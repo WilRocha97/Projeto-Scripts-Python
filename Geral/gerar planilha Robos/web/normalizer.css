@@ -1,0 +1,22 @@
+@import url("https://fonts.googleapis.com/css?family=Raleway:400,400i,700");
+
+*{
+    font-family: Raleway, sans-serif;
+    color: #000;
+}
+
+button, label, input{
+	cursor: pointer;
+	outline: none !important;
+}
+
+button div{
+	color: inherit !important;
+}
+
+.overflow-auto{ overflow: auto !important;  }
+
+.overflow-text{
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}

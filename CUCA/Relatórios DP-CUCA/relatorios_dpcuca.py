@@ -6,7 +6,7 @@ from pyperclip import copy
 from os import makedirs
 from tkinter import *
 from ttk import Combobox
-from pyautogui import press, hotkey, write, click, alert, prompt, getWindowsWithTitle
+from pyautogui import press, hotkey, write, click, alert, getWindowsWithTitle
 
 from sys import path
 path.append(r'..\..\_comum')

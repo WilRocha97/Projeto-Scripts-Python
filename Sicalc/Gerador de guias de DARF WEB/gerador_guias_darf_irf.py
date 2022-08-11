@@ -121,8 +121,6 @@ def run():
     if index is None:
         return False
 
-
-    
     # opções para fazer com que o chome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
     # options.add_argument('--headless')

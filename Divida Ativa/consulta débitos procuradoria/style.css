@@ -1,0 +1,111 @@
+@page {
+    margin: 0.7cm; /* Set margin on each page */
+    size: "A4" landscape;
+}
+
+*{
+    margin: 0;
+    padding: 0;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+/**
+ * Estilo utilizado em sistemas da prodesp, obedecendo o layout padronizado.
+ */
+a:link, a:visited, a:active {
+    color: #222;
+    font: bold 11px Verdana, sans-serif;
+    text-decoration: underline;
+}
+
+label, legend {
+    font: 10px Verdana, sans-serif;
+    padding-top: 2px;
+}
+
+table {
+    margin-top: 15px;
+    border-collapse: collapse;
+    width: 100%
+}
+
+a {
+    border: 0;
+}
+
+body {
+    background-color: #fff;
+    color: #333;
+    font-family: Verdana, Helvetica, Sans-serif;
+    font-size: 12px;
+    margin: 0;
+    text-align: left;
+    padding: 10px 15px;
+}
+
+div.info {
+    font-size: 1.2em;
+}
+
+.main-table td {
+    width: auto;
+    text-align: center !important;
+}
+
+.rich-panel-header {
+    font: bold 11px Verdana, sans-serif !important;
+    padding: 5px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #034ea2;
+    color: white !important;
+}
+
+.rich-table-headercell {
+    background-color: #034ea2;
+    color: white !important;
+}
+
+.rich-table {
+    width: 100%
+}
+
+.rich-table-thead {
+    height: auto;
+}
+
+.rich-table-thead th{
+    padding: 0 2px;
+}
+
+.rich-table tbody .rich-table-row:nth-child(odd) {
+    background-color: #e6e6e6;
+}
+
+.rich-table tbody .rich-table-row:hover {
+    background-color: #BBDBFF;
+    color: white;
+}
+
+.rich-table-cell:first-child {
+    font-size: 12px;
+}
+
+.rich-table-footercell{
+    padding-top: 5px;
+}
+
+.rich-table-cell > span {
+    font-size: 16px;
+}
+
+.rich-table-cell {
+    text-align: center !important;
+    width: auto;
+    border-bottom: 1px solid black;
+    padding-top: 2px;
+}

@@ -1,0 +1,149 @@
+# -*- coding: utf-8 -*-
+from bs4 import BeautifulSoup
+from requests import Session
+import sys
+import os
+from time import sleep
+from pyperclip import copy
+from pyautogui import press, write, hotkey
+
+sys.path.append(r'..\..\_comum')
+from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header_csv, _download_file, _open_lista_dados, _where_to_start, _indice
+from pyautogui_comum import _find_img, _click_img, _wait_img
+
+
+def salvar_pdf(cnpj, nome):
+    # navega na tela até aparecer o botão de emitir relatório
+    while not _find_img('EmitirRelatorio.png', conf=0.9):
+        press('pgDn')
+    _click_img('EmitirRelatorio.png', conf=0.9)
+    _wait_img('Salvar.png', conf=0.9, timeout=-1)
+    sleep(1)
+    # escreve o nome do PDF
+    copy(f'{nome} - {cnpj} - Certidão Negativa de Débitos Não Inscritos.pdf')
+    hotkey('ctrl', 'v')
+    sleep(1)
+    # vai até o campo para inserir o caminho que irá salvar o PDF
+    press('tab', presses=6)
+    sleep(0.5)
+    press('enter')
+    sleep(0.5)
+
+    # cola o caminho que vai salvar o PDF com o pyperclip porque o pyautogui não consegue copiar e colar texto com acentuação
+    docs = 'V:\Setor Robô\Scripts Python\Fazenda\Consulta Débitos Não Inscritos - Pyautogui\execucao\docs'
+    os.makedirs(r'{}'.format(docs), exist_ok=True)
+    copy(docs)
+    hotkey('ctrl', 'v')
+
+    # salva o PDF
+    sleep(0.5)
+    press('enter')
+    sleep(0.5)
+    hotkey('alt', 'l')
+    sleep(1)
+
+    # caso já exista um PDF com o mesmo nome ele substitui
+    if _find_img('SalvarComo.png', conf=0.9):
+        press('s')
+        sleep(1)
+
+    texto = f'{cnpj};Com pendências'
+    print(texto)
+    _escreve_relatorio_csv(texto)
+
+    # esperar aparecer o botão de voltar e clica nele
+    _wait_img('Voltar.png', conf=0.9)
+    _click_img('Voltar.png', conf=0.9)
+
+
+def consulta_ipva(cnpj, nome):
+    # url para entrar no site
+    # url = 'https://www10.fazenda.sp.gov.br/CertidaoNegativaDeb/Pages/Restrita/PesquisarContribuinte.aspx'
+
+    # espera a pagina inicial para inserir o cnpj
+    _wait_img('CNPJ.png', conf=0.9, timeout=-1)
+    _click_img('Campo.png', conf=0.9)
+    sleep(1)
+    # limpa o campo do cnpj
+    press('delete', presses=15)
+    write(cnpj)
+    sleep(1)
+    _click_img('Consultar.png', conf=0.9)
+    sleep(2)
+
+    # aguarda a tela de carregamento
+    while _find_img('Aguarde.png', conf=0.9):
+        sleep(1)
+
+    # espera a tela da empresa abrir e caso apareca a tela de erro da F5 na página
+    while not _find_img('Dados.png', conf=0.9):
+        if _find_img('Atencao.png', conf=0.9):
+            press('enter')
+            press('f5')
+
+    # navega na tela até aparecer o botão de emitir relatório e caso tenha algum sébito salva o relatório
+    while not _find_img('EmitirRelatorio.png', conf=0.9):
+        press('pgDn')
+
+        if _find_img('HaDebitos.png', conf=0.9):
+            salvar_pdf(cnpj, nome)
+            return True
+        if _find_img('HaPendencias.png', conf=0.9):
+            salvar_pdf(cnpj, nome)
+            return True
+        if _find_img('HaPendencias2.png', conf=0.9):
+            salvar_pdf(cnpj, nome)
+            return True
+        if _find_img('ICMSDeclarado.png', conf=0.9):
+            salvar_pdf(cnpj, nome)
+            return True
+        if _find_img('ICMSParcelamento.png', conf=0.9):
+            salvar_pdf(cnpj, nome)
+            return True
+        if _find_img('AIIM.png', conf=0.9):
+            salvar_pdf(cnpj, nome)
+            return True
+        if _find_img('IPVA.png', conf=0.9):
+            salvar_pdf(cnpj, nome)
+            return True
+        if _find_img('OmissaoGIA.png', conf=0.9):
+            salvar_pdf(cnpj, nome)
+            return True
+
+    # define o texto que ira escrever na planilha
+    texto = f'{cnpj};Empresa sem pendências'
+    print(texto)
+    _escreve_relatorio_csv(texto)
+
+    # voltar pra tela de login da empresa
+    _wait_img('Voltar.png', conf=0.9)
+    _click_img('Voltar.png', conf=0.9)
+    return False
+
+
+@_time_execution
+def run():
+    # abre arquivo de dados
+    empresas = _open_lista_dados()
+
+    # define a primeira empresa que vai executar o script
+    index = _where_to_start(tuple(i[0] for i in empresas))
+    if index is None:
+        return False
+
+    # define o número total de empresas
+    total_empresas = empresas[index:]
+
+    # começa a repetição
+    for count, empresa in enumerate(empresas[index:], start=1):
+        cnpj, nome = empresa
+        # printa o indice dos dados
+        _indice(count, total_empresas, empresa)
+
+        # executa a consulta
+        consulta_ipva(cnpj, nome)
+
+
+# função principal
+if __name__ == '__main__':
+    run()

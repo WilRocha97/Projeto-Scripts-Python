@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 # from selenium.common.exceptions import NoSuchElementException
-from bs4 import BeautifulSoup
-from xhtml2pdf import pisa
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from PIL import Image
-from sys import path
-from selenium.webdriver.support.select import Select
 import os, time, re
-from pyautogui import press, hotkey, write, click, alert, prompt, getWindowsWithTitle
+from pyautogui import press, hotkey
+from pyperclip import copy
 
 from sys import path
-
 path.append(r'..\..\_comum')
 from chrome_comum import initialize_chrome, _send_input
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
@@ -37,7 +33,7 @@ def find_by_path(xpath, driver):
         return None
     
 
-def login(insc_muni):
+def pesquisar(cnpj, insc_muni):
     status, driver = initialize_chrome()
     
     url_inicio = 'http://vinhedomun.presconinformatica.com.br/certidaoNegativa.jsf?faces-redirect=true'
@@ -98,40 +94,43 @@ def login(insc_muni):
             driver.quit()
             return situacao, situacao_print
         time.sleep(1)
-    
+
+    # EM MANUTENÇÃO
+
+    salvar_guia(cnpj)
     situacao_print = f'❌ {situacao}'
     driver.quit()
     return situacao, situacao_print
     
     
-def salvar_guia():
+def salvar_guia(cnpj):
     # Salvar o PDF
     while not _find_img('SalvarPDF.png', conf=0.9):
-        sleep(1)
+        time.sleep(1)
         
     # Usa o pyperclip porque o pyautogui não digita letra com acento
-    copy(texto)
+    copy(f'{cnpj} - Débitos Municipais Vinhedo.pdf')
     hotkey('ctrl', 'v')
-    sleep(0.5)
+    time.sleep(0.5)
     
     # Selecionar local
     press('tab', presses=6)
-    sleep(0.5)
+    time.sleep(0.5)
     press('enter')
-    sleep(0.5)
+    time.sleep(0.5)
     
-    copy('V:\Setor Robô\Scripts Python\CUCA\Relatórios DP-CUCA\{}\{}'.format(e_dir, diretorio))
+    copy('V:\Setor Robô\Scripts Python\Serviços Prefeitura\Consulta Débitos Municipais Vinhedo\execucao\documentos')
     
     hotkey('ctrl', 'v')
-    sleep(0.5)
+    time.sleep(0.5)
     press('enter')
     
-    sleep(0.5)
+    time.sleep(0.5)
     hotkey('alt', 'l')
-    sleep(1)
+    time.sleep(1)
     if _find_img('SalvarComo.png', 0.9):
         press('s')
-        sleep(1)
+        time.sleep(1)
     
 
 @_time_execution
@@ -152,7 +151,7 @@ def run():
         
         _indice(count, total_empresas, empresa)
         
-        situacao, situacao_print = login(insc_muni)
+        situacao, situacao_print = pesquisar(cnpj, insc_muni)
         print(situacao_print)
         if situacao == 'Desculpe, mas ocorreram problemas de rede. Por favor, tente novamente mais tarde.':
             return False

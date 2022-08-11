@@ -1,0 +1,82 @@
+body{
+    font-family: 'Montserrat', sans-serif;
+}
+
+
+div {
+    margin: 5px;
+}
+
+input {
+    width: 100%;
+}
+
+span {
+    font-size: 30px;
+}
+
+label {
+    font-size: 14px;
+    margin-right: 8px;
+}
+
+#id_paginas {
+    font-size: 28px;
+}
+
+#lbl_radio{
+    display: block;
+    margin-top: 14px;
+    margin-left: 14px;
+
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.button {
+    display:inline-block;
+    
+    margin-right: 8px;
+    padding:9px 20px;
+    border:1px solid #3498db;
+    border-radius: 0.6em;
+
+    font-weight: bold;
+    font-size: 14px;
+    color: #fff;
+
+    text-align: center;
+    text-decoration:none;
+    text-transform: uppercase;
+
+    cursor:pointer;
+    background-color: #3498db;
+}
+.button:hover {
+    background-color: #fff;
+    color: #3498db;
+}
+.button:active {
+    position:relative;
+    top:1px;
+}
+
+.container {
+    padding: 5px;
+    width: 550px;
+    height: 120px;
+}
+
+.flex {
+    display: flex;
+}
+
+.centro {
+    text-align: center;
+}
+
+.tipo {
+    width: 155px;
+    margin-top: 8px;
+    margin-bottom: 14px;
+}

@@ -1,0 +1,38 @@
+@page {
+        margin: 0.7cm; /* Set margin on each page */
+        size: "A4" landscape;
+    }
+
+    *{
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+    }
+
+p{
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+table{
+    margin-top: 20px;
+    border: 1px solid #000;
+    border-collapse: collapse;
+}
+
+table > *{
+    font-size: 0.84em;
+    font-family: Arial, Helvetica, sans-serif;
+} 
+
+tr{
+    border-bottom: 1px solid #000;
+}
+
+td, th{
+    padding: 2px;
+    border-right: 1px solid #000;
+}

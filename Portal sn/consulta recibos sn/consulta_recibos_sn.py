@@ -42,13 +42,13 @@ def consulta_recibos(cnpj, mes, ano, session):
 
         download = (doc_num, link)
 
-    # se o numero do documento for igual a 0 retorna que o o recibo não foi encontrado
+    # se o número do documento for igual a 0 retorna que o o recibo não foi encontrado
     if download[0] == 0:
         print(f'❗ Não encontrou recibo {mes}/{ano}')
         return f'Não encontrou recibo {mes}/{ano}'
 
     # tenta fazer o download do recibo em PDF
-    res = session.get(url_base + download[1], verify=False)
+    res = session.get(url_base + str(download[1]), verify=False)
     if res.headers.get('content-type', '') != 'application/pdf':
         print('❌ Erro - Não pode fazer download do recibo')
         return 'Erro - Não pode fazer download do recibo'
@@ -68,12 +68,12 @@ def run():
         return False
     comp = comp.split('/')
 
-    # função pra abrir a lista de dados
+    # função para abrir a lista de dados
     empresas = open_lista_dados()
     if not empresas:
         return False
 
-    # função pra saber onde o robô começa na lista de dados
+    # função para saber onde o robô começa na lista de dados
     index = where_to_start(tuple(i[0] for i in empresas))
     if index is None:
         return False

@@ -74,6 +74,7 @@ def calculos(relatorio):
 
 
 def gerar(relatorio, andamentos, empresa):
+    # comando para gerar arquivos no dpcuca e faz uma verificação se pode gerar
     if _find_img('NaoImprimi.png', conf=0.9):
         cod, cnpj, razao, mes, ano = empresa
         _inicial('DPCUCA')
@@ -146,31 +147,38 @@ def imprimir(relatorio, andamentos, empresa, texto, espera=10, diretorio='Relat�
     else:
         copy('V:\Setor Robô\Scripts Python\CUCA\Relatórios DP-CUCA\{}\{}'.format(e_dir, diretorio))
     
+    # cola o caminho para salvar
     hotkey('ctrl', 'v')
     sleep(0.5)
     press('enter')
     
+    # salva o arquivo na pasta
     sleep(0.5)
     hotkey('alt', 'l')
     sleep(1)
     if _find_img('SalvarComo.png', 0.9):
         press('s')
         sleep(1)
+        
+    # espera terminar de salvar o arquivo
     while _find_img('Progresso.png', 0.9):
         sleep(0.5)
+        
+    # fecha a visualização
     while _find_img('PDF.png', 0.9):
         press('esc')
         sleep(1)
         if _find_img('Comunicado.png', 0.9):
             press(['right', 'enter'], interval=0.2)
             sleep(1)
-    if relatorio == 'Provisões 13º e Ferias':
-        return True
-    elif relatorio == 'Relatório de empresas' or relatorio == 'Relatório de Experiência geral':
-        return True
-    else:
-        print('✔ {} gerado'.format(relatorio))
-        _escreve_relatorio_csv(f'{cod};{cnpj};{razao};{mes};{ano};{relatorio} gerado', nome=andamentos)
+    
+    # se for alguma dessas consultas não escreve na planilha nesse momento
+    for i in ['Provisões 13º e Ferias', 'Relatório de empresas', 'Relatório de Experiência geral']:
+        if relatorio == i:
+            return True
+        
+    print('✔ {} gerado'.format(relatorio))
+    _escreve_relatorio_csv(f'{cod};{cnpj};{razao};{mes};{ano};{relatorio} gerado', nome=andamentos)
     return True
 
 

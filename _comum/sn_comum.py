@@ -38,8 +38,8 @@ def new_session_sn(cnpj, cpf, cod, serv, driver):
 
     captcha = ''
     while not find_by_id('captcha-img', driver):
+        print('>>> Aguardando site')
         for url in (url_base, url_login):
-            print('>>> Aguardando site')
             driver.get(url)
             sleep(1)
         """try:"""

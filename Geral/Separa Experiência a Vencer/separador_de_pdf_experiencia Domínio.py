@@ -4,6 +4,7 @@ from pathlib import Path
 from datetime import datetime
 
 
+# guarda info da página anterior
 def guarda_info(page, matchtexto_nome, matchtexto_cnpj):
     prevpagina = page.number
     prevtexto_nome = matchtexto_nome
@@ -27,6 +28,7 @@ def cria_pdf(page, matchtexto_nome, matchtexto_cnpj, prevtexto_nome, prevtexto_c
         new_pdf.save(text)
         print(nome + andamento)
         
+        # atualiza as infos da página anterior
         prevpagina = page.number
         prevtexto_nome = matchtexto_nome
         prevtexto_cnpj = matchtexto_cnpj

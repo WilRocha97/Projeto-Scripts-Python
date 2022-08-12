@@ -14,7 +14,7 @@ from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dad
 from captcha_comum import _solve_text_captcha
 from pyautogui_comum import _find_img, _wait_img, _click_img
 
-os.makedirs('execucao/documentos', exist_ok=True)
+os.makedirs('execucao/Certidões', exist_ok=True)
 
 
 def find_by_id(xpath, driver):
@@ -39,10 +39,10 @@ def pesquisar(cnpj, insc_muni):
     url_inicio = 'http://vinhedomun.presconinformatica.com.br/certidaoNegativa.jsf?faces-redirect=true'
     driver.get(url_inicio)
 
-    while not find_by_id('homeForm:panelCaptcha:j_idt47', driver):
+    while not find_by_id('homeForm:panelCaptcha:j_idt52', driver):
         time.sleep(1)
-    # bloco que salva a iamgem do captcha
-    element = driver.find_element(by=By.ID, value='homeForm:panelCaptcha:j_idt47')
+    # bloco que salva a imagem do captcha
+    element = driver.find_element(by=By.ID, value='homeForm:panelCaptcha:j_idt52')
     location = element.location
     size = element.size
     driver.save_screenshot('ignore\captcha\pagina.png')
@@ -74,12 +74,13 @@ def pesquisar(cnpj, insc_muni):
     
     if not captcha:
         print('Erro Login - não encontrou captcha')
-    
+
+    time.sleep(1)
     # clica na barra de inscrição e insere
     driver.find_element(by=By.ID, value='homeForm:inputInscricao').click()
     time.sleep(2)
     driver.find_element(by=By.ID, value='homeForm:inputInscricao').send_keys(insc_muni)
-    _send_input('homeForm:panelCaptcha:j_idt50', captcha, driver)
+    _send_input('homeForm:panelCaptcha:j_idt55', captcha, driver)
     time.sleep(2)
     
     # clica no botão de pesquisar
@@ -88,17 +89,15 @@ def pesquisar(cnpj, insc_muni):
     print('>>> Consultando')
     while 'dados-contribuinte-inscricao">0000000000' not in driver.page_source:
         if find_by_path('/html/body/div[1]/div[5]/div[2]/div[1]/div/ul/li/span', driver):
-            padraozinho = re.compile(r'<span class="ui-messages-error-summary">(.+)<\/span><\/li><\/ul><\/div><\/div><div class="right"><button id="j_idt70"')
+            padraozinho = re.compile(r'<span class="ui-messages-error-summary">(.+)<\/span><\/li><\/ul><\/div><\/div><div class="right"><button id="j_idt75"')
             situacao = padraozinho.search(driver.page_source).group(1)
             situacao_print = f'❌ {situacao}'
             driver.quit()
             return situacao, situacao_print
         time.sleep(1)
 
-    # EM MANUTENÇÃO
-
-    salvar_guia(cnpj)
-    situacao_print = f'❌ {situacao}'
+    situacao = salvar_guia(cnpj)
+    situacao_print = f'✔ {situacao}'
     driver.quit()
     return situacao, situacao_print
     
@@ -107,9 +106,21 @@ def salvar_guia(cnpj):
     # Salvar o PDF
     while not _find_img('SalvarPDF.png', conf=0.9):
         time.sleep(1)
+    _click_img('SalvarPDF.png', conf=0.9)
+    
+    while not _find_img('Salvar.png', conf=0.9):
+        time.sleep(1)
+    _click_img('Salvar.png', conf=0.9)
+    
+    while not _find_img('Imprimir.png', conf=0.9):
+        time.sleep(1)
+    _click_img('Imprimir.png', conf=0.9)
+    
+    while not _find_img('SalvarComo.png', conf=0.9):
+        time.sleep(1)
         
     # Usa o pyperclip porque o pyautogui não digita letra com acento
-    copy(f'{cnpj} - Débitos Municipais Vinhedo.pdf')
+    copy(f'{cnpj} - Certidão Negativa de Débitos Municipais Vinhedo.pdf')
     hotkey('ctrl', 'v')
     time.sleep(0.5)
     
@@ -119,7 +130,7 @@ def salvar_guia(cnpj):
     press('enter')
     time.sleep(0.5)
     
-    copy('V:\Setor Robô\Scripts Python\Serviços Prefeitura\Consulta Débitos Municipais Vinhedo\execucao\documentos')
+    copy('V:\Setor Robô\Scripts Python\Serviços Prefeitura\Consulta Débitos Municipais Vinhedo\execucao\Certidões')
     
     hotkey('ctrl', 'v')
     time.sleep(0.5)
@@ -132,6 +143,8 @@ def salvar_guia(cnpj):
         press('s')
         time.sleep(1)
     
+    return 'Certidão negativa salva'
+
 
 @_time_execution
 def run():

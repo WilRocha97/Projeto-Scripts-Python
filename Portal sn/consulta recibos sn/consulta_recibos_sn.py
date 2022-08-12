@@ -17,10 +17,9 @@ def consulta_recibos(cnpj, mes, ano, session):
     url_cons = f'{url_base}/SimplesNacional/Aplicacoes/ATSPO/pgdasd2018.app/Consulta'
 
     disable_warnings(exceptions.InsecureRequestWarning)
-
+    
     session.get(url_cons, verify=False)
     res = session.post(url_cons, {'anoDigitado': ano}, verify=False)
-
     soup = BeautifulSoup(res.content, 'html.parser')
     # procura no código do site se existe recibo
     recibos = soup.findAll('a', attrs={'data-content': 'Imprimir Recibo'})
@@ -39,7 +38,8 @@ def consulta_recibos(cnpj, mes, ano, session):
             continue
         if doc_num < download[0]:
             continue
-
+        
+        # faz o download do recibo
         download = (doc_num, link)
 
     # se o número do documento for igual a 0 retorna que o o recibo não foi encontrado
@@ -98,19 +98,25 @@ def run():
     
             # printa o indice da empresa que está sendo executada
             _indice(count, total_empresas, empresa)
-    
-            # loga no site do simples nacional com web driver e retorna uma sessão de request
-            session = new_session_sn(cnpj, cpf, cod, 'recibos', driver)
-    
-            # se existe uma sessão realiza a consulta
-            if isinstance(session, Session):
-                text = consulta_recibos(cnpj, *comp, session)
-                session.close()
-            else:
-                text = session
-    
-            # escreve na planilha de andamentos o resultado da execução atual
-            escreve_relatorio_csv(f'{cnpj};{text}')
+
+            captcha = 'erro'
+            while captcha == 'erro':
+                # loga no site do simples nacional com web driver e retorna uma sessão de request
+                session = new_session_sn(cnpj, cpf, cod, 'recibos', driver)
+                
+                if session == 'Erro Login - Caracteres anti-robô inválidos. Tente novamente.':
+                    captcha = 'erro'
+                else:
+                    captcha = 'ok'
+                    # se existe uma sessão realiza a consulta
+                    if isinstance(session, Session):
+                        text = consulta_recibos(cnpj, *comp, session)
+                        session.close()
+                    else:
+                        text = session
+                    
+                    # escreve na planilha de andamentos o resultado da execução atual
+                    escreve_relatorio_csv(f'{cnpj};{text}')
     
         driver.quit()
     return True

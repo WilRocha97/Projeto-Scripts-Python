@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
 from sys import path
-import os, time, pyperclip, pyautogui as p
-
 path.append(r'..\..\_comum')
 from cuca_comum import _horario, _login, _fechar, _verificar_empresa, _inicial, _iniciar
 from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
+
+from datetime import datetime
+import os, time, pyperclip, pyautogui as p
 
 
 def login(empresa, execucao, mes, ano):

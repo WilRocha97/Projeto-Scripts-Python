@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 # from selenium.common.exceptions import NoSuchElementException
-from bs4 import BeautifulSoup
-from xhtml2pdf import pisa
-from requests import Session
+from selenium import webdriver
+from selenium.webdriver.common.by import By
 from PIL import Image
 import os, time, re
 
@@ -13,7 +12,6 @@ from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dad
 from captcha_comum import _solve_recaptcha
 
 os.makedirs('execucao/Certidões', exist_ok=True)
-site_key = '6LfK0igTAAAAAOeUqc7uHQpW4XS3EqxwOUCHaSSi'
 
 
 def find_by_id(xpath, driver):
@@ -32,21 +30,39 @@ def find_by_path(xpath, driver):
         return None
 
 
-def pesquisar(cnpj, insc_muni):
+def login(cnpj, insc_muni):
     status, driver = initialize_chrome()
     
-    url_inicio = 'https://jundiai.sp.gov.br/servicos-online/certidao-negativa-de-debitos-mobiliarios/'
+    url_inicio = 'https://web.jundiai.sp.gov.br/PMJ/SW/certidaonegativamobiliario.aspx'
     driver.get(url_inicio)
     
-    while not find_by_id('g-recaptcha-response', driver):
-        time.sleep(1)
-
-    data = {'url': url_inicio, 'sitekey': site_key}
+    time.sleep(1)
+    
+    data = {'url': url_inicio, 'sitekey': '6LfK0igTAAAAAOeUqc7uHQpW4XS3EqxwOUCHaSSi'}
     response = _solve_recaptcha(data)
     
     _send_input('DadoContribuinteMobiliario1_txtCfm', insc_muni, driver)
     _send_input('DadoContribuinteMobiliario1_txtNrCicCgc', cnpj, driver)
-    _send_input('g-recaptcha-response', response, driver)
+    try:
+        driver.execute_script('document.getElementById("g-recaptcha-response-1").innerText="' + response + '"')
+    except:
+        driver.execute_script('document.getElementById("g-recaptcha-response").innerText="' + response + '"')
+    time.sleep(5)
+    
+    print('>>> Consultando empresa')
+    driver.find_element(by=By.ID, value='btnEnviar').click()
+    
+    while not find_by_id('lblContribuinte', driver):
+        time.sleep(1)
+        
+    situacao = re.compile(r'<span id=\"lblSituacao\">(.+)<\/span>')
+    situacao = situacao.search(driver.page_source)
+    situacao = situacao.group(1)
+    time.sleep(1)
+    
+    situacao_print = f'✔ {situacao}'
+    driver.quit()
+    return situacao, situacao_print
     
     
 @_time_execution
@@ -57,6 +73,10 @@ def run():
     if index is None:
         return False
 
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument('--window-size=1920,1080')
+    
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         cnpj, insc_muni = empresa
@@ -64,7 +84,8 @@ def run():
         _indice(count, total_empresas, empresa)
 
         situacao, situacao_print = login(cnpj, insc_muni)
-        _escreve_relatorio_csv(f'{cnpj};{insc_muni};{situacao}')
+        
+        _escreve_relatorio_csv(f'{cnpj};{insc_muni};{situacao}', nome='Consulta de débitos municipais de Jundiaí')
         print(situacao_print)
 
 

@@ -201,6 +201,7 @@ for file in os.listdir(documentos):
         # time.sleep(55)
         # regex_termo = re.compile(r'{}'.format(cnpj))
         regex_termo = re.compile(r'GIA')
+        # regex_termo = re.compile(r'CP-SEGUR.\n11/2021')
         # regex_termo = re.compile(r'GIA ST-1/1')
         # regex_termo = re.compile(r'GIA-1/1')
         resultado = regex_termo.search(texto)

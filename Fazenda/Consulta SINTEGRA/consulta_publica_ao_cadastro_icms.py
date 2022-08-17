@@ -5,6 +5,7 @@ from PIL import Image
 import os, time, re, shutil
 
 from sys import path
+
 path.append(r'..\..\_comum')
 from chrome_comum import initialize_chrome, _send_input
 from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header_csv, _open_lista_dados, _where_to_start, _indice
@@ -22,16 +23,16 @@ def find_by_id(xpath, driver):
 def consultar(options, cnpj):
     cnpj_limpo = cnpj.replace('.', '').replace('/', '').replace('-', '')
     status, driver = initialize_chrome(options)
-
+    
     # entra na página inicial da consulta
     url_inicio = 'https://www.cadesp.fazenda.sp.gov.br/(S(31mwr1eckqxyy2tfvbfuvpfc))/Pages/Cadastro/Consultas/ConsultaPublica/ConsultaPublica.aspx'
     driver.get(url_inicio)
     time.sleep(1)
-
+    
     # clica no menu de identificação
     driver.find_element(by=By.ID, value='ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_tipoFiltroDropDownList').click()
     time.sleep(1)
-
+    
     # clica na opção "CNPJ"
     driver.find_element(by=By.XPATH, value='/html/body/form/table[3]/tbody/tr/td[2]/table[2]/tbody/tr/td[2]/table/tbody/tr[2]/td[2]/div/div[2]/div[1]/table/tbody/tr[2]/td/select/option[2]').click()
     time.sleep(1)
@@ -39,11 +40,11 @@ def consultar(options, cnpj):
     # pega o sitekey para quebrar o captcha
     data = {'url': url_inicio, 'sitekey': '6LfWn8wZAAAAABbBsWZvt7wQXWYNTOFN3Prjcx1L'}
     response = _solve_recaptcha(data)
-
+    
     # pega a id do campo do recaptcha
     id_response = re.compile(r'<textarea id=\"(.+)\" name=\"g-recaptcha-response')
     id_response = id_response.search(driver.page_source).group(1)
-
+    
     # insere a solução do captcha via javascript
     driver.execute_script('document.getElementById("' + id_response + '").innerText="' + response + '"')
     
@@ -60,15 +61,19 @@ def consultar(options, cnpj):
     while not find_by_id('ctl00_conteudoPaginaPlaceHolder_lblCodigoControleCertidao', driver):
         time.sleep(1)
         if find_by_id('ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_MensagemErroFiltroLabel', driver):
-            situacao = driver.execute_script('document.getElementById("ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_MensagemErroFiltroLabel").innerText')
-            situacao_print = f'✔ {situacao}'
+            erro = re.compile(r'ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_MensagemErroFiltroLabel.+\">(.+)</span.')
+            erro = erro.search(driver.page_source).group(1)
             driver.quit()
-            _escreve_relatorio_csv(f'{cnpj};{situacao}', nome='Consulta ao cadastro de ICMS')
-            print(situacao_print)
-        
+            print(f'Erro no login: {erro}')
+            if erro == 'Captcha inválido. Tente novamente.':
+                return False
+            _escreve_relatorio_csv(f'{cnpj};Erro no login: {erro}', nome='Consulta ao cadastro de ICMS')
+            return True
+    
+    print('>>> Consultando empresa')
     pega_info(cnpj, driver)
-
     driver.quit()
+    return True
 
 
 def pega_info(cnpj, driver):
@@ -78,55 +83,55 @@ def pega_info(cnpj, driver):
         ie = ie.search(driver.page_source).group(1)
     except:
         ie = 'N/D'
-        
+    
     try:
         # pega nome
         razao = re.compile(r'Empresarial:.+\n.+\"dadoDetalhe\">(.+)</td>')
         razao = razao.search(driver.page_source).group(1)
     except:
         razao = 'N/D'
-        
+    
     try:
         # pega natureza
         natureza = re.compile(r'Jurídica:.+\n.+\"dadoDetalhe\".+>(.+)</td>')
         natureza = natureza.search(driver.page_source).group(1)
     except:
         natureza = 'N/D'
-        
+    
     try:
         # pega logradouro
         logradouro = re.compile(r'Logradouro:.+\n.+\"dadoDetalhe\".+>(.+)</td>')
         logradouro = logradouro.search(driver.page_source).group(1)
     except:
         logradouro = 'N/D'
-        
+    
     try:
         # pega número
         numero = re.compile(r'Nº:.+\n.+\"dadoDetalhe\">(.+)</td>')
         numero = numero.search(driver.page_source).group(1)
     except:
         numero = 'N/D'
-        
+    
     try:
         # pega cep
         cep = re.compile(r'CEP:.+\n.+\"dadoDetalhe\">(.+)</td>')
         cep = cep.search(driver.page_source).group(1)
     except:
         cep = 'N/D'
-        
+    
     try:
         # pega município
         municipio = re.compile(r'Município:.+\n.+\"dadoDetalhe\">(.+)</td>')
         municipio = municipio.search(driver.page_source).group(1)
     except:
         municipio = 'N/D'
-        
-    # try:
+    
+    try:
         # pega complemento
-        # complemento = re.compile(r'')
-        # complemento = complemento.search(driver.page_source).group(1)
-    # except:
-        # complemento = 'N/D
+        complemento = re.compile(r'Complemento: </b>(.+)</td>')
+        complemento = complemento.search(driver.page_source).group(1)
+    except:
+        complemento = 'N/D'
     
     try:
         # pega bairro
@@ -134,14 +139,14 @@ def pega_info(cnpj, driver):
         bairro = bairro.search(driver.page_source).group(1)
     except:
         bairro = 'N/D'
-        
+    
     try:
         # pega UF
         uf = re.compile(r'UF:.+</b>(.+)</td>')
         uf = uf.search(driver.page_source).group(1)
     except:
         uf = 'N/D'
-        
+    
     try:
         # pega situação
         situacao = re.compile(r'Cadastral: </td>\n.+\">(.+)</td>')
@@ -169,33 +174,54 @@ def pega_info(cnpj, driver):
         atividade = atividade.search(driver.page_source).group(1)
     except:
         atividade = 'N/D'
-        
+    
     try:
         # pega inatividade
         inatividade = re.compile(r'Inatividade:</b> (.+)</td>')
         inatividade = inatividade.search(driver.page_source).group(1)
     except:
         inatividade = 'N/D'
-        
+    
     try:
         # pega data da situação
         data_situacao = re.compile(r'Cadastral: </b>(.+)</td>')
         data_situacao = data_situacao.search(driver.page_source).group(1)
     except:
         data_situacao = 'N/D'
-        
+    
     try:
         # pega posto fiscal
         posto = re.compile(r'Fiscal:.+\">(.+)</span>')
         posto = posto.search(driver.page_source).group(1)
     except:
         posto = 'N/D'
+        
+    try:
+        # pega Data de Credenciamento como emissor de NF-e
+        credenciamento = re.compile(r'Data&nbsp;de&nbsp;Credenciamento&nbsp;como&nbsp;emissor&nbsp;de&nbsp;NF-e: .+\n.+\">(.+)</td>')
+        credenciamento = credenciamento.search(driver.page_source).group(1)
+    except:
+        credenciamento = 'N/D'
+        
+    try:
+        # pega Indicador de Obrigatoriedade de NF-e
+        obrigatoriedade = re.compile(r'Indicador&nbsp;de&nbsp;Obrigatoriedade&nbsp;de&nbsp;NF-e: .+\n.+\">(.+)</td>')
+        obrigatoriedade = obrigatoriedade.search(driver.page_source).group(1)
+    except:
+        obrigatoriedade = 'N/D'
+        
+    try:
+        # pega Data de Início da Obrigatoriedade de NF-e
+        inicio_obrigado = re.compile(r'Data&nbsp;de&nbsp;Início&nbsp;da&nbsp;Obrigatoriedade&nbsp;de&nbsp;NF-e: .+\n.+\">(.+)</td>')
+        inicio_obrigado = inicio_obrigado.search(driver.page_source).group(1)
+    except:
+        inicio_obrigado = 'N/D'
     
-    endereco = f'{logradouro}, Nº{numero}, {cep}, {bairro}, {municipio}-{uf}'
-    _escreve_relatorio_csv(';'.join([cnpj, ie, razao.replace('&amp;', '&'), situacao, ocorrencia, inatividade, data_situacao, natureza, endereco, regime, atividade, posto]),
-                           nome='Consulta ao cadastro de ICMS')
+    endereco = f'{logradouro}, Nº{numero}, {complemento}, {cep}, {bairro}, {municipio}-{uf}'
+    _escreve_relatorio_csv(';'.join([cnpj, ie, razao.replace('&amp;', '&'), situacao, data_situacao, ocorrencia, inatividade, natureza, endereco.replace('N/D, ', '').replace(';', ''),
+                                     regime, atividade.replace('<br>', ' / ').replace(';', ','), posto, credenciamento, obrigatoriedade, inicio_obrigado]), nome='Consulta ao cadastro de ICMS')
     print(f'✔ Dados coletados - {situacao} - {ocorrencia}')
-    
+
 
 @_time_execution
 def run():
@@ -206,11 +232,11 @@ def run():
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:
         return False
-
+    
     options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')
-    # options.add_argument('--window-size=1920,1080')
-    options.add_argument("--start-maximized")
+    options.add_argument('--headless')
+    options.add_argument('--window-size=1920,1080')
+    # options.add_argument("--start-maximized")
     options.add_experimental_option('prefs', {
         "download.default_directory": "V:\\Setor Robô\\Scripts Python\\Serviços Prefeitura\\Consulta Débitos Municipais Jundiaí\\execucao\\Certidões",  # Change default directory for downloads
         "download.prompt_for_download": False,  # To auto download the file
@@ -221,17 +247,20 @@ def run():
     # cria o indice para cada empresa da lista de dados
     total_empresas = empresas[index:]
     
-    _escreve_header_csv(';'.join(['CNPJ', 'IE', 'NOME', 'SITUAÇÃO CADASTRAL', 'OCORRÊNCIA FISCAL',  'DATA DE INATIVIDADE', 'DATA DA SITUAÇÃO', 'NATUREZA JURÍDICA',
-                                     'ENDEREÇO', 'REGIME DE APURAÇÃO', 'ATIVIDADE ECONÔMICA', 'POSTO FISCAL']), nome='Consulta ao cadastro de ICMS.csv')
+    _escreve_header_csv(';'.join(['CNPJ', 'IE', 'NOME', 'SITUAÇÃO CADASTRAL', 'DATA DA SITUAÇÃO', 'OCORRÊNCIA FISCAL', 'DATA DE INATIVIDADE', 'NATUREZA JURÍDICA',
+                                  'ENDEREÇO', 'REGIME DE APURAÇÃO', 'ATIVIDADE ECONÔMICA', 'POSTO FISCAL', 'CREDENCIAMENTO COMO EMISSOR DE NF-E', 'OBRIGATORIEDADE DE NF-E',
+                                  'INÍCIO DA OBRIGATORIEDADE']), nome='Consulta ao cadastro de ICMS.csv')
     
     for count, empresa in enumerate(empresas[index:], start=1):
         cnpj, nome = empresa
         
         # printa o indice da empresa que está sendo executada
         _indice(count, total_empresas, empresa)
-
-        consultar(options, cnpj)
-
         
+        erro = False
+        while not erro:
+            erro = consultar(options, cnpj)
+        
+
 if __name__ == '__main__':
     run()

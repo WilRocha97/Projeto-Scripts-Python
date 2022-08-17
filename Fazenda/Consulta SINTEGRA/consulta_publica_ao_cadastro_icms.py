@@ -56,8 +56,10 @@ def consultar(options, cnpj):
     driver.execute_script('document.querySelector("#ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_consultaPublicaButton").removeAttribute("disabled")')
     time.sleep(1)
     
+    # clica no botão de pesquisa
     driver.find_element(by=By.ID, value='ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_consultaPublicaButton').click()
     
+    # enquanto não abre a tela com as infos da empresa, verifica se aparece alguma mensagem de erro do site
     while not find_by_id('ctl00_conteudoPaginaPlaceHolder_lblCodigoControleCertidao', driver):
         time.sleep(1)
         if find_by_id('ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_MensagemErroFiltroLabel', driver):
@@ -70,6 +72,7 @@ def consultar(options, cnpj):
             _escreve_relatorio_csv(f'{cnpj};Erro no login: {erro}', nome='Consulta ao cadastro de ICMS')
             return True
     
+    # pega as infos da empresa para preencher a planilha
     print('>>> Consultando empresa')
     pega_info(cnpj, driver)
     driver.quit()
@@ -77,150 +80,48 @@ def consultar(options, cnpj):
 
 
 def pega_info(cnpj, driver):
-    # pega ie
-    try:
-        ie = re.compile(r'IE:.+\n.+\"dadoDetalhe\">(.+)</td>')
-        ie = ie.search(driver.page_source).group(1)
-    except:
-        ie = 'N/D'
+    # pega as infos da empresa
+    regex = [r'IE:.+\n.+\"dadoDetalhe\">(.+)</td>',
+             r'Empresarial:.+\n.+\"dadoDetalhe\">(.+)</td>',
+             r'Cadastral: </td>\n.+\">(.+)</td>',
+             r'Cadastral: </b>(.+)</td>',
+             r'Fiscal: .+\n.+\">(.+)</td>',
+             r'Inatividade:</b> (.+)</td>',
+             r'Jurídica:.+\n.+\"dadoDetalhe\".+>(.+)</td>',
+             r'Apuração: .+\n.+\">(.+)</td>',
+             r'Econômicas: .+\n.+\">(.+)<br>',
+             r'Fiscal:.+\">(.+)</span>',
+             r'Data&nbsp;de&nbsp;Credenciamento&nbsp;como&nbsp;emissor&nbsp;de&nbsp;NF-e: .+\n.+\">(.+)</td>',
+             r'Indicador&nbsp;de&nbsp;Obrigatoriedade&nbsp;de&nbsp;NF-e: .+\n.+\">(.+)</td>',
+             r'Data&nbsp;de&nbsp;Início&nbsp;da&nbsp;Obrigatoriedade&nbsp;de&nbsp;NF-e: .+\n.+\">(.+)</td>']
+    infos = ''
+    for reg in regex:
+        try:
+            info = re.compile(reg)
+            info = info.search(driver.page_source).group(1).replace('&amp;', '&').replace('<br>', ' / ').replace(';', ',')
+        except:
+            info = 'N/D'
+        infos += info + ';'
     
-    try:
-        # pega nome
-        razao = re.compile(r'Empresarial:.+\n.+\"dadoDetalhe\">(.+)</td>')
-        razao = razao.search(driver.page_source).group(1)
-    except:
-        razao = 'N/D'
+    # pega as infos do endereço da empresa
+    regex_endereco = [r'Logradouro:.+\n.+\"dadoDetalhe\".+>(.+)</td>',
+                      r'Nº:.+\n.+\"dadoDetalhe\">(.+)</td>',
+                      r'Complemento: </b>(.+)</td>',
+                      r'CEP:.+\n.+\"dadoDetalhe\">(.+)</td>',
+                      r'Bairro:.+</b>(.+)</td>',
+                      r'Município:.+\n.+\"dadoDetalhe\">(.+)</td>',
+                      r'UF:.+</b>(.+)</td>']
+    enderecos = ''
+    for reg in regex_endereco:
+        try:
+            endereco = re.compile(reg)
+            endereco = endereco.search(driver.page_source).group(1).replace(';', '').replace(', , ', ', ')
+        except:
+            endereco = ''
+        enderecos += endereco + ', '
     
-    try:
-        # pega natureza
-        natureza = re.compile(r'Jurídica:.+\n.+\"dadoDetalhe\".+>(.+)</td>')
-        natureza = natureza.search(driver.page_source).group(1)
-    except:
-        natureza = 'N/D'
-    
-    try:
-        # pega logradouro
-        logradouro = re.compile(r'Logradouro:.+\n.+\"dadoDetalhe\".+>(.+)</td>')
-        logradouro = logradouro.search(driver.page_source).group(1)
-    except:
-        logradouro = 'N/D'
-    
-    try:
-        # pega número
-        numero = re.compile(r'Nº:.+\n.+\"dadoDetalhe\">(.+)</td>')
-        numero = numero.search(driver.page_source).group(1)
-    except:
-        numero = 'N/D'
-    
-    try:
-        # pega cep
-        cep = re.compile(r'CEP:.+\n.+\"dadoDetalhe\">(.+)</td>')
-        cep = cep.search(driver.page_source).group(1)
-    except:
-        cep = 'N/D'
-    
-    try:
-        # pega município
-        municipio = re.compile(r'Município:.+\n.+\"dadoDetalhe\">(.+)</td>')
-        municipio = municipio.search(driver.page_source).group(1)
-    except:
-        municipio = 'N/D'
-    
-    try:
-        # pega complemento
-        complemento = re.compile(r'Complemento: </b>(.+)</td>')
-        complemento = complemento.search(driver.page_source).group(1)
-    except:
-        complemento = 'N/D'
-    
-    try:
-        # pega bairro
-        bairro = re.compile(r'Bairro:.+</b>(.+)</td>')
-        bairro = bairro.search(driver.page_source).group(1)
-    except:
-        bairro = 'N/D'
-    
-    try:
-        # pega UF
-        uf = re.compile(r'UF:.+</b>(.+)</td>')
-        uf = uf.search(driver.page_source).group(1)
-    except:
-        uf = 'N/D'
-    
-    try:
-        # pega situação
-        situacao = re.compile(r'Cadastral: </td>\n.+\">(.+)</td>')
-        situacao = situacao.search(driver.page_source).group(1)
-    except:
-        situacao = 'N/D'
-    
-    try:
-        # pega ocorrência
-        ocorrencia = re.compile(r'Fiscal: .+\n.+\">(.+)</td>')
-        ocorrencia = ocorrencia.search(driver.page_source).group(1)
-    except:
-        ocorrencia = 'N/D'
-    
-    try:
-        # pega regime
-        regime = re.compile(r'Apuração: .+\n.+\">(.+)</td>')
-        regime = regime.search(driver.page_source).group(1)
-    except:
-        regime = 'N/D'
-    
-    try:
-        # pega atividade
-        atividade = re.compile(r'Econômicas: .+\n.+\">(.+)<br>')
-        atividade = atividade.search(driver.page_source).group(1)
-    except:
-        atividade = 'N/D'
-    
-    try:
-        # pega inatividade
-        inatividade = re.compile(r'Inatividade:</b> (.+)</td>')
-        inatividade = inatividade.search(driver.page_source).group(1)
-    except:
-        inatividade = 'N/D'
-    
-    try:
-        # pega data da situação
-        data_situacao = re.compile(r'Cadastral: </b>(.+)</td>')
-        data_situacao = data_situacao.search(driver.page_source).group(1)
-    except:
-        data_situacao = 'N/D'
-    
-    try:
-        # pega posto fiscal
-        posto = re.compile(r'Fiscal:.+\">(.+)</span>')
-        posto = posto.search(driver.page_source).group(1)
-    except:
-        posto = 'N/D'
-        
-    try:
-        # pega Data de Credenciamento como emissor de NF-e
-        credenciamento = re.compile(r'Data&nbsp;de&nbsp;Credenciamento&nbsp;como&nbsp;emissor&nbsp;de&nbsp;NF-e: .+\n.+\">(.+)</td>')
-        credenciamento = credenciamento.search(driver.page_source).group(1)
-    except:
-        credenciamento = 'N/D'
-        
-    try:
-        # pega Indicador de Obrigatoriedade de NF-e
-        obrigatoriedade = re.compile(r'Indicador&nbsp;de&nbsp;Obrigatoriedade&nbsp;de&nbsp;NF-e: .+\n.+\">(.+)</td>')
-        obrigatoriedade = obrigatoriedade.search(driver.page_source).group(1)
-    except:
-        obrigatoriedade = 'N/D'
-        
-    try:
-        # pega Data de Início da Obrigatoriedade de NF-e
-        inicio_obrigado = re.compile(r'Data&nbsp;de&nbsp;Início&nbsp;da&nbsp;Obrigatoriedade&nbsp;de&nbsp;NF-e: .+\n.+\">(.+)</td>')
-        inicio_obrigado = inicio_obrigado.search(driver.page_source).group(1)
-    except:
-        inicio_obrigado = 'N/D'
-    
-    endereco = f'{logradouro}, Nº{numero}, {complemento}, {cep}, {bairro}, {municipio}-{uf}'
-    _escreve_relatorio_csv(';'.join([cnpj, ie, razao.replace('&amp;', '&'), situacao, data_situacao, ocorrencia, inatividade, natureza, endereco.replace('N/D, ', '').replace(';', ''),
-                                     regime, atividade.replace('<br>', ' / ').replace(';', ','), posto, credenciamento, obrigatoriedade, inicio_obrigado]), nome='Consulta ao cadastro de ICMS')
-    print(f'✔ Dados coletados - {situacao} - {ocorrencia}')
+    _escreve_relatorio_csv(cnpj + ';' + infos + enderecos, nome='Consulta ao cadastro de ICMS')
+    print(f'✔ Dados coletados')
 
 
 @_time_execution
@@ -248,8 +149,8 @@ def run():
     total_empresas = empresas[index:]
     
     _escreve_header_csv(';'.join(['CNPJ', 'IE', 'NOME', 'SITUAÇÃO CADASTRAL', 'DATA DA SITUAÇÃO', 'OCORRÊNCIA FISCAL', 'DATA DE INATIVIDADE', 'NATUREZA JURÍDICA',
-                                  'ENDEREÇO', 'REGIME DE APURAÇÃO', 'ATIVIDADE ECONÔMICA', 'POSTO FISCAL', 'CREDENCIAMENTO COMO EMISSOR DE NF-E', 'OBRIGATORIEDADE DE NF-E',
-                                  'INÍCIO DA OBRIGATORIEDADE']), nome='Consulta ao cadastro de ICMS.csv')
+                                  'REGIME DE APURAÇÃO', 'ATIVIDADE ECONÔMICA', 'POSTO FISCAL', 'CREDENCIAMENTO COMO EMISSOR DE NF-E', 'OBRIGATORIEDADE DE NF-E',
+                                  'INÍCIO DA OBRIGATORIEDADE', 'ENDEREÇO']), nome='Consulta ao cadastro de ICMS.csv')
     
     for count, empresa in enumerate(empresas[index:], start=1):
         cnpj, nome = empresa
@@ -260,7 +161,7 @@ def run():
         erro = False
         while not erro:
             erro = consultar(options, cnpj)
-        
+
 
 if __name__ == '__main__':
     run()

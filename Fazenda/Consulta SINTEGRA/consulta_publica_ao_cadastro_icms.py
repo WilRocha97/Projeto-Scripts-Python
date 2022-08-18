@@ -21,7 +21,6 @@ def find_by_id(xpath, driver):
 
 
 def consultar(options, cnpj):
-    cnpj_limpo = cnpj.replace('.', '').replace('/', '').replace('-', '')
     status, driver = _initialize_chrome(options)
     
     # entra na página inicial da consulta
@@ -115,12 +114,12 @@ def pega_info(cnpj, driver):
     for reg in regex_endereco:
         try:
             endereco = re.compile(reg)
-            endereco = endereco.search(driver.page_source).group(1).replace(';', '').replace(', , ', ', ')
+            endereco = endereco.search(driver.page_source).group(1)
         except:
             endereco = ''
         enderecos += endereco + ', '
     
-    _escreve_relatorio_csv(cnpj + ';' + infos + enderecos, nome='Consulta ao cadastro de ICMS')
+    _escreve_relatorio_csv(f"{cnpj};{infos}{enderecos.replace(', , ', ', ').replace(';', '')}", nome='Consulta ao cadastro de ICMS')
     print(f'✔ Dados coletados')
 
 

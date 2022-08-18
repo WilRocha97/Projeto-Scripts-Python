@@ -9,7 +9,7 @@ from sys import path
 import os, time
 
 path.append(r'..\..\_comum')
-from chrome_comum import initialize_chrome
+from chrome_comum import _initialize_chrome
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
 from captcha_comum import _solve_text_captcha
 
@@ -76,7 +76,7 @@ def find_by_id(xpath, driver):
 
 
 def login(options, cnpj, insc_muni):
-    status, driver = initialize_chrome(options)
+    status, driver = _initialize_chrome(options)
 
     print('>>> Consultando cnpj', cnpj)
     base = 'http://179.108.81.10:9081/tbw'

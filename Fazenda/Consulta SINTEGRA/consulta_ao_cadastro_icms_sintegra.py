@@ -80,19 +80,19 @@ def consultar(options, cnpj):
 
 def pega_info(cnpj, driver):
     # pega as infos da empresa
-    regex = [r'IE:.+\n.+\"dadoDetalhe\">(.+)</td>',
-             r'Empresarial:.+\n.+\"dadoDetalhe\">(.+)</td>',
-             r'Cadastral: </td>\n.+\">(.+)</td>',
-             r'Cadastral: </b>(.+)</td>',
-             r'Fiscal: .+\n.+\">(.+)</td>',
-             r'Inatividade:</b> (.+)</td>',
-             r'Jurídica:.+\n.+\"dadoDetalhe\".+>(.+)</td>',
-             r'Apuração: .+\n.+\">(.+)</td>',
-             r'Econômicas: .+\n.+\">(.+)<br>',
-             r'Fiscal:.+\">(.+)</span>',
-             r'Data&nbsp;de&nbsp;Credenciamento&nbsp;como&nbsp;emissor&nbsp;de&nbsp;NF-e: .+\n.+\">(.+)</td>',
-             r'Indicador&nbsp;de&nbsp;Obrigatoriedade&nbsp;de&nbsp;NF-e: .+\n.+\">(.+)</td>',
-             r'Data&nbsp;de&nbsp;Início&nbsp;da&nbsp;Obrigatoriedade&nbsp;de&nbsp;NF-e: .+\n.+\">(.+)</td>']
+    regex = [r'IE:.+\n.+\"dadoDetalhe\">(.+)</td>',     # inscrição estadual
+             r'Empresarial:.+\n.+\"dadoDetalhe\">(.+)</td>',     # nome da empresa
+             r'Cadastral: </td>\n.+\">(.+)</td>',     # situação cadastral
+             r'Cadastral: </b>(.+)</td>',     # data da situação cadastral
+             r'Fiscal: .+\n.+\">(.+)</td>',     # ocorrência fiscal
+             r'Inatividade:</b> (.+)</td>',     # data de inatividade
+             r'Jurídica:.+\n.+\"dadoDetalhe\".+>(.+)</td>',     # natureza jurídica
+             r'Apuração: .+\n.+\">(.+)</td>',     # regime de apuração
+             r'Econômicas: .+\n.+\">(.+)<br>',     # atividade econômica
+             r'Fiscal:.+\">(.+)</span>',     # posto fiscal
+             r'Data&nbsp;de&nbsp;Credenciamento&nbsp;como&nbsp;emissor&nbsp;de&nbsp;NF-e: .+\n.+\">(.+)</td>',     # credenciamento como emissor de nf-e
+             r'Indicador&nbsp;de&nbsp;Obrigatoriedade&nbsp;de&nbsp;NF-e: .+\n.+\">(.+)</td>',     # obrigatoriedade de nf-e
+             r'Data&nbsp;de&nbsp;Início&nbsp;da&nbsp;Obrigatoriedade&nbsp;de&nbsp;NF-e: .+\n.+\">(.+)</td>']     # início da obrigatoriedade
     infos = ''
     for reg in regex:
         try:
@@ -103,13 +103,13 @@ def pega_info(cnpj, driver):
         infos += info + ';'
     
     # pega as infos do endereço da empresa
-    regex_endereco = [r'Logradouro:.+\n.+\"dadoDetalhe\".+>(.+)</td>',
-                      r'Nº:.+\n.+\"dadoDetalhe\">(.+)</td>',
-                      r'Complemento: </b>(.+)</td>',
-                      r'CEP:.+\n.+\"dadoDetalhe\">(.+)</td>',
-                      r'Bairro:.+</b>(.+)</td>',
-                      r'Município:.+\n.+\"dadoDetalhe\">(.+)</td>',
-                      r'UF:.+</b>(.+)</td>']
+    regex_endereco = [r'Logradouro:.+\n.+\"dadoDetalhe\".+>(.+)</td>',     # logradouro
+                      r'Nº:.+\n.+\"dadoDetalhe\">(.+)</td>',     # número
+                      r'Complemento: </b>(.+)</td>',     # complemento
+                      r'CEP:.+\n.+\"dadoDetalhe\">(.+)</td>',     # cep
+                      r'Bairro:.+</b>(.+)</td>',     # bairro
+                      r'Município:.+\n.+\"dadoDetalhe\">(.+)</td>',     # cidade
+                      r'UF:.+</b>(.+)</td>']     # uf
     enderecos = ''
     for reg in regex_endereco:
         try:
@@ -147,10 +147,6 @@ def run():
     # cria o indice para cada empresa da lista de dados
     total_empresas = empresas[index:]
     
-    _escreve_header_csv(';'.join(['CNPJ', 'IE', 'NOME', 'SITUAÇÃO CADASTRAL', 'DATA DA SITUAÇÃO', 'OCORRÊNCIA FISCAL', 'DATA DE INATIVIDADE', 'NATUREZA JURÍDICA',
-                                  'REGIME DE APURAÇÃO', 'ATIVIDADE ECONÔMICA', 'POSTO FISCAL', 'CREDENCIAMENTO COMO EMISSOR DE NF-E', 'OBRIGATORIEDADE DE NF-E',
-                                  'INÍCIO DA OBRIGATORIEDADE', 'ENDEREÇO']), nome='Consulta ao cadastro de ICMS.csv')
-    
     for count, empresa in enumerate(empresas[index:], start=1):
         cnpj, nome = empresa
         
@@ -161,6 +157,10 @@ def run():
         while not erro:
             erro = consultar(options, cnpj)
 
-
+    _escreve_header_csv(';'.join(['CNPJ', 'IE', 'NOME', 'SITUAÇÃO CADASTRAL', 'DATA DA SITUAÇÃO', 'OCORRÊNCIA FISCAL', 'DATA DE INATIVIDADE', 'NATUREZA JURÍDICA',
+                                      'REGIME DE APURAÇÃO', 'ATIVIDADE ECONÔMICA', 'POSTO FISCAL', 'CREDENCIAMENTO COMO EMISSOR DE NF-E', 'OBRIGATORIEDADE DE NF-E',
+                                      'INÍCIO DA OBRIGATORIEDADE', 'ENDEREÇO']), nome='Consulta ao cadastro de ICMS.csv')
+        
+        
 if __name__ == '__main__':
     run()

@@ -7,7 +7,7 @@ import os, time, re, shutil
 
 from sys import path
 path.append(r'..\..\_comum')
-from chrome_comum import initialize_chrome, _send_input
+from chrome_comum import _initialize_chrome, _send_input
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
 from captcha_comum import _solve_recaptcha
 
@@ -32,7 +32,7 @@ def find_by_path(xpath, driver):
 
 def login(options, cnpj, insc_muni):
     cnpj_limpo = cnpj.replace('.', '').replace('/', '').replace('-', '')
-    status, driver = initialize_chrome(options)
+    status, driver = _initialize_chrome(options)
     
     # entra na página inicial da consulta
     url_inicio = 'https://web.jundiai.sp.gov.br/PMJ/SW/certidaonegativamobiliario.aspx'

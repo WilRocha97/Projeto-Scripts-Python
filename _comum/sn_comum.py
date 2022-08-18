@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import time
+
 from bs4 import BeautifulSoup
 from requests import Session
 from time import sleep
@@ -37,32 +39,32 @@ def new_session_sn(cnpj, cpf, cod, serv, driver):
     aux_acessos = zip(('txtCNPJ', 'txtCPFResponsavel', 'txtCodigoAcesso'), (cnpj, cpf, cod))
 
     captcha = ''
-    while not find_by_id('captcha-img', driver):
-        print('>>> Aguardando site')
-        for url in (url_base, url_login):
-            driver.get(url)
-            sleep(1)
-        """try:"""
-        element = driver.find_element(by=By.ID, value='captcha-img')
-        location = element.location
-        size = element.size
-        driver.save_screenshot('ignore\captcha\pagina.png')
-        x = location['x']
-        y = location['y']
-        w = size['width']
-        h = size['height']
-        width = x + w
-        height = y + h
-        sleep(2)
-        im = Image.open(r'ignore\captcha\pagina.png')
-        im = im.crop((int(x), int(y), int(width), int(height)))
-        im.save(r'ignore\captcha\captcha.png')
+    
+    for url in (url_base, url_login):
+        driver.get(url)
         sleep(1)
+        
+    print('>>> Aguardando site')
+    while not find_by_id('captcha-img', driver):
+        sleep(1)
+        
+    element = driver.find_element(by=By.ID, value='captcha-img')
+    location = element.location
+    size = element.size
+    driver.save_screenshot('ignore\captcha\pagina.png')
+    x = location['x']
+    y = location['y']
+    w = size['width']
+    h = size['height']
+    width = x + w
+    height = y + h
+    sleep(2)
+    im = Image.open(r'ignore\captcha\pagina.png')
+    im = im.crop((int(x), int(y), int(width), int(height)))
+    im.save(r'ignore\captcha\captcha.png')
+    sleep(1)
 
-        captcha = _solve_text_captcha(os.path.join('ignore', 'captcha', 'captcha.png'))
-
-        """except:
-            print('>>> Erro no site, tentando novamente')"""
+    captcha = _solve_text_captcha(os.path.join('ignore', 'captcha', 'captcha.png'))
 
     send_input('txtTexto_captcha_serpro_gov_br', captcha, driver)
 

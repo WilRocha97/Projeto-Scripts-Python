@@ -6,10 +6,10 @@ from selenium import webdriver
 from urllib3 import disable_warnings, exceptions
 
 path.append(r'..\..\_comum')
-from sn_comum import new_session_sn
-from pyautogui_comum import get_comp
-from chrome_comum import initialize_chrome
-from comum_comum import time_execution, download_file, open_lista_dados, where_to_start, escreve_relatorio_csv, _indice
+from sn_comum import _new_session_sn
+from pyautogui_comum import _get_comp
+from chrome_comum import _initialize_chrome
+from comum_comum import _time_execution, _download_file, _open_lista_dados, _where_to_start, _escreve_relatorio_csv, _indice
 
 
 def consulta_recibos(cnpj, mes, ano, session):
@@ -55,26 +55,26 @@ def consulta_recibos(cnpj, mes, ano, session):
 
     # salva o PDF do recibo
     nome = f'recibo_sn {cnpj} {mes}{ano}.pdf'
-    download_file(nome, res)
+    _download_file(nome, res)
 
-    print('✔ Recibo disponivel')
-    return 'Recibo disponivel'
+    print('✔ Recibo disponível')
+    return 'Recibo disponível'
 
 
-@time_execution
+@_time_execution
 def run():
-    comp = get_comp(printable='mm/yyyy', strptime='%m/%Y')
+    comp = _get_comp(printable='mm/yyyy', strptime='%m/%Y')
     if not comp:
         return False
     comp = comp.split('/')
 
     # função para abrir a lista de dados
-    empresas = open_lista_dados()
+    empresas = _open_lista_dados()
     if not empresas:
         return False
 
     # função para saber onde o robô começa na lista de dados
-    index = where_to_start(tuple(i[0] for i in empresas))
+    index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:
         return False
 
@@ -90,35 +90,35 @@ def run():
         options.add_argument('--headless')
         options.add_argument('--window-size=1920,1080')
     
-        status, driver = initialize_chrome(options)
-    
         total_empresas = empresas[index:]
         for count, empresa in enumerate(empresas[index:], start=1):
             cnpj, cpf, cod = empresa
     
             # printa o indice da empresa que está sendo executada
             _indice(count, total_empresas, empresa)
-
+            
             captcha = 'erro'
             while captcha == 'erro':
                 # loga no site do simples nacional com web driver e retorna uma sessão de request
-                session = new_session_sn(cnpj, cpf, cod, 'recibos', driver)
+                status, driver = _initialize_chrome(options)
+                session = _new_session_sn(cnpj, cpf, cod, 'recibos', driver)
                 
                 if session == 'Erro Login - Caracteres anti-robô inválidos. Tente novamente.':
+                    print('❌ Erro Login - Caracteres anti-robô inválidos. Tente novamente')
                     captcha = 'erro'
+                    driver.quit()
                 else:
                     captcha = 'ok'
                     # se existe uma sessão realiza a consulta
                     if isinstance(session, Session):
                         text = consulta_recibos(cnpj, *comp, session)
-                        session.close()
+                        driver.quit()
                     else:
                         text = session
+                        driver.quit()
                     
                     # escreve na planilha de andamentos o resultado da execução atual
-                    escreve_relatorio_csv(f'{cnpj};{text}')
-    
-        driver.quit()
+                    _escreve_relatorio_csv(f'{cnpj};{text}')
     return True
 
 

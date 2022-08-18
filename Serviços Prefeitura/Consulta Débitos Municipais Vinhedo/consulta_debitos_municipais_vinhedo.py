@@ -9,7 +9,7 @@ from pyperclip import copy
 
 from sys import path
 path.append(r'..\..\_comum')
-from chrome_comum import initialize_chrome, _send_input
+from chrome_comum import _initialize_chrome, _send_input
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
 from captcha_comum import _solve_text_captcha
 from pyautogui_comum import _find_img, _wait_img, _click_img
@@ -34,7 +34,7 @@ def find_by_path(xpath, driver):
     
 
 def pesquisar(cnpj, insc_muni):
-    status, driver = initialize_chrome()
+    status, driver = _initialize_chrome()
     
     url_inicio = 'http://vinhedomun.presconinformatica.com.br/certidaoNegativa.jsf?faces-redirect=true'
     driver.get(url_inicio)

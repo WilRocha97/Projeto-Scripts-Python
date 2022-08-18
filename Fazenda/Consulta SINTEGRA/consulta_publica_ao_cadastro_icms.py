@@ -7,7 +7,7 @@ import os, time, re, shutil
 from sys import path
 
 path.append(r'..\..\_comum')
-from chrome_comum import initialize_chrome, _send_input
+from chrome_comum import _initialize_chrome, _send_input
 from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header_csv, _open_lista_dados, _where_to_start, _indice
 from captcha_comum import _solve_recaptcha
 
@@ -22,7 +22,7 @@ def find_by_id(xpath, driver):
 
 def consultar(options, cnpj):
     cnpj_limpo = cnpj.replace('.', '').replace('/', '').replace('-', '')
-    status, driver = initialize_chrome(options)
+    status, driver = _initialize_chrome(options)
     
     # entra na página inicial da consulta
     url_inicio = 'https://www.cadesp.fazenda.sp.gov.br/(S(31mwr1eckqxyy2tfvbfuvpfc))/Pages/Cadastro/Consultas/ConsultaPublica/ConsultaPublica.aspx'

@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from time import sleep
-# from pyautogui import click, locateOnScreen
+from pyautogui import click, locateOnScreen
 from os import path, remove
 
 
@@ -99,10 +99,10 @@ def login():
     driver.find_element(by=By.ID, value='enterButton').click()
     
     caminho = path.join('imgs', 'abrir_app.png')
-    '''while not locateOnScreen(caminho, confidence=0.9):
+    while not locateOnScreen(caminho, confidence=0.9):
         sleep(0.5)
     while locateOnScreen(caminho, confidence=0.9):
-        click(locateOnScreen(caminho, confidence=0.9), button='left')'''
+        click(locateOnScreen(caminho, confidence=0.9), button='left')
     
     sleep(20)
     driver.quit()

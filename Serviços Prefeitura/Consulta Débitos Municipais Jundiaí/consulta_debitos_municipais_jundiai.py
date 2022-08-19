@@ -134,14 +134,14 @@ def run():
     # cria o indice para cada empresa da lista de dados
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, insc_muni = empresa
+        cnpj, insc_muni, nome = empresa
 
         # printa o indice da empresa que está sendo executada
         _indice(count, total_empresas, empresa)
         
         situacao, situacao_print = login(options, cnpj, insc_muni)
         
-        _escreve_relatorio_csv(f'{cnpj};{insc_muni};{situacao}', nome='Consulta de débitos municipais de Jundiaí')
+        _escreve_relatorio_csv(f'{cnpj};{insc_muni};{nome};{situacao}', nome='Consulta de débitos municipais de Jundiaí')
         print(situacao_print)
 
 

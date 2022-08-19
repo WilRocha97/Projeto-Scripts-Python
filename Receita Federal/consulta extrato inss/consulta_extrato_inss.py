@@ -64,10 +64,11 @@ def localiza_tabela(empresa, driver):
     return x
 
 
-def login(driver, empresa, ano):
+def login(options, empresa, ano):
     #
     cnpj, senha, nome = empresa
-
+    status, driver = _initialize_chrome(options)
+    
     # entrar no site
     try:
         driver.get('http://gps.receita.fazenda.gov.br/')
@@ -161,13 +162,12 @@ def consulta():
 
         _indice(count, total_empresas, empresa)
 
-        status, driver = _initialize_chrome(options)
         # faz 3 tentativas, se não der certo anota o erro na planilha
         x = 'Erro'
         tentativas = 1
         while x == 'Erro':
             # login na empresa
-            driver, x = login(driver, empresa, ano)
+            driver, x = login(options, empresa, ano)
 
             # se o login retornar 'Ok'
             if x == 'Ok':

@@ -39,12 +39,14 @@ def relatorio_pagamento_ecac(empresa, periodo, andamento):
             time.sleep(1)
             p.hotkey('alt', 'c')
             
-        if _find_img('NaoAcessouEcac.png', conf=0.9):
+        if _find_img('NaoEncontrouCert.png', conf=0.9):
             print('❌ Certificado Digital não encontrado, tentando novamente.')
+            _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Certificado Digital não encontrado.')
             p.press('enter')
             _wait_img('ConsultarPagamentos.png', conf=0.9, timeout=-1)
             time.sleep(1)
-            p.hotkey('alt', 'c')
+            p.press('esc', presses=3)
+            return False
     
     p.press('esc', presses=3)
 

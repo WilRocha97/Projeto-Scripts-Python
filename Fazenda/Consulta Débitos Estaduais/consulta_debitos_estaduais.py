@@ -85,10 +85,17 @@ def consulta_deb_estaduais(cnpj, s, s_id):
     # formata o cnpj colocando os separadores
     f_cnpj = f'{cnpj[:2]}.{cnpj[2:5]}.{cnpj[5:8]}/{cnpj[8:12]}-{cnpj[12:]}'
     
-    res = s.get(url_pesquisa)
-    time.sleep(2)
-    state, generator, validation = _get_info_post(content=res.content)
-        
+    erro = True
+    while erro:
+        try:
+            res = s.get(url_pesquisa)
+            time.sleep(2)
+            
+            state, generator, validation = _get_info_post(content=res.content)
+            erro = False
+        except:
+            erro = True
+            
     info = {
         '__EVENTTARGET': 'ctl00$MainContent$btnConsultar',
         '__EVENTARGUMENT': '', '__VIEWSTATE': state,
@@ -98,9 +105,16 @@ def consulta_deb_estaduais(cnpj, s, s_id):
         'ctl00$MainContent$txtCriterioConsulta': f_cnpj
     }
     
-    res = s.post(url_pesquisa, info)
-    soup = BeautifulSoup(res.content, 'html.parser')
-    state, generator, validation = _get_info_post(content=res.content)
+    erro = True
+    while erro:
+        try:
+            res = s.post(url_pesquisa, info)
+            soup = BeautifulSoup(res.content, 'html.parser')
+            
+            state, generator, validation = _get_info_post(content=res.content)
+            erro = False
+        except:
+            erro = True
     
     info['__EVENTTARGET'] = 'ctl00$MainContent$lkbImpressao'
     info['__VIEWSTATE'] = state

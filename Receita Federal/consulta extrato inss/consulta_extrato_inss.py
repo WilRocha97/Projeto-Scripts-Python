@@ -37,7 +37,6 @@ def localiza_tabela(empresa, driver):
     # para cada linha da tabela ele pega a informação de competência e o valor do caso houver
     # caso não exista nenhuma tabela e anotado o texto referente a situação do contribuinte
     # caso não consiga encontrar o texto sobre a situação do contribuinte retorna o erro
-    time.sleep(60)
     for i in range(12):
         try:
             comp = driver.find_element(by=By.XPATH, value='//*[@id="j_idt13"]/table[2]/tbody/tr[{}]/td[1]/a'.format(index)).text
@@ -50,6 +49,7 @@ def localiza_tabela(empresa, driver):
                 soup = BeautifulSoup(html, 'html.parser')
                 padrao = re.compile(r'<tr><td class=\"coluna\"><span class=\"labelNegrito\">Situa.+ </span>(.+)</td><td class')
                 resposta = padrao.search(str(soup))
+                print(soup)
                 print(resposta.group(1))
                 _escreve_relatorio_csv(';'.join([cnpj, nome, resposta.group(1)]))
                 break
@@ -155,7 +155,7 @@ def consulta():
     # options.add_argument("--start-maximized")
 
     total_empresas = empresas[index:]
-    ano = datetime.now().year
+    ano = '2021'
     # para cada empresa da lista de dados
     for count, empresa in enumerate(empresas[index:], start=1):
         cnpj, senha, nome = empresa

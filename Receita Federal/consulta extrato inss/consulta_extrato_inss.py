@@ -4,9 +4,10 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from PIL import Image
-from sys import path
+from pyautogui import prompt
 import os, time, re
 
+from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start
 from captcha_comum import _solve_text_captcha
@@ -41,15 +42,17 @@ def localiza_tabela(empresa, driver):
         try:
             comp = driver.find_element(by=By.XPATH, value='//*[@id="j_idt13"]/table[2]/tbody/tr[{}]/td[1]/a'.format(index)).text
             resposta = driver.find_element(by=By.XPATH, value='//*[@id="j_idt13"]/table[2]/tbody/tr[{}]/td[3]'.format(index)).text
-            _escreve_relatorio_csv(';'.join([cnpj, nome, comp, resposta]))
+            try:
+                quantidade = driver.find_element(by=By.XPATH, value='/html/body/form/table[2]/tbody/tr[{}]/td[2]'.format(index)).text
+            except:
+                quantidade = ''
+            _escreve_relatorio_csv(';'.join([cnpj, nome, comp, resposta, quantidade]))
             index -= 1
         except:
-            html = driver.page_source
             try:
-                soup = BeautifulSoup(html, 'html.parser')
+                soup = BeautifulSoup(driver.page_source, 'html.parser')
                 padrao = re.compile(r'<tr><td class=\"coluna\"><span class=\"labelNegrito\">Situa.+ </span>(.+)</td><td class')
                 resposta = padrao.search(str(soup))
-                print(soup)
                 print(resposta.group(1))
                 _escreve_relatorio_csv(';'.join([cnpj, nome, resposta.group(1)]))
                 break
@@ -155,7 +158,7 @@ def consulta():
     # options.add_argument("--start-maximized")
 
     total_empresas = empresas[index:]
-    ano = '2021'
+    ano = prompt(text='Qual o ano da consulta', title='Script incrível', default='0000')
     # para cada empresa da lista de dados
     for count, empresa in enumerate(empresas[index:], start=1):
         cnpj, senha, nome = empresa

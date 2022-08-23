@@ -226,7 +226,6 @@ def run():
     
     # escreve o cabeçalho na planilha de andamentos
     _escreve_header_csv('cnpj;situacao')
-    s.close()
     return True
 
 

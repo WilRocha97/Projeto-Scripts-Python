@@ -26,6 +26,7 @@ def consulta(empresas, index):
         while x == 'Erro':
 
             with Session() as s:
+                s.get('https://www.serpro.gov.br/')
                 response = s.get(_url)
                 print('>>> Abrindo site...')
 
@@ -88,17 +89,20 @@ def consulta(empresas, index):
                     print('✔ Consulta realizada')
                     _escreve_relatorio_csv(';'.join([cnpj, nome, sn, simei, evento_sn, evento_simei]), nome='Optante Simples Nacional')
                     x = 'OK'
+                    s.close()
 
                 except:
-                    if tentativas >= 3:
+                    '''if tentativas >= 3:
                         _escreve_relatorio_csv(';'.join([cnpj, nome, 'Erro no login']), nome='Optante Simples Nacional')
                         print('❌ Erro ao consultar a empresa')
-                        break
+                        s.close()
+                        break'''
 
                     print('❌ Erro na consulta\n>>> Tentando novamente...')
-                    print(soup)
+                    # print(soup)
                     x = 'Erro'
                     tentativas += 1
+                    s.close()
 
 
 @_time_execution

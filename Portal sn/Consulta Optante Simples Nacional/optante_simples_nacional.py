@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import time
+
 from bs4 import BeautifulSoup
 from requests import Session
 from sys import path
@@ -24,12 +26,11 @@ def consulta(empresas, index):
         tentativas = 1
         x = 'Erro'
         while x == 'Erro':
-
+            time.sleep(30)
             with Session() as s:
-                s.get('https://www.serpro.gov.br/')
                 response = s.get(_url)
                 print('>>> Abrindo site...')
-
+                time.sleep(60)
                 # pega o token de verificação do site
                 soup = BeautifulSoup(response.content, 'html.parser')
                 soup = soup.prettify()
@@ -45,13 +46,16 @@ def consulta(empresas, index):
                 payload = {'Cnpj': str(cnpj),
                            'h-captcha-response': str(token),
                            '__RequestVerificationToken': str(request_verification)}
-
+                
                 try:
                     # faz login
-                    s.post('https://consopt.www8.receita.fazenda.gov.br/consultaoptantes', data=payload)
+                    response = s.post('https://consopt.www8.receita.fazenda.gov.br/consultaoptantes', data=payload)
                     # abre a tela de consulta
-                    response = s.get('https://consopt.www8.receita.fazenda.gov.br/consultaoptantes/Home/ConsultarCnpj?vc={}'.format(cnpj))
+                    
+                    payload = {'vc': cnpj}
+                    s.get('https://consopt.www8.receita.fazenda.gov.br/consultaoptantes/Home/ConsultarCnpj?vc={}'.format(cnpj), data=payload)
                     # verifica a situação da empresa em relação ao simples nacional e simei
+                    
                     soup = BeautifulSoup(response.content, 'html.parser')
                     soup = soup.prettify()
                     padrao_sn = re.compile(r'Situação no Simples Nacional:\n.+\n.......(.+)')
@@ -89,19 +93,22 @@ def consulta(empresas, index):
                     print('✔ Consulta realizada')
                     _escreve_relatorio_csv(';'.join([cnpj, nome, sn, simei, evento_sn, evento_simei]), nome='Optante Simples Nacional')
                     x = 'OK'
+                    s.cookies.clear()
                     s.close()
 
                 except:
-                    '''if tentativas >= 3:
+                    if tentativas >= 5:
                         _escreve_relatorio_csv(';'.join([cnpj, nome, 'Erro no login']), nome='Optante Simples Nacional')
                         print('❌ Erro ao consultar a empresa')
+                        s.cookies.clear()
                         s.close()
-                        break'''
+                        break
 
                     print('❌ Erro na consulta\n>>> Tentando novamente...')
                     # print(soup)
                     x = 'Erro'
                     tentativas += 1
+                    s.cookies.clear()
                     s.close()
 
 

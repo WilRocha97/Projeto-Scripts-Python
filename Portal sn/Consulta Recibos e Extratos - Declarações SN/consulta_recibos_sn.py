@@ -55,7 +55,7 @@ def consulta_recibos(cnpj, mes, ano, session):
 
     # salva o PDF do recibo
     nome = f'recibo_sn {cnpj} {mes}{ano}.pdf'
-    _download_file(nome, res, pasta='execucoes')
+    _download_file(nome, res, pasta='execucao/Recibos')
 
     print('✔ Recibo disponível')
     return 'Recibo disponível'

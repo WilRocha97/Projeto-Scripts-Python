@@ -55,7 +55,7 @@ def consulta_recibos(cnpj, mes, ano, session):
 
     # salva o PDF do recibo
     nome = f'recibo_sn {cnpj} {mes}{ano}.pdf'
-    _download_file(nome, res)
+    _download_file(nome, res, pasta='execucoes')
 
     print('✔ Recibo disponível')
     return 'Recibo disponível'
@@ -118,7 +118,7 @@ def run():
                         driver.quit()
                     
                     # escreve na planilha de andamentos o resultado da execução atual
-                    _escreve_relatorio_csv(f'{cnpj};{text}')
+                    _escreve_relatorio_csv(f'{cnpj};{text}', nome='Recibos SN')
     return True
 
 

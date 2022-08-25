@@ -160,7 +160,7 @@ def run():
     
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, insc_muni, cidade = empresa
+        cnpj, insc_muni, nome = empresa
         
         _indice(count, total_empresas, empresa)
         
@@ -169,7 +169,7 @@ def run():
         if situacao == 'Desculpe, mas ocorreram problemas de rede. Por favor, tente novamente mais tarde.':
             return False
         
-        _escreve_relatorio_csv(f'{cnpj};{insc_muni};{situacao}', nome='Consulta de débitos municipais de Vinhedo')
+        _escreve_relatorio_csv(f'{cnpj};{insc_muni};{nome};{situacao}', nome='Consulta de débitos municipais de Vinhedo')
 
     return True
     

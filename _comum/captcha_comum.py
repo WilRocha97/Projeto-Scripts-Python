@@ -4,6 +4,7 @@ from twocaptcha import TwoCaptcha"""
 from anticaptchaofficial.imagecaptcha import *
 from anticaptchaofficial.recaptchav2proxyless import *
 from anticaptchaofficial.hcaptchaproxyless import *
+from time import sleep
 import os
 
 # variaveis globais
@@ -153,26 +154,33 @@ _solve_text_captcha = solve_text_captcha
 # Recebe a url do site com o captcha mais a chave da api resposnável pelo captcha encontrada no código do site
 # envia para a api e retorna a chave para resolver o captcha
 def solve_hcaptcha(data):
-    print('>>> Quebrando hcaptcha')
-    solver = hCaptchaProxyless()
-    solver.set_verbose(1)
-    solver.set_key(anticaptcha_api_key)
-    solver.set_website_url(data['url'])
-    solver.set_website_key(data['sitekey'])
-
-    # tell API that Hcaptcha is invisible
-    # solver.set_is_invisible(1)
-
-    # set here parameters like rqdata, sentry, apiEndpoint, endpoint, reportapi, assethost, imghost
-    # solver.set_enterprise_payload({
-    #    "rqdata": "rq data value from target website",
-    #    "sentry": True
-    # })
-
-    g_response = solver.solve_and_return_solution()
-    if g_response != 0:
-        return g_response
-    else:
-        print(solver.error_code)
-        return solver.error_code
+    response = 'ERROR_NO_SLOT_AVAILABLE'
+    while response == 'ERROR_NO_SLOT_AVAILABLE':
+        print('>>> Quebrando hcaptcha')
+        solver = hCaptchaProxyless()
+        solver.set_verbose(1)
+        solver.set_key(anticaptcha_api_key)
+        solver.set_website_url(data['url'])
+        solver.set_website_key(data['sitekey'])
+    
+        # tell API that Hcaptcha is invisible
+        solver.set_is_invisible(1)
+    
+        # set here parameters like rqdata, sentry, apiEndpoint, endpoint, reportapi, assethost, imghost
+        # solver.set_enterprise_payload({
+        #    "rqdata": "rq data value from target website",
+        #    "sentry": True
+        # })
+    
+        g_response = solver.solve_and_return_solution()
+        
+        if g_response != 0:
+            return g_response
+        else:
+            if solver.error_code == 'ERROR_NO_SLOT_AVAILABLE':
+                sleep(5)
+                response = 'ERROR_NO_SLOT_AVAILABLE'
+            else:
+                print(solver.error_code)
+                return solver.error_code
 _solve_hcaptcha = solve_hcaptcha

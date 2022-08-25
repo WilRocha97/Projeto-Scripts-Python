@@ -10,7 +10,7 @@ sys.path.append(r'..\..\_comum')
 from comum_comum import _indice, _escreve_relatorio_csv, _time_execution, _open_lista_dados, _where_to_start, _indice
 
 
-def lancamento(empresas, index):
+def consulta(empresas, index):
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         _indice(count, total_empresas, empresa)
@@ -26,45 +26,55 @@ def lancamento(empresas, index):
             # loga na empresa
             query = {'loginacesso': cnpj,
                      'senha': senha}
-            s.post('https://valinhos.sigissweb.com/ControleDeAcesso', data=query)
+            res = s.post('https://valinhos.sigissweb.com/ControleDeAcesso', data=query)
+            
+            try:
+                soup = BeautifulSoup(res.content, 'html.parser')
+                soup = soup.prettify()
+                # print(soup)
+                regex = re.compile(r"'Aviso', '(.+)<br>")
+                regex2 = re.compile(r"'Aviso', '(.+)...', ")
+                try:
+                    documento = regex.search(soup).group(1)
+                except:
+                    documento = regex2.search(soup).group(1)
+                _escreve_relatorio_csv(f'{cnpj};{nome};{documento}', nome='Pendências SIGISSWEB Valinhos')
+                print(f"❌ {documento}")
+                continue
+            except:
+                pass
             
             s.get('https://valinhos.sigissweb.com/CertidaoNegativaCentral?oper=gerarcertidao')
-            
-            payload = {'cnpjCpf': cnpj,
-                       'btnexecutar': 'Executar',
-                       '(empty)'
-                       'oper': 'geracertidaoviaresp'}
-            resposta = s.post('https://valinhos.sigissweb.com/CertidaoNegativaCentral?', data=payload, stream=True)
 
             # crio um regex para obter o nome original do arquivo
             regex = re.compile(r'filename="(.*)\.pdf"')
             salvar = s.get('https://valinhos.sigissweb.com/CertidaoNegativaCentral?oper=imprimirCert&cnpjCpf=' + cnpj)
 
-            if 'text' not in salvar.headers.get('Content-Type'):
-                # pego o contexto do link referente ao nome original do arquivo
-                filename = salvar.headers.get('content-disposition', '')
-                
-                # aplico o regex para separar o nome do arquivo (Pendencias/Certidao)
-                documento = regex.search(filename).group(1).replace('ê', 'e').replace('ã', 'a')
-                
-                print(f'>>> Salvando {documento}')
-                if documento == 'Certidao':
-                    caminho = os.path.join('execucao', 'Certidões', cnpj + ' - ' + nome + ' - Certidão Negativa.pdf')
-                    os.makedirs('execucao\Certidões', exist_ok=True)
-                else:
-                    caminho = os.path.join('execucao', 'Pendências', cnpj + ' - ' + nome + ' - Pendências.pdf')
-                    os.makedirs('execucao\Pendências', exist_ok=True)
-                    
-                arquivo = open(caminho, 'wb')
-                for parte in salvar.iter_content(100000):
-                    arquivo.write(parte)
-                arquivo.close()
-                print(f"{documento} - {cnpj}.pdf salvo")
-                _escreve_relatorio_csv(f'{cnpj};{nome};{documento} salvo', nome='Pendências SIGISSWEB Valinhos')
-                
+            # if 'text' not in salvar.headers.get('Content-Type'):
+            
+            # pego o contexto do link referente ao nome original do arquivo
+            filename = salvar.headers.get('content-disposition', '')
+            
+            # aplico o regex para separar o nome do arquivo (Pendencias/Certidao)
+            documento = regex.search(filename).group(1).replace('ê', 'e').replace('ã', 'a')
+            
+            print(f'>>> Salvando {documento}')
+            if documento == 'Certidao':
+                caminho = os.path.join('execucao', 'Certidões', cnpj + ' - ' + nome + ' - Certidão Negativa.pdf')
+                os.makedirs('execucao\Certidões', exist_ok=True)
+                print(f"✔ Certidão")
             else:
-                _escreve_relatorio_csv(f'{cnpj};{nome};Empresa não localizada', nome='Pendências SIGISSWEB Valinhos')
+                caminho = os.path.join('execucao', 'Pendências', cnpj + ' - ' + nome + ' - Pendências.pdf')
+                os.makedirs('execucao\Pendências', exist_ok=True)
+                print(f"❗ Pendência")
                 
+            arquivo = open(caminho, 'wb')
+            for parte in salvar.iter_content(100000):
+                arquivo.write(parte)
+            arquivo.close()
+            
+            _escreve_relatorio_csv(f'{cnpj};{nome};{documento}', nome='Pendências SIGISSWEB Valinhos')
+            
 
 @_time_execution
 def run():
@@ -76,7 +86,7 @@ def run():
     if index is None:
         return False
     
-    lancamento(empresas, index)
+    consulta(empresas, index)
 
 
 if __name__ == '__main__':

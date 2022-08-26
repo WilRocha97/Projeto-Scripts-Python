@@ -12,11 +12,17 @@ from chrome_comum import _initialize_chrome
 from comum_comum import _time_execution, _download_file, _open_lista_dados, _where_to_start, _escreve_relatorio_csv, _indice
 
 
-def configura(empresas , total_empresas, index, options, qual_documento, comp):
-    if qual_documento == 'Declaração':
+def configura(empresas , total_empresas, index, options, qual_consulta, comp):
+    if qual_consulta == 'Os dois':
+        qual_documento = ''
+        consulta = 'Recibo e Declaração'
+    elif qual_consulta == 'Declaração':
+        qual_documento = 'Declaração'
         consulta = 'Declarações - Extratos'
     else:
+        qual_documento = 'Recibo'
         consulta = 'Recibos'
+        
     for count, empresa in enumerate(empresas[index:], start=1):
         cnpj, cpf, cod = empresa
         
@@ -36,9 +42,20 @@ def configura(empresas , total_empresas, index, options, qual_documento, comp):
             else:
                 captcha = 'ok'
                 # se existe uma sessão realiza a consulta
+                
                 if isinstance(session, Session):
-                    text = consulta_documento(qual_documento, consulta, cnpj, *comp, session)
+                    
+                    if qual_consulta == 'Os dois':
+                        text = ''
+                        for qual_documento in ['Recibo', 'Declaração']:
+                            texto = consulta_documento(qual_documento, qual_documento, cnpj, *comp, session)
+                            text += texto + ';'
+                        
+                    else:
+                        text = consulta_documento(qual_documento, consulta, cnpj, *comp, session)
+                        
                     driver.quit()
+                    
                 else:
                     text = session
                     driver.quit()
@@ -79,14 +96,14 @@ def consulta_documento(qual_documento, consulta, cnpj, mes, ano, session):
 
     # se o número do documento for igual a 0 retorna que o extrato não foi encontrado
     if download[0] == 0:
-        print(f'❗ Não encontrou extrato {mes}/{ano}')
-        return f'Não encontrou extrato {mes}/{ano}'
+        print(f'❗ Não encontrou {qual_documento.lower()} {mes}/{ano}')
+        return f'Não encontrou {qual_documento.lower()} {mes}/{ano}'
 
     # tenta fazer o download do extrato em PDF
     res = session.get(url_base + str(download[1]), verify=False)
     if res.headers.get('content-type', '') != 'application/pdf':
-        print(f'❌ Erro - Não pode fazer download da {qual_documento.lower()}')
-        return f'Erro - Não pode fazer download da {qual_documento.lower()}'
+        print(f'❌ Erro - Não pode fazer download: {qual_documento.lower()}')
+        return f'Erro - Não pode fazer download: {qual_documento.lower()}'
 
     # salva o PDF do extrato
     nome = f'{qual_documento.lower()} SN - {cnpj} - {mes}{ano}.pdf'
@@ -129,11 +146,7 @@ def run():
     
         total_empresas = empresas[index:]
         
-        if qual_consulta == 'Os dois':
-            for qual_documento in ['Recibo', 'Declaração']:
-                configura(empresas, total_empresas, index, options, qual_documento, comp)
-        else:
-            configura(empresas, total_empresas, index, options, qual_consulta, comp)
+        configura(empresas, total_empresas, index, options, qual_consulta, comp)
            
     return True
 

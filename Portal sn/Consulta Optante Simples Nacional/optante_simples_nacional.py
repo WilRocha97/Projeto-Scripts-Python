@@ -34,7 +34,7 @@ def consulta(empresas, index):
                 # pega o token de verificação do site
                 soup = BeautifulSoup(response.content, 'html.parser')
                 soup = soup.prettify()
-                padrao_response = re.compile(r'__RequestVerificationToken.+value=\"(.+)\"\/>')
+                padrao_response = re.compile(r'__RequestVerificationToken.+value=\"(.+)\"/>')
                 request_verification = padrao_response.search(soup)
                 request_verification = request_verification.group(1)
 

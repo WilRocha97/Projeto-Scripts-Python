@@ -96,6 +96,12 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
     while not _find_img('SalvarEmPDF.png', conf=0.9):
         time.sleep(1)
 
+    if not _find_img('ClienteCSelecionado.png', conf=0.9):
+        _click_img('Botao.png', conf=0.9)
+        _wait_img('ClienteC.png', conf=0.9, timeout=-1)
+        _click_img('ClienteC.png', conf=0.9)
+        time.sleep(5)
+
     p.press('enter')
 
     while not _find_img('PDFAberto.png', conf=0.9):

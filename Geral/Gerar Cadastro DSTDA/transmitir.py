@@ -57,6 +57,10 @@ def configura(empresa, comp):
         p.hotkey('alt', 'l')
         _wait_img('Novo.png', conf=0.9, timeout=-1)
         p.hotkey('alt', 'f')
+        time.sleep(1)
+        p.hotkey('alt', 'f4')
+        time.sleep(1)
+        p.hotkey('alt', 's')
         return False
     
     p.press('enter')

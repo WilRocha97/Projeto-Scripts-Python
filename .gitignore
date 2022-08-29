@@ -19,3 +19,6 @@
 *.dll
 *.md
 *.json
+*.rfb
+*.RFB
+*.db

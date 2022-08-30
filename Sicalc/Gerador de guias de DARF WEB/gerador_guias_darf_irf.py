@@ -49,6 +49,7 @@ def gerar(empresa, apuracao, vencimento, driver):
     # inserir o código da receita referente a guia
     driver.find_element(by=By.ID, value='codReceitaPrincipal').send_keys(cod)
     time.sleep(1)
+    
     # confirmar a seleção
     p.press(['up', 'enter'], interval=1)
     p.moveTo(106, 375)

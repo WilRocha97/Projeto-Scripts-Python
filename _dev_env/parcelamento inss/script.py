@@ -3,8 +3,8 @@ from pyautogui import confirm
 from bs4 import BeautifulSoup
 from requests import Session
 from datetime import date
-from sys import path
 
+from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import get_comp
 from ecac_comum import new_session_ecac, new_login_ecac

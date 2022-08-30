@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 from bs4 import BeautifulSoup
-from sys import path
 from time import sleep
 from selenium import webdriver
 import re
 
+from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _download_file, _open_lista_dados, _where_to_start, _escreve_relatorio_csv, _indice
 from captcha_comum import _break_recaptcha_v2

@@ -2,9 +2,9 @@
 from pyautogui import confirm
 from bs4 import BeautifulSoup
 from requests import Session
-from sys import path
 import json
 
+from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import get_comp
 from esocial_comum import new_session_esocial, new_login_esocial

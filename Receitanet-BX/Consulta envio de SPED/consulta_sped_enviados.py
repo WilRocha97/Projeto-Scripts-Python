@@ -179,6 +179,7 @@ def trocar_empresa(cnpj):
     while not _find_img('Receitanet.png', conf=0.9):
         p.hotkey('ctrl', 't')
         time.sleep(0.5)
+        
     p.press('tab')
     time.sleep(0.5)
     p.press('tab')
@@ -361,7 +362,7 @@ def consulta_sped(empresas, index, consulta, sped, ano_consulta, mes, mes_final,
         if sped == 'SPED ECD':
             configurar_ecd()
 
-        # Digitar data inicial (Os dias tem que ter um delay entre um digito e outro para não dar problema no programa da Receitanet)
+        # Digitar data inicial (Os dias devem ter um delay entre um dígito e outro para não dar problema no programa da Receitanet)
         time.sleep(0.5)
         p.write('01', interval=0.5)
         time.sleep(0.5)
@@ -370,7 +371,7 @@ def consulta_sped(empresas, index, consulta, sped, ano_consulta, mes, mes_final,
         time.sleep(0.5)
         p.press('tab')
 
-        # Digitar data final (Os dias tem que ter um delay entre um digito e outro para não dar problema no programa da Receitanet)
+        # Digitar data final (Os dias devem ter um delay entre um dígito e outro para não dar problema no programa da Receitanet)
         p.write(str(dia), interval=0.5)
         time.sleep(0.5)
         p.write(mes_final)
@@ -452,7 +453,8 @@ def run():
     
     empresas = _open_lista_dados()
     index = _where_to_start(tuple(i[0] for i in empresas))
-    if index is None: return False
+    if index is None:
+        return False
     consultar(sped, empresas, index)
 
 

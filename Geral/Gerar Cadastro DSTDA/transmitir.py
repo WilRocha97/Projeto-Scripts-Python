@@ -216,7 +216,7 @@ def transmitir(empresa, comp):
     _wait_img('salvar_como.png', conf=0.9, timeout=-1)
     time.sleep(1)
 
-    copy(f'Recibo  de entrega SN - {mes}-{ano} - {cnpj}')
+    copy(f'Recibo de entrega SN - {mes}-{ano} - {cnpj}')
     p.hotkey('ctrl', 'v')
     time.sleep(0.5)
 

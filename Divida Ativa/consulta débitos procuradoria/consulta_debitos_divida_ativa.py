@@ -96,7 +96,7 @@ def salva_pagina(pagina, cnpj, compl=''):
     with open(nome, 'w+b') as pdf:
         # pisa.showLogging()
         pisa.CreatePDF(str(html), pdf)
-    print('>>> Arquivo salvo')
+    print('✔ Arquivo salvo')
     _escreve_relatorio_csv(f'{cnpj};Empresa com debitos;{compl}')
     
     return True
@@ -113,8 +113,9 @@ def consulta_debito(empresa):
             soup = BeautifulSoup(pagina.content, 'html.parser')
             viewstate = soup.find('input', attrs={'id': "javax.faces.ViewState"}).get('value')
         except Exception as e:
-            print('>>> Não encontrou viewState')
+            print('❌ Não encontrou viewState')
             print(e)
+            s.close()
             return False
         
         # gera o token para passar pelo captcha
@@ -152,10 +153,10 @@ def consulta_debito(empresa):
         debitos = verifica_debitos(pagina)
         
         if not debitos:
-            print('>>> Sem débitos')
+            print('✔ Sem débitos')
             _escreve_relatorio_csv(f'{cnpj};Empresa sem debitos')
         else:
-            print('>>> Com débitos')
+            print('❗ Com débitos')
             soup = BeautifulSoup(pagina.content, 'html.parser')
             tabela = soup.find('tbody', attrs={'id': 'consultaDebitoForm:dataTable:tb'})
             linhas = tabela.find_all('a')
@@ -192,6 +193,7 @@ def consulta_debito(empresa):
                 s.post(url, info)
                 viewstate = soup.find('input', attrs={'id': "javax.faces.ViewState"}).get('value')
         
+        s.close()
         return True
 
 
@@ -207,12 +209,17 @@ def run():
     for count, empresa in enumerate(empresas[index:], start=1):
         _indice(count, total_empresas, empresa)
         cnpj, nome = empresa
-        try:
-            consulta_debito(empresa)
-        except Exception as e:
-            print('❌ Erro durante a consulta')
-            _escreve_relatorio_csv(f'{cnpj};{e}')
-            print(e)
+        
+        erro = 'sim'
+        while erro == 'sim':
+            try:
+                consulta_debito(empresa)
+                erro = 'nao'
+            except Exception as e:
+                print('❌ Erro durante a consulta')
+                _escreve_relatorio_csv(f'{cnpj};{e}')
+                print(e)
+                erro = 'sim'
 
 
 if __name__ == '__main__':

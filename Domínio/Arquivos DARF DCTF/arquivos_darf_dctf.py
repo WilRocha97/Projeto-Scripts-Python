@@ -29,6 +29,8 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
     p.press('m')
 
     while not _find_img('DCTFMensal.png', conf=0.9):
+        if _find_img('DCTFMensal2.png', conf=0.9):
+            break
         time.sleep(1)
 
     # Período
@@ -47,6 +49,8 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
     p.hotkey('alt', 'o')
 
     while not _find_img('OutrosDados.png', conf=0.9):
+        if _find_img('OutrosDados2.png', conf=0.9):
+            break
         time.sleep(2)
 
     p.click(1214, 488)
@@ -77,7 +81,7 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
 
     p.hotkey('alt', 'x')
 
-    while _find_img('DCTFMensal.png', conf=0.9):
+    while _find_img('DCTFMensal.png', conf=0.9) or _find_img('DCTFMensal2.png', conf=0.9):
         time.sleep(1)
         if _find_img('NaoGerouArquivo.png', conf=0.9):
             p.press('enter')
@@ -107,7 +111,7 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
             p.press('esc', presses=5)
             return False
 
-        if _find_img('SaldoNaoCalculado.png', conf=0.9):
+        if _find_img('SaldoNaoCalculado.png', conf=0.9) or _find_img('SaldoNaoCalculado2.png', conf=0.9):
             p.press('enter')
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Saldo dos impostos não foi calculado no período']), nome=andamento)
             print('❌ Saldo dos impostos não foi calculado no período')
@@ -129,7 +133,7 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
             p.press('esc', presses=5)
             return False
 
-        if _find_img('FinalExportacao.png', conf=0.9):
+        if _find_img('FinalExportacao.png', conf=0.9) or _find_img('FinalExportacao2.png', conf=0.9):
             p.press('enter')
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Arquivo gerado']), nome=andamento)
             print('✔ Arquivo gerado')

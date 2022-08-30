@@ -1,4 +1,4 @@
-# arquivos
+# Arquivos
 *.pdf
 *.PDF
 *.csv
@@ -22,4 +22,6 @@
 *.rfb
 *.RFB
 *.db
+
+#Pastas
 Ecac/

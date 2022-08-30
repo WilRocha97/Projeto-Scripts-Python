@@ -39,7 +39,7 @@ def _login(empresa, andamentos):
                 time.sleep(1)
             return False
         
-        if _find_img('EmpresaNaoUsaSistema.png', conf=0.9):
+        if _find_img('EmpresaNaoUsaSistema.png', conf=0.9) or _find_img('EmpresaNaoUsaSistema2.png', conf=0.9):
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Empresa não está marcada para usar este sistema']), nome=andamentos)
             print('❌ Empresa não está marcada para usar este sistema')
             p.press('enter')

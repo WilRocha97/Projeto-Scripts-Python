@@ -145,6 +145,7 @@ def login(options, empresa, ano):
 
 @_time_execution
 def consulta():
+    ano = prompt(text='Qual o ano da consulta', title='Script incrível', default='0000')
     empresas = _open_lista_dados()
 
     index = _where_to_start(tuple(i[0] for i in empresas))
@@ -158,7 +159,7 @@ def consulta():
     # options.add_argument("--start-maximized")
 
     total_empresas = empresas[index:]
-    ano = prompt(text='Qual o ano da consulta', title='Script incrível', default='0000')
+
     # para cada empresa da lista de dados
     for count, empresa in enumerate(empresas[index:], start=1):
         cnpj, senha, nome = empresa

@@ -6,6 +6,7 @@ import pyautogui as p
 import cv2
 
 
+# pega a pasta onde estão as imagens referentes aos usuários que não iram desconectar
 def ask_for_dir(title='Abrir pasta'):
     root = Tk()
     root.withdraw()
@@ -18,6 +19,8 @@ def ask_for_dir(title='Abrir pasta'):
     return folder if folder else False
 
 
+# para cada imagem na pasta selecionada, procura na tela se existe aquele usuário selecionado, se tiver,
+# pega a coordenada do centro da imagem referente e faz um cálculo para clicar na área do check para desmarcar o usuário
 def localiza_autorizados():
     for imagem in listdir(documentos):
         if p.locateOnScreen(path.join(documentos, imagem)):
@@ -29,36 +32,65 @@ def localiza_autorizados():
 
 
 def run():
+    # espera a tela de carregamento do módulo do domínio fechar
     while p.locateOnScreen(path.join('imgs', 'tela_de_carregamento.png'), confidence=0.9):
         sleep(1)
-        
+    
+    # filtra a lista por nome de usuário e clica na coluna do lado para tirar a seleção da coluna de nomes, pois se estiver selecionada o robô se perde
     p.click(p.locateCenterOnScreen(path.join('imgs', 'lista_usuarios.png'), confidence=0.9), button='left', clicks=2)
     p.click(p.locateCenterOnScreen(path.join('imgs', 'estacao.png'), confidence=0.9))
     
+    # seleciona todos os usuários
     p.hotkey('alt', 't')
     sleep(2)
     
+    # enquanto não chegar no final da lista procura os usuários que não iram desconectar e tira a seleção dele
     while not p.locateOnScreen(path.join('imgs', 'seta_baixo_limite.png')):
+        # procura o usuário antes de descer a lista
         localiza_autorizados()
         
         p.click(p.locateCenterOnScreen(path.join('imgs', 'seta_baixo.png'), confidence=0.9), button='left', clicks=10)
         
+        # procura o usuário após descer a lista
         localiza_autorizados()
-        
+    
+    # volta para o topo da lista
     p.click(p.locateCenterOnScreen(path.join('imgs', 'seta_cima.png'), confidence=0.9), button='left', clicks=50)
     
-    # if p.locateCenterOnScreen(os.path.join('imgs', 'desconectar.png'), confidence=0.9):
-    #     p.hotkey('alt', 'd')
+    # se o botão de desconectar estiver habilitado, clica nele
+    if p.locateCenterOnScreen(path.join('imgs', 'desconectar.png'), confidence=0.9):
+        p.hotkey('alt', 'd')
+        sleep(1)
+        
+    if p.locateOnScreen(path.join('imgs', 'usuario_e_senha.png')):
+        p.click(p.locateCenterOnScreen(path.join('imgs', 'usuario.png'), confidence=0.9), button='left')
+        p.write(usuario)
+        p.click(p.locateCenterOnScreen(path.join('imgs', 'senha.png'), confidence=0.9), button='left')
+        p.write(senha)
+        sleep(1)
+
+    # p.hotkey('alt', 'o')
+    p.hotkey('alt', 'c')
     
     
 if __name__ == '__main__':
+    # pergunta qual a pasta com as imagens dos usuários que não iram desconectar
     documentos = ask_for_dir()
+    usuario = p.prompt(text='Usuário Gerente')
+    senha = p.prompt(text='Senha Gerente')
+    # espera abrir a tela
+    tempo = 0
     while not p.locateOnScreen(path.join('imgs', 'conexoes.png'), confidence=0.5):
         sleep(1)
+        tempo += 1
+        if tempo > 60:
+            break
         
+    # enquanto a tela estiver aberta repete o ciclo, se após 30 segundos não encontrar a tela, o robô é encerrado
     while p.locateOnScreen(path.join('imgs', 'conexoes.png'), confidence=0.5):
         run()
         sleep(30)
     
+    # alerta de robô finalizado
     p.alert(text='Robô finalizado.')
     

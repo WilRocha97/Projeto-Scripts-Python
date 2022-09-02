@@ -7,7 +7,7 @@ import cv2
 
 
 # pega a pasta onde estão as imagens referentes aos usuários que não iram desconectar
-def ask_for_dir(title='Abrir pasta'):
+def ask_for_dir(title='Selecione a pasta onde estão as imagens dos usuários que não iram desconectar'):
     root = Tk()
     root.withdraw()
     root.wm_attributes('-topmost', 1)
@@ -75,22 +75,37 @@ def run():
     
 if __name__ == '__main__':
     # pergunta qual a pasta com as imagens dos usuários que não iram desconectar
-    documentos = ask_for_dir()
-    usuario = p.prompt(text='Usuário Gerente')
-    senha = p.prompt(text='Senha Gerente')
-    # espera abrir a tela
     tempo = 0
-    while not p.locateOnScreen(path.join('imgs', 'conexoes.png'), confidence=0.5):
-        sleep(1)
-        tempo += 1
-        if tempo > 60:
-            break
-        
-    # enquanto a tela estiver aberta repete o ciclo, se após 30 segundos não encontrar a tela, o robô é encerrado
-    while p.locateOnScreen(path.join('imgs', 'conexoes.png'), confidence=0.5):
-        run()
-        sleep(30)
+    usuario = None
+    senha = None
+    documentos = ask_for_dir()
+    if documentos:
+        usuario = p.prompt(text='Usuário Gerente')
+        if usuario:
+            senha = p.prompt(text='Senha Gerente')
+            if senha:
+                # espera abrir a tela
+                p.alert(text=f'Abra a tela de conexões com o banco de dados e configure o tempo de atualização para 30 segundos (Controle > Parâmetros).')
+                while not p.locateOnScreen(path.join('imgs', 'conexoes.png'), confidence=0.5):
+                    sleep(1)
+                    tempo += 1
+                    if tempo >= 60:
+                        break
+                    
+                # enquanto a tela estiver aberta repete o ciclo, se após 30 segundos não encontrar a tela, o robô é encerrado
+                while p.locateOnScreen(path.join('imgs', 'conexoes.png'), confidence=0.5):
+                    run()
+                    sleep(30)
     
     # alerta de robô finalizado
-    p.alert(text='Robô finalizado.')
-    
+    if not documentos:
+        p.alert(text=f'Diretório dos usuários não selecionado, robô finalizado.')
+    elif not usuario:
+        p.alert(text=f'Usuario Gerente não informado, robô finalizado.')
+    elif not senha:
+        p.alert(text=f'Senha Gerente não informada, robô finalizado.')
+    elif tempo == 'inativo':
+        p.alert(text=f'Tela de conexões com a banco de dados não encontrada, robô finalizado.')
+    else:
+        p.alert(text=f'Robô finalizado.')
+        

@@ -108,7 +108,7 @@ def separa():
 
 if __name__ == '__main__':
     # o robo pega o pdf na pasta PDF e cria outro para colocar os separados
-    os.makedirs('Separados', exist_ok=True)
+    os.makedirs('Separados Domínio', exist_ok=True)
     inicio = datetime.now()
 
     # Definir o mês e o ano da consulta

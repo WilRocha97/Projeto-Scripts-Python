@@ -11,13 +11,13 @@ from fazenda_comum import _get_info_post, _new_session_fazenda_driver
 from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header_csv, _download_file, _open_lista_dados, _where_to_start, _indice
 
 _situacoes = {
-    'C': 'Certidão sem pendencias',
-    'S': 'Nao apresentou STDA',
-    'G': 'Nao apresentou GIA',
-    'E': 'Nao baixou arquivo',
-    'T': 'Transporte de Saldo Credor Incorreto',
-    'P': 'Pendencias',
-    'I': 'Pendencias GIA',
+    'C': '✔ Certidão sem pendencias',
+    'S': '❗ Nao apresentou STDA',
+    'G': '❗ Nao apresentou GIA',
+    'E': '❌Nao baixou arquivo',
+    'T': '❗ Transporte de Saldo Credor Incorreto',
+    'P': '❗ Pendencias',
+    'I': '❗ Pendencias GIA',
     
 }
 
@@ -51,11 +51,11 @@ def confere_pendencias(pagina):
     if not pendencia[1]:
         tabela = soup.find('table', attrs={'id': f'{id_base}gdvResultado'})
         if not tabela:
-            return 'Erro ao analisar GIA/STDA'
+            return '❌ Erro ao analisar GIA/STDA'
         
         linhas = tabela.find_all('tr')
         if not linhas:
-            return 'Erro ao analisar GIA/STDA'
+            return '❌ Erro ao analisar GIA/STDA'
         
         for linha in linhas:
             if 'Não apresentou GIA' in linha.text:
@@ -199,7 +199,7 @@ def run():
                     usuario_anterior = 'padrão'
                     s.close()
                     _escreve_relatorio_csv(texto)
-                    print(f'>>> {texto}\n', end='')
+                    print(f'❗ {sid}\n', end='')
                     continue
                 
                 # adiciona os cookies do login no web driver na sessão por request
@@ -208,7 +208,7 @@ def run():
         
         # se não retornar a id da sessão do web driver fecha a sessão por request
         if not sid:
-            texto = f'{cnpj};Erro no login'
+            situacao = '❌ Erro no login'
             usuario_anterior = 'padrão'
             s.close()
         
@@ -216,13 +216,12 @@ def run():
         else:
             # retorna o resultado da consulta
             situacao = consulta_deb_estaduais(cnpj, s, sid)
-            texto = f'{cnpj};{situacao}'
             # guarda o usuario da execução atual
             usuario_anterior = usuario
         
         # escreve na planilha de andamentos o resultado da execução atual
         _escreve_relatorio_csv(texto)
-        print(f'>>> {texto}\n', end='')
+        print(situacao)
     
     # escreve o cabeçalho na planilha de andamentos
     _escreve_header_csv('cnpj;situacao')

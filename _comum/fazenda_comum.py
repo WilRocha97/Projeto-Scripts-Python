@@ -116,7 +116,7 @@ def new_session_fazenda_driver(cnpj, user, pwd, perfil):
     options.add_argument('--headless')
     options.add_argument('--window-size=1920,1080')
 
-    status, driver = initialize_chrome()
+    status, driver = initialize_chrome(options)
     driver.get(url_home)
 
     # gera o token para passar pelo captcha
@@ -134,7 +134,7 @@ def new_session_fazenda_driver(cnpj, user, pwd, perfil):
         driver.quit()
         return False
 
-    print(f'>>> Logando na empresa {cnpj}')
+    print(f'>>> Logando na empresa')
     element = driver.find_element(by=By.ID, value='ConteudoPagina_txtUsuario')
     element.send_keys(user)
 

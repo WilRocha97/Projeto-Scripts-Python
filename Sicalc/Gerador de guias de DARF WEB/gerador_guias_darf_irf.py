@@ -92,7 +92,7 @@ def gerar(empresa, apuracao, vencimento, driver):
         time.sleep(1)
     while os.path.exists('V:/Setor Robô/Scripts Python/Sicalc/Gerador de guias de DARF WEB/execucao/Guias/Darf.pdf'):
         try:
-            arquivo = f'{nome} - {cnpj} - DARF IRRF - {apuracao.replace("/", "-")} - venc. {vencimento.replace("/", "-")}.pdf'
+            arquivo = f'{nome} - {cnpj} - DARF IRRF {cod} - {apuracao.replace("/", "-")} - venc. {vencimento.replace("/", "-")}.pdf'
             download_folder = "V:\\Setor Robô\\Scripts Python\\Sicalc\\Gerador de guias de DARF WEB\\execucao\\Guias"
             shutil.move(os.path.join(download_folder, 'Darf.pdf'), os.path.join(download_folder, arquivo))
             time.sleep(2)

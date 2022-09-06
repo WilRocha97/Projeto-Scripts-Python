@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from pyautogui import prompt
+from pyautogui import prompt, click, locateCenterOnScreen
 from time import sleep
 from sys import path
 import pyautogui as a
@@ -90,9 +90,9 @@ def baixar():
 	wait_img('screen_files.png', conf=0.9)
 
 	# marca o arquivo para download
-	a.press('tab', presses=14, interval=0.1)
-	click_img('check_result_baixar.png', conf=0.9)
-	sleep(0.2)
+	a.press('tab', presses=14, interval=0.5)
+	click(locateCenterOnScreen(os.path.join('imgs', 'check_result_baixar.png'), confidence=0.9) or locateCenterOnScreen(os.path.join('imgs', 'check_result_baixar_invisivel.png'), confidence=0.9))
+	sleep(1)
 
 	# baixar arquivo e esperar concluir
 	for i in range(2):

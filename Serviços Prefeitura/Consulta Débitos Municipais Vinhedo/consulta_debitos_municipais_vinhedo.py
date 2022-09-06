@@ -112,11 +112,12 @@ def salvar_guia(cnpj):
         time.sleep(1)
     _click_img('Salvar.png', conf=0.9)
     
-    while not _find_img('Imprimir.png', conf=0.9):
+    while not _find_img('Imprimir2.png', conf=0.9):
         time.sleep(1)
-    _click_img('Imprimir.png', conf=0.9)
+    if _find_img('Imprimir2.png', conf=0.9):
+        _click_img('Imprimir2.png', conf=0.9)
     
-    while not _find_img('SalvarComo.png', conf=0.9):
+    while not _find_img('SalvarComo2.png', conf=0.9):
         time.sleep(1)
         
     # Usa o pyperclip porque o pyautogui não digita letra com acento

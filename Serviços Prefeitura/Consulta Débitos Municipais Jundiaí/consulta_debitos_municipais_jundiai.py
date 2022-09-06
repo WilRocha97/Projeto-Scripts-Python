@@ -74,7 +74,7 @@ def login(options, cnpj, insc_muni):
             situacao = situacao.search(driver.page_source).group(1)
             if situacao == 'Consta(m) pendência(s) para a emissão de certidão por meio da Internet. Dirija-se à Av. União dos Ferroviários, 1760 - Centro - Jundiaí de segunda a sexta-feiras ' \
                            'das 9h:00 às 18h:00 e aos sábados das 9h:00 às 13h:00.':
-                situacao_print = f'✔ {situacao}'
+                situacao_print = f'❗ {situacao}'
                 driver.quit()
                 return situacao, situacao_print
             if situacao == 'Confirme que você não é um robô':
@@ -104,6 +104,11 @@ def login(options, cnpj, insc_muni):
                 time.sleep(2)
             except:
                 pass
+    if situacao == 'Consta(m) pendência(s) para a emissão de certidão por meio da Internet. Dirija-se à Av. União dos Ferroviários, 1760 - Centro - Jundiaí de segunda a sexta-feiras ' \
+                   'das 9h:00 às 18h:00 e aos sábados das 9h:00 às 13h:00.':
+        situacao_print = f'❗ {situacao}'
+        driver.quit()
+        return situacao, situacao_print
     
     situacao_print = f'✔ {situacao}'
     driver.quit()

@@ -5,6 +5,7 @@ from tkinter.filedialog import askdirectory, Tk
 import pyautogui as p
 import cv2
 
+# 'auto-py-to-exe': para criar o executável e 'Inno setup Compiler': para criar o instalador
 
 # para cada imagem na pasta selecionada, procura na tela se existe aquele usuário selecionado, se tiver,
 # pega a coordenada do centro da imagem referente e faz um cálculo para clicar na área do check para desmarcar o usuário

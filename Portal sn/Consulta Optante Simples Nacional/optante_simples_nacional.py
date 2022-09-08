@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import time
-
 from bs4 import BeautifulSoup
 from requests import Session
 from sys import path

@@ -1,4 +1,9 @@
 # Arquivos
+chromedriver.exe
+win32-phantomjs.exe
+phantomjs.exe
+Verifica Site.exe
+desconectar_usuarios.exe
 *.pdf
 *.PDF
 *.csv
@@ -12,7 +17,6 @@
 *.zip
 *.rar
 *.log
-*.exe
 *.PNG
 *.png
 *.html

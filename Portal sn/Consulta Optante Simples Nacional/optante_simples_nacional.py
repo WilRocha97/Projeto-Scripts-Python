@@ -26,11 +26,10 @@ def consulta(empresas, index):
         tentativas = 1
         x = 'Erro'
         while x == 'Erro':
-            time.sleep(30)
             with Session() as s:
                 response = s.get(_url)
                 print('>>> Abrindo site...')
-                time.sleep(60)
+                time.sleep(5)
                 # pega o token de verificação do site
                 soup = BeautifulSoup(response.content, 'html.parser')
                 soup = soup.prettify()

@@ -603,7 +603,7 @@ def relatorio_dpcuca(index, empresas, relatorio, andamentos):
 def run():
     relatorio = escolher_relatorio()
     empresas = _open_lista_dados()
-    andamentos = relatorio
+    andamentos = relatorio + ' 2'
 
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:

@@ -1,1 +1,1 @@
-# Scripts-Python Pasta com os script
+# Scripts-Python Pasta com os script e executáveis

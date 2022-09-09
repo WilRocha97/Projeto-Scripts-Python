@@ -4,6 +4,7 @@ win32-phantomjs.exe
 phantomjs.exe
 Verifica Site.exe
 desconectar_usuarios.exe
+Thumbs.db
 *.pdf
 *.PDF
 *.csv

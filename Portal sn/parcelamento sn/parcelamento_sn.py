@@ -27,10 +27,16 @@ def get_info_post(soup):
 def consulta_parcelamento(cnpj, tipo, comp, session):
     url_base = 'https://www8.receita.fazenda.gov.br'
     url_home = f'{url_base}/SimplesNacional/Aplicacoes/ATSPO/{tipo}.app'
-
-    res = session.get(url_home, verify=False)
-    state, generator = get_info_post(content=res.content)
-
+    
+    try:
+        print('>>> Consultando parcelamento')
+        res = session.get(url_home, verify=False)
+        state, generator = get_info_post(content=res.content)
+    except:
+        sys.stdout.write('❌ ')
+        text = 'Erro ao consultar parcelamento'
+        return text
+            
     data = {
         '__EVENTTARGET': 'ctl00$contentPlaceH$linkButtonEmitirDAS',
         '__EVENTARGUMENT': '', '__VIEWSTATE': state,
@@ -144,19 +150,22 @@ def run():
 
         _indice(count, total_empresas, empresa)
 
+        text = 'Erro ao consultar parcelamento'
         session = 'Erro Login - Caracteres anti-robô inválidos. Tente novamente.'
-        while session == 'Erro Login - Caracteres anti-robô inválidos. Tente novamente.':
+        while session == 'Erro Login - Caracteres anti-robô inválidos. Tente novamente.' or text == 'Erro ao consultar parcelamento':
             session = new_session_sn(cnpj, cpf, cod, tipo, driver)
+            
             if isinstance(session, str):
-                escreve_relatorio_csv(f'{cnpj};{session}', nome=resumo)
+                if not session == 'Erro Login - Caracteres anti-robô inválidos. Tente novamente.':
+                    escreve_relatorio_csv(f'{cnpj};{session}', nome=resumo)
                 print('>>>', session)
-                continue
-    
-            text = consulta_parcelamento(cnpj, tipo, comp, session)
-            escreve_relatorio_csv(f'{cnpj};{text}', nome=resumo)
-            print(text)
-    
-            session.close()
+                text = None
+            else:
+                text = consulta_parcelamento(cnpj, tipo, comp, session)
+                if not text == 'Erro ao consultar parcelamento':
+                    escreve_relatorio_csv(f'{cnpj};{text}', nome=resumo)
+                print(text)
+                session.close()
 
     driver.quit()
     return True

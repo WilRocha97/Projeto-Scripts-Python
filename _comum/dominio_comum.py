@@ -52,5 +52,7 @@ def _login(empresa, andamentos):
         if _find_img('ConformeModulo.png', conf=0.9):
             p.press('enter')
             time.sleep(1)
-            
+    
+    p.press('esc', presses=5)
+
     return True

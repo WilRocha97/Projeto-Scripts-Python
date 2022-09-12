@@ -38,6 +38,12 @@ def gerar(comp, empresa, andamentos):
         time.sleep(1)
         if _find_img('impressora.png', conf=0.9):
             p.press('enter')
+        if _find_img('SemDados.png', conf=0.9):
+            p.press('enter')
+            _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Sem dados para gerar holerite')
+            p.press('esc', presses=5, interval=0.3)
+            print('❌ Sem dados para gerar holerite')
+            return False
         if cont > 60:
             _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Sem dados para gerar holerite')
             p.press('esc', presses=5, interval=0.3)

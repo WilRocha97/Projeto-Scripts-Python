@@ -9,7 +9,6 @@ from ttk import Combobox
 from pyautogui import press, hotkey, write, click, alert, getWindowsWithTitle
 
 from sys import path
-
 path.append(r'..\..\_comum')
 from cuca_comum import _horario, _login, _fechar, _verificar_empresa, _inicial, _iniciar
 from pyautogui_comum import _find_img, _click_img, _wait_img
@@ -22,7 +21,6 @@ def escolher_relatorio():
 
     window_width = 400
     window_height = 100
-
     # find the center point
     center_x = int(root.winfo_screenwidth() / 2 - window_width / 2)
     center_y = int(root.winfo_screenheight() / 2 - window_height / 2)
@@ -604,7 +602,6 @@ def run():
     relatorio = escolher_relatorio()
     empresas = _open_lista_dados()
     andamentos = relatorio
-
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:
         return False

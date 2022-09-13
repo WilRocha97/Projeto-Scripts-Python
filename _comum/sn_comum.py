@@ -37,8 +37,6 @@ def new_session_sn(cnpj, cpf, cod, serv, driver):
     url_base = 'http://www8.receita.fazenda.gov.br/SimplesNacional'
     url_login = f'{url_base}/controleAcesso/Autentica.aspx?id={_servs[serv]}'
     aux_acessos = zip(('txtCNPJ', 'txtCPFResponsavel', 'txtCodigoAcesso'), (cnpj, cpf, cod))
-
-    captcha = ''
     
     for url in (url_base, url_login):
         driver.get(url)
@@ -71,7 +69,8 @@ def new_session_sn(cnpj, cpf, cod, serv, driver):
     for key, value in aux_acessos:
         send_input(f'ctl00_ContentPlaceHolder_{key}', value, driver)
         sleep(0.5)
-
+    
+    print('>>> Logando na empresa')
     elem = driver.find_element(by=By.ID, value='ctl00_ContentPlaceHolder_btContinuar')
     elem.click()
     sleep(1)

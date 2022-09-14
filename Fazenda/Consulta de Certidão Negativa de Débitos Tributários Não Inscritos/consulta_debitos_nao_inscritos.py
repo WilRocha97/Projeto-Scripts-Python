@@ -12,7 +12,7 @@ from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header
 from pyautogui_comum import _find_img, _click_img, _wait_img
 
 
-def salvar_pdf(cnpj, nome):
+def salvar_pdf(cnpj, nome, debito=''):
     # navega na tela até aparecer o botão de emitir relatório
     while not _find_img('EmitirRelatorio.png', conf=0.9):
         press('pgDn')
@@ -20,7 +20,7 @@ def salvar_pdf(cnpj, nome):
     _wait_img('Salvar.png', conf=0.9, timeout=-1)
     sleep(1)
     # escreve o nome do PDF
-    copy(f'{nome} - {cnpj} - Certidão Negativa de Débitos Não Inscritos.pdf')
+    copy(f'{nome} - {cnpj} - Certidão Negativa de Débitos Não Inscritos - {debito}.pdf')
     hotkey('ctrl', 'v')
     sleep(1)
     # vai até o campo para inserir o caminho que irá salvar o PDF
@@ -84,7 +84,10 @@ def consulta_ipva(cnpj, nome):
     # navega na tela até aparecer o botão de emitir relatório e caso tenha algum sébito salva o relatório
     while not _find_img('EmitirRelatorio.png', conf=0.9):
         press('pgDn')
-
+        
+        if _find_img('GIA.png', conf=0.9):
+            salvar_pdf(cnpj, nome, debito='GIA')
+            return True
         if _find_img('HaDebitos.png', conf=0.9):
             salvar_pdf(cnpj, nome)
             return True
@@ -104,9 +107,6 @@ def consulta_ipva(cnpj, nome):
             salvar_pdf(cnpj, nome)
             return True
         if _find_img('IPVA.png', conf=0.9):
-            salvar_pdf(cnpj, nome)
-            return True
-        if _find_img('OmissaoGIA.png', conf=0.9):
             salvar_pdf(cnpj, nome)
             return True
 

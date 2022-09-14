@@ -14,6 +14,7 @@ Thumbs.db
 *.pfx
 *.xls
 *.xlsx
+*.docx
 *.txt
 *.zip
 *.rar

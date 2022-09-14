@@ -30,7 +30,7 @@ def login_sicalc(empresa, apuracao, vencimento, driver):
     p.press('pgDn')
 
     # esperar o botão de login habilitar e clicar nele
-    _wait_img('continuar.png', conf=0.95, timeout=30)
+    _wait_img('continuar.png', conf=0.95, timeout=-1)
     time.sleep(0.5)
     driver.find_element(by=By.XPATH, value='//*[@id="divBotoes"]/input[1]').click()
 

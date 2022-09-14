@@ -81,7 +81,7 @@ def consulta_ipva(cnpj, nome):
             press('enter')
             press('f5')
 
-    # navega na tela até aparecer o botão de emitir relatório e caso tenha algum sébito salva o relatório
+    # navega na tela até aparecer o botão de emitir relatório e caso tenha algum débito, salva o relatório
     while not _find_img('EmitirRelatorio.png', conf=0.9):
         press('pgDn')
         

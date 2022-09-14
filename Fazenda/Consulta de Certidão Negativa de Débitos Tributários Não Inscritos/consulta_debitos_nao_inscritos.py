@@ -75,7 +75,7 @@ def consulta_ipva(cnpj, nome):
     while _find_img('Aguarde.png', conf=0.9):
         sleep(1)
 
-    # espera a tela da empresa abrir e caso apareca a tela de erro da F5 na página
+    # espera a tela da empresa abrir e caso apareça a tela de erro da F5 na página
     while not _find_img('Dados.png', conf=0.9):
         if _find_img('Atencao.png', conf=0.9):
             press('enter')

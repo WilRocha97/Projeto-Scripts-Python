@@ -12,8 +12,8 @@ from dominio_comum import _login
 
 def relatorio_darf_dctf(empresa, periodo, andamento):
     cod, cnpj, nome = empresa
-    _wait_img('Relatorios.png', conf=0.9, timeout=-1)
-    # Relatóriosm
+    _wait_img('relatorios.png', conf=0.9, timeout=-1)
+    # Relatórios
     p.hotkey('alt', 'r')
     time.sleep(0.5)
     # Impostos
@@ -22,9 +22,9 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
     time.sleep(0.5)
     p.press('m')
 
-    while not _find_img('ResumoDeImpostos.png', conf=0.9):
+    while not _find_img('resumo_de_impostos.png', conf=0.9):
         time.sleep(1)
-        if _find_img('SemParametroVigencia.png', conf=0.9):
+        if _find_img('vigencia_sem_parametro.png', conf=0.9):
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Não existe parametro']), nome=andamento)
             print('❌ Não existe parametro')
             p.press('enter')
@@ -44,21 +44,21 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
     p.hotkey('alt', 't')
     time.sleep(1)
 
-    while _find_img('DestacarLinhas.png', conf=0.95):
-        _click_img('DestacarLinhas.png', conf=0.95)
+    while _find_img('destacar_linhas.png', conf=0.95):
+        _click_img('destacar_linhas.png', conf=0.95)
         time.sleep(0.5)
         
-    '''while _find_img('DetalharDados.png', conf=0.95):
-                    _click_img('DetalharDados.png', conf=0.95)
+    '''while _find_img('detalhar_dados.png', conf=0.95):
+                    _click_img('detalhar_dados.png', conf=0.95)
                     time.sleep(0.5)'''
 
     p.hotkey('alt', 'o')
     time.sleep(1)
     sem_layout = 0
 
-    while not _find_img('ResumoGerado.png', conf=0.9):
+    while not _find_img('resumo_gerado.png', conf=0.9):
 
-        if _find_img('ImpostoSemLayout.png', conf=0.9):
+        if _find_img('imposto_sem_layout.png', conf=0.9):
             sem_layout = 1
             p.press('enter')
         if sem_layout == 1:
@@ -71,7 +71,7 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
             return False
 
         time.sleep(3)
-        if _find_img('SemDados.png', conf=0.9):
+        if _find_img('sem_dados.png', conf=0.9):
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para imprimir']), nome=andamento)
             print('❌ Sem dados para imprimir')
             p.press('enter')
@@ -80,7 +80,7 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
             time.sleep(1)
             return False
 
-        if _find_img('SemImposto.png', conf=0.9):
+        if _find_img('sem_imposto.png', conf=0.9):
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para imprimir']), nome=andamento)
             print('❌ Sem dados para imprimir')
             p.press('enter')
@@ -89,24 +89,27 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
             time.sleep(1)
             return False
 
-        if _find_img('ResumoCalculado.png', conf=0.9):
+        if _find_img('resumo_calculado.png', conf=0.9):
             break
 
-    _click_img('SalvarPDF.png', conf=0.9)
-    while not _find_img('SalvarEmPDF.png', conf=0.9):
+    _click_img('salvar_pdf.png', conf=0.9)
+    while not _find_img('salvar_em_pdf.png', conf=0.9):
         time.sleep(1)
 
-    if not _find_img('ClienteCSelecionado.png', conf=0.9):
-        _click_img('Botao.png', conf=0.9)
-        _wait_img('ClienteC.png', conf=0.9, timeout=-1)
-        _click_img('ClienteC.png', conf=0.9)
+    if not _find_img('cliente_c_selecionado.png', conf=0.9):
+        while not _find_img('cliente_c.png', conf=0.9):
+            _click_img('botao.png', conf=0.9)
+            time.sleep(3)
+        _click_img('cliente_c.png', conf=0.9)
         time.sleep(5)
 
     p.press('enter')
 
-    while not _find_img('PDFAberto.png', conf=0.9):
+    while not _find_img('pdf_aberto.png', conf=0.9):
         if _find_img('Substituir.png', conf=0.9):
             p.hotkey('alt', 'y')
+        if _find_img('adobe.png', conf=0.9):
+            p.press('enter')
         time.sleep(1)
 
     p.hotkey('alt', 'f4')

@@ -12,10 +12,10 @@ from pyautogui_comum import _find_img, _click_img, _wait_img
 
 def salvar_pdf(cnpj, nome, debito=''):
     # navega na tela até aparecer o botão de emitir relatório
-    while not _find_img('EmitirRelatorio.png', conf=0.9):
+    while not _find_img('emitir_relatorios.png', conf=0.9):
         press('pgDn')
-    _click_img('EmitirRelatorio.png', conf=0.9)
-    _wait_img('Salvar.png', conf=0.9, timeout=-1)
+    _click_img('emitir_relatorios.png', conf=0.9)
+    _wait_img('salvar.png', conf=0.9, timeout=-1)
     sleep(1)
     # escreve o nome do PDF
     copy(f'{nome} - {cnpj} - Certidão Negativa de Débitos Não Inscritos - {debito}.pdf')
@@ -41,7 +41,7 @@ def salvar_pdf(cnpj, nome, debito=''):
     sleep(1)
 
     # caso já exista um PDF com o mesmo nome ele substitui
-    if _find_img('SalvarComo.png', conf=0.9):
+    if _find_img('salvar_como.png', conf=0.9):
         press('s')
         sleep(1)
 
@@ -50,8 +50,8 @@ def salvar_pdf(cnpj, nome, debito=''):
     _escreve_relatorio_csv(texto)
 
     # esperar aparecer o botão de voltar e clica nele
-    _wait_img('Voltar.png', conf=0.9)
-    _click_img('Voltar.png', conf=0.9)
+    _wait_img('voltar.png', conf=0.9)
+    _click_img('voltar.png', conf=0.9)
 
 
 def consulta_ipva(cnpj, nome):
@@ -59,52 +59,52 @@ def consulta_ipva(cnpj, nome):
     # url = 'https://www10.fazenda.sp.gov.br/CertidaoNegativaDeb/Pages/Restrita/PesquisarContribuinte.aspx'
 
     # espera a pagina inicial para inserir o cnpj
-    _wait_img('CNPJ.png', conf=0.9, timeout=-1)
-    _click_img('Campo.png', conf=0.9)
+    _wait_img('cnpj.png', conf=0.9, timeout=-1)
+    _click_img('campo.png', conf=0.9)
     sleep(1)
     # limpa o campo do cnpj
     press('delete', presses=15)
     write(cnpj)
     sleep(1)
-    _click_img('Consultar.png', conf=0.9)
+    _click_img('consultar.png', conf=0.9)
     sleep(2)
 
     # aguarda a tela de carregamento
-    while _find_img('Aguarde.png', conf=0.9):
+    while _find_img('aguarde.png', conf=0.9):
         sleep(1)
 
     # espera a tela da empresa abrir e caso apareça a tela de erro da F5 na página
-    while not _find_img('Dados.png', conf=0.9):
-        if _find_img('Atencao.png', conf=0.9):
+    while not _find_img('dados.png', conf=0.9):
+        if _find_img('atencao.png', conf=0.9):
             press('enter')
             press('f5')
 
     # navega na tela até aparecer o botão de emitir relatório e caso tenha algum débito, salva o relatório
-    while not _find_img('EmitirRelatorio.png', conf=0.9):
+    while not _find_img('emitir_relatorios.png', conf=0.9):
         press('pgDn')
         
-        if _find_img('GIA.png', conf=0.9):
+        if _find_img('gia.png', conf=0.9):
             salvar_pdf(cnpj, nome, debito='GIA')
             return True
-        if _find_img('HaDebitos.png', conf=0.9):
+        if _find_img('ha_debitos.png', conf=0.9):
             salvar_pdf(cnpj, nome)
             return True
-        if _find_img('HaPendencias.png', conf=0.9):
+        if _find_img('ha_pendencias.png', conf=0.9):
             salvar_pdf(cnpj, nome)
             return True
-        if _find_img('HaPendencias2.png', conf=0.9):
+        if _find_img('ha_pendencias_2.png', conf=0.9):
             salvar_pdf(cnpj, nome)
             return True
-        if _find_img('ICMSDeclarado.png', conf=0.9):
+        if _find_img('icms_declarado.png', conf=0.9):
             salvar_pdf(cnpj, nome)
             return True
-        if _find_img('ICMSParcelamento.png', conf=0.9):
+        if _find_img('icms_parcelado.png', conf=0.9):
             salvar_pdf(cnpj, nome)
             return True
-        if _find_img('AIIM.png', conf=0.9):
+        if _find_img('aiim.png', conf=0.9):
             salvar_pdf(cnpj, nome)
             return True
-        if _find_img('IPVA.png', conf=0.9):
+        if _find_img('ipva.png', conf=0.9):
             salvar_pdf(cnpj, nome)
             return True
 
@@ -114,8 +114,8 @@ def consulta_ipva(cnpj, nome):
     _escreve_relatorio_csv(texto)
 
     # voltar pra tela de login da empresa
-    _wait_img('Voltar.png', conf=0.9)
-    _click_img('Voltar.png', conf=0.9)
+    _wait_img('voltar.png', conf=0.9)
+    _click_img('voltar.png', conf=0.9)
     return False
 
 

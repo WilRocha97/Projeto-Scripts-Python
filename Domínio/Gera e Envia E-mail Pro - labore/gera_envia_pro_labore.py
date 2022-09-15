@@ -18,7 +18,7 @@ def gerar(comp, empresa, andamentos):
     time.sleep(1)
     p.press('f')
     time.sleep(1)
-    while not _find_img('ReciboDePagamento.png', conf=0.9):
+    while not _find_img('recibo_de_pagamento.png', conf=0.9):
         time.sleep(1)
         
     for i in [0, 1]:
@@ -34,32 +34,32 @@ def gerar(comp, empresa, andamentos):
     
     cont = 1
     # espera o holerite gerar
-    while not _find_img('HoleriteGerado.png', conf=0.9):
+    while not _find_img('holerite_gerado.png', conf=0.9):
         time.sleep(1)
         if _find_img('impressora.png', conf=0.9):
             p.press('enter')
-        if _find_img('SemDados.png', conf=0.9):
+        if _find_img('sem_dados.png', conf=0.9):
             p.press('enter')
-            _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Sem dados para gerar holerite')
+            _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Sem dados para gerar holerite', nome=andamentos)
             p.press('esc', presses=5, interval=0.3)
             print('❌ Sem dados para gerar holerite')
             return False
         if cont > 60:
-            _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Sem dados para gerar holerite')
+            _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Sem dados para gerar holerite', nome=andamentos)
             p.press('esc', presses=5, interval=0.3)
             print('❌ Sem dados para gerar holerite')
             return False
         cont += 1
     
     # clica no ícone do e-mail
-    _click_img('email.png', conf=0.9)
+    _click_img('e-mail.png', conf=0.9)
     
     # espera o botão branco
-    while not _find_img('EnviarPorEmail.png', conf=0.9):
+    while not _find_img('enviar_por_e-mail.png', conf=0.9):
         time.sleep(1)
     
     # clica no espaço da mensagem
-    _click_img('Mensagem.png', conf=0.9)
+    _click_img('mensagem.png', conf=0.9)
     # guarda o texto
     pyperclip.copy('Esse e-mail foi enviado automaticamente, favor não responder.')
     # cola o texto
@@ -67,10 +67,10 @@ def gerar(comp, empresa, andamentos):
     time.sleep(0.5)
     p.press('tab', presses=3, interval=0.5)
     p.press('enter')
-    while not _find_img('Assinatura.png', conf=0.9):
+    while not _find_img('assinatura.png', conf=0.9):
         time.sleep(1)
     # escreve a assinatura
-    if not _find_img('AssinaturaDoRobo.png', conf=0.9):
+    if not _find_img('assinatura_do_robo.png', conf=0.9):
         p.write('At.te \nDepto Pessoal \nVeiga & Postal.')
     time.sleep(1)
     p.hotkey('alt', 'o')
@@ -79,15 +79,15 @@ def gerar(comp, empresa, andamentos):
     p.hotkey('alt', 'r')
     time.sleep(1)
     
-    while _find_img('EnviarRelatorioPorEmail.png', conf=0.9):
-        if _find_img('SemDestinatario.png', conf=0.9):
-            _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Destinatário não informado')
+    while _find_img('envia_relatorio_por_e-mail.png', conf=0.9):
+        if _find_img('sem_destinatario.png', conf=0.9):
+            _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Destinatário não informado', nome=andamentos)
             p.press('esc', presses=5, interval=0.3)
             print('❌ Destinatário não informado')
             return False
         time.sleep(1)
     
-    _escreve_relatorio_csv(f'{cod};{cnpj};{nome};E-mail enviado com sucesso')
+    _escreve_relatorio_csv(f'{cod};{cnpj};{nome};E-mail enviado com sucesso', nome=andamentos)
     p.press('esc', presses=5, interval=0.3)
     print('✔ E-mail enviado com sucesso')
     return True

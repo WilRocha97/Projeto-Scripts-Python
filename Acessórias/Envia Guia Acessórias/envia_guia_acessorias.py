@@ -1,6 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-import time
+import time, re
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -42,21 +42,30 @@ def monitorar(driver):
         # print(f'>>> Acessando o departamento {departamento[0]}')
         while not find_by_id('DptNome', driver):
             time.sleep(1)
-        
+
         if 'com guias agrupadas para envio nesse departamento.' in driver.page_source:
+            guias = re.compile(r'class=\"col-xs-12 col-sm-12 no-padding neg\">(.+) (.+) (.+) com guias agrupadas para envio nesse departamento').search(driver.page_source).group(2)
+            guia = 1
+
             driver.find_element(by=By.XPATH, value='/html/body/div[2]/div[2]/div[2]/div/div/label/a').click()
-            # print(f'>>> Abrindo guias')
-            while 'Enviar agora' not in driver.page_source:
-                time.sleep(1)
-
-            # print(f'>>> Enviando guias')
-            driver.find_element(by=By.XPATH, value='/html/body/div[2]/div[2]/div[2]/div/div/div[3]/div[1]/span/a').click()
-            while 'Confirma enviar o e-mail agendado agora?' not in driver.page_source:
-                time.sleep(1)
-
-            driver.find_element(by=By.XPATH, value='/html/body/div[6]/div/div[3]/button[1]').click()
-            while 'OK, envio realizado com sucesso!' not in driver.page_source:
-                time.sleep(0.5)
+            while guia <= int(guias):
+                
+                # print(f'>>> Abrindo guias')
+                while 'Enviar agora' not in driver.page_source:
+                    time.sleep(1)
+    
+                # print(f'>>> Enviando guias')
+                driver.find_element(by=By.XPATH, value=f'/html/body/div[2]/div[2]/div[2]/div/div/div[3]/div[{guia}]/span/a').click()
+                while 'Confirma enviar o e-mail agendado agora?' not in driver.page_source:
+                    time.sleep(1)
+    
+                driver.find_element(by=By.XPATH, value='/html/body/div[6]/div/div[3]/button[1]').click()
+                while 'OK, envio realizado com sucesso!' not in driver.page_source:
+                    time.sleep(0.5)
+                while 'OK, envio realizado com sucesso!' in driver.page_source:
+                    time.sleep(0.5)
+                    
+                guia += 1
         
 
 @_time_execution

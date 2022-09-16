@@ -1,7 +1,47 @@
 # -*- coding: utf-8 -*-
 import fitz, re, os, time
+from tkinter import messagebox
+from tkinter.filedialog import askopenfilename, askdirectory, Tk
 from pathlib import Path
 from datetime import datetime
+
+
+def ask_for_file(title='Selecione o Relatório de Experiência do Domínio', initialdir=os.getcwd()):
+    root = Tk()
+    root.withdraw()
+    root.wm_attributes('-topmost', 1)
+
+    filetypes = [('Plain text files', '*.pdf')]
+    
+    file = askopenfilename(
+        title=title,
+        filetypes=filetypes,
+        initialdir=initialdir
+    )
+    
+    return file if file else False
+
+
+def ask_for_dir(title='Selecione o local para criar a pasta com os arquivos separados'):
+    root = Tk()
+    root.withdraw()
+    root.wm_attributes('-topmost', 1)
+    
+    folder = askdirectory(
+        title=title,
+    )
+    
+    return folder if folder else False
+
+
+def escreve_relatorio(pasta_final, andamento):
+    try:
+        f = open(os.path.join(pasta_final, 'Erros.csv'), 'a', encoding='latin-1')
+    except:
+        f = open(os.path.join(pasta_final, 'Erros - backup.csv'), 'a', encoding='latin-1')
+    
+    f.write(f'{andamento};Erro ao coletar informações da empresa no arquivo, layout da página diferente\n')
+    f.close()
 
 
 # guarda info da página anterior
@@ -12,21 +52,22 @@ def guarda_info(page, matchtexto_nome, matchtexto_cnpj):
     return prevpagina, prevtexto_nome, prevtexto_cnpj
 
 
-def cria_pdf(page, matchtexto_nome, matchtexto_cnpj, prevtexto_nome, prevtexto_cnpj, pdf, pagina1, pagina2, andamento):
+def cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cnpj, prevtexto_nome, prevtexto_cnpj, pdf, pagina1, pagina2):
     with fitz.open() as new_pdf:
         # Define o nome do arquivo
         nome = prevtexto_nome
         cnpj = prevtexto_cnpj.replace('.', '').replace('/', '').replace('-', '')
-        text = cnpj + ';EXPERIENCIA;' + mes + '-' + ano + ' ' + nome + '.pdf'
+        
+        text = f'Relatório de Experiências Domínio Web - {data} - {cnpj} - {nome}.pdf'
         
         # Define o caminho para salvar o pdf
-        text = os.path.join('Separados Domínio', text)
+        os.makedirs(os.path.join(pasta_final, f'Relatorios {data}'), exist_ok=True)
+        arquivo = os.path.join(pasta_final, f'Relatorios {data}', text)
         
         # Define a página inicial e a final
         new_pdf.insert_pdf(pdf, from_page=pagina1, to_page=pagina2)
         
-        new_pdf.save(text)
-        print(nome + andamento)
+        new_pdf.save(arquivo)
         
         # atualiza as infos da página anterior
         prevpagina = page.number
@@ -37,7 +78,16 @@ def cria_pdf(page, matchtexto_nome, matchtexto_cnpj, prevtexto_nome, prevtexto_c
 
 def separa():
     # Abrir o pdf
-    with fitz.open(r'PDF\Experiência Domínio.pdf') as pdf:
+    file = ask_for_file()
+    if not file:
+        return False
+    folder = ask_for_dir()
+    if not folder:
+        return False
+    pasta_final = os.path.join(folder, 'Relatórios de experiência separados Domínio Web')
+    os.makedirs(pasta_final, exist_ok=True)
+    
+    with fitz.open(file) as pdf:
         # Definir os padrões de regex
         padraozinho_nome = re.compile(r'Empresa: \d+ - (.+)\n.+: (\d.+)\nPágina')
         prevpagina = 0
@@ -45,6 +95,7 @@ def separa():
         
         # para cada página do pdf
         for page in pdf:
+            andamento = f'Pagina = {str(page.number + 1)}'
             try:
                 # Pega o texto da pagina
                 textinho = page.get_text('text', flags=1 + 2 + 8)
@@ -75,46 +126,43 @@ def separa():
                 
                 # Se for diferente ele separa a página
                 else:
-                    # Se for mais de uma página entra aqui
                     if paginas > 0:
                         # define qual é a primeira página e o nome da empresa
                         paginainicial = prevpagina - paginas
-                        andamento = '\n' + 'Paginas = ' + str(paginainicial + 1) + ' até ' + str(prevpagina + 1) + '\n\n'
-                        prevpagina, prevtexto_nome, prevtexto_cnpj = cria_pdf(page, matchtexto_nome, matchtexto_cnpj,
+                        andamento = f'Paginas = {str(paginainicial + 1)} até {str(prevpagina + 1)}'
+                        prevpagina, prevtexto_nome, prevtexto_cnpj = cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cnpj,
                                                                               prevtexto_nome, prevtexto_cnpj, pdf,
-                                                                              paginainicial, prevpagina, andamento)
+                                                                              paginainicial, prevpagina)
                         paginas = 0
                     # Se for uma página entra a qui
                     elif paginas == 0:
-                        andamento = '\n' + 'Pagina = ' + str(prevpagina + 1) + '\n\n'
-                        prevpagina, prevtexto_nome, prevtexto_cnpj = cria_pdf(page, matchtexto_nome, matchtexto_cnpj,
+                        andamento = f'Pagina = {str(prevpagina + 1)}'
+                        prevpagina, prevtexto_nome, prevtexto_cnpj = cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cnpj,
                                                                               prevtexto_nome, prevtexto_cnpj, pdf,
-                                                                              prevpagina, prevpagina, andamento)
+                                                                              prevpagina, prevpagina)
             except:
-                print('❌ ERRO')
+                escreve_relatorio(pasta_final, andamento)
                 continue
         
         # Faz o mesmo dos dois de cima apenas para a(as) ultima(as) página(as)
-        if paginas > 0:
-            paginainicial = prevpagina - paginas
-            andamento = '\n' + 'Paginas = ' + str(paginainicial + 1) + ' até ' + str(prevpagina + 1) + '\n\n'
-            cria_pdf(page, matchtexto_nome, matchtexto_cnpj, prevtexto_nome, prevtexto_cnpj, pdf, paginainicial,
-                     prevpagina, andamento)
-        elif paginas == 0:
-            andamento = '\n' + 'Pagina = ' + str(prevpagina + 1) + '\n\n'
-            cria_pdf(page, matchtexto_nome, matchtexto_cnpj, prevtexto_nome, prevtexto_cnpj, pdf, prevpagina,
-                     prevpagina, andamento)
-
-
+        try:
+            if paginas > 0:
+                paginainicial = prevpagina - paginas
+                andamento = f'Paginas = {str(paginainicial + 1)} até {str(prevpagina + 1)}'
+                cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cnpj, prevtexto_nome, prevtexto_cnpj, pdf, paginainicial,
+                         prevpagina)
+            elif paginas == 0:
+                andamento = f'Pagina = {str(prevpagina + 1)}'
+                cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cnpj, prevtexto_nome, prevtexto_cnpj, pdf, prevpagina,
+                         prevpagina)
+        except:
+            escreve_relatorio(pasta_final, andamento)
+            
+            
 if __name__ == '__main__':
-    # o robo pega o pdf na pasta PDF e cria outro para colocar os separados
-    os.makedirs('Separados Domínio', exist_ok=True)
-    inicio = datetime.now()
-
-    # Definir o mês e o ano da consulta
     mes = datetime.now().strftime('%m')
     ano = datetime.now().strftime('%Y')
-    
+    data = f'{mes}-{ano}'
     separa()
     
-    print(datetime.now() - inicio)
+    messagebox.showinfo(title=None, message='Separador finalizado')

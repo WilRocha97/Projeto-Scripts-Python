@@ -12,6 +12,21 @@ from chrome_comum import _initialize_chrome
 from pyautogui_comum import _click_img, _wait_img
 
 
+def renomear(empresa, vencimento):
+    cnpj, nome, valor, cod = empresa
+    download_folder = "V:\\Setor Robô\\Scripts Python\\Sicalc\\Gerador de guias de DARF WEB\\execucao\\Guias"
+    guia = os.path.join(download_folder, 'Darf.pdf')
+    while not os.path.exists(guia):
+        time.sleep(1)
+    while os.path.exists(guia):
+        try:
+            arquivo = f'{nome} - {cnpj} - DARF IRRF {cod} - {apuracao.replace("/", "-")} - venc. {vencimento.replace("/", "-")}.pdf'
+            shutil.move(guia, os.path.join(download_folder, arquivo))
+            time.sleep(2)
+        except:
+            pass
+
+
 def login_sicalc(empresa, apuracao, vencimento, driver):
     cnpj, nome, valor, cod = empresa
     driver.get('https://sicalc.receita.economia.gov.br/sicalc/rapido/contribuinte')
@@ -87,8 +102,10 @@ def gerar(empresa, apuracao, vencimento, driver):
     
     print('>>> Gerando guia')
     driver.find_element(by=By.ID, value='btnDarf').click()
-    
-    while not os.path.exists('V:/Setor Robô/Scripts Python/Sicalc/Gerador de guias de DARF WEB/execucao/Guias/Darf.pdf'):
+
+    renomear(empresa, vencimento)
+
+    '''while not os.path.exists('V:/Setor Robô/Scripts Python/Sicalc/Gerador de guias de DARF WEB/execucao/Guias/Darf.pdf'):
         time.sleep(1)
     while os.path.exists('V:/Setor Robô/Scripts Python/Sicalc/Gerador de guias de DARF WEB/execucao/Guias/Darf.pdf'):
         try:
@@ -97,7 +114,7 @@ def gerar(empresa, apuracao, vencimento, driver):
             shutil.move(os.path.join(download_folder, 'Darf.pdf'), os.path.join(download_folder, arquivo))
             time.sleep(2)
         except:
-            pass
+            pass'''
 
     print('✔ Guia gerada')
     _escreve_relatorio_csv('{};{};{};{};Guia gerada'.format(cnpj, nome, valor, cod))

@@ -129,13 +129,13 @@ _which_cert = which_cert
 
 
 # Recebe um texto 'texto' junta com 'end' e escreve num arquivo 'nome'
-def escreve_relatorio_csv(texto, nome='resumo', end='\n', encode='latin-1'):
-    os.makedirs(e_dir, exist_ok=True)
+def escreve_relatorio_csv(texto, nome='resumo', local=e_dir, end='\n', encode='latin-1'):
+    os.makedirs(local, exist_ok=True)
 
     try:
-        f = open(str(e_dir / f"{nome}.csv"), 'a', encoding=encode)
+        f = open(str(local / f"{nome}.csv"), 'a', encoding=encode)
     except:
-        f = open(str(e_dir / f"{nome}-erro.csv"), 'a', encoding=encode)
+        f = open(str(local / f"{nome}-erro.csv"), 'a', encoding=encode)
 
     f.write(texto + end)
     f.close()
@@ -144,13 +144,13 @@ _escreve_relatorio_csv = escreve_relatorio_csv
 
 # Recebe um cabeçalho 'texto' e escreve
 # no comeco do arquivo 'nome'
-def escreve_header_csv(texto, nome='resumo.csv', encode='latin-1'):
-    os.makedirs(e_dir, exist_ok=True)
+def escreve_header_csv(texto, nome='resumo.csv', local=e_dir, encode='latin-1'):
+    os.makedirs(local, exist_ok=True)
     
-    with open(str(e_dir / nome), 'r', encoding=encode) as f:
+    with open(str(local / nome), 'r', encoding=encode) as f:
         conteudo = f.read()
 
-    with open(str(e_dir / nome), 'w', encoding=encode) as f:
+    with open(str(local / nome), 'w', encoding=encode) as f:
         f.write(texto + '\n' + conteudo)
 _escreve_header_csv = escreve_header_csv
 

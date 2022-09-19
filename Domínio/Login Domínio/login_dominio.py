@@ -94,8 +94,8 @@ def login():
     status, driver = initialize_chrome()
 
     driver.get('https://www.dominioweb.com.br/')
-    send_input('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[1]/span[2]/input', 'livia@veigaepostal.com.br', driver)
-    send_input('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[2]/span[2]/input', 'Milenio04!', driver)
+    send_input('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[1]/span[2]/input', 'robo@veigaepostal.com.br', driver)
+    send_input('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[2]/span[2]/input', 'Rb#0086*', driver)
     driver.find_element(by=By.ID, value='enterButton').click()
     
     caminho = path.join('imgs', 'abrir_app.png')

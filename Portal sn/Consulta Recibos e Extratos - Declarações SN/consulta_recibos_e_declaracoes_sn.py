@@ -15,7 +15,7 @@ from comum_comum import _time_execution, _download_file, _open_lista_dados, _whe
 def configura(empresas , total_empresas, index, options, qual_consulta, comp):
     if qual_consulta == 'Os dois':
         qual_documento = ''
-        consulta = 'Recibo e Declaração'
+        consulta = 'Recibos e Declarações - Extratos'
     elif qual_consulta == 'Declaração':
         qual_documento = 'Declaração'
         consulta = 'Declarações - Extratos'
@@ -47,8 +47,8 @@ def configura(empresas , total_empresas, index, options, qual_consulta, comp):
                     
                     if qual_consulta == 'Os dois':
                         text = ''
-                        for qual_documento in ['Recibo', 'Declaração']:
-                            texto = consulta_documento(qual_documento, qual_documento, cnpj, *comp, session)
+                        for qual_documento in [('Recibo', 'Recibos'), ('Declaração', 'Declarações - Extratos')]:
+                            texto = consulta_documento(qual_documento[0], qual_documento[1], cnpj, *comp, session)
                             text += texto + ';'
                         
                     else:
@@ -138,16 +138,14 @@ def run():
         raise Exception(driver)'''
 
     # opções para fazer com que o chome trabalhe em segundo plano (opcional)
-    text = 'Erro Login - Caracteres anti-robô inválidos. Tente novamente.'
-    while text == 'Erro Login - Caracteres anti-robô inválidos. Tente novamente.':
-        options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
-        options.add_argument('--window-size=1920,1080')
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument('--window-size=1920,1080')
+
+    total_empresas = empresas[index:]
     
-        total_empresas = empresas[index:]
-        
-        configura(empresas, total_empresas, index, options, qual_consulta, comp)
-           
+    configura(empresas, total_empresas, index, options, qual_consulta, comp)
+    
     return True
 
 

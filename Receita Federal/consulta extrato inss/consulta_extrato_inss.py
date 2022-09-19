@@ -5,6 +5,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from PIL import Image
 from pyautogui import prompt
+from pathlib import Path
 import os, time, re
 
 from sys import path
@@ -30,7 +31,7 @@ def find_by_path(xpath, driver):
         return None
 
 
-def localiza_tabela(empresa, driver):
+def localiza_tabela(empresa, driver, local_dados):
     # index é a quantidade referente ao tamanho da tabela, contem 12 linhas
     index = 12
     cnpj, senha, nome = empresa
@@ -46,7 +47,7 @@ def localiza_tabela(empresa, driver):
                 quantidade = driver.find_element(by=By.XPATH, value='/html/body/form/table[2]/tbody/tr[{}]/td[2]'.format(index)).text
             except:
                 quantidade = ''
-            _escreve_relatorio_csv(';'.join([cnpj, nome, comp, resposta, quantidade]))
+            _escreve_relatorio_csv(';'.join([cnpj, nome, comp, resposta, quantidade]), local=local_dados)
             index -= 1
         except:
             try:
@@ -54,7 +55,7 @@ def localiza_tabela(empresa, driver):
                 padrao = re.compile(r'<tr><td class=\"coluna\"><span class=\"labelNegrito\">Situa.+ </span>(.+)</td><td class')
                 resposta = padrao.search(str(soup))
                 print(resposta.group(1))
-                _escreve_relatorio_csv(';'.join([cnpj, nome, resposta.group(1)]))
+                _escreve_relatorio_csv(';'.join([cnpj, nome, resposta.group(1)]), local=local_dados)
                 break
             except:
                 x = 'Erro'
@@ -147,6 +148,7 @@ def login(options, empresa, ano):
 def consulta():
     ano = prompt(text='Qual o ano da consulta', title='Script incrível', default='0000')
     empresas = _open_lista_dados()
+    local_dados = Path(r'\\vpsrv03\Arq_Robo\Consulta Extrato INSS\ref. {}'.format(ano))
 
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:
@@ -184,7 +186,7 @@ def consulta():
                     if index > 60:
                         # se as tentativas excederem 3 sai do while e mantém o x = 'Ok' para sair do primeiro while
                         if tentativas >= 3:
-                            _escreve_relatorio_csv(';'.join([cnpj, nome, 'Erro no login']))
+                            _escreve_relatorio_csv(';'.join([cnpj, nome, 'Erro no login']), local=local_dados)
                             print('❌ Erro no login')
                             break
                         # se não conseguir e ainda estiver no limite de tentativas começa mais um siclo do while e retorna 'Erro
@@ -195,7 +197,7 @@ def consulta():
 
                 # se achar a tabela percorre a tabela
                 if find_by_id('j_idt13', driver):
-                    x = localiza_tabela(empresa, driver)
+                    x = localiza_tabela(empresa, driver, local_dados)
                     tentativas += 1
 
             driver.quit()

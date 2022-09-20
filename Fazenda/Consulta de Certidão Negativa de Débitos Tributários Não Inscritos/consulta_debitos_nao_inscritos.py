@@ -28,7 +28,7 @@ def salvar_pdf(cnpj, nome, debito=''):
     sleep(0.5)
 
     # cola o caminho que vai salvar o PDF com o pyperclip porque o pyautogui não consegue copiar e colar texto com acentuação
-    docs = 'V:\Setor Robô\Scripts Python\Fazenda\Consulta Débitos Não Inscritos - Pyautogui\execucao\docs'
+    docs = 'V:\Setor Robô\Scripts Python\Fazenda\Consulta de Certidão Negativa de Débitos Tributários Não Inscritos\execucao\docs'
     os.makedirs(r'{}'.format(docs), exist_ok=True)
     copy(docs)
     hotkey('ctrl', 'v')
@@ -135,6 +135,7 @@ def run():
     # começa a repetição
     for count, empresa in enumerate(empresas[index:], start=1):
         cnpj, nome = empresa
+        nome = nome.replace('/', ' ')
         # printa o indice dos dados
         _indice(count, total_empresas, empresa)
 

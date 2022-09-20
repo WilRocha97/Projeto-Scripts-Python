@@ -31,6 +31,7 @@ Thumbs.db
 *.iss
 
 #Pastas
+_dev_env/
 Ecac/
 Caixa/
 Domínio/Confirmar/confirmar.py

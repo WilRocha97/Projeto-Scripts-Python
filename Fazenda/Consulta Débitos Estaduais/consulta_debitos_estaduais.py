@@ -114,6 +114,7 @@ def consulta_deb_estaduais(cnpj, s, s_id):
             state, generator, validation = _get_info_post(content=res.content)
             erro = False
         except:
+            print('Erro ao gerar info para a consulta')
             erro = True
     
     info['__EVENTTARGET'] = 'ctl00$MainContent$lkbImpressao'
@@ -127,7 +128,7 @@ def consulta_deb_estaduais(cnpj, s, s_id):
     attrs = {'id': f'{id_base}lblMensagemDeErro'}
     check = soup.find('span', attrs=attrs)
     if check:
-        return check.text.strip()
+        return '❗ ' + check.text.strip()
     
     try:
         situacao = confere_pendencias(res)
@@ -220,7 +221,11 @@ def run():
             usuario_anterior = usuario
         
         # escreve na planilha de andamentos o resultado da execução atual
-        _escreve_relatorio_csv(texto)
+        texto = f'{cnpj};{str(situacao[2:])}'
+        try:
+            _escreve_relatorio_csv(texto.replace('❗ ', '').replace('❌ ', '').replace('✔ ', ''))
+        except:
+            raise Exception(f"Erro ao escrever esse texto: {texto}")
         print(situacao)
     
     # escreve o cabeçalho na planilha de andamentos

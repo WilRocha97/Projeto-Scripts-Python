@@ -130,6 +130,8 @@ _which_cert = which_cert
 
 # Recebe um texto 'texto' junta com 'end' e escreve num arquivo 'nome'
 def escreve_relatorio_csv(texto, nome='resumo', local=e_dir, end='\n', encode='latin-1'):
+    if local == e_dir:
+        local = Path(local)
     os.makedirs(local, exist_ok=True)
 
     try:

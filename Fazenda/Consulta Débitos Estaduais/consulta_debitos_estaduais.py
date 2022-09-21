@@ -139,7 +139,7 @@ def consulta_deb_estaduais(cnpj, s, s_id):
     
     impressao = s.post(url_pesquisa, info)
     if impressao.headers.get('content-disposition', ''):
-        nome = f"{cnpj};INF_FISC_REAL;Debitos Estaduais - {situacao}.pdf"
+        nome = f"{cnpj};INF_FISC_REAL;Debitos Estaduais - {situacao.replace('❗ ', '').replace('❌ ', '').replace('✔ ', '')}.pdf"
         _download_file(nome, impressao)
     else:
         situacao = _situacoes['E']
@@ -213,7 +213,7 @@ def run():
             usuario_anterior = 'padrão'
             s.close()
         
-        # se restornar a id da sessão do web driver executa a consulta
+        # se retornar a id da sessão do web driver executa a consulta
         else:
             # retorna o resultado da consulta
             situacao = consulta_deb_estaduais(cnpj, s, sid)

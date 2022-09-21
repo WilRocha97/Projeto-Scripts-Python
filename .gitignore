@@ -29,10 +29,12 @@ Thumbs.db
 *.RFB
 *.db
 *.iss
+*.spec
 
 #Pastas
 _dev_env/
+ignore/
 Ecac/
 Caixa/
 Domínio/Confirmar/confirmar.py
-*.spec
+Portal sn/Consulta Recibos e Extratos - Declarações SN/consulta_recibos_e_declaracoes_sn - 2.py

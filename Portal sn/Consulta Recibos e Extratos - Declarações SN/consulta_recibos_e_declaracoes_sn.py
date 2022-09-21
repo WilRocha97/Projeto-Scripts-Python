@@ -12,7 +12,7 @@ from chrome_comum import _initialize_chrome
 from comum_comum import _time_execution, _download_file, _open_lista_dados, _where_to_start, _escreve_relatorio_csv, _indice
 
 
-def configura(empresas , total_empresas, index, options, qual_consulta, comp):
+def configura(empresas, total_empresas, index, options, qual_consulta, comp):
     if qual_consulta == 'Os dois':
         qual_documento = ''
         consulta = 'Recibos e Declarações - Extratos'
@@ -61,7 +61,7 @@ def configura(empresas , total_empresas, index, options, qual_consulta, comp):
                     driver.quit()
                 
                 # escreve na planilha de andamentos o resultado da execução atual
-                _escreve_relatorio_csv(f'{cnpj};{text}', nome=f'{consulta} SN')
+                _escreve_relatorio_csv(f'{cnpj};{cpf};{cod};{text}', nome=f'{consulta} SN')
 
 
 def consulta_documento(qual_documento, consulta, cnpj, mes, ano, session):

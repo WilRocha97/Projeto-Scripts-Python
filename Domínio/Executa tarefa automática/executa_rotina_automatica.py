@@ -1,14 +1,12 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 from time import sleep
 import pyautogui as p
 import os
 import cv2
 
-s = Service(ChromeDriverManager().install())
-# s = Service('chromedriver.exe')
+s = Service('chromedriver.exe')
 
 
 def initialize_chrome(options=None):
@@ -93,6 +91,8 @@ def monitora_rotina():
     while 1 > 0:
         sleep(1)
         
+        if p.locateOnScreen(r'imgs/iniciar_tarefa_agora.png', confidence=0.8):
+            p.hotkey('alt', 'n')
         if p.locateOnScreen(r'imgs/lancamentos_regerados.png', confidence=0.8):
             p.hotkey('alt', 'y')
         if p.locateOnScreen(r'imgs/erros_avisos.png', confidence=0.8):

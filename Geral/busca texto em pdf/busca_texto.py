@@ -203,7 +203,8 @@ for file in os.listdir(documentos):
         # regex_termo = re.compile(r'Não foram detectadas pendências/exigibilidades suspensas nos controles da Receita Federal e da Procuradoria-Geral da Fazenda Nacional.')
         # regex_termo = re.compile(r'CP-SEGUR.\n10/2021')
         # regex_termo = re.compile(r'GIA ST-1/1')
-        regex_termo = re.compile(r'GIA-1/1')
+        # regex_termo = re.compile(r'GIA-1/1')
+        regex_termo = re.compile(r'GIA')
         resultado = regex_termo.search(texto)
         if not resultado:
             continue

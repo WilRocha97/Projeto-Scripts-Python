@@ -29,7 +29,6 @@ Thumbs.db
 *.RFB
 *.db
 *.iss
-*.spec
 
 #Pastas
 _dev_env/

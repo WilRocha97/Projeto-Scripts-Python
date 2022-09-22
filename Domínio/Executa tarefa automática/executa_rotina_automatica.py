@@ -38,6 +38,7 @@ def login():
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     options.add_argument('--window-size=1920,1080')
+    
     status, driver = initialize_chrome()
 
     driver.get('https://www.dominioweb.com.br/')
@@ -64,7 +65,7 @@ def abrir_acesso():
     while not p.locateOnScreen(r'imgs/modulos.png', confidence=0.9):
         sleep(1)
         try:
-            p.getWindowsWithTitle('Lista de Programas'.maximize())
+            p.getWindowsWithTitle('Lista de Programas')[0].activate()
         except:
             pass
     sleep(3)
@@ -72,7 +73,11 @@ def abrir_acesso():
     p.click(p.locateCenterOnScreen(r'imgs/escrita_fiscal.png', confidence=0.9), button='left', clicks=2)
     while not p.locateOnScreen(r'imgs/login_modulo.png', confidence=0.9):
         sleep(1)
-        
+
+    p.moveTo(p.locateCenterOnScreen(r'imgs/insere_usuario.png', confidence=0.9))
+    local_mouse = p.position()
+    p.click(int(local_mouse[0] + 120), local_mouse[1], clicks=2)
+    
     sleep(0.5)
     p.press('del', presses=10)
     p.write('robo')
@@ -91,7 +96,10 @@ def monitora_rotina():
     while 1 > 0:
         sleep(1)
         
+        if p.locateOnScreen(r'imgs/reconectar.png', confidence=0.8):
+            p.click(locaCenterOnScreen(r'imgs/sim.png', confidence=0.8))
         if p.locateOnScreen(r'imgs/iniciar_tarefa_agora.png', confidence=0.8):
+            p.click(locaCenterOnScreen(r'imgs/iniciar_tarefa_agora.png', confidence=0.8))
             p.hotkey('alt', 'n')
         if p.locateOnScreen(r'imgs/lancamentos_regerados.png', confidence=0.8):
             p.hotkey('alt', 'y')

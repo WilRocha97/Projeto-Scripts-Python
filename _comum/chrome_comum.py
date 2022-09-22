@@ -1,4 +1,4 @@
-from win32com.client import Dispatch
+from win32com import client
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -20,7 +20,7 @@ def get_chrome_version():
         r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
     )
 
-    parser = Dispatch("Scripting.FileSystemObject")
+    parser = client.Dispatch("Scripting.FileSystemObject")
     for file in paths:
         try:
             return parser.GetFileVersion(file)

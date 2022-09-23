@@ -13,19 +13,6 @@ padrao_empresa = re.compile(r'CNPJ Matriz:\n(.+)\nNome empresarial:\n(.+)')
 padrao_declaracao = re.compile(r'Nº da Declaração:\n(.+)')
 padrao_receita = re.compile(r'Receita bruta acumulada no ano-calendário corrente\n\(RBA\)\n(.+)\n(.+)\n(.+)')
 
-# Caminho dos arquivos que serão analizados
-arquivos = os.path.join(r'\\VPSRV02', 'DCA', 'Setor Robô', 'Scripts Python', 'Geral', 'Pega Valor a Recolher DARF', 'PDF')
-
-
-def escrever(texto):
-    # Anota o andamento na planilha
-    try:
-        with open('Resumo Mensal.csv', 'a') as f:
-            f.write(texto + '\n')
-    except():
-        with open('Resumo Mensal - Auxiliar.csv', 'a') as f:
-            f.write(texto + '\n')
-
 
 def analiza():
     documentos = ask_for_dir()

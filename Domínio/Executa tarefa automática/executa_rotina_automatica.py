@@ -97,9 +97,9 @@ def monitora_rotina():
         sleep(1)
         
         if p.locateOnScreen(r'imgs/reconectar.png', confidence=0.8):
-            p.click(locaCenterOnScreen(r'imgs/sim.png', confidence=0.8))
+            p.click(p.locaCenterOnScreen(r'imgs/sim.png', confidence=0.8))
         if p.locateOnScreen(r'imgs/iniciar_tarefa_agora.png', confidence=0.8):
-            p.click(locaCenterOnScreen(r'imgs/iniciar_tarefa_agora.png', confidence=0.8))
+            p.click(p.locaCenterOnScreen(r'imgs/iniciar_tarefa_agora.png', confidence=0.8))
             p.hotkey('alt', 'n')
         if p.locateOnScreen(r'imgs/lancamentos_regerados.png', confidence=0.8):
             p.hotkey('alt', 'y')

@@ -113,5 +113,3 @@ if __name__ == '__main__':
     driver = login()
     abrir_acesso()
     monitora_rotina()
-    
-    

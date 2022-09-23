@@ -27,9 +27,7 @@ def ask_for_dir(title='Selecione o local para criar a pasta com os arquivos sepa
     root.withdraw()
     root.wm_attributes('-topmost', 1)
     
-    folder = askdirectory(
-        title=title,
-    )
+    folder = askdirectory(title=title)
     
     return folder if folder else False
 

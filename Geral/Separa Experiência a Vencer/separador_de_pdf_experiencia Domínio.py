@@ -10,7 +10,7 @@ def ask_for_file(title='Selecione o Relatório de Experiência do Domínio', ini
     root = Tk()
     root.withdraw()
     root.wm_attributes('-topmost', 1)
-
+    
     filetypes = [('Plain text files', '*.pdf')]
     
     file = askopenfilename(
@@ -45,20 +45,19 @@ def escreve_relatorio(pasta_final, andamento):
 
 
 # guarda info da página anterior
-def guarda_info(page, matchtexto_nome, matchtexto_cnpj):
+def guarda_info(page, matchtexto_nome, matchtexto_cod):
     prevpagina = page.number
     prevtexto_nome = matchtexto_nome
-    prevtexto_cnpj = matchtexto_cnpj
-    return prevpagina, prevtexto_nome, prevtexto_cnpj
+    prevtexto_cod = matchtexto_cod
+    return prevpagina, prevtexto_nome, prevtexto_cod
 
 
-def cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cnpj, prevtexto_nome, prevtexto_cnpj, pdf, pagina1, pagina2):
+def cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cod, prevtexto_nome, pdf, pagina1, pagina2):
     with fitz.open() as new_pdf:
         # Define o nome do arquivo
-        nome = prevtexto_nome
-        cnpj = prevtexto_cnpj.replace('.', '').replace('/', '').replace('-', '')
+        nome = prevtexto_nome.replace('/', ' ').replace(',', ' ')
         
-        text = f'Relatório de Experiências Domínio Web - {data} - {cnpj} - {nome}.pdf'
+        text = f'Relatório de Experiências Domínio Web - {data} - {nome}.pdf'
         
         # Define o caminho para salvar o pdf
         os.makedirs(os.path.join(pasta_final, f'Relatorios {data}'), exist_ok=True)
@@ -72,8 +71,8 @@ def cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cnpj, prevtexto_nome
         # atualiza as infos da página anterior
         prevpagina = page.number
         prevtexto_nome = matchtexto_nome
-        prevtexto_cnpj = matchtexto_cnpj
-        return prevpagina, prevtexto_nome, prevtexto_cnpj
+        prevtexto_cod = matchtexto_cod
+        return prevpagina, prevtexto_nome, prevtexto_cod
 
 
 def separa():
@@ -89,76 +88,76 @@ def separa():
     
     with fitz.open(file) as pdf:
         # Definir os padrões de regex
-        padraozinho_nome = re.compile(r'Empresa: \d+ - (.+)\n.+: (\d.+)\nPágina')
+        padraozinho_nome = re.compile(r'Local\n(.+) - (.+)\n')
         prevpagina = 0
         paginas = 0
         
         # para cada página do pdf
         for page in pdf:
             andamento = f'Pagina = {str(page.number + 1)}'
-            try:
-                # Pega o texto da pagina
-                textinho = page.get_text('text', flags=1 + 2 + 8)
-                # Procura o nome da empresa no texto do pdf
-                matchzinho_nome = padraozinho_nome.search(textinho)
+            '''try:'''
+            # Pega o texto da pagina
+            textinho = page.get_text('text', flags=1 + 2 + 8)
+            # Procura o nome da empresa no texto do pdf
+            matchzinho_nome = padraozinho_nome.search(textinho)
+            if not matchzinho_nome:
+                matchzinho_nome = padraozinho_nome2.search(textinho)
                 if not matchzinho_nome:
-                    matchzinho_nome = padraozinho_nome2.search(textinho)
-                    if not matchzinho_nome:
-                        prevpagina = page.number
-                        continue
-                
-                # Guardar o nome da empresa
-                matchtexto_nome = matchzinho_nome.group(1)
-                # Guardar o código da empresa no DPCUCA
-                matchtexto_cnpj = matchzinho_nome.group(2)
-                
-                # Se estiver na primeira página, guarda as informações
-                if page.number == 0:
-                    prevpagina, prevtexto_nome, prevtexto_cnpj = guarda_info(page, matchtexto_nome, matchtexto_cnpj)
+                    prevpagina = page.number
                     continue
-                
-                # Se o nome da página atual for igual ao da anterior, soma um indice de páginas
-                if matchtexto_nome == prevtexto_nome:
-                    paginas += 1
-                    # Guarda as informações da página atual
-                    prevpagina, prevtexto_nome, prevtexto_cnpj = guarda_info(page, matchtexto_nome, matchtexto_cnpj)
-                    continue
-                
-                # Se for diferente ele separa a página
-                else:
-                    if paginas > 0:
-                        # define qual é a primeira página e o nome da empresa
-                        paginainicial = prevpagina - paginas
-                        andamento = f'Paginas = {str(paginainicial + 1)} até {str(prevpagina + 1)}'
-                        prevpagina, prevtexto_nome, prevtexto_cnpj = cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cnpj,
-                                                                              prevtexto_nome, prevtexto_cnpj, pdf,
-                                                                              paginainicial, prevpagina)
-                        paginas = 0
-                    # Se for uma página entra a qui
-                    elif paginas == 0:
-                        andamento = f'Pagina = {str(prevpagina + 1)}'
-                        prevpagina, prevtexto_nome, prevtexto_cnpj = cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cnpj,
-                                                                              prevtexto_nome, prevtexto_cnpj, pdf,
-                                                                              prevpagina, prevpagina)
-            except:
-                escreve_relatorio(pasta_final, andamento)
+            
+            # Guardar o nome da empresa
+            matchtexto_nome = matchzinho_nome.group(2)
+            # Guardar o código da empresa no DPCUCA
+            matchtexto_cod = matchzinho_nome.group(1)
+            
+            # Se estiver na primeira página, guarda as informações
+            if page.number == 0:
+                prevpagina, prevtexto_nome, prevtexto_cod = guarda_info(page, matchtexto_nome, matchtexto_cod)
                 continue
+            
+            # Se o nome da página atual for igual ao da anterior, soma um indice de páginas
+            if matchtexto_nome == prevtexto_nome:
+                paginas += 1
+                # Guarda as informações da página atual
+                prevpagina, prevtexto_nome, prevtexto_cod = guarda_info(page, matchtexto_nome, matchtexto_cod)
+                continue
+            
+            # Se for diferente ele separa a página
+            else:
+                if paginas > 0:
+                    # define qual é a primeira página e o nome da empresa
+                    paginainicial = prevpagina - paginas
+                    andamento = f'Paginas = {str(paginainicial + 1)} até {str(prevpagina + 1)}'
+                    prevpagina, prevtexto_nome, prevtexto_cod = cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cod,
+                                                                         prevtexto_nome, pdf,
+                                                                         paginainicial, prevpagina)
+                    paginas = 0
+                # Se for uma página entra a qui
+                elif paginas == 0:
+                    andamento = f'Pagina = {str(prevpagina + 1)}'
+                    prevpagina, prevtexto_nome, prevtexto_cod = cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cod,
+                                                                         prevtexto_nome, pdf,
+                                                                         prevpagina, prevpagina)
+            '''except:
+                escreve_relatorio(pasta_final, andamento)
+                continue'''
         
         # Faz o mesmo dos dois de cima apenas para a(as) ultima(as) página(as)
         try:
             if paginas > 0:
                 paginainicial = prevpagina - paginas
                 andamento = f'Paginas = {str(paginainicial + 1)} até {str(prevpagina + 1)}'
-                cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cnpj, prevtexto_nome, prevtexto_cnpj, pdf, paginainicial,
+                cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cod, prevtexto_nome, pdf, paginainicial,
                          prevpagina)
             elif paginas == 0:
                 andamento = f'Pagina = {str(prevpagina + 1)}'
-                cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cnpj, prevtexto_nome, prevtexto_cnpj, pdf, prevpagina,
+                cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cod, prevtexto_nome, pdf, prevpagina,
                          prevpagina)
         except:
             escreve_relatorio(pasta_final, andamento)
-            
-            
+
+
 if __name__ == '__main__':
     mes = datetime.now().strftime('%m')
     ano = datetime.now().strftime('%Y')

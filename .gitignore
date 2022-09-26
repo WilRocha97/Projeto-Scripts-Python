@@ -30,6 +30,7 @@ Thumbs.db
 *.db
 *.iss
 *.REC
+*.iml
 
 #Pastas
 _dev_env/

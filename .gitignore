@@ -29,6 +29,7 @@ Thumbs.db
 *.RFB
 *.db
 *.iss
+*.REC
 
 #Pastas
 _dev_env/
@@ -38,3 +39,4 @@ Caixa/
 Domínio/Confirmar/confirmar.py
 Portal sn/Consulta Recibos e Extratos - Declarações SN/consulta_recibos_e_declaracoes_sn - 2.py
 SIGISS/Donwload NFSEs do escritório/ignore/Manual do usuário.docx
+ignore/

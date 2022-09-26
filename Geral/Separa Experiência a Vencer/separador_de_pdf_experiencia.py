@@ -137,6 +137,7 @@ def separa():
             andamento = '\n' + 'Paginas = ' + str(paginainicial + 1) + ' até ' + str(prevpagina + 1) + '\n\n'
             cria_pdf(page, matchtexto_nome, matchtexto_codigo, prevtexto_nome, prevtexto_codigo, pdf, paginainicial,
                      prevpagina, andamento)
+            
         elif paginas == 0:
             andamento = '\n' + 'Pagina = ' + str(prevpagina + 1) + '\n\n'
             cria_pdf(page, matchtexto_nome, matchtexto_codigo, prevtexto_nome, prevtexto_codigo, pdf, prevpagina,

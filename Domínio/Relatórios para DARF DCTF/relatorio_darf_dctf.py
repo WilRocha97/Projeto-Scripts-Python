@@ -106,7 +106,7 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
     p.press('enter')
 
     while not _find_img('pdf_aberto.png', conf=0.9):
-        if _find_img('Substituir.png', conf=0.9):
+        if _find_img('substituir.png', conf=0.9):
             p.hotkey('alt', 'y')
         if _find_img('adobe.png', conf=0.9):
             p.press('enter')

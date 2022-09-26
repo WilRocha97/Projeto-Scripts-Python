@@ -31,6 +31,7 @@ Thumbs.db
 *.iss
 *.REC
 *.iml
+Thumbs.db
 
 #Pastas
 _dev_env/
@@ -42,3 +43,7 @@ Portal sn/Consulta Recibos e Extratos - Declarações SN/consulta_recibos_e_decl
 SIGISS/Donwload NFSEs do escritório/ignore/Manual do usuário.docx
 ignore/
 .idea/
+Crédito de PER DCOMP - ALPHA/
+Dados Cadastrais SPED ECF/
+E-Social/
+Tipo de Apuração da Retenção - BETA/

@@ -6,6 +6,7 @@ import pyautogui as p
 import os
 import cv2
 
+
 s = Service('chromedriver.exe')
 
 

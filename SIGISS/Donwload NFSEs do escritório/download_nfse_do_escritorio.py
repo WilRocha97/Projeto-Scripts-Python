@@ -13,6 +13,7 @@ def salvar_arquivo(nome, response):
     except FileNotFoundError:
         os.makedirs('execucao/Documentos', exist_ok=True)
         arquivo = open(os.path.join('execucao/Documentos', nome), 'wb')
+        
     for parte in response.iter_content(100000):
         arquivo.write(parte)
     arquivo.close()

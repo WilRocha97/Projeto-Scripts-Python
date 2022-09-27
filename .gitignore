@@ -33,8 +33,6 @@ Thumbs.db
 *.iml
 Thumbs.db
 *.DEC
-*.js
-*.css
 
 #Pastas
 _dev_env/
@@ -50,3 +48,8 @@ Crédito de PER DCOMP - ALPHA/
 Dados Cadastrais SPED ECF/
 E-Social/
 Tipo de Apuração da Retenção - BETA/
+Geral/gerar planilha Robos/
+Geral/separador arquivos dp/
+Geral/conferencia SEFIP/
+Geral/verifica site online/
+Geral/mouseNow/

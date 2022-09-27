@@ -22,7 +22,7 @@ else:
 
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
-from captcha_comum import _solve_text_captcha
+from captcha_comum import _solve_recaptcha
 from chrome_comum import _initialize_chrome, _send_select, _send_input
 
 
@@ -55,31 +55,20 @@ def salva_proc_pdf(id_proc, html):
 
 
 def consulta_proc(tipo, dados, driver):
-    url_home = 'http://www.receita.fazenda.gov.br/Aplicacoes/ATSDR/procuracoesrfb/controlador/controlePrincipal.asp?acao=telaInicial'
+    url_home = 'https://servicos.receita.fazenda.gov.br/Servicos/procuracoesrfb/controlador/controlePrincipal.asp?acao=telaInicial'
+    sitekey = '6LcM8oMhAAAAABaLv_NpRn2EEcBTNQp_WDlpYDDJ'
     driver.get(url_home)
 
-    while not find_by_id('img_captcha_serpro_gov_br', driver):
+    while not find_by_id('g-recaptcha-response', driver):
         sleep(1)
-    element = driver.find_element(by=By.ID, value='img_captcha_serpro_gov_br')
-    location = element.location
-    size = element.size
-    driver.save_screenshot('ignore\captcha\pagina.png')
-    x = location['x']
-    y = location['y']
-    w = size['width']
-    h = size['height']
-    width = x + w
-    height = y + h
-    sleep(2)
-    im = Image.open(r'ignore\captcha\pagina.png')
-    im = im.crop((int(x), int(y), int(width), int(height)))
-    im.save(r'ignore\captcha\captcha.png')
-    sleep(1)
-    captcha = _solve_text_captcha(os.path.join('ignore', 'captcha', 'captcha.png'))
+        
+    recaptcha_data = {'sitekey': sitekey, 'url': url_home}
+    response = _solve_recaptcha(recaptcha_data)
 
-    element = driver.find_element(by=By.ID, value='captcha')
-    element.send_keys(captcha)
-    sleep(0.5)
+    # insere a solução do captcha via javascript
+    driver.execute_script('document.getElementById("g-recaptcha-response").innerText="' + response + '"')
+    sleep(2)
+    
     driver.find_element(by=By.ID, value='btnContinuar').click()
 
     print('>>> Aguardando o site responder')
@@ -200,7 +189,6 @@ def valida_dados(dados):
 
 @_time_execution
 def run():
-    print('>>> Inicializando chromedriver...')
     status, driver = _initialize_chrome()
     if not status:
         alert(title=_title, text=driver)
@@ -233,10 +221,9 @@ def run():
 
         texto = f'{empresa[0]};{situacao}'
         _escreve_relatorio_csv(texto)
-        print(f'>>> {texto}\n\n', end='')
+        print(f'>>> {texto}')
 
     driver.quit()
-    os.remove('chromedriver.exe')
 
     text = f"Processo concluído com sucesso os arquivos estão em {os.getcwd()}"
     alert(title=_title, text=text)

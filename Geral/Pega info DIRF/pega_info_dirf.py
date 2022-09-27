@@ -13,12 +13,20 @@ def run():
         # Abrir o pdf
         arq = os.path.join(documentos, arq)
 
-        file1 = open(arq, "r")
-        dec = file1.read()
+        arq = open(arq, "r")
+        dec = arq.read()
         # print(dec)
         # time.sleep(44)
-        ano = re.compile(r'DIRF\|(.+)\|N').search(dec).group(1)
-        cnpj = re.compile(r'DECPJ\|(.\d+)\|').search(dec).group(1)
+        try:
+            ano = re.compile(r'DIRF\|(.+)\|N').search(dec).group(1)
+        except:
+            ano = re.compile(r'DIRF\|(.+)\|S').search(dec).group(1)
+            
+        try:
+            cnpj = re.compile(r'DECPJ\|(.\d+)\|').search(dec).group(1)
+        except:
+            cnpj = re.compile(r'DECPF\|(.\d+)\|').search(dec).group(1)
+            
         infos_socios = re.findall(r'BPFDEC\|(.\d+)\|(.+)\|\|(.+)\n.+\nRTPO(.+)\n', dec)
         for socio in infos_socios:
             socio = str(socio).split(',')
@@ -28,7 +36,7 @@ def run():
 
             _escreve_relatorio_csv(f"{cnpj};{nome};{cpf};{valores};{ano}", nome='Valores DIRF')
         
-        file1.close()
+        arq.close()
     
     
 if __name__ == '__main__':

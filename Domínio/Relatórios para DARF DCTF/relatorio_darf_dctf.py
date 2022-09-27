@@ -62,7 +62,7 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
             sem_layout = 1
             p.press('enter')
         if sem_layout == 1:
-            while not _find_img('ResumoDeImpostos.png', conf=0.9):
+            while not _find_img('resumo_de_impostos.png', conf=0.9):
                 p.press('enter')
                 time.sleep(1)
             p.press('esc', presses=4)

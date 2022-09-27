@@ -28,8 +28,8 @@ def analiza():
                 try:
                     # Pega o texto da pagina
                     textinho = page.get_text('text', flags=1 + 2 + 8)
-                    # print(textinho)
-                    # time.sleep(55)
+                    print(textinho)
+                    time.sleep(55)
                     # Procura o valor a recolher da empresa
                     localiza_empresa = padrao_empresa.search(textinho)
 

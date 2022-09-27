@@ -61,7 +61,7 @@ def _login(empresa, andamentos):
             p.press('enter')
             time.sleep(1)
             p.press('esc')
-            while p.locateOnScreen(r'imgs_c\'trocar_empresa.png', confidence=0.9):
+            while p.locateOnScreen(r'imgs_c\trocar_empresa.png', confidence=0.9):
                 time.sleep(1)
             return False
         

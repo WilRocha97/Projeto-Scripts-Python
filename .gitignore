@@ -33,6 +33,8 @@ Thumbs.db
 *.iml
 Thumbs.db
 *.DEC
+*.js
+*.css
 
 #Pastas
 _dev_env/

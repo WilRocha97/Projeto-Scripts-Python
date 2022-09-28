@@ -9,14 +9,10 @@ def run():
     documentos = ask_for_dir()
     # Analiza cada pdf que estiver na pasta
     for arq in os.listdir(documentos):
-        # print(f'\nArquivo: {arq}')
-        # Abrir o pdf
         arq = os.path.join(documentos, arq)
-
         arq = open(arq, "r")
         dec = arq.read()
-        # print(dec)
-        # time.sleep(44)
+
         try:
             ano = re.compile(r'DIRF\|(.+)\|N').search(dec).group(1)
         except:

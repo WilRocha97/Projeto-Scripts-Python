@@ -93,53 +93,53 @@ def separa():
         # para cada página do pdf
         for page in pdf:
             andamento = f'Pagina = {str(page.number + 1)}'
-            '''try:'''
-            # Pega o texto da pagina
-            textinho = page.get_text('text', flags=1 + 2 + 8)
-            # Procura o nome da empresa no texto do pdf
-            matchzinho_nome = padraozinho_nome.search(textinho)
-            if not matchzinho_nome:
-                matchzinho_nome = padraozinho_nome2.search(textinho)
+            try:
+                # Pega o texto da pagina
+                textinho = page.get_text('text', flags=1 + 2 + 8)
+                # Procura o nome da empresa no texto do pdf
+                matchzinho_nome = padraozinho_nome.search(textinho)
                 if not matchzinho_nome:
-                    prevpagina = page.number
+                    matchzinho_nome = padraozinho_nome2.search(textinho)
+                    if not matchzinho_nome:
+                        prevpagina = page.number
+                        continue
+                
+                # Guardar o nome da empresa
+                matchtexto_nome = matchzinho_nome.group(2)
+                # Guardar o código da empresa no DPCUCA
+                matchtexto_cod = matchzinho_nome.group(1)
+                
+                # Se estiver na primeira página, guarda as informações
+                if page.number == 0:
+                    prevpagina, prevtexto_nome, prevtexto_cod = guarda_info(page, matchtexto_nome, matchtexto_cod)
                     continue
-            
-            # Guardar o nome da empresa
-            matchtexto_nome = matchzinho_nome.group(2)
-            # Guardar o código da empresa no DPCUCA
-            matchtexto_cod = matchzinho_nome.group(1)
-            
-            # Se estiver na primeira página, guarda as informações
-            if page.number == 0:
-                prevpagina, prevtexto_nome, prevtexto_cod = guarda_info(page, matchtexto_nome, matchtexto_cod)
-                continue
-            
-            # Se o nome da página atual for igual ao da anterior, soma um indice de páginas
-            if matchtexto_nome == prevtexto_nome:
-                paginas += 1
-                # Guarda as informações da página atual
-                prevpagina, prevtexto_nome, prevtexto_cod = guarda_info(page, matchtexto_nome, matchtexto_cod)
-                continue
-            
-            # Se for diferente ele separa a página
-            else:
-                if paginas > 0:
-                    # define qual é a primeira página e o nome da empresa
-                    paginainicial = prevpagina - paginas
-                    andamento = f'Paginas = {str(paginainicial + 1)} até {str(prevpagina + 1)}'
-                    prevpagina, prevtexto_nome, prevtexto_cod = cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cod,
-                                                                         prevtexto_nome, pdf,
-                                                                         paginainicial, prevpagina)
-                    paginas = 0
-                # Se for uma página entra a qui
-                elif paginas == 0:
-                    andamento = f'Pagina = {str(prevpagina + 1)}'
-                    prevpagina, prevtexto_nome, prevtexto_cod = cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cod,
-                                                                         prevtexto_nome, pdf,
-                                                                         prevpagina, prevpagina)
-            '''except:
+                
+                # Se o nome da página atual for igual ao da anterior, soma um indice de páginas
+                if matchtexto_nome == prevtexto_nome:
+                    paginas += 1
+                    # Guarda as informações da página atual
+                    prevpagina, prevtexto_nome, prevtexto_cod = guarda_info(page, matchtexto_nome, matchtexto_cod)
+                    continue
+                
+                # Se for diferente ele separa a página
+                else:
+                    if paginas > 0:
+                        # define qual é a primeira página e o nome da empresa
+                        paginainicial = prevpagina - paginas
+                        andamento = f'Paginas = {str(paginainicial + 1)} até {str(prevpagina + 1)}'
+                        prevpagina, prevtexto_nome, prevtexto_cod = cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cod,
+                                                                             prevtexto_nome, pdf,
+                                                                             paginainicial, prevpagina)
+                        paginas = 0
+                    # Se for uma página entra a qui
+                    elif paginas == 0:
+                        andamento = f'Pagina = {str(prevpagina + 1)}'
+                        prevpagina, prevtexto_nome, prevtexto_cod = cria_pdf(pasta_final, page, matchtexto_nome, matchtexto_cod,
+                                                                             prevtexto_nome, pdf,
+                                                                             prevpagina, prevpagina)
+            except:
                 escreve_relatorio(pasta_final, andamento)
-                continue'''
+                continue
         
         # Faz o mesmo dos dois de cima apenas para a(as) ultima(as) página(as)
         try:

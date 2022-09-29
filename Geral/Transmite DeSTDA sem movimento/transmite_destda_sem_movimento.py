@@ -225,6 +225,7 @@ def transmitir(empresa, comp):
     time.sleep(0.5)
     p.press('enter')
     time.sleep(0.5)
+    makedirs(r'V:\Setor Robô\Scripts Python\Geral\Transmite DeSTDA sem movimento\execucao\Recibos', exist_ok=True)
     copy('V:\Setor Robô\Scripts Python\Geral\Transmite DeSTDA sem movimento\execucao\Recibos')
     p.hotkey('ctrl', 'v')
     time.sleep(0.5)

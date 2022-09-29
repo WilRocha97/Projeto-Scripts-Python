@@ -218,6 +218,19 @@ def transmitir(empresa, comp):
             _escreve_relatorio_csv(f'{cnpj};{nome};CNPJ informado não confere com o existente', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
             print('❌ CNPJ informado não confere com o existente')
             return False
+
+        if _find_img('usuario_nao_cadastrado.png', conf=0.9):
+            p.hotkey('alt', 'f')
+            time.sleep(1)
+            p.hotkey('alt', 'f')
+            time.sleep(1)
+            p.press('f')
+    
+            excluir_documento()
+    
+            _escreve_relatorio_csv(f'{cnpj};{nome};Usuário não cadastrado', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
+            print('❌ Usuário não cadastrado')
+            return False
         
     p.press('enter')
     

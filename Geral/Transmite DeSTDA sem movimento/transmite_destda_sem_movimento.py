@@ -205,6 +205,19 @@ def transmitir(empresa, comp):
             _escreve_relatorio_csv(f'{cnpj};{nome};CPF do responsável inválido', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
             print('❌ CPF do responsável inválido')
             return False
+
+        if _find_img('cnpj_informado_nao_confere.png', conf=0.9):
+            p.hotkey('alt', 'f')
+            time.sleep(1)
+            p.hotkey('alt', 'f')
+            time.sleep(1)
+            p.press('f')
+    
+            excluir_documento()
+    
+            _escreve_relatorio_csv(f'{cnpj};{nome};CNPJ informado não confere com o existente', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
+            print('❌ CNPJ informado não confere com o existente')
+            return False
         
     p.press('enter')
     

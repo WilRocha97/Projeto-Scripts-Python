@@ -194,6 +194,9 @@ def transmitir(empresa, comp):
     while not _find_img('processo_finalizado.png', conf=0.9):
         time.sleep(1)
         if _find_img('cpf_do_responsavel_invalido.png', conf=0.9):
+            _escreve_relatorio_csv(f'{cnpj};{nome};CPF do responsável inválido', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
+            print('❌ CPF do responsável inválido')
+            
             p.hotkey('alt', 'f')
             time.sleep(1)
             p.hotkey('alt', 'f')
@@ -201,12 +204,12 @@ def transmitir(empresa, comp):
             p.press('f')
             
             excluir_documento()
-            
-            _escreve_relatorio_csv(f'{cnpj};{nome};CPF do responsável inválido', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
-            print('❌ CPF do responsável inválido')
             return False
 
         if _find_img('cnpj_informado_nao_confere.png', conf=0.9):
+            _escreve_relatorio_csv(f'{cnpj};{nome};CNPJ informado não confere com o existente', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
+            print('❌ CNPJ informado não confere com o existente')
+            
             p.hotkey('alt', 'f')
             time.sleep(1)
             p.hotkey('alt', 'f')
@@ -214,12 +217,12 @@ def transmitir(empresa, comp):
             p.press('f')
     
             excluir_documento()
-    
-            _escreve_relatorio_csv(f'{cnpj};{nome};CNPJ informado não confere com o existente', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
-            print('❌ CNPJ informado não confere com o existente')
             return False
 
         if _find_img('usuario_nao_cadastrado.png', conf=0.9):
+            _escreve_relatorio_csv(f'{cnpj};{nome};Usuário não cadastrado', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
+            print('❌ Usuário não cadastrado')
+            
             p.hotkey('alt', 'f')
             time.sleep(1)
             p.hotkey('alt', 'f')
@@ -227,9 +230,6 @@ def transmitir(empresa, comp):
             p.press('f')
     
             excluir_documento()
-    
-            _escreve_relatorio_csv(f'{cnpj};{nome};Usuário não cadastrado', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
-            print('❌ Usuário não cadastrado')
             return False
         
     p.press('enter')

@@ -13,16 +13,16 @@ def reinstala_sedif():
     time.sleep(2)
     p.hotkey('win', 'm')
     os.startfile(r'C:\Users\robo\Downloads\sedif_Setup')
-    _wait_img('InstalaSedif.png', conf=0.9, timeout=-1)
+    _wait_img('instala_sedif.png', conf=0.9, timeout=-1)
     p.press('enter', presses=5, interval=1)
-    _wait_img('FinalInstalaSedif.png', conf=0.9, timeout=-1)
+    _wait_img('final_instala_sedif.png', conf=0.9, timeout=-1)
     p.press('enter')
-    _wait_img('AtualizaSedif.png', conf=0.9, timeout=-1)
-    _click_img('AtualizaSedif.png', conf=0.9)
+    _wait_img('atualiza_sedif.png', conf=0.9, timeout=-1)
+    _click_img('atualiza_sedif.png', conf=0.9)
     time.sleep(1)
-    _click_img('Nao.png', conf=0.9)
+    _click_img('nao.png', conf=0.9)
     time.sleep(5)
-    if _find_img('AtualizaSedif2.png', conf=0.9):
+    if _find_img('ja_atualizado.png', conf=0.9):
         p.press('enter')
         time.sleep(1)
         p.press('esc')
@@ -38,10 +38,10 @@ def configura(empresa, comp):
     _wait_img('novo_documento.png', conf=0.9, timeout=-1)
     _click_img('novo_documento.png', conf=0.9)
     
-    while not _find_img('NomeEmpresa.png', conf=0.9):
+    while not _find_img('nome_empresa.png', conf=0.9):
         time.sleep(10)
         p.click(900, 900)
-    _click_img('NomeEmpresa.png', conf=0.9)
+    _click_img('nome_empresa.png', conf=0.9)
     
     p.write(nome)
     time.sleep(5)
@@ -55,7 +55,7 @@ def configura(empresa, comp):
         print('❗ Empresa não encontrada')
         p.press('esc')
         p.hotkey('alt', 'l')
-        _wait_img('Novo.png', conf=0.9, timeout=-1)
+        _wait_img('novo.png', conf=0.9, timeout=-1)
         p.hotkey('alt', 'f')
         time.sleep(1)
         p.hotkey('alt', 'f4')
@@ -67,7 +67,7 @@ def configura(empresa, comp):
     p.write(comp)
     p.hotkey('alt', 'p')
     
-    while not p.locateOnScreen(os.path.join('imgs', 'Escrituracao.png')):
+    while not p.locateOnScreen(os.path.join('imgs', 'escrituracao.png')):
         time.sleep(1)
     p.write('DeSTDA')
     p.press('tab', presses=2)
@@ -75,13 +75,13 @@ def configura(empresa, comp):
     p.press('tab')
     p.write('Sem dados informados')
     time.sleep(0.5)
-    _click_img('Confirmar.png', conf=0.9)
+    _click_img('confirmar.png', conf=0.9)
     time.sleep(20)
     
-    if _find_img('jaExisteDeclaracao.png', conf=0.9):
+    if _find_img('ja_existe_declaracao.png', conf=0.9):
         p.press('esc')
     
-    if _find_img('PreenchimentoErrado.png', conf=0.9):
+    if _find_img('preenchimento_errado.png', conf=0.9):
         _escreve_relatorio_csv(f'{cnpj};{nome};Preenchimento incorreto dos campos {comp}', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
         print('❗ Preenchimento incorreto dos campos')
         p.press('enter')
@@ -152,7 +152,7 @@ def transmitir(empresa, comp):
 
     # espera o botão de transmitir
     while not _find_img('transmitir.png', conf=0.9):
-        if _find_img('Criticas.png', conf=0.9):
+        if _find_img('criticas.png', conf=0.9):
             p.press('enter', presses=4, interval=2)
             time.sleep(1)
             p.hotkey('alt', 'f')
@@ -193,7 +193,7 @@ def transmitir(empresa, comp):
     
     while not _find_img('processo_finalizado.png', conf=0.9):
         time.sleep(1)
-        if _find_img('CPFdoResponsavelinvalido.png', conf=0.9):
+        if _find_img('cpf_do_responsavel_invalido.png', conf=0.9):
             p.hotkey('alt', 'f')
             time.sleep(1)
             p.hotkey('alt', 'f')
@@ -225,7 +225,7 @@ def transmitir(empresa, comp):
     time.sleep(0.5)
     p.press('enter')
     time.sleep(0.5)
-    makedirs(r'V:\Setor Robô\Scripts Python\Geral\Transmite DeSTDA sem movimento\execucao\Recibos', exist_ok=True)
+    os.makedirs(r'V:\Setor Robô\Scripts Python\Geral\Transmite DeSTDA sem movimento\execucao\Recibos', exist_ok=True)
     copy('V:\Setor Robô\Scripts Python\Geral\Transmite DeSTDA sem movimento\execucao\Recibos')
     p.hotkey('ctrl', 'v')
     time.sleep(0.5)

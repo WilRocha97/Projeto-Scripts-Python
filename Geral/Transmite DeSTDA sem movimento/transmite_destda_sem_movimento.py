@@ -22,10 +22,10 @@ def reinstala_sedif():
     time.sleep(1)
     _click_img('nao.png', conf=0.9)
     time.sleep(5)
-    if _find_img('ja_atualizado.png', conf=0.9):
+    '''if _find_img('ja_atualizado.png', conf=0.9):
         p.press('enter')
         time.sleep(1)
-        p.press('esc')
+        p.press('esc')'''
     time.sleep(1)
     
 

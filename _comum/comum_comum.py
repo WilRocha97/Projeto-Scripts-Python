@@ -268,5 +268,5 @@ def indice(count, total_empresas, empresa):
 
     empresa = str(empresa).replace("('", '[ ').replace("')", ' ]').replace("', '", ' - ').replace(',)', ' ]')
 
-    print(' - '.join([indice_dados, empresa]))
+    print(f'{indice_dados} - {empresa}')
 _indice = indice

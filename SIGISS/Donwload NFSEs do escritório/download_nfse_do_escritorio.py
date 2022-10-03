@@ -40,7 +40,7 @@ def download(empresas, index):
             # Salva o PDF da nota e anota na planilha
             salvar_arquivo('nfe_' + num + '.pdf', response)
             _escreve_relatorio_csv(';'.join([num, 'Nota Fiscal salva']), 'Download NFSEs do Escritório')
-            print('✔ Download concluído, nota: ' + num)
+            
         except:
             # Se der erro para validar a nota
             print('❌ ERRO, nota: ' + num)

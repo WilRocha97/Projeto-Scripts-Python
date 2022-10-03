@@ -81,15 +81,13 @@ def login(options, empresa, ano):
         print('❌ Time out\n>>> Tentando novamente...')
         x = 'Erro'
         return driver, x
-
+    
+    timer = 0
     while not find_by_id('captcha_challenge', driver):
-        time.sleep(30)
-        if not find_by_id('captcha_challenge', driver):
-            driver.delete_all_cookies()
-            print('>>> Recarregando a página...')
-            try:
-                driver.get('http://gps.receita.fazenda.gov.br/')
-            except:
+        time.sleep(1)
+        timer += 1
+        if timer > 60:
+            if not find_by_id('captcha_challenge', driver):
                 print('❌ Timed out\n>>> Tentando novamente...')
                 x = 'Erro'
                 return driver, x

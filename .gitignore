@@ -9,13 +9,12 @@ Thumbs.db
 *.PDF
 *.csv
 *.xml
+*.txt
 *.pyc
 *.iml
 *.pfx
 *.xls
 *.xlsx
-*.docx
-*.txt
 *.zip
 *.rar
 *.log
@@ -52,3 +51,4 @@ Geral/verifica site online/
 Geral/mouseNow/
 Geral/leitor c100 c170/
 SIGISS/emissao nota/
+Divida Ativa/ICMS PGE/guias/

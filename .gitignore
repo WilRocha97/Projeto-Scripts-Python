@@ -5,6 +5,10 @@ phantomjs.exe
 Verifica Site.exe
 desconectar_usuarios.exe
 Thumbs.db
+pagina.png
+captcha.png
+elem.png
+debug_screen.png
 *.pdf
 *.PDF
 *.csv
@@ -28,12 +32,10 @@ Thumbs.db
 *.iss
 *.REC
 *.iml
-Thumbs.db
 *.DEC
 
 #Pastas
 _dev_env/
-ignore/
 Ecac/
 Caixa/
 Domínio/Confirmar/confirmar.py

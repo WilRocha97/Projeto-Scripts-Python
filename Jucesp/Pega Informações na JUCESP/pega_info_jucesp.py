@@ -11,7 +11,7 @@ from sys import path
 
 path.append(r'..\..\_comum')
 from chrome_comum import _initialize_chrome, _send_input
-from comum_comum import _time_execution, _escreve_relatorio_csv, _indice
+from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header_csv, _indice, _open_lista_dados, _where_to_start
 from captcha_comum import _solve_text_captcha
 
 os.makedirs('execucao', exist_ok=True)
@@ -121,7 +121,7 @@ def consulta(driver):
             break
 
     print('❕ Lista coletada')
-    _escreve_relatorio_csv(str(nire).replace('[', '').replace('], ', '\n'), nome='NIRES JUCESP')
+    _escreve_relatorio_csv(str(nire).replace('[', '').replace(']', '').replace("'", "").replace(', ', '\n'), nome='NIRES JUCESP')
     return nire
     
 
@@ -159,11 +159,10 @@ def consulta_empresas(nire, driver):
     _escreve_relatorio_csv(f"{nire};{infos_da_empresa}", nome='Consulta JUCESP')
         
     
-    
-    
 @_time_execution
 def run():
     continuar = confirm(text='Continuar consulta existente?', buttons=('Sim', 'Não'))
+    
     data_abertura_inicio = prompt(text='Data de abertura, de: ', title='Script incrível', default='00/00/0000')
     data_abertura_final = prompt(text='Até: ', title='Script incrível', default='00/00/0000')
     qual_municipio = prompt(text='Município', title='Script incrível', default='')
@@ -179,13 +178,13 @@ def run():
         if not driver:
             print('❌ Erro no captcha, tentando novamente...\n')
     
-    if cnontinuar == 'Não':
+    if continuar == 'Não':
         nires = consulta(driver)
         for count, nire in enumerate(nires, start=1):
             _indice(count, nires, nire)
             consulta_empresas(nire, driver)
 
-    if cnontinuar == 'Sim':
+    if continuar == 'Sim':
         nires = _open_lista_dados()
         index = _where_to_start(tuple(i[0] for i in nires))
         if index is None:
@@ -196,6 +195,7 @@ def run():
             consulta_empresas(nire, driver)
         
     print(f'✔ Dados coletados')
+    _escreve_header_csv("", nome='Consulta JUCESP')
     driver.quit()
     
     

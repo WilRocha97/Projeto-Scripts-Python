@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os, time
-from pyautogui import prompt
+from pyautogui import prompt, confirm
 from bs4 import BeautifulSoup
 from xhtml2pdf import pisa
 from selenium import webdriver
@@ -125,59 +125,45 @@ def consulta(driver):
     return nire
     
 
-def consulta_empresas(nires, driver):
+def consulta_empresas(nire, driver):
     print('>>> Coletando dados das empresas\n')
 
-    '''empresas = _open_lista_dados()
-
-    index = _where_to_start(tuple(i[0] for i in empresas))
-    if index is None:
-        return False
+    driver.get(f'https://www.jucesponline.sp.gov.br/Pre_Visualiza.aspx?nire={str(nire)}&idproduto=')
+    time.sleep(1)
     
-    total_empresas = empresas[index:]
-    for count, empresa in enumerate(empresas[index:], start=1):
-    
-        _indice(count, total_empresas, empresa)'''
-    
-    for count, nire in enumerate(nires, start=1):
-        _indice(count, nires, nire)
-        
-        driver.get(f'https://www.jucesponline.sp.gov.br/Pre_Visualiza.aspx?nire={str(nire)}&idproduto=')
+    while not find_by_id('ctl00_cphContent_frmPreVisualiza_lblEmpresa', driver):
         time.sleep(1)
-        
-        while not find_by_id('ctl00_cphContent_frmPreVisualiza_lblEmpresa', driver):
-            time.sleep(1)
-        
-        infos = [('cnpj', 'ctl00_cphContent_frmPreVisualiza_lblCnpj'),
-                 ('nome', 'ctl00_cphContent_frmPreVisualiza_lblEmpresa'),
-                 ('inscricao', 'ctl00_cphContent_frmPreVisualiza_lblInscricao'),
-                 ('tipo', 'ctl00_cphContent_frmPreVisualiza_lblDetalhes'),
-                 ('data_constituicao', 'ctl00_cphContent_frmPreVisualiza_lblConstituicao'),
-                 ('data_ativiade', 'ctl00_cphContent_frmPreVisualiza_lblAtividade'),
-                 ('objeto', 'ctl00_cphContent_frmPreVisualiza_lblObjeto'),
-                 ('capital', 'ctl00_cphContent_frmPreVisualiza_lblCapital'),
-                 ('logradouro', 'ctl00_cphContent_frmPreVisualiza_lblLogradouro'),
-                 ('numero', 'ctl00_cphContent_frmPreVisualiza_lblNumero'),
-                 ('complemento', 'ctl00_cphContent_frmPreVisualiza_lblComplemento'),
-                 ('bairro', 'ctl00_cphContent_frmPreVisualiza_lblBairro'),
-                 ('cep', 'ctl00_cphContent_frmPreVisualiza_lblCep'),
-                 ('municipio', 'ctl00_cphContent_frmPreVisualiza_lblMunicipio'),
-                 ('uf', 'ctl00_cphContent_frmPreVisualiza_lblUf')]
+    
+    infos = [('cnpj', 'ctl00_cphContent_frmPreVisualiza_lblCnpj'),
+             ('nome', 'ctl00_cphContent_frmPreVisualiza_lblEmpresa'),
+             ('inscricao', 'ctl00_cphContent_frmPreVisualiza_lblInscricao'),
+             ('tipo', 'ctl00_cphContent_frmPreVisualiza_lblDetalhes'),
+             ('data_constituicao', 'ctl00_cphContent_frmPreVisualiza_lblConstituicao'),
+             ('data_ativiade', 'ctl00_cphContent_frmPreVisualiza_lblAtividade'),
+             ('objeto', 'ctl00_cphContent_frmPreVisualiza_lblObjeto'),
+             ('capital', 'ctl00_cphContent_frmPreVisualiza_lblCapital'),
+             ('logradouro', 'ctl00_cphContent_frmPreVisualiza_lblLogradouro'),
+             ('numero', 'ctl00_cphContent_frmPreVisualiza_lblNumero'),
+             ('complemento', 'ctl00_cphContent_frmPreVisualiza_lblComplemento'),
+             ('bairro', 'ctl00_cphContent_frmPreVisualiza_lblBairro'),
+             ('cep', 'ctl00_cphContent_frmPreVisualiza_lblCep'),
+             ('municipio', 'ctl00_cphContent_frmPreVisualiza_lblMunicipio'),
+             ('uf', 'ctl00_cphContent_frmPreVisualiza_lblUf')]
 
-        infos_da_empresa = ''
-        for info in infos:
-            info_da_empresa = driver.find_element(by=By.ID, value=str(info[1])).text
-            
-            infos_da_empresa += info_da_empresa.replace('\n', ' | ').replace(';', ' | ') + ';'
-
-        _escreve_relatorio_csv(f"{nire};{infos_da_empresa}", nome='Consulta JUCESP')
+    infos_da_empresa = ''
+    for info in infos:
+        info_da_empresa = driver.find_element(by=By.ID, value=str(info[1])).text
         
-    print(f'✔ Dados coletados')
-    driver.quit()
+        infos_da_empresa += info_da_empresa.replace('\n', ' | ').replace(';', ' | ') + ';'
+
+    _escreve_relatorio_csv(f"{nire};{infos_da_empresa}", nome='Consulta JUCESP')
+        
+    
     
     
 @_time_execution
 def run():
+    continuar = confirm(text='Continuar consulta existente?', buttons=('Sim', 'Não'))
     data_abertura_inicio = prompt(text='Data de abertura, de: ', title='Script incrível', default='00/00/0000')
     data_abertura_final = prompt(text='Até: ', title='Script incrível', default='00/00/0000')
     qual_municipio = prompt(text='Município', title='Script incrível', default='')
@@ -192,10 +178,26 @@ def run():
         driver = logar(options, data_abertura_inicio, data_abertura_final, qual_municipio)
         if not driver:
             print('❌ Erro no captcha, tentando novamente...\n')
-            
-    nires = consulta(driver)
-    consulta_empresas(nires, driver)
+    
+    if cnontinuar == 'Não':
+        nires = consulta(driver)
+        for count, nire in enumerate(nires, start=1):
+            _indice(count, nires, nire)
+            consulta_empresas(nire, driver)
 
-
+    if cnontinuar == 'Sim':
+        nires = _open_lista_dados()
+        index = _where_to_start(tuple(i[0] for i in nires))
+        if index is None:
+            return False
+        total_nires = nires[index:]
+        for count, nire in enumerate(nires[index:], start=1):
+            _indice(count, total_nires, nire)
+            consulta_empresas(nire, driver)
+        
+    print(f'✔ Dados coletados')
+    driver.quit()
+    
+    
 if __name__ == '__main__':
     run()

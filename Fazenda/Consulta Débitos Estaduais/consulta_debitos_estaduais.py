@@ -1,5 +1,4 @@
-import time
-
+import time, re
 from requests.exceptions import ConnectionError
 from bs4 import BeautifulSoup
 from sys import path
@@ -45,9 +44,12 @@ def confere_pendencias(pagina):
         pendencia[0] = float(deb[3:].replace('.', '').replace(',', '.')) == 0
         if all(pendencia):
             return _situacoes['C']
-        
-        situacao.append(_situacoes['P'])
-    
+
+        if re.findall(r'GIA-1\/1', str(soup)):
+            situacao.append(_situacoes['I'])
+        else:
+            situacao.append(_situacoes['P'])
+            
     if not pendencia[1]:
         tabela = soup.find('table', attrs={'id': f'{id_base}gdvResultado'})
         if not tabela:
@@ -70,9 +72,7 @@ def confere_pendencias(pagina):
                 situacao.append(_situacoes['T'])
                 break
                 
-            if soup.find('GIA-1/1'):
-                situacao.append(_situacoes['I'])
-                break
+        
     
     return ' e '.join(situacao)
 

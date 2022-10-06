@@ -39,10 +39,10 @@ def pesquisar(cnpj, insc_muni):
     url_inicio = 'http://vinhedomun.presconinformatica.com.br/certidaoNegativa.jsf?faces-redirect=true'
     driver.get(url_inicio)
 
-    while not find_by_id('homeForm:panelCaptcha:j_idt52', driver):
+    while not find_by_id('homeForm:panelCaptcha:j_idt47', driver):
         time.sleep(1)
     # bloco que salva a imagem do captcha
-    element = driver.find_element(by=By.ID, value='homeForm:panelCaptcha:j_idt52')
+    element = driver.find_element(by=By.ID, value='homeForm:panelCaptcha:j_idt47')
     location = element.location
     size = element.size
     driver.save_screenshot('ignore\captcha\pagina.png')
@@ -80,7 +80,7 @@ def pesquisar(cnpj, insc_muni):
     driver.find_element(by=By.ID, value='homeForm:inputInscricao').click()
     time.sleep(2)
     driver.find_element(by=By.ID, value='homeForm:inputInscricao').send_keys(insc_muni)
-    _send_input('homeForm:panelCaptcha:j_idt55', captcha, driver)
+    _send_input('homeForm:panelCaptcha:j_idt50', captcha, driver)
     time.sleep(2)
     
     # clica no botão de pesquisar
@@ -89,11 +89,15 @@ def pesquisar(cnpj, insc_muni):
     print('>>> Consultando')
     while 'dados-contribuinte-inscricao">0000000000' not in driver.page_source:
         if find_by_path('/html/body/div[1]/div[5]/div[2]/div[1]/div/ul/li/span', driver):
-            padraozinho = re.compile(r'<span class="ui-messages-error-summary">(.+)<\/span><\/li><\/ul><\/div><\/div><div class="right"><button id="j_idt75"')
+            padraozinho = re.compile(r'confirmationMessage\" class=\"ui-messages ui-widget\" aria-live=\"polite\"><div '
+                                     r'class=\"ui-messages-error ui-corner-all\"><span class=\"ui-messages-error-icon\"></span><ul><li><span '
+                                     r'class=\"ui-messages-error-summary\">(.+).</span></li></ul></div></div><div class=\"right\"><button id=\"j_idt')
             situacao = padraozinho.search(driver.page_source).group(1)
             situacao_print = f'❌ {situacao}'
+            # print(driver.page_source)
             driver.quit()
             return situacao, situacao_print
+        
         time.sleep(1)
 
     situacao = salvar_guia(cnpj)

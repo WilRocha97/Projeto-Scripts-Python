@@ -45,7 +45,7 @@ def salvar_pdf(cnpj, nome, debito=''):
         press('s')
         sleep(1)
 
-    texto = f'{cnpj};Com pendências'
+    texto = f'{cnpj};Com pendências {debito}'
     print(texto)
     _escreve_relatorio_csv(texto)
 
@@ -90,7 +90,7 @@ def consulta_ipva(cnpj, nome):
                     salvar_pdf(cnpj, nome, debito=' - GIA')
                 else:
                     salvar_pdf(cnpj, nome)
-                    return True
+                return True
 
     # define o texto que ira escrever na planilha
     texto = f'{cnpj};Empresa sem pendências'

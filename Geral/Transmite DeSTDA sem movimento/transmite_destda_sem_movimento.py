@@ -231,7 +231,20 @@ def transmitir(empresa, comp):
     
             excluir_documento()
             return False
-        
+
+        if _find_img('arquivo_corrompido.png', conf=0.9):
+            _escreve_relatorio_csv(f'{cnpj};{nome};Arquivo de configuração corrompido', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
+            print('❌ Arquivo de configuração corrompido')
+
+            p.hotkey('alt', 'f')
+            time.sleep(1)
+            p.hotkey('alt', 'f')
+            time.sleep(1)
+            p.press('f')
+
+            excluir_documento()
+            return False
+
     p.press('enter')
     
     _wait_img('salvar_recibo.png', conf=0.9, timeout=-1)

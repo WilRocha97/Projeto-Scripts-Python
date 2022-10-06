@@ -79,34 +79,18 @@ def consulta_ipva(cnpj, nome):
             press('enter')
             press('f5')
 
+    debitos = ('ha_debitos.png', 'ha_pendencias.png', 'ha_pendencias_2.png', 'icms_declarado.png', 'icms_parcelado.png', 'aiim.png', 'ipva.png')
     # navega na tela até aparecer o botão de emitir relatório e caso tenha algum débito, salva o relatório
     while not _find_img('emitir_relatorios.png', conf=0.9):
         press('pgDn')
         
-        if _find_img('gia.png', conf=0.9):
-            salvar_pdf(cnpj, nome, debito=' - GIA')
-            return True
-        if _find_img('ha_debitos.png', conf=0.9):
-            salvar_pdf(cnpj, nome)
-            return True
-        if _find_img('ha_pendencias.png', conf=0.9):
-            salvar_pdf(cnpj, nome)
-            return True
-        if _find_img('ha_pendencias_2.png', conf=0.9):
-            salvar_pdf(cnpj, nome)
-            return True
-        if _find_img('icms_declarado.png', conf=0.9):
-            salvar_pdf(cnpj, nome)
-            return True
-        if _find_img('icms_parcelado.png', conf=0.9):
-            salvar_pdf(cnpj, nome)
-            return True
-        if _find_img('aiim.png', conf=0.9):
-            salvar_pdf(cnpj, nome)
-            return True
-        if _find_img('ipva.png', conf=0.9):
-            salvar_pdf(cnpj, nome)
-            return True
+        for debito in debitos:
+            if _find_img(debito, conf=0.9):
+                if _find_img('gia.png', conf=0.9):
+                    salvar_pdf(cnpj, nome, debito=' - GIA')
+                else:
+                    salvar_pdf(cnpj, nome)
+                    return True
 
     # define o texto que ira escrever na planilha
     texto = f'{cnpj};Empresa sem pendências'

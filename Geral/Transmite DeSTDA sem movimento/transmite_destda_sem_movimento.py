@@ -191,59 +191,27 @@ def transmitir(empresa, comp):
     p.write('f7j54kymq4')
     _click_img('ok.png', conf=0.9)
     
+    excessoes = [('cpf_do_responsavel_invalido.png', 'CPF do responsável inválido'),
+                 ('cnpj_informado_nao_confere.png', 'CNPJ informado não confere com o existente'),
+                 ('usuario_nao_cadastrado.png', 'Usuário não cadastrado'),
+                 ('arquivo_corrompido.png', 'Arquivo de configuração corrompido')]
+    
     while not _find_img('processo_finalizado.png', conf=0.9):
         time.sleep(1)
-        if _find_img('cpf_do_responsavel_invalido.png', conf=0.9):
-            _escreve_relatorio_csv(f'{cnpj};{nome};CPF do responsável inválido', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
-            print('❌ CPF do responsável inválido')
+        for excessao in excessoes:
             
-            p.hotkey('alt', 'f')
-            time.sleep(1)
-            p.hotkey('alt', 'f')
-            time.sleep(1)
-            p.press('f')
-            
-            excluir_documento()
-            return False
-
-        if _find_img('cnpj_informado_nao_confere.png', conf=0.9):
-            _escreve_relatorio_csv(f'{cnpj};{nome};CNPJ informado não confere com o existente', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
-            print('❌ CNPJ informado não confere com o existente')
-            
-            p.hotkey('alt', 'f')
-            time.sleep(1)
-            p.hotkey('alt', 'f')
-            time.sleep(1)
-            p.press('f')
-    
-            excluir_documento()
-            return False
-
-        if _find_img('usuario_nao_cadastrado.png', conf=0.9):
-            _escreve_relatorio_csv(f'{cnpj};{nome};Usuário não cadastrado', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
-            print('❌ Usuário não cadastrado')
-            
-            p.hotkey('alt', 'f')
-            time.sleep(1)
-            p.hotkey('alt', 'f')
-            time.sleep(1)
-            p.press('f')
-    
-            excluir_documento()
-            return False
-
-        if _find_img('arquivo_corrompido.png', conf=0.9):
-            _escreve_relatorio_csv(f'{cnpj};{nome};Arquivo de configuração corrompido', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
-            print('❌ Arquivo de configuração corrompido')
-
-            p.hotkey('alt', 'f')
-            time.sleep(1)
-            p.hotkey('alt', 'f')
-            time.sleep(1)
-            p.press('f')
-
-            excluir_documento()
-            return False
+            if _find_img(excessao[0], conf=0.9):
+                _escreve_relatorio_csv(f'{cnpj};{nome};{excessao[1]}', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
+                print(f'❌ {excessao[1]}')
+                
+                p.hotkey('alt', 'f')
+                time.sleep(1)
+                p.hotkey('alt', 'f')
+                time.sleep(1)
+                p.press('f')
+                
+                excluir_documento()
+                return False
 
     p.press('enter')
     
@@ -291,11 +259,7 @@ def transmitir(empresa, comp):
     _click_img('transmissao.png', conf=0.9)
     time.sleep(2)
 
-    p.hotkey('alt', 'f')
-    time.sleep(1)
-    p.hotkey('alt', 'f')
-    time.sleep(1)
-    p.hotkey('alt', 'f')
+    p.hotkey('alt', 'f', presses=3, interval=1)
     time.sleep(1)
 
     _wait_img('tela_inicial.png', conf=0.9, timeout=-1)

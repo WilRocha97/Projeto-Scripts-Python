@@ -12,7 +12,7 @@ from chrome_comum import _initialize_chrome
 from pyautogui_comum import _click_img, _wait_img
 
 
-def renomear(empresa, vencimento):
+def renomear(empresa, apuracao, vencimento):
     cnpj, nome, valor, cod = empresa
     download_folder = "V:\\Setor Robô\\Scripts Python\\Sicalc\\Gerador de guias de DARF WEB\\execucao\\Guias"
     guia = os.path.join(download_folder, 'Darf.pdf')
@@ -20,7 +20,7 @@ def renomear(empresa, vencimento):
         time.sleep(1)
     while os.path.exists(guia):
         try:
-            arquivo = f'{nome} - {cnpj} - DARF IRRF {cod} - {apuracao.replace("/", "-")} - venc. {vencimento.replace("/", "-")}.pdf'
+            arquivo = f'{nome.replace("/", " ")} - {cnpj} - DARF IRRF {cod} {apuracao.replace("/", "-")} - venc. {vencimento.replace("/", "-")}.pdf'
             shutil.move(guia, os.path.join(download_folder, arquivo))
             time.sleep(2)
         except:
@@ -103,7 +103,7 @@ def gerar(empresa, apuracao, vencimento, driver):
     print('>>> Gerando guia')
     driver.find_element(by=By.ID, value='btnDarf').click()
 
-    renomear(empresa, vencimento)
+    renomear(empresa, apuracao, vencimento)
 
     '''while not os.path.exists('V:/Setor Robô/Scripts Python/Sicalc/Gerador de guias de DARF WEB/execucao/Guias/Darf.pdf'):
         time.sleep(1)

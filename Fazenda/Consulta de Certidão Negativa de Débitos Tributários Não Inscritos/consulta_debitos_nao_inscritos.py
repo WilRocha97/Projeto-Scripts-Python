@@ -46,7 +46,7 @@ def salvar_pdf(cnpj, nome, debito=''):
         sleep(1)
 
     texto = f'{cnpj};Com pendências {debito}'
-    print(texto)
+    print(f'❗ Com pendências {debito}')
     _escreve_relatorio_csv(texto)
 
     # esperar aparecer o botão de voltar e clica nele
@@ -59,7 +59,13 @@ def consulta_ipva(cnpj, nome):
     # url = 'https://www10.fazenda.sp.gov.br/CertidaoNegativaDeb/Pages/Restrita/PesquisarContribuinte.aspx'
 
     # espera a pagina inicial para inserir o cnpj
-    _wait_img('cnpj.png', conf=0.9, timeout=-1)
+    while not _find_img('cnpj.png', conf=0.9):
+        if _find_img('certificado.png', conf=0.9):
+            _click_img('certificado.png', conf=0.9)
+        if _find_img('verificar_impedimentos.png', conf=0.9):
+            _click_img('verificar_impedimentos.png', conf=0.9)
+        sleep(1)
+
     _click_img('campo.png', conf=0.9)
     sleep(1)
     # limpa o campo do cnpj
@@ -94,7 +100,7 @@ def consulta_ipva(cnpj, nome):
 
     # define o texto que ira escrever na planilha
     texto = f'{cnpj};Empresa sem pendências'
-    print(texto)
+    print('✔ Empresa sem pendências')
     _escreve_relatorio_csv(texto)
 
     # voltar pra tela de login da empresa
@@ -127,6 +133,5 @@ def run():
         consulta_ipva(cnpj, nome)
 
 
-# função principal
 if __name__ == '__main__':
     run()

@@ -9,7 +9,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers
 from chrome_comum import _initialize_chrome
-from pyautogui_comum import _click_img, _wait_img
+from pyautogui_comum import _click_img, _wait_img, _find_img
 
 
 def renomear(empresa, apuracao, vencimento):
@@ -72,28 +72,37 @@ def gerar(empresa, apuracao, vencimento, driver):
     time.sleep(1)
 
     # descer a visualização da página
-    p.press('pgDn', presses=2)
-    time.sleep(1)
-
+    while not _find_img('apuracao.png', conf=0.95):
+        p.press('pgDn')
+        time.sleep(1)
+        
     # clicar no campo e inserir a data de apuração
     _click_img('apuracao.png', conf=0.95)
     time.sleep(1)
     p.write(apuracao)
     time.sleep(1)
 
+    # descer a visualização da página
+    while not _find_img('valor.png', conf=0.95):
+        p.press('pgDn')
+        time.sleep(1)
+        
     # clicar no campo e inserir o valor
     _click_img('valor.png', conf=0.95, clicks=2)
     time.sleep(1)
     p.write(valor)
 
     p.press('tab')
-    time.sleep(1)
-
-    # clica em calcular
-    driver.find_element(by=By.ID, value='btnCalcular').click()
-
+    time.sleep(2)
+    
     # espera guia ser calculada
-    _wait_img('checkbox_guia.png', conf=0.9, timeout=-1)
+    while not _find_img('checkbox_guia.png', conf=0.95):
+        # clica em calcular
+        driver.find_element(by=By.ID, value='btnCalcular').click()
+    
+        # descer a visualização da página
+        p.press('pgDn')
+        time.sleep(1)
 
     print('>>> Guia calculada')
     # marca a guia que será gerada

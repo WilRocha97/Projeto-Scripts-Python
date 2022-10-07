@@ -131,9 +131,7 @@ def run():
 
         # executa a consulta
         consulta_ipva(cnpj, nome)
-        
 
 
-# função principal
 if __name__ == '__main__':
     run()

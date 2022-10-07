@@ -9,7 +9,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers
 from chrome_comum import _initialize_chrome
-from pyautogui_comum import _click_img, _wait_img
+from pyautogui_comum import _click_img, _wait_img, _find_img
 
 
 def renomear(empresa, apuracao, vencimento):
@@ -72,15 +72,21 @@ def gerar(empresa, apuracao, vencimento, driver):
     time.sleep(1)
 
     # descer a visualização da página
-    p.press('pgDn', presses=2)
-    time.sleep(1)
-
+    while not _find_img('apuracao.png', conf=0.95):
+        p.press('pgDn')
+        time.sleep(1)
+        
     # clicar no campo e inserir a data de apuração
     _click_img('apuracao.png', conf=0.95)
     time.sleep(1)
     p.write(apuracao)
     time.sleep(1)
 
+    # descer a visualização da página
+    while not _find_img('valor.png', conf=0.95):
+        p.press('pgDn')
+        time.sleep(1)
+        
     # clicar no campo e inserir o valor
     _click_img('valor.png', conf=0.95, clicks=2)
     time.sleep(1)
@@ -89,17 +95,20 @@ def gerar(empresa, apuracao, vencimento, driver):
     p.press('tab')
     time.sleep(1)
 
-    # clica em calcular
     driver.find_element(by=By.ID, value='btnCalcular').click()
-
-    # espera guia ser calculada
-    _wait_img('checkbox_guia.png', conf=0.9, timeout=-1)
-
     print('>>> Guia calculada')
-    # marca a guia que será gerada
-    driver.find_element(by=By.XPATH, value='//*[@id="cts"]/tbody/tr/td[1]/input').click()
-    time.sleep(1)
     
+    # espera guia ser calculada
+    while not _find_img('checkbox_guia.png', conf=0.95):
+        # descer a visualização da página
+        p.press('pgDn')
+        time.sleep(1)
+
+    time.sleep(1)
+    # marca a guia que será gerada
+    driver.find_element(by=By.XPATH, value='/html/body/div[2]/div[2]/div[1]/div/div/div/div[4]/table/tbody/tr/td[1]/input').click()
+    time.sleep(1)
+
     print('>>> Gerando guia')
     driver.find_element(by=By.ID, value='btnDarf').click()
 

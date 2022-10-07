@@ -93,22 +93,22 @@ def gerar(empresa, apuracao, vencimento, driver):
     p.write(valor)
 
     p.press('tab')
-    time.sleep(2)
+    time.sleep(1)
+
+    driver.find_element(by=By.ID, value='btnCalcular').click()
+    print('>>> Guia calculada')
     
     # espera guia ser calculada
     while not _find_img('checkbox_guia.png', conf=0.95):
-        # clica em calcular
-        driver.find_element(by=By.ID, value='btnCalcular').click()
-    
         # descer a visualização da página
         p.press('pgDn')
         time.sleep(1)
 
-    print('>>> Guia calculada')
-    # marca a guia que será gerada
-    driver.find_element(by=By.XPATH, value='//*[@id="cts"]/tbody/tr/td[1]/input').click()
     time.sleep(1)
-    
+    # marca a guia que será gerada
+    driver.find_element(by=By.XPATH, value='/html/body/div[2]/div[2]/div[1]/div/div/div/div[4]/table/tbody/tr/td[1]/input').click()
+    time.sleep(1)
+
     print('>>> Gerando guia')
     driver.find_element(by=By.ID, value='btnDarf').click()
 

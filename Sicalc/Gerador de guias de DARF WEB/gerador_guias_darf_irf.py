@@ -105,10 +105,18 @@ def gerar(empresa, apuracao, vencimento, driver):
         time.sleep(1)
 
     time.sleep(1)
+    
     # marca a guia que será gerada
-    driver.find_element(by=By.XPATH, value='/html/body/div[2]/div[2]/div[1]/div/div/div/div[4]/table/tbody/tr/td[1]/input').click()
-    time.sleep(1)
-
+    erro = 'sim'
+    while erro == 'sim':
+        try:
+            driver.find_element(by=By.XPATH, value='/html/body/div[2]/div[2]/div[1]/div/div/div/div[4]/table/tbody/tr/td[1]/input').click()
+            time.sleep(1)
+            erro = 'não'
+        except:
+            driver.find_element(by=By.ID, value='btnCalcular').click()
+            erro = 'sim'
+            
     print('>>> Gerando guia')
     driver.find_element(by=By.ID, value='btnDarf').click()
 

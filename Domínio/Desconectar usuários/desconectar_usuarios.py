@@ -48,7 +48,7 @@ def configura_parametro():
         sleep(1)
     p.press('del', presses=5)
     sleep(1)
-    p.write('30')
+    p.write('90')
     sleep(1)
     p.hotkey('alt', 'g')
     while p.locateOnScreen(path.join('imgs', 'tela_parametros.png')):

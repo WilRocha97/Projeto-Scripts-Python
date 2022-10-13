@@ -23,6 +23,7 @@ def _login(empresa, andamentos):
     while not p.locateOnScreen(r'imgs_c\trocar_empresa.png', confidence=0.9):
         p.press('f8')
     
+    time.sleep(1)
     # clica para pesquisar empresa por código
     if p.locateOnScreen(r'imgs_c\codigo.png', confidence=0.9):
         p.click(p.locateCenterOnScreen(r'imgs_c\codigo.png', confidence=0.9))
@@ -70,6 +71,7 @@ def _login(empresa, andamentos):
             time.sleep(1)
     
     p.press('esc', presses=5)
+    time.sleep(1)
 
     return True
 

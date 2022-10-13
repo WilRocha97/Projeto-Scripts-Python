@@ -34,7 +34,7 @@ def gerar(comp, empresa, andamentos):
     
     cont = 1
     # espera o holerite gerar
-    while not _find_img('holerite_gerado.png', conf=0.9):
+    while not _find_img('holerite_gerado.png', conf=0.9) or _find_img('holerite_gerado_2.png', conf=0.9):
         time.sleep(1)
         if _find_img('impressora.png', conf=0.9):
             p.press('enter')
@@ -58,6 +58,9 @@ def gerar(comp, empresa, andamentos):
     while not _find_img('enviar_por_e-mail.png', conf=0.9):
         time.sleep(1)
     
+    if _find_img('nao_assinatura.png'):
+        _click_img('nao_assinatura.png')
+    time.sleep(1)
     # clica no espaço da mensagem
     _click_img('mensagem.png', conf=0.9)
     # guarda o texto

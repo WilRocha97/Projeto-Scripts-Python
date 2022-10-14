@@ -103,7 +103,7 @@ def baixar():
 		if find_img('empty_queue.png', conf=0.9):
 			print('>>> movendo arquivo')
 
-			src = os.path.join(os.path.expandvars("%userprofile%"), 'documents', 'arquivos receitanetbx')
+			src = os.path.join(os.path.expandvars("%userprofile%"), 'Documents', 'Arquivos ReceitanetBX', 'tmp')
 			dest = os.path.join(os.getcwd(), 'execucao', 'docs')
 			os.makedirs(dest, exist_ok=True)
 

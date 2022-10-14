@@ -4,7 +4,6 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 import os, time, shutil, re, fitz
 
-
 from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers
@@ -119,7 +118,7 @@ def salvar_guia(driver, cnpj, nome):
     time.sleep(1)
     renomear(cnpj)
     _escreve_relatorio_csv(f'{cnpj};{nome};Guia gerada no Veri')
-    print('Guia gerada no Veri')
+    print('✔ Guia gerada no Veri')
 
     
 @_time_execution
@@ -157,6 +156,7 @@ def run():
         _indice(count, total_empresas, empresa)
 
         resultado = 'Erro'
+        count = 0
         # fazer login do SICALC
         while resultado == 'Erro':
             # iniciar o driver do chome
@@ -164,6 +164,11 @@ def run():
             
             resultado = login_veri(empresa, driver)
             driver.close()
+            count += 1
+            if count >= 10:
+                _escreve_relatorio_csv(f'{cnpj};{nome};Números de tentativas para gerar a guia excedido')
+                print('❌ Números de tentativas para gerar a guia excedido')
+                break
 
 
 if __name__ == '__main__':

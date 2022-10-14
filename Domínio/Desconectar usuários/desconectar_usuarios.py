@@ -96,7 +96,7 @@ def run():
         sleep(2)
     
     # enquanto não chegar no final da lista procura os usuários que não iram desconectar e tira a seleção dele
-    while not p.locateOnScreen(path.join('imgs', 'seta_baixo_limite.png')):
+    while not p.locateOnScreen(path.join('imgs', 'seta_baixo_limite.png'), confidence=0.9):
         if not p.locateOnScreen(path.join('imgs', 'seta_baixo.png'), confidence=0.9):
             localiza_autorizados()
             break

@@ -19,12 +19,19 @@ def localiza_elemento(driver, elemento):
         return False
 
 
-def renomear(cnpj):
+def renomear(empresa):
+    cnpj, nome = empresa
     download_folder = "V:\\Setor Robô\\Scripts Python\\Veri\\Gerar DARF\\ignore\\docs"
     final_foder = "V:\\Setor Robô\\Scripts Python\\Veri\\Gerar DARF\\execucao\\Guias"
-
+    
+    count = 0
     while not os.listdir(download_folder):
         time.sleep(1)
+        count += 1
+        if count >= 30:
+            _escreve_relatorio_csv(f'{cnpj};{nome};Erro, nenhum arquivo baixado')
+            print('❌ Erro, nenhum arquivo baixado')
+            return False
     
     time.sleep(2)
     for file in os.listdir(download_folder):
@@ -87,11 +94,10 @@ def gerar(empresa, driver):
         return 'Continue'
     
     # enquanto tiver o botão de gerar
-    count = 0
     while localiza_elemento(driver, '/html/body/div[2]/div[3]/div[3]/section/div/div/div/div[2]/div[3]/div/div[2]/div/div/div[2]/table/tbody/tr[2]/td[11]/div/div/a'):
         # salva a guia se tiver o botão de salvar
         if localiza_elemento(driver, '/html/body/div[2]/div[3]/div[3]/section/div/div/div/div[2]/div[3]/div/div[2]/div/div/div[2]/table/tbody/tr[2]/td[11]/div/div[3]/a'):
-            salvar_guia(driver, cnpj, nome)
+            salvar_guia(driver, empresa)
             return 'Continue'
         
         driver.execute_script("document.querySelector('#example > tbody > tr.odd > td:nth-child(11) > div > div > a').click()")
@@ -112,11 +118,13 @@ def gerar(empresa, driver):
         time.sleep(2)
         
         
-def salvar_guia(driver, cnpj, nome):
+def salvar_guia(driver, empresa):
+    cnpj, nome = empresa
     print('>>> Baixando guia...')
     driver.execute_script("document.querySelector('#example > tbody > tr.odd > td:nth-child(11) > div > div.center > a').click()")
     time.sleep(1)
-    renomear(cnpj)
+    if not renomear(empresa):
+        return 'Continue'
     _escreve_relatorio_csv(f'{cnpj};{nome};Guia gerada no Veri')
     print('✔ Guia gerada no Veri')
 
@@ -141,7 +149,7 @@ def run():
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     options.add_argument('--window-size=1920,1080')
-    # options.add_argument("--start-maximized")
+    options.add_argument("--start-maximized")
     options.add_experimental_option('prefs', {
         "download.default_directory": "V:\\Setor Robô\\Scripts Python\\Veri\\Gerar DARF\\ignore\\docs",  # Change default directory for downloads
         "download.prompt_for_download": False,  # To auto download the file
@@ -151,6 +159,7 @@ def run():
 
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
+        cnpj, nome = empresa
 
         # configurar o indice para localizar em qual empresa está
         _indice(count, total_empresas, empresa)
@@ -165,9 +174,9 @@ def run():
             resultado = login_veri(empresa, driver)
             driver.close()
             count += 1
-            if count >= 10:
-                _escreve_relatorio_csv(f'{cnpj};{nome};Números de tentativas para gerar a guia excedido')
-                print('❌ Números de tentativas para gerar a guia excedido')
+            if count >= 5:
+                _escreve_relatorio_csv(f'{cnpj};{nome};Não conseguiu gerar a guia')
+                print('❌ Não conseguiu gerar a guia')
                 break
 
 

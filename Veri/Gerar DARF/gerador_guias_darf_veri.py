@@ -83,7 +83,7 @@ def gerar(empresa, driver):
         nao_encontrada = ''
     if nao_encontrada == 'Nenhum registro encontrado':
         _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum registro encontrado')
-        print('Nenhum registro encontrado')
+        print('❗ Nenhum registro encontrado')
         return 'Continue'
     
     # enquanto tiver o botão de gerar
@@ -97,7 +97,7 @@ def gerar(empresa, driver):
         driver.execute_script("document.querySelector('#example > tbody > tr.odd > td:nth-child(11) > div > div > a').click()")
         time.sleep(2)
 
-        print('Gerando guia...')
+        print('>>> Gerando guia...')
         count = 0
         while localiza_elemento(driver, '/html/body/div[6]/div/h2'):
             time.sleep(1)
@@ -113,7 +113,7 @@ def gerar(empresa, driver):
         
         
 def salvar_guia(driver, cnpj, nome):
-    print('Baixando guia...')
+    print('>>> Baixando guia...')
     driver.execute_script("document.querySelector('#example > tbody > tr.odd > td:nth-child(11) > div > div.center > a').click()")
     time.sleep(1)
     renomear(cnpj)

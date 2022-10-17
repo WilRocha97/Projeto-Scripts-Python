@@ -262,9 +262,9 @@ _download_file = download_file
 def indice(count, total_empresas, empresa):
 
     if count > 1:
-        print('[ {} Restantes ]\n\n'.format(len(total_empresas) - (count - 1)))
+        print(f'[ {len(total_empresas) - (count - 1)} Restantes ]\n\n')
     # Cria um indice para saber qual linha dos dados está
-    indice_dados = '[ {} de {} ]'.format(str(count), str(len(total_empresas)))
+    indice_dados = f'[ {str(count)} de {str(len(total_empresas))} ]'
 
     empresa = str(empresa).replace("('", '[ ').replace("')", ' ]').replace("', '", ' - ').replace(',)', ' ]')
             

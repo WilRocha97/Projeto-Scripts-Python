@@ -575,8 +575,9 @@ def relatorio_dpcuca(index, empresas, relatorio, andamentos):
             continue
 
         # CNPJ com os separadores para poder verificar a empresa no cuca
-        texto = '{};{};{};{};{};Empresa não encontrada no DPCUCA'.format(cod, cnpj, nome, mes, ano)
-        if not _verificar_empresa(cnpj, relatorio, texto, 'dpcuca'):
+        if not _verificar_empresa(cnpj, 'dpcuca'):
+            _escreve_relatorio_csv(f'{cod};{cnpj};{nome};{mes};{ano};Empresa não encontrada no DPCUCA', nome=andamentos)
+            print('❌ Empresa não encontrada no DPCUCA')
             continue
 
         # Entra na opção de cálculos do DPCUCA

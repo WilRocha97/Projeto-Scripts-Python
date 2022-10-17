@@ -267,6 +267,6 @@ def indice(count, total_empresas, empresa):
     indice_dados = '[ {} de {} ]'.format(str(count), str(len(total_empresas)))
 
     empresa = str(empresa).replace("('", '[ ').replace("')", ' ]').replace("', '", ' - ').replace(',)', ' ]')
-
+            
     print(f'{indice_dados} - {empresa}')
 _indice = indice

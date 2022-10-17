@@ -16,8 +16,9 @@ def login(empresa, execucao, mes, ano):
         _escreve_relatorio_csv('{};{};Empresa Inativa'.format(cod, nome), nome=execucao)
         print('❌ Empresa Inativa')
         return False
-    texto = '{};{};Não encontrada no DPCUCA'.format(cod, nome)
-    if not _verificar_empresa(cpf, execucao, texto, 'dpcuca'):
+    if not _verificar_empresa(cpf, 'dpcuca'):
+        _escreve_relatorio_csv(f'{cod};{nome};Empresa não encontrada no DPCUCA', nome=andamentos)
+        print('❌ Empresa não encontrada no DPCUCA')
         return False
     return True
 

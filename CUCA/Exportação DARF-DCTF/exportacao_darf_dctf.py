@@ -23,17 +23,17 @@ def login(empresa, qual_cuca, log, competencia, ano, execucao):
     if not _login(empresa, log, qual_cuca, 'Exportação DARF-DCTF', competencia, ano):
 
         if qual_cuca == 'dpcuca':
-            _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Empresa Inativa']), nome=execucao)
+            _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Empresa Inativa', nome=execucao)
             print('❌ Empresa Inativa')
             time.sleep(0.5)
-
         return False
-
-    if not _verificar_empresa(cnpj, execucao, texto, qual_cuca):
+    
+    if not _verificar_empresa(cnpj, 'qual_cuca'):
+        _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Empresa não encontrada no {qual_cuca}', nome=execucao)
+        print('❌ Empresa não encontrada no DPCUCA')
         if qual_cuca == 'dpcuca':
             p.hotkey('win', 'm')
             time.sleep(0.5)
-
         return False
     return True
 
@@ -151,11 +151,11 @@ def transferir_info(index, empresas, competencia, ano, execucao):
 
             p.hotkey('alt', 'o')
             time.sleep(1)
-            _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Transferência concluída']), nome=execucao)
+            _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Transferência concluída', nome=execucao)
             print('✔ Transferência concluída')
 
         elif not _find_img('ExisteTransferencia.png', conf=0.9):
-            _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Não transferiu']), nome=execucao)
+            _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Não transferiu', nome=execucao)
             print('❌ Não transferiu')
 
     p.hotkey('win', 'm')

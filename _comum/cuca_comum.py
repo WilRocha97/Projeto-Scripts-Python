@@ -302,7 +302,7 @@ def _verificacoes(qual_cuca, competencia, execucao='cuca', empresa='N'):
     return True
 
 
-def _verificar_empresa(indice, andamentos, texto='falso', qual_cuca='falso'):
+def _verificar_empresa(indice, qual_cuca='falso'):
     # Verifica se está logado na empresa certa
     try:
         if qual_cuca == 'cuca':
@@ -312,9 +312,6 @@ def _verificar_empresa(indice, andamentos, texto='falso', qual_cuca='falso'):
         if empresa:
             return True
     except:
-        if texto != 'falso':
-            _escreve_relatorio_csv(texto, nome=andamentos)
-            print('❌ Empresa não encontrada no {}'.format(qual_cuca.upper()))
         return False
 
 

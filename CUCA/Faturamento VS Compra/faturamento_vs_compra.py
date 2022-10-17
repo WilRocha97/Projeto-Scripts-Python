@@ -11,10 +11,11 @@ from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, _open_
 
 def login(empresa, execucao):
     cod, cnpj, nome = empresa
-    texto = '{};{};{};Empresa não encontrada no CUCA'.format(cod, cnpj, nome)
     if not _login(empresa, 'Codigo', 'cuca', execucao):
         return False
-    if not _verificar_empresa(cnpj, execucao, texto, 'cuca'):
+    if not _verificar_empresa(cnpj, 'dpcuca'):
+        _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Empresa não encontrada no CUCA', nome=execucao)
+        print('❌ Empresa não encontrada no CUCA')
         return False
     return True
 
@@ -46,11 +47,11 @@ def consulta_faturamento_vs_compra(execucao, empresas, index):
 
         if _find_img('Impossivel.png', 0.9):
             p.press('enter')
-            _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Impossível  continuar, balanço não foi fechado corretamente.']), nome=execucao)
+            _escreve_relatorio_csv(f'[{cod};{cnpj};{nome};Impossível  continuar, balanço não foi fechado corretamente.', nome=execucao)
             continue
 
         while not _find_img('DeclaracaoDeFaturamento.png', 0.9):
-            # As vezes aparece uma tela para iniciar a tabela do mês da empresa, deve confirmar
+            # Ocasionalmente aparece uma tela para iniciar a tabela do mês da empresa, deve confirmar
             if _find_img('Continuar.png', 0.9):
                 p.hotkey('alt', 's')
                 time.sleep(10)
@@ -93,7 +94,7 @@ def consulta_faturamento_vs_compra(execucao, empresas, index):
 
 @_time_execution
 def run():
-    execucao = 'Faturamento VS Compra 3'
+    execucao = 'Faturamento VS Compra'
     empresas = _open_lista_dados()
 
     index = _where_to_start(tuple(i[0] for i in empresas))

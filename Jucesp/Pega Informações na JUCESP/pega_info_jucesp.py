@@ -165,6 +165,7 @@ def run():
     data_abertura_inicio = '01/01/2022'
     data_abertura_final = '31/01/2022'
     qual_municipio = 'valinhos'
+    nires = ''
     if continuar == 'Não':
         data_abertura_inicio = prompt(text='Data de abertura, de: ', title='Script incrível', default='00/00/0000')
         data_abertura_final = prompt(text='Até: ', title='Script incrível', default='00/00/0000')
@@ -175,37 +176,26 @@ def run():
     options.add_argument('--window-size=1920,1080')
     # options.add_argument("--start-maximized")
     
-    if continuar == 'Não':
-        driver = False
-        while not driver:
-            driver = logar(options, data_abertura_inicio, data_abertura_final, qual_municipio)
-            if not driver:
-                print('❌ Erro no captcha, tentando novamente...\n')
-                
-        nires = consulta(driver)
-        for count, nire in enumerate(nires, start=1):
-            _indice(count, nires, nire)
-            consulta_empresas(nire, driver)
-        driver.quit()
-        
     if continuar == 'Sim':
-        nires = _open_lista_dados()
-        index = _where_to_start(tuple(i[0] for i in nires))
+        total_nires = _open_lista_dados()
+        index = _where_to_start(tuple(i[0] for i in total_nires))
         if index is None:
             return False
-        total_nires = nires[index:]
+        nires = total_nires[index:]
 
-        driver = False
-        while not driver:
-            driver = logar(options, data_abertura_inicio, data_abertura_final, qual_municipio)
-            print('\n')
-            if not driver:
-                print('❌ Erro no captcha, tentando novamente...\n')
+    driver = False
+    while not driver:
+        driver = logar(options, data_abertura_inicio, data_abertura_final, qual_municipio)
+        if not driver:
+            print('❌ Erro no captcha, tentando novamente...\n')
+
+    if continuar == 'Não':
+        nires = consulta(driver)
                 
-        for count, nire in enumerate(nires[index:], start=1):
-            _indice(count, total_nires, nire)
-            consulta_empresas(nire, driver)
-        driver.quit()
+    for count, nire in enumerate(nires, start=1):
+        _indice(count, nires, nire)
+        consulta_empresas(nire, driver)
+    driver.quit()
         
     print(f'✔ Dados coletados')
     _escreve_header_csv("", nome='Consulta JUCESP')

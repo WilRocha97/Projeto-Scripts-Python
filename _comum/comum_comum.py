@@ -266,7 +266,7 @@ def indice(count, total_empresas, empresa):
     # Cria um indice para saber qual linha dos dados está
     indice_dados = f'[ {str(count)} de {str(len(total_empresas))} ]'
 
-    empresa = str(empresa).replace("('", '[ ').replace("')", ' ]').replace("', '", ' - ').replace(',)', ' ]')
+    empresa = str(empresa).replace("('", '[ ').replace("')", ' ]').replace("',)", " ]").replace(',)', ' ]').replace("', '", ' - ')
             
     print(f'{indice_dados} - {empresa}')
 _indice = indice

@@ -120,15 +120,15 @@ def consulta(driver):
         except:
             break
 
-    print('❕ Lista coletada')
+    print('❕ Lista coletada\n')
     _escreve_relatorio_csv(str(nire).replace('[', '').replace(']', '').replace("'", "").replace(', ', '\n'), nome='NIRES JUCESP')
     return nire
     
 
 def consulta_empresas(nire, driver):
-    print('>>> Coletando dados das empresas\n')
-
-    driver.get(f'https://www.jucesponline.sp.gov.br/Pre_Visualiza.aspx?nire={str(nire)}&idproduto=')
+    print('>>> Coletando dados das empresas')
+    nire = str(nire).replace("('", "").replace("',)", "")
+    driver.get(f'https://www.jucesponline.sp.gov.br/Pre_Visualiza.aspx?nire={nire}&idproduto=')
     time.sleep(1)
     
     while not find_by_id('ctl00_cphContent_frmPreVisualiza_lblEmpresa', driver):
@@ -162,42 +162,54 @@ def consulta_empresas(nire, driver):
 @_time_execution
 def run():
     continuar = confirm(text='Continuar consulta existente?', buttons=('Sim', 'Não'))
-    
-    data_abertura_inicio = prompt(text='Data de abertura, de: ', title='Script incrível', default='00/00/0000')
-    data_abertura_final = prompt(text='Até: ', title='Script incrível', default='00/00/0000')
-    qual_municipio = prompt(text='Município', title='Script incrível', default='')
+    data_abertura_inicio = '01/01/2022'
+    data_abertura_final = '31/01/2022'
+    qual_municipio = 'valinhos'
+    if continuar == 'Não':
+        data_abertura_inicio = prompt(text='Data de abertura, de: ', title='Script incrível', default='00/00/0000')
+        data_abertura_final = prompt(text='Até: ', title='Script incrível', default='00/00/0000')
+        qual_municipio = prompt(text='Município', title='Script incrível', default='')
     
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     options.add_argument('--window-size=1920,1080')
     # options.add_argument("--start-maximized")
     
-    driver = False
-    while not driver:
-        driver = logar(options, data_abertura_inicio, data_abertura_final, qual_municipio)
-        if not driver:
-            print('❌ Erro no captcha, tentando novamente...\n')
-    
     if continuar == 'Não':
+        driver = False
+        while not driver:
+            driver = logar(options, data_abertura_inicio, data_abertura_final, qual_municipio)
+            if not driver:
+                print('❌ Erro no captcha, tentando novamente...\n')
+                
         nires = consulta(driver)
         for count, nire in enumerate(nires, start=1):
             _indice(count, nires, nire)
             consulta_empresas(nire, driver)
-
+        driver.quit()
+        
     if continuar == 'Sim':
         nires = _open_lista_dados()
         index = _where_to_start(tuple(i[0] for i in nires))
         if index is None:
             return False
         total_nires = nires[index:]
+
+        driver = False
+        while not driver:
+            driver = logar(options, data_abertura_inicio, data_abertura_final, qual_municipio)
+            print('\n')
+            if not driver:
+                print('❌ Erro no captcha, tentando novamente...\n')
+                
         for count, nire in enumerate(nires[index:], start=1):
             _indice(count, total_nires, nire)
             consulta_empresas(nire, driver)
+        driver.quit()
         
     print(f'✔ Dados coletados')
     _escreve_header_csv("", nome='Consulta JUCESP')
-    driver.quit()
     
-    
+
 if __name__ == '__main__':
     run()

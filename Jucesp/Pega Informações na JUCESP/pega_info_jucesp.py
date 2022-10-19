@@ -163,7 +163,7 @@ def consulta_empresas(nire, driver):
 def run():
     continuar = confirm(text='Continuar consulta existente?', buttons=('Sim', 'Não'))
     data_abertura_inicio = '01/01/2022'
-    data_abertura_final = '31/01/2022'
+    data_abertura_final = '15/01/2022'
     qual_municipio = 'valinhos'
     nires = ''
     if continuar == 'Não':

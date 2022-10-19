@@ -2,8 +2,10 @@
 import sys
 import os
 from time import sleep
+
+import pyautogui
 from pyperclip import copy
-from pyautogui import press, write, hotkey
+from pyautogui import press, write, hotkey, mouseInfo, click
 
 sys.path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header_csv, _download_file, _open_lista_dados, _where_to_start, _indice
@@ -65,12 +67,15 @@ def consulta_ipva(cnpj, nome):
         if _find_img('verificar_impedimentos.png', conf=0.9):
             _click_img('verificar_impedimentos.png', conf=0.9)
         sleep(1)
+        click(700, 400)
 
     _click_img('campo.png', conf=0.9)
     sleep(1)
     # limpa o campo do cnpj
     press('delete', presses=15)
     write(cnpj)
+    sleep(1)
+    click(700, 400)
     sleep(1)
     _click_img('consultar.png', conf=0.9)
     sleep(2)

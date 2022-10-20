@@ -17,7 +17,6 @@ _situacoes = {
     'T': '❗ Transporte de Saldo Credor Incorreto',
     'P': '❗ Pendencias',
     'I': '❗ Pendencias GIA',
-    
 }
 
 
@@ -71,8 +70,6 @@ def confere_pendencias(pagina):
             if 'Transporte de Saldo Credor Incorreto' in linha.text:
                 situacao.append(_situacoes['T'])
                 break
-                
-        
     
     return ' e '.join(situacao)
 

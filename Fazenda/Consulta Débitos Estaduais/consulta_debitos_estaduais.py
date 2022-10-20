@@ -44,7 +44,11 @@ def confere_pendencias(pagina):
         if all(pendencia):
             return _situacoes['C']
 
-        if re.findall(r'GIA-1\/1', str(soup)):
+        if re.findall(r'GIA-1/1', str(soup)):
+            situacao.append(_situacoes['I'])
+        elif re.findall(r'GIA ST-1/1', str(soup)):
+            situacao.append(_situacoes['I'])
+        elif re.findall(r'MainContent_rptListaDebito_rptDetalheDebito_0_lblValorOrigem_0\">GIA<', str(soup)):
             situacao.append(_situacoes['I'])
         else:
             situacao.append(_situacoes['P'])

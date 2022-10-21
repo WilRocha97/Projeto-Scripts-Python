@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import os, time
 from pyautogui import prompt, confirm
-from bs4 import BeautifulSoup
-from xhtml2pdf import pisa
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from PIL import Image

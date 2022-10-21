@@ -87,6 +87,9 @@ def consulta_deb_estaduais(cnpj, s, s_id):
     f_cnpj = f'{cnpj[:2]}.{cnpj[2:5]}.{cnpj[5:8]}/{cnpj[8:12]}-{cnpj[12:]}'
     
     erro = True
+    state = ''
+    validation = ''
+    generator = ''
     while erro:
         try:
             res = s.get(url_pesquisa)
@@ -107,6 +110,8 @@ def consulta_deb_estaduais(cnpj, s, s_id):
     }
     
     erro = True
+    res = ''
+    soup = ''
     while erro:
         try:
             res = s.post(url_pesquisa, info)
@@ -116,6 +121,7 @@ def consulta_deb_estaduais(cnpj, s, s_id):
             erro = False
         except:
             print('Erro ao gerar info para a consulta')
+            
             erro = True
     
     info['__EVENTTARGET'] = 'ctl00$MainContent$lkbImpressao'

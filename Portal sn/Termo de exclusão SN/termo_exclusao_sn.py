@@ -65,7 +65,8 @@ def login(empresas, total_empresas, index, options, comp):
                 if isinstance(session, Session):
                     text = consulta(driver, empresa, comp)
                     driver.quit()
-                    
+                    if text == 'erro':
+                        captcha = 'erro'
                 else:
                     text = session
                     driver.quit()
@@ -76,10 +77,18 @@ def login(empresas, total_empresas, index, options, comp):
 
 def consulta(driver, empresa, comp):
     time.sleep(2)
-    driver.get('https://www8.receita.fazenda.gov.br/SimplesNacional/Aplicacoes/ATBHE/DTESN.app/')
+    try:
+        driver.get('https://www8.receita.fazenda.gov.br/SimplesNacional/Aplicacoes/ATBHE/DTESN.app/')
+    except:
+        return 'erro'
     
+    print('>>> Aguardando site')
+    timer = 0
     while not _find_by_id('MenuPrincipal', driver):
         time.sleep(1)
+        timer += 1
+        if timer >= 10:
+            return 'erro'
         
     try:
         termo = re.compile(r'TERMO DE EXCLUSÃO DO SIMPLES NACIONAL.+nº (.+), de (.+ de ' + comp + ')<\/a>').search(str(driver.page_source))

@@ -15,23 +15,24 @@ _site_key = '6LcUdlwaAAAAADjMUnV5jwUKKMlqdZbKNKXTfYEi'
 _execucao = 'Valor FAP original'
 
 
-def login(cnpj_sem_mil_contra, cnpj, driver):
+def login(cnpj, driver):
     tentativas = 1
     x = 'erro'
     while x == 'erro':
-        driver.get('https://google.com')
         url = 'https://www2.dataprev.gov.br/FapWeb/pages/login.xhtml'
         print('>>> Acessando o site')
-        driver.get(url)
+        try:
+            driver.get(url)
+        except:
+            return 'erro'
 
         recaptcha_data = {'sitekey': _site_key, 'url': url}
 
         captcha = _solve_recaptcha(recaptcha_data)
         print('>>> logando no site')
-
         try:
-            driver.find_element(by=By.ID, value='form:CNPJ').send_keys(cnpj_sem_mil_contra)
-            driver.find_element(by=By.ID, value='form:senha').send_keys(cnpj_sem_mil_contra)
+            driver.find_element(by=By.ID, value='form:CNPJ').send_keys(cnpj)
+            driver.find_element(by=By.ID, value='form:senha').send_keys(str(cnpj[:8]))
             driver.execute_script('document.getElementById("g-recaptcha-response").innerHTML="' + captcha + '";')
     
             sleep(1)
@@ -40,12 +41,16 @@ def login(cnpj_sem_mil_contra, cnpj, driver):
     
             html = driver.page_source.encode('utf-8')
             soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
-            padrao = re.compile(r'<div class=\"mensagem\"><ul><li class=\"erro\">(.+)</li></ul></div>')
+            padrao = re.compile(r'class=\"erro\">(.+)</li>')
             resposta = padrao.search(str(soup))
             if resposta:
                 resposta = resposta.group(1)
     
                 print('❌ {}'.format(resposta))
+                if resposta == 'Senha da empresa inválida! ' or resposta == 'Sem acesso: Verifique senha, CNPJ da empresa ou nível de acesso!':
+                    _escreve_relatorio_csv(';'.join([cnpj, resposta]), nome=_execucao)
+                    return 'erro no login'
+                
                 tentativas += 1
                 x = 'erro'
             else:
@@ -58,18 +63,19 @@ def login(cnpj_sem_mil_contra, cnpj, driver):
 
         if tentativas >= 3:
             _escreve_relatorio_csv(';'.join([cnpj, resposta]), nome=_execucao)
-            return False
+            return 'erro no login'
 
-    if not consulta(driver, cnpj):
-        return False
+    resultado = consulta(driver, cnpj)
 
-    return True
+    return resultado
 
 
 def consulta(driver, cnpj):
     print('>>> consultando')
-    driver.get('https://www2.dataprev.gov.br/FapWeb/pages/consulta/resultadoConsultaFap.xhtml')
-
+    try:
+        driver.get('https://www2.dataprev.gov.br/FapWeb/pages/consulta/resultadoConsultaFap.xhtml')
+    except:
+        return 'erro'
     while not _find_by_id('form:panelConsulta', driver):
         sleep(1)
 
@@ -103,7 +109,7 @@ def consulta(driver, cnpj):
         except:
             print('❌ Valor do FAP Original não encontrado')
             _escreve_relatorio_csv(';'.join([cnpj, 'Valor do FAP Original não encontrado']), nome=_execucao)
-            return False
+            return 'não tem'
 
     return True
 
@@ -119,22 +125,21 @@ def run():
         return False
 
     options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')
-    # options.add_argument('--window-size=1920,1080')
-    options.add_argument("--start-maximized")
+    options.add_argument('--headless')
+    options.add_argument('--window-size=1920,1080')
+    # options.add_argument("--start-maximized")
 
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, cnpj_sem_mil_contra = empresa
+        cnpj, nome = empresa
 
         _indice(count, total_empresas, empresa)
 
-        status, driver = _initialize_chrome(options)
-
-        if not login(cnpj_sem_mil_contra, cnpj, driver):
-            continue
-
-        driver.close()
+        resultado = 'erro'
+        while resultado == 'erro':
+            status, driver = _initialize_chrome(options)
+            resultado = login(cnpj, driver)
+            driver.close()
 
 
 if __name__ == '__main__':

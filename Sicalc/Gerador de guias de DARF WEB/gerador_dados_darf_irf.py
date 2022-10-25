@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
-import os, csv
+import os, csv, decimal
+from decimal import Decimal
+from pathlib import Path
 
 from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers
+
+e_dir = Path('ignore')
+ctx = decimal.getcontext()
+ctx.rounding = decimal.ROUND_HALF_UP
 
 
 def gera():
@@ -14,19 +20,22 @@ def gera():
     
     for count1, empresa in enumerate(empresas, start=1):
         cnpj, nome, valor, cod = empresa
+        valor = Decimal(float(valor.replace(',', '.')))
         cnpj_armazenado = cnpj
-        nome_armazenado = nome
+        nome_armazenado = nome.replace('/', ' ')
         cod_armazenado = cod
-        valor_armazenado = float(valor.replace(',', '.'))
+        valor_armazenado = valor
         
         for count2, empresa in enumerate(empresas, start=1):
             cnpj, nome, valor, cod = empresa
+            valor = Decimal(float(valor.replace(',', '.')))
+            
             if count2 != count1:
                 if cnpj_armazenado == cnpj and cod_armazenado == cod:
-                    valor_armazenado += float(valor.replace(',', '.'))
-
-        sp = str(valor_armazenado).split('.')
-        valor_armazenado = f'{str(sp[0])},{str(sp[1][:2])}'
+                    valor_armazenado += valor
+                    
+        valor_armazenado = round(valor_armazenado, 2)
+        valor_armazenado = str(valor_armazenado).replace('.', ',')
         
         _escreve_relatorio_csv(f'{cnpj_armazenado};{nome_armazenado};{valor_armazenado};{cod_armazenado}', nome='Dados Somados')
 
@@ -39,7 +48,7 @@ def tira_duplicadas():
         linha_armazenada = ''
         for linha in tabela:
             if linha != linha_armazenada:
-                _escreve_relatorio_csv(f'{linha[0]};{linha[1]};{linha[2]};{linha[3]}', nome='Dados Somados Filtrados')
+                _escreve_relatorio_csv(f'{linha[0]};{linha[1]};{linha[2]};{linha[3]}', nome='Dados', local=e_dir)
             linha_armazenada = linha
                     
                 
@@ -49,6 +58,7 @@ def run():
     # p.mouseInfo()
     gera()
     tira_duplicadas()
+    os.remove('execucao/Dados Somados.csv')
     
 
 if __name__ == '__main__':

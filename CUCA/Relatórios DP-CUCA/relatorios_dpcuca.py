@@ -558,7 +558,7 @@ def relatorio_dpcuca(index, empresas, relatorio, andamentos):
         cod, cnpj, nome, mes, ano = empresa
 
         # Verificar horário
-        _hora_limite = datetime.now().replace(hour=17, minute=25, second=0, microsecond=0)
+        _hora_limite = datetime.now().replace(hour=18, minute=25, second=0, microsecond=0)
         if _horario(_hora_limite, 'DPCUCA'):
             _iniciar('dpcuca')
             getWindowsWithTitle('DPCUCA')[0].maximize()

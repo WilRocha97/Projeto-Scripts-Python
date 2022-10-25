@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
+import re
 from bs4 import BeautifulSoup
 from time import sleep
 from selenium import webdriver
-import re
+from selenium.webdriver.common.by import By
 
 from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _download_file, _open_lista_dados, _where_to_start, _escreve_relatorio_csv, _indice
-from captcha_comum import _break_recaptcha_v2
-from chrome_comum import _initialize_chrome
+from captcha_comum import _solve_recaptcha
+from chrome_comum import _initialize_chrome, _find_by_id
 
 _site_key = '6LcUdlwaAAAAADjMUnV5jwUKKMlqdZbKNKXTfYEi'
 _execucao = 'Valor FAP original'
@@ -25,45 +26,39 @@ def login(cnpj_sem_mil_contra, cnpj, driver):
 
         recaptcha_data = {'sitekey': _site_key, 'url': url}
 
-        captcha = _break_recaptcha_v2(recaptcha_data)
-        if captcha is str:
-            print(captcha)
-            print('❌ ', captcha)
-            x = 'erro'
-        else:
-            print('>>> logando no site')
+        captcha = _solve_recaptcha(recaptcha_data)
+        print('>>> logando no site')
 
-            try:
-                driver.find_element_by_id('form:CNPJ').send_keys(cnpj_sem_mil_contra)
-                driver.find_element_by_id('form:senha').send_keys(cnpj_sem_mil_contra)
-                driver.execute_script('document.getElementById("g-recaptcha-response").innerHTML="' + captcha['code'] + '";')
-
-                sleep(1)
-                elem = driver.find_element_by_id('form:btnAutenticar')
-                elem.click()
-                sleep(5)
-
-                html = driver.page_source.encode('utf-8')
-                soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
-                padrao = re.compile(r'<div class=\"mensagem\"><ul><li class=\"erro\">(.+)</li></ul></div>')
-                resposta = padrao.search(str(soup))
-                if resposta:
-                    resposta = resposta.group(1)
-
-                    print('❌ {}'.format(resposta))
-                    tentativas += 1
-                    x = 'erro'
-                else:
-                    x = 'ok'
-            except:
-                resposta = 'Erro no login'
+        try:
+            driver.find_element(by=By.ID, value='form:CNPJ').send_keys(cnpj_sem_mil_contra)
+            driver.find_element(by=By.ID, value='form:senha').send_keys(cnpj_sem_mil_contra)
+            driver.execute_script('document.getElementById("g-recaptcha-response").innerHTML="' + captcha + '";')
+    
+            sleep(1)
+            driver.find_element(by=By.ID, value='form:btnAutenticar').click()
+            sleep(5)
+    
+            html = driver.page_source.encode('utf-8')
+            soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
+            padrao = re.compile(r'<div class=\"mensagem\"><ul><li class=\"erro\">(.+)</li></ul></div>')
+            resposta = padrao.search(str(soup))
+            if resposta:
+                resposta = resposta.group(1)
+    
                 print('❌ {}'.format(resposta))
                 tentativas += 1
                 x = 'erro'
+            else:
+                x = 'ok'
+        except:
+            resposta = 'Erro no login'
+            print('❌ {}'.format(resposta))
+            tentativas += 1
+            x = 'erro'
 
-            if tentativas >= 2:
-                _escreve_relatorio_csv(';'.join([cnpj, resposta]), nome=_execucao)
-                return False
+        if tentativas >= 3:
+            _escreve_relatorio_csv(';'.join([cnpj, resposta]), nome=_execucao)
+            return False
 
     if not consulta(driver, cnpj):
         return False
@@ -75,7 +70,7 @@ def consulta(driver, cnpj):
     print('>>> consultando')
     driver.get('https://www2.dataprev.gov.br/FapWeb/pages/consulta/resultadoConsultaFap.xhtml')
 
-    while not driver.find_element_by_id('form:panelConsulta'):
+    while not _find_by_id('form:panelConsulta', driver):
         sleep(1)
 
     sleep(1)
@@ -124,8 +119,9 @@ def run():
         return False
 
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--window-size=1920,1080')
+    # options.add_argument('--headless')
+    # options.add_argument('--window-size=1920,1080')
+    options.add_argument("--start-maximized")
 
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):

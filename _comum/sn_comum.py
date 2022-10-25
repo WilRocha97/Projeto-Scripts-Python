@@ -22,6 +22,7 @@ _servs = {
     'snparc': '37',
     'pertsn': '61',
     'recibos': '60',
+    'caixa postal': '41',
 }
 
 
@@ -33,7 +34,7 @@ def find_by_id(id_nome, driver):
         return None
 
 
-def new_session_sn(cnpj, cpf, cod, serv, driver):
+def new_session_sn(cnpj, cpf, cod, serv, driver, usa_driver=False):
     url_base = 'http://www8.receita.fazenda.gov.br/SimplesNacional'
     url_login = f'{url_base}/controleAcesso/Autentica.aspx?id={_servs[serv]}'
     aux_acessos = zip(('txtCNPJ', 'txtCPFResponsavel', 'txtCodigoAcesso'), (cnpj, cpf, cod))
@@ -79,14 +80,20 @@ def new_session_sn(cnpj, cpf, cod, serv, driver):
     erro = soup.find('span', attrs={'id': 'ctl00_ContentPlaceHolder_lblErro'})
     if erro:
         driver.get(url_base)
-        return f'Erro Login - {erro.text.strip()}'
+        if usa_driver:
+            return driver, f'Erro Login - {erro.text.strip()}'
+        else:
+            return f'Erro Login - {erro.text.strip()}'
 
     session = Session()
     for cookie in driver.get_cookies():
         session.cookies.set(cookie['name'], cookie['value'])
-
-    driver.delete_all_cookies()
-    return session
+    
+    if usa_driver:
+        return driver, session
+    else:
+        driver.delete_all_cookies()
+        return session
 _new_session_sn = new_session_sn
 
 

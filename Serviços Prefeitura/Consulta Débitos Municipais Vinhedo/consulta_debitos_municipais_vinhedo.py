@@ -33,8 +33,8 @@ def find_by_path(xpath, driver):
         return None
     
 
-def pesquisar(cnpj, insc_muni):
-    status, driver = _initialize_chrome()
+def pesquisar(options, cnpj, insc_muni):
+    status, driver = _initialize_chrome(options)
     
     url_inicio = 'http://vinhedomun.presconinformatica.com.br/certidaoNegativa.jsf?faces-redirect=true'
     driver.get(url_inicio)
@@ -169,7 +169,7 @@ def run():
         
         _indice(count, total_empresas, empresa)
         
-        situacao, situacao_print = pesquisar(cnpj, insc_muni)
+        situacao, situacao_print = pesquisar(options, cnpj, insc_muni)
         print(situacao_print)
         if situacao == 'Desculpe, mas ocorreram problemas de rede. Por favor, tente novamente mais tarde.':
             return False

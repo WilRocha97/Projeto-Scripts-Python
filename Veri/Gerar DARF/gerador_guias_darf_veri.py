@@ -11,7 +11,7 @@ from chrome_comum import _initialize_chrome
 from pyautogui_comum import _click_img, _wait_img, _find_img
 
 
-def localiza_elemento(driver, elemento):
+def localiza_path(driver, elemento):
     try:
         driver.find_element(by=By.XPATH, value=elemento)
         return True
@@ -19,6 +19,14 @@ def localiza_elemento(driver, elemento):
         return False
 
 
+def localiza_id(driver, elemento):
+    try:
+        driver.find_element(by=By.ID, value=elemento)
+        return True
+    except:
+        return False
+    
+    
 def renomear(empresa):
     cnpj, nome = empresa
     download_folder = "V:\\Setor Robô\\Scripts Python\\Veri\\Gerar DARF\\ignore\\docs"
@@ -71,14 +79,14 @@ def login_veri(empresa, driver):
 
 def gerar(empresa, driver):
     cnpj, nome = empresa
-    while not driver.find_element(by=By.ID, value='carouselExampleIndicators'):
+    while not localiza_id(driver, 'carouselExampleIndicators'):
         time.sleep(1)
     
     driver.get('https://26973312000175.veri-sp.com.br/dctf_web_nova/index?filter=ATIVA')
     time.sleep(1)
     
     # espera aparecer a barra de pesquisa
-    while not driver.find_element(by=By.XPATH, value='/html/body/div[2]/div[3]/div[3]/section/div/div/div/div[2]/div[3]/div/div[1]/div[2]/div/label/input'):
+    while not localiza_path(driver, '/html/body/div[2]/div[3]/div[3]/section/div/div/div/div[2]/div[3]/div/div[1]/div[2]/div/label/input'):
         time.sleep(1)
     
     # insere o cnpj na barra de pesquisa
@@ -98,9 +106,9 @@ def gerar(empresa, driver):
     # enquanto tiver o botão de gerar
     count = 0
     count2_final = 0
-    while localiza_elemento(driver, '/html/body/div[2]/div[3]/div[3]/section/div/div/div/div[2]/div[3]/div/div[2]/div/div/div[2]/table/tbody/tr[2]/td[11]/div/div/a'):
+    while localiza_path(driver, '/html/body/div[2]/div[3]/div[3]/section/div/div/div/div[2]/div[3]/div/div[2]/div/div/div[2]/table/tbody/tr[2]/td[11]/div/div/a'):
         # salva a guia se tiver o botão de salvar
-        if localiza_elemento(driver, '/html/body/div[2]/div[3]/div[3]/section/div/div/div/div[2]/div[3]/div/div[2]/div/div/div[2]/table/tbody/tr[2]/td[11]/div/div[3]/a'):
+        if localiza_path(driver, '/html/body/div[2]/div[3]/div[3]/section/div/div/div/div[2]/div[3]/div/div[2]/div/div/div[2]/table/tbody/tr[2]/td[11]/div/div[3]/a'):
             salvar_guia(driver, empresa)
             return 'Continue'
         
@@ -110,14 +118,14 @@ def gerar(empresa, driver):
 
         print('>>> Gerando guia...')
         count2 = 0
-        while localiza_elemento(driver, '/html/body/div[6]/div/h2'):
+        while localiza_path(driver, '/html/body/div[6]/div/h2'):
             time.sleep(1)
             count2 += 1
             if count2 >= 60:
                 return 'Erro'
         
         count2_final += count2
-        while not localiza_elemento(driver, '/html/body/div[2]/div[3]/div[3]/section/div/div/div/div[2]/div[3]/div/div[1]/div[2]/div/label/input'):
+        while not localiza_path(driver, '/html/body/div[2]/div[3]/div[3]/section/div/div/div/div[2]/div[3]/div/div[1]/div[2]/div/label/input'):
             time.sleep(1)
             count += 1
 

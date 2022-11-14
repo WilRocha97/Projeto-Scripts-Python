@@ -43,6 +43,8 @@ def renomear(empresa):
         file_rename = f'{cnpj} - DARF - venc. {vencimento.replace("/", "-")}.pdf'
         shutil.move(os.path.join(download_folder, file), os.path.join(final_foder, file_rename))
         time.sleep(2)
+        _escreve_relatorio_csv(f'{cnpj};{nome};Guia gerada no Veri')
+        print('✔ Guia gerada no Veri')
 
 
 def login_veri(empresa, driver):
@@ -94,6 +96,8 @@ def gerar(empresa, driver):
         return 'Continue'
     
     # enquanto tiver o botão de gerar
+    count = 0
+    count2_final = 0
     while localiza_elemento(driver, '/html/body/div[2]/div[3]/div[3]/section/div/div/div/div[2]/div[3]/div/div[2]/div/div/div[2]/table/tbody/tr[2]/td[11]/div/div/a'):
         # salva a guia se tiver o botão de salvar
         if localiza_elemento(driver, '/html/body/div[2]/div[3]/div[3]/section/div/div/div/div[2]/div[3]/div/div[2]/div/div/div[2]/table/tbody/tr[2]/td[11]/div/div[3]/a'):
@@ -102,32 +106,34 @@ def gerar(empresa, driver):
         
         driver.execute_script("document.querySelector('#example > tbody > tr.odd > td:nth-child(11) > div > div > a').click()")
         time.sleep(2)
+        count += 2
 
         print('>>> Gerando guia...')
-        count = 0
+        count2 = 0
         while localiza_elemento(driver, '/html/body/div[6]/div/h2'):
             time.sleep(1)
-            count += 1
-            if count >= 60:
+            count2 += 1
+            if count2 >= 60:
                 return 'Erro'
-            
+        
+        count2_final += count2
         while not localiza_elemento(driver, '/html/body/div[2]/div[3]/div[3]/section/div/div/div/div[2]/div[3]/div/div[1]/div[2]/div/label/input'):
             time.sleep(1)
+            count += 1
 
         driver.find_element(by=By.XPATH, value='/html/body/div[2]/div[3]/div[3]/section/div/div/div/div[2]/div[3]/div/div[1]/div[2]/div/label/input').send_keys(cnpj)
         time.sleep(2)
+        count += 2
+        if count >= 60 - count2_final:
+            return 'Erro'
         
         
 def salvar_guia(driver, empresa):
-    cnpj, nome = empresa
     print('>>> Baixando guia...')
     driver.execute_script("document.querySelector('#example > tbody > tr.odd > td:nth-child(11) > div > div.center > a').click()")
     time.sleep(1)
-    if not renomear(empresa):
-        return 'Continue'
-    _escreve_relatorio_csv(f'{cnpj};{nome};Guia gerada no Veri')
-    print('✔ Guia gerada no Veri')
-
+    renomear(empresa)
+    
     
 @_time_execution
 def run():
@@ -166,7 +172,7 @@ def run():
 
         resultado = 'Erro'
         count = 0
-        # fazer login do SICALC
+        # fazer login no Veri
         while resultado == 'Erro':
             # iniciar o driver do chome
             status, driver = _initialize_chrome(options)
@@ -174,7 +180,7 @@ def run():
             resultado = login_veri(empresa, driver)
             driver.close()
             count += 1
-            if count >= 5:
+            if count >= 3:
                 _escreve_relatorio_csv(f'{cnpj};{nome};Não conseguiu gerar a guia')
                 print('❌ Não conseguiu gerar a guia')
                 break

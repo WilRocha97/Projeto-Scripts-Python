@@ -38,11 +38,14 @@ def pesquisar(options, cnpj, insc_muni):
     
     url_inicio = 'http://vinhedomun.presconinformatica.com.br/certidaoNegativa.jsf?faces-redirect=true'
     driver.get(url_inicio)
-
-    while not find_by_id('homeForm:panelCaptcha:j_idt47', driver):
-        time.sleep(1)
+    
+    contador = 1
+    while not find_by_id(f'homeForm:panelCaptcha:j_idt{str(contador)}', driver):
+        contador += 1
+        time.sleep(0.2)
+        
     # bloco que salva a imagem do captcha
-    element = driver.find_element(by=By.ID, value='homeForm:panelCaptcha:j_idt47')
+    element = driver.find_element(by=By.ID, value=f'homeForm:panelCaptcha:j_idt{str(contador)}')
     location = element.location
     size = element.size
     driver.save_screenshot('ignore\captcha\pagina.png')
@@ -80,7 +83,7 @@ def pesquisar(options, cnpj, insc_muni):
     driver.find_element(by=By.ID, value='homeForm:inputInscricao').click()
     time.sleep(2)
     driver.find_element(by=By.ID, value='homeForm:inputInscricao').send_keys(insc_muni)
-    _send_input('homeForm:panelCaptcha:j_idt50', captcha, driver)
+    _send_input(f'homeForm:panelCaptcha:j_idt{str(contador + 3)}', captcha, driver)
     time.sleep(2)
     
     # clica no botão de pesquisar
@@ -160,6 +163,7 @@ def run():
         return False
     
     options = webdriver.ChromeOptions()
+    # options.add_argument("--start-maximized")
     options.add_argument('--headless')
     options.add_argument('--window-size=1920,1080')
     

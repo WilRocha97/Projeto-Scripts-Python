@@ -215,10 +215,7 @@ def run():
             try:
                 consulta_debito(empresa)
                 erro = 'nao'
-            except Exception as e:
-                print('❌ Erro durante a consulta')
-                _escreve_relatorio_csv(f'{cnpj};{e}')
-                print(e)
+            except:
                 erro = 'sim'
 
 

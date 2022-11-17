@@ -29,6 +29,8 @@ def login(cnpj, options):
             x = 'ok'
         except:
             driver.close()
+            time.sleep(5)
+            print('>>> Erro no site, tentando novamente')
             x = 'erro'
         
         if x == 'ok':
@@ -48,26 +50,34 @@ def login(cnpj, options):
         
                 html = driver.page_source.encode('utf-8')
                 soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
-                padrao = re.compile(r'class=\"erro\">(.+)</li>')
+                padrao = re.compile(r'</li><li class=\"erro\">(.+)</li>')
                 resposta = padrao.search(str(soup))
                 if resposta:
                     resposta = resposta.group(1)
-        
                     print('❌ {}'.format(resposta))
+                    
                     if resposta == 'Senha da empresa inválida! ' or resposta == 'Sem acesso: Verifique senha, CNPJ da empresa ou nível de acesso!':
                         _escreve_relatorio_csv(';'.join([cnpj, resposta]), nome=_execucao)
                         driver.close()
                         return 'erro no login'
                     
-                    tentativas += 1
-                    x = 'erro'
-                    driver.close()
+                    if resposta == 'Erro ao validar o captcha.':
+                        x = 'erro'
+                        driver.close()
+                        
+                    else:
+                        tentativas += 1
+                        x = 'erro'
+                        driver.close()
+                    
                 else:
                     resposta = consulta(driver, cnpj)
+                    
                     if resposta == 'erro':
                         x = 'erro'
                         tentativas += 1
                         driver.close()
+                        
                     else:
                         driver.close()
                         return 'ok'

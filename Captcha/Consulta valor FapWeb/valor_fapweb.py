@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
+import time
+
 from bs4 import BeautifulSoup
 from time import sleep
 from selenium import webdriver
@@ -15,59 +17,70 @@ _site_key = '6LcUdlwaAAAAADjMUnV5jwUKKMlqdZbKNKXTfYEi'
 _execucao = 'Valor FAP original'
 
 
-def login(cnpj, driver):
+def login(cnpj, options):
     tentativas = 1
     x = 'erro'
     while x == 'erro':
+        status, driver = _initialize_chrome(options)
         url = 'https://www2.dataprev.gov.br/FapWeb/pages/login.xhtml'
         print('>>> Acessando o site')
         try:
             driver.get(url)
+            x = 'ok'
         except:
-            return 'erro'
-
-        recaptcha_data = {'sitekey': _site_key, 'url': url}
-
-        captcha = _solve_recaptcha(recaptcha_data)
-        print('>>> logando no site')
-        try:
-            driver.find_element(by=By.ID, value='form:CNPJ').send_keys(cnpj)
-            driver.find_element(by=By.ID, value='form:senha').send_keys(str(cnpj[:8]))
-            driver.execute_script('document.getElementById("g-recaptcha-response").innerHTML="' + captcha + '";')
-    
-            sleep(1)
-            driver.find_element(by=By.ID, value='form:btnAutenticar').click()
+            driver.close()
+            x = 'erro'
+        
+        if x == 'ok':
             sleep(5)
-    
-            html = driver.page_source.encode('utf-8')
-            soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
-            padrao = re.compile(r'class=\"erro\">(.+)</li>')
-            resposta = padrao.search(str(soup))
-            if resposta:
-                resposta = resposta.group(1)
-    
+            try:
+                recaptcha_data = {'sitekey': _site_key, 'url': url}
+        
+                captcha = _solve_recaptcha(recaptcha_data)
+                print('>>> logando no site')
+                driver.find_element(by=By.ID, value='form:CNPJ').send_keys(cnpj)
+                driver.find_element(by=By.ID, value='form:senha').send_keys(str(cnpj[:8]))
+                driver.execute_script('document.getElementById("g-recaptcha-response").innerHTML="' + captcha + '";')
+        
+                sleep(1)
+                driver.find_element(by=By.ID, value='form:btnAutenticar').click()
+                sleep(5)
+        
+                html = driver.page_source.encode('utf-8')
+                soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
+                padrao = re.compile(r'class=\"erro\">(.+)</li>')
+                resposta = padrao.search(str(soup))
+                if resposta:
+                    resposta = resposta.group(1)
+        
+                    print('❌ {}'.format(resposta))
+                    if resposta == 'Senha da empresa inválida! ' or resposta == 'Sem acesso: Verifique senha, CNPJ da empresa ou nível de acesso!':
+                        _escreve_relatorio_csv(';'.join([cnpj, resposta]), nome=_execucao)
+                        driver.close()
+                        return 'erro no login'
+                    
+                    tentativas += 1
+                    x = 'erro'
+                    driver.close()
+                else:
+                    resposta = consulta(driver, cnpj)
+                    if resposta == 'erro':
+                        x = 'erro'
+                        tentativas += 1
+                        driver.close()
+                    else:
+                        driver.close()
+                        return 'ok'
+            except:
+                resposta = 'Erro no login'
                 print('❌ {}'.format(resposta))
-                if resposta == 'Senha da empresa inválida! ' or resposta == 'Sem acesso: Verifique senha, CNPJ da empresa ou nível de acesso!':
-                    _escreve_relatorio_csv(';'.join([cnpj, resposta]), nome=_execucao)
-                    return 'erro no login'
-                
                 tentativas += 1
                 x = 'erro'
-            else:
-                x = 'ok'
-        except:
-            resposta = 'Erro no login'
-            print('❌ {}'.format(resposta))
-            tentativas += 1
-            x = 'erro'
-
-        if tentativas >= 3:
-            _escreve_relatorio_csv(';'.join([cnpj, resposta]), nome=_execucao)
-            return 'erro no login'
-
-    resultado = consulta(driver, cnpj)
-
-    return resultado
+                driver.close()
+    
+            if tentativas >= 3:
+                _escreve_relatorio_csv(';'.join([cnpj, resposta]), nome=_execucao)
+                return 'erro no login'
 
 
 def consulta(driver, cnpj):
@@ -134,12 +147,8 @@ def run():
         cnpj, nome = empresa
 
         _indice(count, total_empresas, empresa)
-
-        resultado = 'erro'
-        while resultado == 'erro':
-            status, driver = _initialize_chrome(options)
-            resultado = login(cnpj, driver)
-            driver.close()
+        
+        login(cnpj, options)
 
 
 if __name__ == '__main__':

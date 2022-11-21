@@ -119,13 +119,12 @@ def salvar_guia(cnpj):
         time.sleep(1)
     _click_img('Salvar.png', conf=0.9)
     
-    while not _find_img('Imprimir2.png', conf=0.9):
+    while not _find_img('SalvarComo.png', conf=0.9) or not _find_img('SalvarComo2.png', conf=0.9):
         time.sleep(1)
-    if _find_img('Imprimir2.png', conf=0.9):
-        _click_img('Imprimir2.png', conf=0.9)
-    
-    while not _find_img('SalvarComo2.png', conf=0.9):
-        time.sleep(1)
+        if _find_img('Imprimir2.png', conf=0.9):
+            _click_img('Imprimir2.png', conf=0.9)
+        if _find_img('Imprimir.png', conf=0.9):
+            _click_img('Imprimir.png', conf=0.9)
         
     # Usa o pyperclip porque o pyautogui não digita letra com acento
     copy(f'{cnpj} - Certidão Negativa de Débitos Municipais Vinhedo.pdf')
@@ -163,9 +162,7 @@ def run():
         return False
     
     options = webdriver.ChromeOptions()
-    # options.add_argument("--start-maximized")
-    options.add_argument('--headless')
-    options.add_argument('--window-size=1920,1080')
+    options.add_argument("--start-maximized")
     
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):

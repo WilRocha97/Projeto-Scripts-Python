@@ -15,7 +15,7 @@ from chrome_comum import initialize_chrome
 disable_warnings(exceptions.InsecureRequestWarning)
 warnings.filterwarnings('ignore')
 
-# variaveis globais
+# variáveis globais
 _perfil = {'contribuinte': ('1', 'CONTR'), 'contador': ('2', 'CONTA')}
 
 

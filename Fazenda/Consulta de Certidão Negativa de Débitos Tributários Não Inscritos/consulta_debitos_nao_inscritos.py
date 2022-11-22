@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
-import sys
 import os
 from time import sleep
-
-import pyautogui
 from pyperclip import copy
 from pyautogui import press, write, hotkey, mouseInfo, click
 
-sys.path.append(r'..\..\_comum')
+from sys import path
+path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header_csv, _download_file, _open_lista_dados, _where_to_start, _indice
 from pyautogui_comum import _find_img, _click_img, _wait_img
 

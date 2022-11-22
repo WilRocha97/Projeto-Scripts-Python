@@ -23,7 +23,7 @@ def analiza():
         arq = os.path.join(documentos, arq)
         with fitz.open(arq) as pdf:
 
-            # Pra cada pagina do pdf
+            # Para cada página do pdf
             for page in pdf:
                 try:
                     # Pega o texto da pagina
@@ -34,7 +34,7 @@ def analiza():
                     if not localiza_empresa:
                         continue
 
-                    # Procura a descrição do valor a recolher 1, tem algumas variações do que aparece junto a éssa info
+                    # Procura a descrição do valor a recolher 1, tem algumas variações do que aparece junto a essa info
                     localiza_receita = padrao_receita.search(textinho)
                     localiza_declaracao = padrao_declaracao.search(textinho)
                     

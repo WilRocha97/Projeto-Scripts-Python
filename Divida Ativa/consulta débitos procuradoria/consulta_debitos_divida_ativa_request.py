@@ -4,10 +4,13 @@ import re
 from bs4 import BeautifulSoup
 from requests import Session
 from xhtml2pdf import pisa
+from selenium import webdriver
+from selenium.webdriver.common.by import By
 
 from sys import path
 path.append(r'..\..\_comum')
 from captcha_comum import _solve_recaptcha
+from chrome_comum import _initialize_chrome
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
 import os
 
@@ -102,99 +105,125 @@ def salva_pagina(pagina, cnpj, compl=''):
     return True
 
 
-def consulta_debito(empresa):
+def inicia_sessao():
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument('--window-size=1920,1080')
+    
+    status, driver = _initialize_chrome(options)
+    
+    url = 'https://www.dividaativa.pge.sp.gov.br/sc/pages/consultas/consultarDebito.jsf'
+    driver.get(url)
+    
+    # gera o token para passar pelo captcha
+    recaptcha_data = {'sitekey': '6Le9EjMUAAAAAPKi-JVCzXgY_ePjRV9FFVLmWKB_', 'url': url}
+    token = _solve_recaptcha(recaptcha_data)
+    
+    driver.find_element(by=By.ID, value='consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa').click()
+    driver.find_element(by=By.XPATH, value='/html/body/div[1]/div/div/div/div[2]/div/div[3]/div/div[2]/div[2]/span/form/span/div/div[2]/table/tbody/tr/td[1]/div/div/span/select/option[2]').click()
+    time.sleep(1)
+    
+    driver.find_element(by=By.ID, value='consultaDebitoForm:decTxtTipoConsulta:cnpj').send_keys('00656064000145')
+    driver.execute_script("document.getElementById('g-recaptcha-response').innerText='" + token + "'")
+    time.sleep(1)
+    
+    driver.execute_script("document.getElementsByName('consultaDebitoForm:j_id102')[0].click()")
+    time.sleep(1)
+    return driver
+
+
+def consulta_debito(s, empresa):
     cnpj, nome = empresa
     url = 'https://www.dividaativa.pge.sp.gov.br/sc/pages/consultas/consultarDebito.jsf'
-    str_cnpj = f"{cnpj[0:2]}.{cnpj[2:5]}.{cnpj[5:8]}/{cnpj[8:12]}-{cnpj[12:]}"
-    with Session() as s:
-        pagina = s.get(url)
-        
-        try:
-            soup = BeautifulSoup(pagina.content, 'html.parser')
-            viewstate = soup.find(id="javax.faces.ViewState").get('value')
-        except Exception as e:
-            print('❌ Não encontrou viewState')
-            print(e)
-            s.close()
-            return False
-        
-        # gera o token para passar pelo captcha
-        recaptcha_data = {'sitekey': '6Le9EjMUAAAAAPKi-JVCzXgY_ePjRV9FFVLmWKB_', 'url': url}
-        token = _solve_recaptcha(recaptcha_data)
-        
-        # Troca opção de pesquisa para CNPJ
-        info = {
-            'AJAXREQUEST': '_viewRoot',
-            'consultaDebitoForm': 'consultaDebitoForm',
-            'consultaDebitoForm:decTxtTipoConsulta:cdaEtiqueta': '',
-            'g-recaptcha-response': '',
-            'consultaDebitoForm:modalSelecionarDebitoOpenedState': '',
-            'consultaDebitoForm:modalDadosCartorioOpenedState': '',
-            'javax.faces.ViewState': viewstate,
-            'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa': 'CNPJ',
-            'ajaxSingle': 'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa',
-            'consultaDebitoForm:decLblTipoConsulta:j_id74': 'consultaDebitoForm:decLblTipoConsulta:j_id74'
-        }
-        s.post(url, info)
-        
-        # Consulta o cnpj
-        info = {
-            'consultaDebitoForm': 'consultaDebitoForm',
-            'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa': 'CNPJ',
-            'consultaDebitoForm:decTxtTipoConsulta:cnpj': str_cnpj,
-            'consultaDebitoForm:decTxtTipoConsulta:tiposDebitosCnpj': 0,
-            'g-recaptcha-response': token,
-            'consultaDebitoForm:j_id102': 'Consultar',
-            'consultaDebitoForm:modalSelecionarDebitoOpenedState': '',
-            'consultaDebitoForm:modalDadosCartorioOpenedState': '',
-            'javax.faces.ViewState': viewstate
-        }
-        pagina = s.post(url, info)
-        debitos = verifica_debitos(pagina)
-        
-        if not debitos:
-            print('✔ Sem débitos')
-            _escreve_relatorio_csv(f'{cnpj};Empresa sem debitos')
-        else:
-            print('❗ Com débitos')
-            soup = BeautifulSoup(pagina.content, 'html.parser')
-            tabela = soup.find('tbody', attrs={'id': 'consultaDebitoForm:dataTable:tb'})
-            linhas = tabela.find_all('a')
-            viewstate = soup.find('input', attrs={'id': "javax.faces.ViewState"}).get('value')
-            for index, linha in enumerate(linhas):
-                tipo = linha.get('id')
-                info = {
-                    'consultaDebitoForm': 'consultaDebitoForm',
-                    'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa': 'CNPJ',
-                    'consultaDebitoForm:decTxtTipoConsulta:cnpj': cnpj,
-                    'consultaDebitoForm:decTxtTipoConsulta:tiposDebitosCnpj': 0,
-                    'g-recaptcha-response': token,
-                    'consultaDebitoForm:modalSelecionarDebitoOpenedState': '',
-                    'consultaDebitoForm:modalDadosCartorioOpenedState': '',
-                    'javax.faces.ViewState': viewstate,
-                    f'consultaDebitoForm:dataTable:{index}:lnkConsultaDebito': tipo
-                }
-                pagina = s.post(url, info)
-                salva_pagina(pagina, cnpj, linha.text)
-                
-                # Retorna para tela de consulta
-                viewstate = soup.find('input', attrs={'id': "javax.faces.ViewState"}).get('value')
-                info = {
-                    'consultaDebitoForm': 'consultaDebitoForm',
-                    'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa': 'CNPJ',
-                    'consultaDebitoForm:decTxtTipoConsulta:cnpj': cnpj,
-                    'consultaDebitoForm:decTxtTipoConsulta:tiposDebitosCnpj': 0,
-                    'g-recaptcha-response': token,
-                    'consultaDebitoForm:j_id260': 'Voltar',
-                    'consultaDebitoForm:modalSelecionarDebitoOpenedState': '',
-                    'consultaDebitoForm:modalDadosCartorioOpenedState': '',
-                    'javax.faces.ViewState': viewstate
-                }
-                s.post(url, info)
-                viewstate = soup.find('input', attrs={'id': "javax.faces.ViewState"}).get('value')
-        
+    # str_cnpj = f"{cnpj[0:2]}.{cnpj[2:5]}.{cnpj[5:8]}/{cnpj[8:12]}-{cnpj[12:]}"
+
+    pagina = s.get(url)
+    
+    try:
+        soup = BeautifulSoup(pagina.content, 'html.parser')
+        viewstate = soup.find(id="javax.faces.ViewState").get('value')
+    except Exception as e:
+        print('❌ Não encontrou viewState')
+        print(e)
         s.close()
-        return True
+        return False
+    
+    # gera o token para passar pelo captcha
+    recaptcha_data = {'sitekey': '6Le9EjMUAAAAAPKi-JVCzXgY_ePjRV9FFVLmWKB_', 'url': url}
+    token = _solve_recaptcha(recaptcha_data)
+    
+    # Troca opção de pesquisa para CNPJ
+    info = {
+        'AJAXREQUEST': '_viewRoot',
+        'consultaDebitoForm': 'consultaDebitoForm',
+        'consultaDebitoForm:decTxtTipoConsulta:cdaEtiqueta': '',
+        'g-recaptcha-response': '',
+        'consultaDebitoForm:modalSelecionarDebitoOpenedState': '',
+        'consultaDebitoForm:modalDadosCartorioOpenedState': '',
+        'javax.faces.ViewState': viewstate,
+        'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa': 'CNPJ',
+        'ajaxSingle': 'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa',
+        'consultaDebitoForm:decLblTipoConsulta:j_id74': 'consultaDebitoForm:decLblTipoConsulta:j_id74'
+    }
+    s.post(url, info)
+    
+    # Consulta o cnpj
+    info = {
+        'consultaDebitoForm': 'consultaDebitoForm',
+        'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa': 'CNPJ',
+        'consultaDebitoForm:decTxtTipoConsulta:cnpj': cnpj,
+        'consultaDebitoForm:decTxtTipoConsulta:tiposDebitosCnpj': 0,
+        'g-recaptcha-response': token,
+        'consultaDebitoForm:j_id102': 'Consultar',
+        'consultaDebitoForm:modalSelecionarDebitoOpenedState': '',
+        'consultaDebitoForm:modalDadosCartorioOpenedState': '',
+        'javax.faces.ViewState': viewstate
+    }
+    pagina = s.post(url, info)
+    debitos = verifica_debitos(pagina)
+    
+    if not debitos:
+        print('✔ Sem débitos')
+        _escreve_relatorio_csv(f'{cnpj};Empresa sem debitos')
+    else:
+        print('❗ Com débitos')
+        soup = BeautifulSoup(pagina.content, 'html.parser')
+        tabela = soup.find('tbody', attrs={'id': 'consultaDebitoForm:dataTable:tb'})
+        linhas = tabela.find_all('a')
+        viewstate = soup.find('input', attrs={'id': "javax.faces.ViewState"}).get('value')
+        for index, linha in enumerate(linhas):
+            tipo = linha.get('id')
+            info = {
+                'consultaDebitoForm': 'consultaDebitoForm',
+                'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa': 'CNPJ',
+                'consultaDebitoForm:decTxtTipoConsulta:cnpj': cnpj,
+                'consultaDebitoForm:decTxtTipoConsulta:tiposDebitosCnpj': 0,
+                'g-recaptcha-response': token,
+                'consultaDebitoForm:modalSelecionarDebitoOpenedState': '',
+                'consultaDebitoForm:modalDadosCartorioOpenedState': '',
+                'javax.faces.ViewState': viewstate,
+                f'consultaDebitoForm:dataTable:{index}:lnkConsultaDebito': tipo
+            }
+            pagina = s.post(url, info)
+            salva_pagina(pagina, cnpj, linha.text)
+            
+            # Retorna para tela de consulta
+            viewstate = soup.find('input', attrs={'id': "javax.faces.ViewState"}).get('value')
+            info = {
+                'consultaDebitoForm': 'consultaDebitoForm',
+                'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa': 'CNPJ',
+                'consultaDebitoForm:decTxtTipoConsulta:cnpj': cnpj,
+                'consultaDebitoForm:decTxtTipoConsulta:tiposDebitosCnpj': 0,
+                'g-recaptcha-response': token,
+                'consultaDebitoForm:j_id260': 'Voltar',
+                'consultaDebitoForm:modalSelecionarDebitoOpenedState': '',
+                'consultaDebitoForm:modalDadosCartorioOpenedState': '',
+                'javax.faces.ViewState': viewstate
+            }
+            s.post(url, info)
+            viewstate = soup.find('input', attrs={'id': "javax.faces.ViewState"}).get('value')
+    
+    return True
 
 
 @_time_execution
@@ -204,19 +233,28 @@ def run():
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:
         return False
-    
-    total_empresas = empresas[index:]
-    for count, empresa in enumerate(empresas[index:], start=1):
-        _indice(count, total_empresas, empresa)
-        
-        erro = 'sim'
-        while erro == 'sim':
-            try:
-                consulta_debito(empresa)
-                erro = 'nao'
-            except:
-                erro = 'sim'
 
+    driver = inicia_sessao()
+
+    cookies = driver.get_cookies()
+    driver.quit()
+    with Session() as s:
+        for cookie in cookies:
+            s.cookies.set(cookie['name'], cookie['value'])
+            
+        total_empresas = empresas[index:]
+        for count, empresa in enumerate(empresas[index:], start=1):
+            _indice(count, total_empresas, empresa)
+            
+            erro = 'sim'
+            while erro == 'sim':
+                try:
+                    consulta_debito(s, empresa)
+                    erro = 'nao'
+                except:
+                    erro = 'sim'
+    s.close()
+    
 
 if __name__ == '__main__':
     run()

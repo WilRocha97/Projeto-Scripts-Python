@@ -118,9 +118,12 @@ def pega_info(cnpj, driver):
         except:
             endereco = ''
         enderecos += endereco + ', '
+
+    enderecos = enderecos.replace(', , ', ', ').replace(';', '')
+    pattern = re.compile(r'\s\s+')
+    enderecos = re.sub(pattern, '', enderecos)
     
-    _escreve_relatorio_csv(f"{cnpj};{infos}{enderecos.replace(', , ', ', ').replace(';', '').replace('      ', ' ').replace('      ', ' ').replace('   ', ' ').replace('   ', ' ').replace('   ', ' ').replace('  ', ' ').replace('  ', ' ').replace('  ', ' ')}",
-                           nome='Consulta ao cadastro de ICMS')
+    _escreve_relatorio_csv(f"{cnpj};{infos}{enderecos}", nome='Consulta ao cadastro de ICMS')
     print(f'✔ Dados coletados')
 
 

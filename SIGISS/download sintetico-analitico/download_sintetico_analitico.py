@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+import time
+from bs4 import BeautifulSoup
 from dateutil.relativedelta import *
 from datetime import datetime, date
 from requests import Session
 from pyautogui import prompt
-from Dados import empresas
 from time import sleep
-import os
+import os, re
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -55,10 +56,23 @@ def consulta_xml(empresa, data_inicio, data_final):
     with Session() as s:
         login_data = {"loginacesso": cnpj, "senha": senha}
         pagina = s.post(url_acesso, login_data)
-        if pagina.status_code != 200:
-            print('>>> Erro a acessar página.')
-            return False
 
+        try:
+            soup = BeautifulSoup(pagina.content, 'html.parser')
+            soup = soup.prettify()
+            # print(soup)
+            regex = re.compile(r"'Aviso', '(.+)<br>")
+            regex2 = re.compile(r"'Aviso', '(.+)\.\.\.', ")
+            try:
+                documento = regex.search(soup).group(1)
+            except:
+                documento = regex2.search(soup).group(1)
+            _escreve_relatorio_csv(f'{cnpj};{nome};{documento}')
+            print(f"❌ {documento}")
+            return False
+        except:
+            pass
+        
         for comp in intervalo_comp(data_inicio, data_final):
             info = {
                 'cnpj_cpf_destinatario': '',
@@ -99,16 +113,19 @@ def consulta_xml(empresa, data_inicio, data_final):
             salvar = [(s.get(url_sintetico)), (s.get(url_analitico))]
             # salvar relatório sintético depois relatório analítico
             for url in salvar:
+                arquivo_nome = re.compile(r'- \d+ - (.+)').search(file).group(1)
                 # rotina para salvar os arquivos pdf
                 if 'text' not in url.headers.get('Content-Type', 'text'):
                     arquivo = open(os.path.join(pasta, file+'.pdf'), 'wb')
                     for parte in url.iter_content(100000):
                         arquivo.write(parte)
                     arquivo.close()
-                    print(f"✔ Arquivo {file}.pdf salvo")
+                    
+                    _escreve_relatorio_csv(f'{cnpj};{senha};{nome};Relatório {arquivo_nome} gerado')
+                    print(f"✔ Relatório {arquivo_nome} salvo")
                 else:
-                    _escreve_relatorio_csv(f'{cnpj};{senha};{nome};Erro ao acessar a página')
-                    print(f'❌ Não gerou relatório {file}.')
+                    _escreve_relatorio_csv(f'{cnpj};{senha};{nome};Erro ao acessar a página {arquivo_nome}')
+                    print(f'❌ Não gerou relatório {arquivo_nome}.')
 
                 # necessário para não sobrepor o cachê da pesquisa
                 sleep(1)

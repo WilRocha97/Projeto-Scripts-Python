@@ -194,14 +194,19 @@ def transmitir(empresa, comp):
     excessoes = [('cpf_do_responsavel_invalido.png', 'CPF do responsável inválido'),
                  ('cnpj_informado_nao_confere.png', 'CNPJ informado não confere com o existente'),
                  ('usuario_nao_cadastrado.png', 'Usuário não cadastrado'),
-                 ('arquivo_corrompido.png', 'Arquivo de configuração corrompido')]
+                 ('arquivo_corrompido.png', 'Arquivo de configuração corrompido'),
+                 ('erro.png', 'Erro no SEDIF')]
     
     while not _find_img('processo_finalizado.png', conf=0.9):
         time.sleep(1)
         for excessao in excessoes:
             
             if _find_img(excessao[0], conf=0.9):
-                _escreve_relatorio_csv(f'{cnpj};{nome};{excessao[1]}', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
+                if not excessao[1] == 'Erro no SEDIF':
+                    _escreve_relatorio_csv(f'{cnpj};{nome};{excessao[1]}', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
+                else:
+                    p.press('enter')
+                    
                 print(f'❌ {excessao[1]}')
                 
                 p.hotkey('alt', 'f')
@@ -211,7 +216,7 @@ def transmitir(empresa, comp):
                 p.press('f')
                 
                 excluir_documento()
-                return False
+                return excessao[1]
 
     p.press('enter')
     
@@ -290,13 +295,20 @@ def run():
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         _indice(count, total_empresas, empresa)
-        reinstala_sedif()
-        if not configura(empresa, comp):
-            continue
-        transmitir(empresa, comp)
-        p.hotkey('alt', 'f4')
-        time.sleep(1)
-        p.hotkey('alt', 's')
+        erro = 'sim'
+        while erro == 'sim':
+            reinstala_sedif()
+            if not configura(empresa, comp):
+                continue
+            erro = transmitir(empresa, comp)
+            p.hotkey('alt', 'f4')
+            time.sleep(1)
+            p.hotkey('alt', 's')
+            
+            if erro == 'Erro no SEDIF':
+                erro = 'sim'
+            else:
+                erro = 'não'
 
 
 if __name__ == '__main__':

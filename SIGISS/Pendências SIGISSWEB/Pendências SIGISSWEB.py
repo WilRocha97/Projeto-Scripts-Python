@@ -38,7 +38,7 @@ def consulta(empresas, index):
                     documento = regex.search(soup).group(1)
                 except:
                     documento = regex2.search(soup).group(1)
-                _escreve_relatorio_csv(f'{cnpj};{nome};{documento}', nome='Pendências SIGISSWEB Valinhos')
+                _escreve_relatorio_csv(f'{cnpj};{senha};{nome};{documento}', nome='Pendências SIGISSWEB Valinhos')
                 print(f"❌ {documento}")
                 continue
             except:
@@ -73,7 +73,7 @@ def consulta(empresas, index):
                 arquivo.write(parte)
             arquivo.close()
             
-            _escreve_relatorio_csv(f'{cnpj};{nome};{documento}', nome='Pendências SIGISSWEB Valinhos')
+            _escreve_relatorio_csv(f'{cnpj};{senha};{nome};{documento}', nome='Pendências SIGISSWEB Valinhos')
             
 
 @_time_execution

@@ -67,7 +67,7 @@ def consulta_xml(empresa, data_inicio, data_final):
                 documento = regex.search(soup).group(1)
             except:
                 documento = regex2.search(soup).group(1)
-            _escreve_relatorio_csv(f'{cnpj};{nome};{documento}')
+            _escreve_relatorio_csv(f'{cnpj};{senha};{nome};{documento}')
             print(f"❌ {documento}")
             return False
         except:
@@ -114,8 +114,12 @@ def consulta_xml(empresa, data_inicio, data_final):
             # salvar relatório sintético depois relatório analítico
             for url in salvar:
                 arquivo_nome = re.compile(r'- \d+ - (.+)').search(file).group(1)
+                
                 # rotina para salvar os arquivos pdf
                 if 'text' not in url.headers.get('Content-Type', 'text'):
+                    os.makedirs('execução/Sintético', exist_ok=True)
+                    os.makedirs('execução/Analítico', exist_ok=True)
+                    
                     arquivo = open(os.path.join(pasta, file+'.pdf'), 'wb')
                     for parte in url.iter_content(100000):
                         arquivo.write(parte)
@@ -146,8 +150,7 @@ def run():
     if index is None:
         return False
 
-    os.makedirs('execução/Sintético', exist_ok=True)
-    os.makedirs('execução/Analítico', exist_ok=True)
+    
 
     data_inicio = prompt("Data inicio no formato 00/0000:").split('/')
     data_final = prompt("Data final no formato 00/0000:").split('/')

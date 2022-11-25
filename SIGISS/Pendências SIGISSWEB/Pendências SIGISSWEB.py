@@ -33,7 +33,7 @@ def consulta(empresas, index):
                 soup = soup.prettify()
                 # print(soup)
                 regex = re.compile(r"'Aviso', '(.+)<br>")
-                regex2 = re.compile(r"'Aviso', '(.+)...', ")
+                regex2 = re.compile(r"'Aviso', '(.+)\.\.\.', ")
                 try:
                     documento = regex.search(soup).group(1)
                 except:

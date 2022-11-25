@@ -19,10 +19,10 @@ def analiza():
         arquivo = os.path.join(documentos, arq)
         with fitz.open(arquivo) as pdf:
     
-            pattern = re.compile(r'- \d+ - Analitico.pdf')
+            pattern = re.compile(r'- \d+ - Analítico.pdf')
             empresa = re.sub(pattern, '', arq)
 
-            cnpj = re.compile(r'- (\d+) - Analitico.pdf').search(arq).group(1)
+            cnpj = re.compile(r'- (\d+) - Analítico.pdf').search(arq).group(1)
 
             # Para cada página do pdf
             for page in pdf:
@@ -40,7 +40,6 @@ def analiza():
                         indice += 1
                         
                         if indice >= 30:
-                            print(f'{arq} - {textinho}')
                             break
                             
                     if not valores:

@@ -87,7 +87,7 @@ def consulta_xml(empresa, data_inicio, data_final):
                 'rps': '',
                 'operRPS': '=',
                 'rps2': '',
-                'data_emissao':'', 
+                'data_emissao': '',
                 'operData': '=',
                 'data_emissao2': '',
                 'mesi': comp[0],
@@ -149,8 +149,6 @@ def run():
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:
         return False
-
-    
 
     data_inicio = prompt("Data inicio no formato 00/0000:").split('/')
     data_final = prompt("Data final no formato 00/0000:").split('/')

@@ -20,7 +20,7 @@ def find_by_id(xpath, driver):
         return None
 
 
-def consultar(options, cnpj):
+def consultar(options, cnpj, nome):
     status, driver = _initialize_chrome(options)
     
     # entra na página inicial da consulta
@@ -68,17 +68,17 @@ def consultar(options, cnpj):
             print(f'Erro no login: {erro}')
             if erro == 'Captcha inválido. Tente novamente.':
                 return False
-            _escreve_relatorio_csv(f'{cnpj};Erro no login: {erro}', nome='Consulta ao cadastro de ICMS')
+            _escreve_relatorio_csv(f'{nome};{cnpj};Erro no login: {erro}', nome='Consulta ao cadastro de ICMS')
             return True
     
     # pega as infos da empresa para preencher a planilha
     print('>>> Consultando empresa')
-    pega_info(cnpj, driver)
+    pega_info(cnpj, nome, driver)
     driver.quit()
     return True
 
 
-def pega_info(cnpj, driver):
+def pega_info(cnpj, nome, driver):
     # pega as infos da empresa
     regex = [r'IE:.+\n.+\"dadoDetalhe\">(.+)</td>',  # inscrição estadual
              r'Empresarial:.+\n.+\"dadoDetalhe\">(.+)</td>',  # nome da empresa
@@ -123,7 +123,7 @@ def pega_info(cnpj, driver):
     pattern = re.compile(r'\s\s+')
     enderecos = re.sub(pattern, '', enderecos)
     
-    _escreve_relatorio_csv(f"{cnpj};{infos}{enderecos}", nome='Consulta ao cadastro de ICMS')
+    _escreve_relatorio_csv(f"{nome};{cnpj};Ok;{infos}{enderecos}", nome='Consulta ao cadastro de ICMS')
     print(f'✔ Dados coletados')
 
 
@@ -159,7 +159,7 @@ def run():
         
         erro = False
         while not erro:
-            erro = consultar(options, cnpj)
+            erro = consultar(options, cnpj, nome)
     
     _escreve_header_csv(';'.join(['CNPJ', 'IE', 'NOME', 'SITUAÇÃO CADASTRAL', 'DATA DA SITUAÇÃO', 'OCORRÊNCIA FISCAL', 'DATA DE INATIVIDADE', 'NATUREZA JURÍDICA',
                                   'REGIME DE APURAÇÃO', 'ATIVIDADE ECONÔMICA', 'POSTO FISCAL', 'CREDENCIAMENTO COMO EMISSOR DE NF-E', 'OBRIGATORIEDADE DE NF-E',

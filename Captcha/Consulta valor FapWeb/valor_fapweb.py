@@ -50,18 +50,21 @@ def login(cnpj, options):
         
                 html = driver.page_source.encode('utf-8')
                 soup = BeautifulSoup(html, 'html.parser', from_encoding='utf-8')
-                padrao = re.compile(r'</li><li class=\"erro\">(.+)</li>')
+                padrao = re.compile(r'<li class=\"erro\">(.+)</li>')
                 resposta = padrao.search(str(soup))
                 if resposta:
                     resposta = resposta.group(1)
+                    resposta = resposta.replace('O parâmetro responde é inválido.</li><li class="erro">', '')
                     print('❌ {}'.format(resposta))
                     
-                    if resposta == 'Senha da empresa inválida! ' or resposta == 'Sem acesso: Verifique senha, CNPJ da empresa ou nível de acesso!':
+                    if resposta == 'Senha da empresa inválida! ' \
+                            or resposta == 'Sem acesso: Verifique senha, CNPJ da empresa ou nível de acesso!' \
+                            or resposta == 'Irregularidade com a senha digitada. Procure a unidade de atendimento da Receita Federal do Brasil - RFB ou consulte o Guia de Consulta na página inicial do FAP. ':
                         _escreve_relatorio_csv(';'.join([cnpj, resposta]), nome=_execucao)
                         driver.close()
                         return 'erro no login'
                     
-                    if resposta == 'Erro ao validar o captcha.':
+                    elif resposta == 'O parâmetro responde é inválido.</li><li class="erro">Erro ao validar o captcha.':
                         x = 'erro'
                         driver.close()
                         
@@ -150,6 +153,7 @@ def run():
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     options.add_argument('--window-size=1920,1080')
+    options.add_argument('--ignore-certificate-errors')
     # options.add_argument("--start-maximized")
 
     total_empresas = empresas[index:]

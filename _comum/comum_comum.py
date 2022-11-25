@@ -13,7 +13,7 @@ import contextlib
 import OpenSSL.crypto
 
 # variáveis globais
-e_dir = Path('execucao')
+e_dir = Path('execução')
 _headers = {
     'Accept-Encoding': 'gzip, deflate, sdch',
     'Accept-Language': 'en-US,en;q=0.8',

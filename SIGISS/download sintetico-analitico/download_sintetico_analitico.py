@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# ! python3
 from dateutil.relativedelta import *
 from datetime import datetime, date
 from requests import Session
@@ -8,15 +7,20 @@ from Dados import empresas
 from time import sleep
 import os
 
+from sys import path
+path.append(r'..\..\_comum')
+from chrome_comum import _initialize_chrome, _send_input
+from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header_csv, _open_lista_dados, _where_to_start, _indice
+
 '''
-Download dos pdf no período dtInicio-dtFinal para a empresa CNPJ (notas prestadas e tomadas)
+Download dos pdf no período dtInicio-dats_final para a empresa CNPJ (notas prestadas e tomadas)
 Os arquivos são obtidos pelo site 'https://valinhos.sigissweb.com' através do usuario e senha 
 do contribuinte.
 
 url_acesso -> link para acessar o sistema
 url_pesquisa -> link para filtrar o período necessário
-url_sintetico -> link que retorna o arquivo .pdf sintetico do período solicitado
-url_analitico -> link que retorna o arquivo .pdf analitico do período solicitado
+url_sintético -> link que retorna o arquivo .pdf sintético do período solicitado
+url_analitico -> link que retorna o arquivo .pdf analítico do período solicitado
 '''
 
 
@@ -37,22 +41,25 @@ def intervalo_comp(dti, dtf):
     return intervalo
 
 
-def consulta_xml(nome, cnpj, senha, dtInicio, dtFinal):
+def consulta_xml(empresa, data_inicio, data_final):
+    cnpj, senha, nome = empresa
+    nome = nome.replace('/', ' ').replace('   ', ' ').replace('  ', ' ')
+    
     url_acesso = "https://valinhos.sigissweb.com/ControleDeAcesso"
     url_pesquisa = "https://valinhos.sigissweb.com/nfecentral?oper=efetuapesquisasimples"
     url_sintetico = "https://valinhos.sigissweb.com/nfecentral?oper=relnfesintetico"
     url_analitico = "https://valinhos.sigissweb.com/nfecentral?oper=relnfeanalitico"
     # obter login e senha do banco de dados utilizando o cnpj
 
-    # inicia a sessão no site, realiza o login e obtem os arquivos para o contribuinte
+    # inicia a sessão no site, realiza o login e obtém os arquivos para o contribuinte
     with Session() as s:
-        login_data = {"loginacesso":cnpj,"senha":senha}
+        login_data = {"loginacesso": cnpj, "senha": senha}
         pagina = s.post(url_acesso, login_data)
         if pagina.status_code != 200:
             print('>>> Erro a acessar página.')
             return False
 
-        for comp in intervalo_comp(dtInicio, dtFinal):
+        for comp in intervalo_comp(data_inicio, data_final):
             info = {
                 'cnpj_cpf_destinatario': '',
                 'operCNPJCPFdest': 'EX',
@@ -80,19 +87,17 @@ def consulta_xml(nome, cnpj, senha, dtInicio, dtFinal):
                 'tipoPesq': 'normal'
             }
 
-            file = '-'.join([nome, cnpj, 'Sintetico'])
             pagina = s.post(url_pesquisa, info)
             if pagina.status_code != 200:
-                print('>>> Erro a acessar página.')
+                _escreve_relatorio_csv(f'{cnpj};{senha};{nome};Erro ao acessar a página')
+                print('>>> Erro ao acessar a página.')
                 return False
 
-            salvar = []          
-            salvar.append(s.get(url_sintetico))
-            salvar.append(s.get(url_analitico))
+            file = f'{nome} - {cnpj} - Sintético'
+            pasta = 'execução/Sintético'
 
-            pasta = 'sintetico'
-
-            #salvar relatório sintético depois relatório analítico
+            salvar = [(s.get(url_sintetico)), (s.get(url_analitico))]
+            # salvar relatório sintético depois relatório analítico
             for url in salvar:
                 # rotina para salvar os arquivos pdf
                 if 'text' not in url.headers.get('Content-Type', 'text'):
@@ -100,30 +105,47 @@ def consulta_xml(nome, cnpj, senha, dtInicio, dtFinal):
                     for parte in url.iter_content(100000):
                         arquivo.write(parte)
                     arquivo.close()
-                    print(f"Arquivo {file}.pdf salvo")
+                    print(f"✔ Arquivo {file}.pdf salvo")
+                else:
+                    _escreve_relatorio_csv(f'{cnpj};{senha};{nome};Erro ao acessar a página')
+                    print(f'❌ Não gerou relatório {file}.')
 
-                # necessário para não sobrepor o cache da pesquisa
+                # necessário para não sobrepor o cachê da pesquisa
                 sleep(1)
 
-                file = '-'.join([nome, cnpj, 'Analitico'])
-                pasta = 'analitico'
+                file = f'{nome} - {cnpj} - Analítico'
+                pasta = 'execução/Analítico'
                 
     return True
 
 
-if __name__ == '__main__':
-    comeco = datetime.now()
-    os.makedirs('sintetico', exist_ok=True)
-    os.makedirs('analitico', exist_ok=True)
+@_time_execution
+def run():
+    # função para abrir a lista de dados
+    empresas = _open_lista_dados()
+    
+    # função para saber onde o robô começa na lista de dados
+    index = _where_to_start(tuple(i[0] for i in empresas))
+    if index is None:
+        return False
 
-    dtInicio = prompt("Data inicio no formato 00-0000:").split('-')
-    dtFinal = prompt("Data inicio no formato 00-0000:").split('-')
+    os.makedirs('execução/Sintético', exist_ok=True)
+    os.makedirs('execução/Analítico', exist_ok=True)
 
-    for empresa in empresas:
-        print('>>> Buscando empresa', empresa[1])
+    data_inicio = prompt("Data inicio no formato 00/0000:").split('/')
+    data_final = prompt("Data final no formato 00/0000:").split('/')
+
+    # cria o indice para cada empresa da lista de dados
+    total_empresas = empresas[index:]
+
+    for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        _indice(count, total_empresas, empresa)
         try:
-            consulta_xml(*empresa, dtInicio, dtFinal)
+            consulta_xml(empresa, data_inicio, data_final)
         except Exception as e:
             print(e)
-    fim = datetime.now()
-    print("\n>>> Tempo total:", (fim-comeco))
+
+
+if __name__ == '__main__':
+    run()

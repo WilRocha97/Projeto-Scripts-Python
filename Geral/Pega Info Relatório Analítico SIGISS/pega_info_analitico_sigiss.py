@@ -19,23 +19,22 @@ def analiza():
         arquivo = os.path.join(documentos, arq)
         with fitz.open(arquivo) as pdf:
     
-            pattern = re.compile(r'- \d+ - Analítico.pdf')
+            pattern = re.compile(r' - \d+ - Analítico.+.pdf')
             empresa = re.sub(pattern, '', arq)
 
-            cnpj = re.compile(r'- (\d+) - Analítico.pdf').search(arq).group(1)
+            cnpj = re.compile(r' - (\d+) - Analítico.+.pdf').search(arq).group(1)
 
             # Para cada página do pdf
             for page in pdf:
                 try:
                     # Pega o texto da pagina
                     textinho = page.get_text('text', flags=1 + 2 + 8)
-                    
                     # Procura o valor a recolher da empresa
                     valores = None
                     indice = 20
                     while not valores:
                         indice = str(indice)
-                        valores = re.compile(r'(.+)\n(.+)\nSérie:\n(.+\n){' + indice + '}ISS\n.+\nR\$ (.+)\nR\$ (.+)\nR\$ (.+)\nR\$ (.+)\nR\$ (.+)(\n.+){7}\nR\$ (.+)').findall(textinho)
+                        valores = re.compile(r'\n.+\n(.+)\n.+\n.0+(.+)\n(.+)\n(.+)\nSérie:\n(.+\n){' + indice + '}ISS\n.+\nR\$ (.+)\nR\$ (.+)\nR\$ (.+)\nR\$ (.+)\nR\$ (.+)(\n.+){7}\nR\$ (.+)').findall(textinho)
                         indice = int(indice)
                         indice += 1
                         
@@ -47,15 +46,17 @@ def analiza():
                 
                     for valor in valores:
                         # Guarda as infos da empresa
-                        cnpj_destinatario = valor[0]
-                        nome_destinatario = valor[1]
-                        iss = valor[9]
-                        pis = valor[3]
-                        cofins = valor[6]
-                        csll = valor[7]
-                        inss = valor[4]
-                        irrf = valor[5]
-                        _escreve_relatorio_csv(f"{cnpj};{empresa};{nome_destinatario};{cnpj_destinatario};{iss};{pis};{cofins};{csll};{inss};{irrf}")
+                        emissao = valor[0]
+                        numero = valor[1]
+                        cnpj_destinatario = valor[2]
+                        nome_destinatario = valor[3]
+                        iss = valor[11]
+                        pis = valor[5]
+                        cofins = valor[8]
+                        csll = valor[9]
+                        inss = valor[6]
+                        irrf = valor[7]
+                        _escreve_relatorio_csv(f"{cnpj};{empresa};{emissao};{numero};{nome_destinatario};{cnpj_destinatario};{iss};{pis};{cofins};{csll};{inss};{irrf}")
                 except():
                     print(f'\nArquivo: {arq} - ERRO')
 
@@ -63,5 +64,5 @@ def analiza():
 if __name__ == '__main__':
     inicio = datetime.now()
     analiza()
-    _escreve_header_csv(';'.join(['CNPJ', 'NOME', 'DESTINATÁRIO', 'CNPJ DESTINATÁRIO', 'ISS', 'PIS', 'COFINS', 'CSLL', 'INSS', 'IRRF']))
+    _escreve_header_csv(';'.join(['CNPJ', 'NOME', 'EMISSÃO DA NOTA', 'NÚMERO DA NOTA', 'DESTINATÁRIO', 'CNPJ DESTINATÁRIO', 'ISS', 'PIS', 'COFINS', 'CSLL', 'INSS', 'IRRF']))
     print(datetime.now() - inicio)

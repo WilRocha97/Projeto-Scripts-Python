@@ -25,23 +25,6 @@ url_analitico -> link que retorna o arquivo .pdf analítico do período solicita
 '''
 
 
-def intervalo_comp(dti, dtf):
-    dti = date(int(dti[1]), int(dti[0]), 1)
-    dtf = date(int(dtf[1]), int(dtf[0]), 1)
-
-    intervalo = []
-    while True:
-        tupla_comp = (str(dti.month).rjust(2, '0'), str(dti.year))
-        intervalo.append(tupla_comp)
-        
-        if dti != dtf:
-            dti = dti + relativedelta(months=+1)
-        else:
-            break
-
-    return intervalo
-
-
 def consulta_xml(empresa, data_inicio, data_final):
     cnpj, senha, nome = empresa
     nome = nome.replace('/', ' ').replace('   ', ' ').replace('  ', ' ')
@@ -72,70 +55,76 @@ def consulta_xml(empresa, data_inicio, data_final):
             return False
         except:
             pass
-        
-        for comp in intervalo_comp(data_inicio, data_final):
-            info = {
-                'cnpj_cpf_destinatario': '',
-                'operCNPJCPFdest': 'EX',
-                'RAZAO_SOCIAL_DESTINATARIO': '',
-                'selnomedestoper': 'EX',
-                'id_codigo_servico': '',
-                'serie': '',
-                'numero_nf': '',
-                'operNFE': '=',
-                'numero_nf2': '',
-                'rps': '',
-                'operRPS': '=',
-                'rps2': '',
-                'data_emissao': '',
-                'operData': '=',
-                'data_emissao2': '',
-                'mesi': comp[0],
-                'anoi': comp[1],
-                'mesf': comp[0],
-                'anof': comp[1],
-                'aliq_iss': '',
-                'regime': '?',
-                'iss_retido': '?',
-                'cancelada': '?',
-                'tipoPesq': 'normal'
-            }
+    
+        info = {
+            'cnpj_cpf_destinatario': '',
+            'operCNPJCPFdest': 'EX',
+            'RAZAO_SOCIAL_DESTINATARIO': '',
+            'selnomedestoper': 'EX',
+            'id_codigo_servico': '',
+            'serie': '',
+            'numero_nf': '',
+            'operNFE': '=',
+            'numero_nf2': '',
+            'rps': '',
+            'operRPS': '=',
+            'rps2': '',
+            'data_emissao': '',
+            'operData': '=',
+            'data_emissao2': '',
+            'mesi': data_inicio[0],
+            'anoi': data_inicio[1],
+            'mesf': data_final[0],
+            'anof': data_final[1],
+            'aliq_iss': '',
+            'regime': '?',
+            'iss_retido': '?',
+            'cancelada': '?',
+            'tipoPesq': 'normal'
+        }
 
-            pagina = s.post(url_pesquisa, info)
-            if pagina.status_code != 200:
-                _escreve_relatorio_csv(f'{cnpj};{senha};{nome};Erro ao acessar a página')
-                print('>>> Erro ao acessar a página.')
-                return False
+        pagina = s.post(url_pesquisa, info)
+        if pagina.status_code != 200:
+            _escreve_relatorio_csv(f'{cnpj};{senha};{nome};Erro ao acessar a página')
+            print('>>> Erro ao acessar a página.')
+            return False
+    
+        if data_inicio != data_final:
+            file = f'{nome} - {cnpj} - Sintético - {str(data_inicio[0])}-{str(data_inicio[1])} até {str(data_final[0])}-{str(data_final[1])}'
+        else:
+            file = f'{nome} - {cnpj} - Sintético - {str(data_inicio[0])}-{str(data_inicio[1])}'
+            
+        pasta = 'execução/Sintético'
 
-            file = f'{nome} - {cnpj} - Sintético'
-            pasta = 'execução/Sintético'
-
-            salvar = [(s.get(url_sintetico)), (s.get(url_analitico))]
-            # salvar relatório sintético depois relatório analítico
-            for url in salvar:
-                arquivo_nome = re.compile(r'- \d+ - (.+)').search(file).group(1)
+        salvar = [(s.get(url_sintetico)), (s.get(url_analitico))]
+        # salvar relatório sintético depois relatório analítico
+        for url in salvar:
+            arquivo_nome = re.compile(r'- \d+ - (.+)').search(file).group(1)
+            
+            # rotina para salvar os arquivos pdf
+            if 'text' not in url.headers.get('Content-Type', 'text'):
+                os.makedirs('execução/Sintético', exist_ok=True)
+                os.makedirs('execução/Analítico', exist_ok=True)
                 
-                # rotina para salvar os arquivos pdf
-                if 'text' not in url.headers.get('Content-Type', 'text'):
-                    os.makedirs('execução/Sintético', exist_ok=True)
-                    os.makedirs('execução/Analítico', exist_ok=True)
-                    
-                    arquivo = open(os.path.join(pasta, file+'.pdf'), 'wb')
-                    for parte in url.iter_content(100000):
-                        arquivo.write(parte)
-                    arquivo.close()
-                    
-                    _escreve_relatorio_csv(f'{cnpj};{senha};{nome};Relatório {arquivo_nome} gerado')
-                    print(f"✔ Relatório {arquivo_nome} salvo")
-                else:
-                    _escreve_relatorio_csv(f'{cnpj};{senha};{nome};Erro ao acessar a página {arquivo_nome}')
-                    print(f'❌ Não gerou relatório {arquivo_nome}.')
+                arquivo = open(os.path.join(pasta, file+'.pdf'), 'wb')
+                for parte in url.iter_content(100000):
+                    arquivo.write(parte)
+                arquivo.close()
+                
+                _escreve_relatorio_csv(f'{cnpj};{senha};{nome};Relatório {arquivo_nome} gerado')
+                print(f"✔ Relatório {arquivo_nome} salvo")
+            else:
+                _escreve_relatorio_csv(f'{cnpj};{senha};{nome};Erro ao acessar a página {arquivo_nome}')
+                print(f'❌ Não gerou relatório {arquivo_nome}.')
 
-                # necessário para não sobrepor o cachê da pesquisa
-                sleep(1)
+            # necessário para não sobrepor o cachê da pesquisa
+            sleep(1)
 
-                file = f'{nome} - {cnpj} - Analítico'
-                pasta = 'execução/Analítico'
+            if data_inicio != data_final:
+                file = f'{nome} - {cnpj} - Analítico - {str(data_inicio[0])}-{str(data_inicio[1])} até {str(data_final[0])}-{str(data_final[1])}'
+            else:
+                file = f'{nome} - {cnpj} - Analítico - {str(data_inicio[0])}-{str(data_inicio[1])}'
+            pasta = 'execução/Analítico'
                 
     return True
 

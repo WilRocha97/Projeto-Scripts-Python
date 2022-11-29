@@ -238,8 +238,8 @@ def transmitir(empresa, comp):
     p.press('enter')
     time.sleep(0.5)
     
-    os.makedirs(r'V:\Setor Robô\Scripts Python\Geral\Transmite DeSTDA sem movimento\execucao\Recibos', exist_ok=True)
-    copy('V:\Setor Robô\Scripts Python\Geral\Transmite DeSTDA sem movimento\execucao\Recibos')
+    os.makedirs(r'V:\Setor Robô\Scripts Python\Geral\Transmite DeSTDA sem movimento\execução\Recibos', exist_ok=True)
+    copy('V:\Setor Robô\Scripts Python\Geral\Transmite DeSTDA sem movimento\execução\Recibos')
     p.hotkey('ctrl', 'v')
     time.sleep(0.5)
     
@@ -299,7 +299,7 @@ def run():
         while erro == 'sim':
             reinstala_sedif()
             if not configura(empresa, comp):
-                continue
+                break
             erro = transmitir(empresa, comp)
             p.hotkey('alt', 'f4')
             time.sleep(1)

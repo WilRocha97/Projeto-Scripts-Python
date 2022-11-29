@@ -61,16 +61,15 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
     p.press('enter')
     time.sleep(2)
     p.click(1214, 488)
-
-    if _find_img('criterio_vazio.png', conf=0.99):
-        time.sleep(1)
-        _click_img('criterio_vazio.png', conf=0.99)
-        time.sleep(2)
-
-    p.click(1215, 548, clicks=2)
     time.sleep(2)
-    if _find_img('sem_alteracao.png'):
-        _click_img('sem_alteracao.png')
+
+    p.click(413, 541)
+    time.sleep(2)
+
+    p.click(1215, 547)
+    time.sleep(2)
+    if _find_img('sem_alteracao.png', conf=0.99):
+        _click_img('sem_alteracao.png', conf=0.99)
         time.sleep(1)
 
     _click_img('ok.png', conf=0.9)

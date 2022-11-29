@@ -74,6 +74,11 @@ def consulta(empresas, index):
                     try:
                         evento_sn = padrao_eventos_sn.search(str(soup))
                         evento_sn = str(evento_sn.group(2))
+                        
+                        if evento_sn == '<thead>':
+                            padrao_evento_sn = re.compile(r'Data Efeito(\n.+){6}.\n +(.+)\n.+\n.+\n +(.+)')
+                            evento_sn = padrao_evento_sn.search(str(soup)).group(3)
+                            
                     except:
                         # print(soup)
                         exit()

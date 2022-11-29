@@ -34,7 +34,7 @@ def analiza():
                     indice = 20
                     while not valores:
                         indice = str(indice)
-                        valores = re.compile(r'\n.+\n(.+)\n.+\n.0+(.+)\n(.+)\n(.+)\nSérie:\n(.+\n){' + indice + '}ISS\n.+\nR\$ (.+)\nR\$ (.+)\nR\$ (.+)\nR\$ (.+)\nR\$ (.+)(\n.+){7}\nR\$ (.+)').findall(textinho)
+                        valores = re.compile(r'\n(.+)\n.+\n.0+(.+)\n(.+)\n(.+)\nSérie:\n(.+\n){' + indice + '}ISS\n.+\nR\$ (.+)\nR\$ (.+)\nR\$ (.+)\nR\$ (.+)\nR\$ (.+)(\n.+){7}\nR\$ (.+)').findall(textinho)
                         indice = int(indice)
                         indice += 1
                         

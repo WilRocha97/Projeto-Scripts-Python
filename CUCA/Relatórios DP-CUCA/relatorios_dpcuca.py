@@ -114,7 +114,7 @@ def imprimir(relatorio, andamentos, empresa, texto, espera=10, diretorio='Relat√
             sleep(5)
             break
         else:
-            click(109, 68)
+            click(95, 65)
     sleep(1)
 
     # Usa o pyperclip porque o pyautogui n√£o digita letra com acento

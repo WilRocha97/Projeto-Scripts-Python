@@ -46,7 +46,7 @@ def limpa_registros(html):
 
 
 def salva_pagina(pagina, cnpj, compl=''):
-    os.makedirs('execucao\documentos', exist_ok=True)
+    os.makedirs('execução\documentos', exist_ok=True)
     soup = BeautifulSoup(pagina.content, 'html.parser')
     formulario = soup.find('form', attrs={'id': 'consultaDebitoForm'})
     
@@ -95,7 +95,7 @@ def salva_pagina(pagina, cnpj, compl=''):
         pass
     
     debito = f' - {compl}' if compl else ''
-    nome = os.path.join('execucao\documentos', f'{cnpj};INF_FISC_REAL;Procuradoria Federal{debito}.pdf')
+    nome = os.path.join('execução\documentos', f'{cnpj};INF_FISC_REAL;Procuradoria Federal{debito}.pdf')
     with open(nome, 'w+b') as pdf:
         # pisa.showLogging()
         pisa.CreatePDF(str(html), pdf)

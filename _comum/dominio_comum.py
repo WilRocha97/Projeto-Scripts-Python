@@ -17,7 +17,7 @@ def _login(empresa, andamentos):
     '''while p.locateOnScreen(r'imgs_c\inicial.png', confidence=0.5):
                     time.sleep(1)'''
 
-    p.click(833,384)
+    p.click(833, 384)
 
     # espera abrir a janela de seleção de empresa
     while not p.locateOnScreen(r'imgs_c\trocar_empresa.png', confidence=0.9):
@@ -66,6 +66,11 @@ def _login(empresa, andamentos):
                 time.sleep(1)
             return False
         
+        if p.locateOnScreen(r'imgs_c\fase_dois_do_cadastro.png', confidence=0.9):
+            p.hotkey('alt', 'n')
+            time.sleep(1)
+            p.hotkey('alt', 'n')
+
         if p.locateOnScreen(r'imgs_c\conforme_modulo.png', confidence=0.9):
             p.press('enter')
             time.sleep(1)

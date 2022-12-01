@@ -5,7 +5,7 @@ from datetime import datetime
 from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
-from comum_comum import _indice, _time_execution, _open_lista_dados, _escreve_relatorio_csv, e_dir, _where_to_start
+from comum_comum import _indice, _time_execution, _open_lista_dados, _escreve_relatorio_csv, _where_to_start
 from dominio_comum import _login
 
 

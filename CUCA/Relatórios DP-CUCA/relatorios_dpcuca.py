@@ -512,6 +512,9 @@ def relatoriozinhos(relatorio, andamentos, empresa):
         hotkey('alt', 'a')
         time.sleep(1)
         
+        if _find_img('dezembro.png', conf=0.9):
+            press('enter')
+            
         selecionar_funcionarios()
 
         _wait_img('ordenacao.png', conf=0.9)

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import time
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from time import sleep
@@ -33,7 +34,7 @@ def escolher_relatorio():
 
     relatorios = ["Férias vencidas ou a vencer", "Ficha de Registro de Funcionários", "Folha de Pagamento - Impressão Multipla", "Holerites - Adiantamento",
                   "Holerites - Mensal", "Holerite Pro Labore", "Provisões 13º e Ferias", "Relatório de empresas", "Relatório de Experiência geral", "Relatório Geral - Impressão Multipla",
-                  "Rescisão", "Resumo Geral Mensal - Impressão Multipla", "Resumo Mensal - Impressão Multipla", "Vale Transporte"]
+                  "Rescisão", "Resumo Geral Mensal - Impressão Multipla", "Resumo Mensal - Impressão Multipla", "Resumo por Evento", "Vale Transporte"]
 
     # drop down menu
     Combobox(root, textvariable=relatorio, values=relatorios, width=55).pack()
@@ -490,7 +491,37 @@ def relatoriozinhos(relatorio, andamentos, empresa):
         selecionar_funcionarios()
         if not imprimir(relatorio, andamentos, empresa, texto, espera=30, diretorio=relatorio):
             return False
+        
+    elif relatorio == 'Resumo por Evento':
+        # Verifica se tem funcionário na empresa
+        if _find_img('SemFuncionarios.png', conf=0.9):
+            nao_gerou(relatorio, andamentos, empresa, 'Não tem ')
+            return False
+        if not gerar(relatorio, andamentos, empresa):
+            return False
+        
+        hotkey('ctrl', 'p')
+        
+        _wait_img('eventos.png', conf=0.9)
+        time.sleep(2)
+        _click_img('eventos.png', conf=0.9)
+        _wait_img('escolher_eventos.png', conf=0.9)
+        time.sleep(2)
+        hotkey('alt', 'm')
+        time.sleep(1)
+        hotkey('alt', 'a')
+        time.sleep(1)
+        
+        selecionar_funcionarios()
 
+        _wait_img('ordenacao.png', conf=0.9)
+        time.sleep(2)
+        
+        hotkey('alt', 'n')
+
+        if not imprimir(relatorio, andamentos, empresa, texto, espera=10, diretorio=relatorio):
+            return False
+        
     elif relatorio == 'Vale Transporte':
         # Aba Vale Transporte > Imprimir > Recibo de Vale Transporte Individual
         _click_img('ValeTransporte.png')

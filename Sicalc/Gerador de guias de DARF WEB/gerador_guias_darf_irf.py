@@ -14,7 +14,7 @@ from pyautogui_comum import _click_img, _wait_img, _find_img
 
 def renomear(empresa, apuracao, vencimento):
     cnpj, nome, valor, cod = empresa
-    download_folder = "V:\\Setor Robô\\Scripts Python\\Sicalc\\Gerador de guias de DARF WEB\\execucao\\Guias"
+    download_folder = "V:\\Setor Robô\\Scripts Python\\Sicalc\\Gerador de guias de DARF WEB\\execução\\Guias"
     guia = os.path.join(download_folder, 'Darf.pdf')
     while not os.path.exists(guia):
         time.sleep(1)
@@ -122,12 +122,12 @@ def gerar(empresa, apuracao, vencimento, driver):
 
     renomear(empresa, apuracao, vencimento)
 
-    '''while not os.path.exists('V:/Setor Robô/Scripts Python/Sicalc/Gerador de guias de DARF WEB/execucao/Guias/Darf.pdf'):
+    '''while not os.path.exists('V:/Setor Robô/Scripts Python/Sicalc/Gerador de guias de DARF WEB/execução/Guias/Darf.pdf'):
         time.sleep(1)
-    while os.path.exists('V:/Setor Robô/Scripts Python/Sicalc/Gerador de guias de DARF WEB/execucao/Guias/Darf.pdf'):
+    while os.path.exists('V:/Setor Robô/Scripts Python/Sicalc/Gerador de guias de DARF WEB/execução/Guias/Darf.pdf'):
         try:
             arquivo = f'{nome} - {cnpj} - DARF IRRF {cod} - {apuracao.replace("/", "-")} - venc. {vencimento.replace("/", "-")}.pdf'
-            download_folder = "V:\\Setor Robô\\Scripts Python\\Sicalc\\Gerador de guias de DARF WEB\\execucao\\Guias"
+            download_folder = "V:\\Setor Robô\\Scripts Python\\Sicalc\\Gerador de guias de DARF WEB\\execução\\Guias"
             shutil.move(os.path.join(download_folder, 'Darf.pdf'), os.path.join(download_folder, arquivo))
             time.sleep(2)
         except:
@@ -141,7 +141,7 @@ def gerar(empresa, apuracao, vencimento, driver):
 
 @_time_execution
 def run():
-    os.makedirs('execucao/Guias', exist_ok=True)
+    os.makedirs('execução/Guias', exist_ok=True)
     # p.mouseInfo()
     apuracao = p.prompt(title='Script incrível', text='Qual o período de apuração?', default='00/0000')
     vencimento = p.prompt(title='Script incrível', text='Qual o vencimento?\n(Sempre dia 20, se for fim de semana ou feriado, antecipa.)', default='00/00/0000')
@@ -162,7 +162,7 @@ def run():
     # options.add_argument('--window-size=1920,1080')
     options.add_argument("--start-maximized")
     options.add_experimental_option('prefs', {
-        "download.default_directory": "V:\\Setor Robô\\Scripts Python\\Sicalc\\Gerador de guias de DARF WEB\\execucao\\Guias",  # Change default directory for downloads
+        "download.default_directory": "V:\\Setor Robô\\Scripts Python\\Sicalc\\Gerador de guias de DARF WEB\\execução\\Guias",  # Change default directory for downloads
         "download.prompt_for_download": False,  # To auto download the file
         "download.directory_upgrade": True,
         "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome

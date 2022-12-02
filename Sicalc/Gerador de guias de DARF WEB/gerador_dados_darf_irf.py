@@ -41,7 +41,7 @@ def gera():
 
 
 def tira_duplicadas():
-    with open('execucao/Dados Somados.csv', encoding='utf-8') as arquivo_referencia:
+    with open('execução/Dados Somados.csv', encoding='utf-8') as arquivo_referencia:
         # 2. ler a tabela
         tabela = csv.reader(arquivo_referencia, delimiter=';')
 
@@ -54,11 +54,11 @@ def tira_duplicadas():
                 
 @_time_execution
 def run():
-    os.makedirs('execucao', exist_ok=True)
+    os.makedirs('execução', exist_ok=True)
     # p.mouseInfo()
     gera()
     tira_duplicadas()
-    os.remove('execucao/Dados Somados.csv')
+    os.remove('execução/Dados Somados.csv')
     
 
 if __name__ == '__main__':

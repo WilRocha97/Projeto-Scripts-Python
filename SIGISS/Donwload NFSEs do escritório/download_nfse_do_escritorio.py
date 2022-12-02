@@ -9,10 +9,10 @@ from comum_comum import _time_execution, _open_lista_dados, _where_to_start, _es
 
 def salvar_arquivo(nome, response):
     try:
-        arquivo = open(os.path.join('execucao/Documentos', nome), 'wb')
+        arquivo = open(os.path.join('execução/Documentos', nome), 'wb')
     except FileNotFoundError:
-        os.makedirs('execucao/Documentos', exist_ok=True)
-        arquivo = open(os.path.join('execucao/Documentos', nome), 'wb')
+        os.makedirs('execução/Documentos', exist_ok=True)
+        arquivo = open(os.path.join('execução/Documentos', nome), 'wb')
         
     for parte in response.iter_content(100000):
         arquivo.write(parte)

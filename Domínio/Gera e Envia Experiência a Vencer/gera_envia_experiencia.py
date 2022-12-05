@@ -222,7 +222,7 @@ def envia_experiencia():
         time.sleep(0.5)
     
     # confirma o envio do arquivo
-    p.hotkey('Alt', 'c')
+    p.hotkey('Alt', 'g')
     time.sleep(2)
 
 

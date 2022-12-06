@@ -11,7 +11,7 @@ from chrome_comum import _initialize_chrome, _send_input
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
 from captcha_comum import _solve_recaptcha
 
-os.makedirs('execucao/Certidões', exist_ok=True)
+os.makedirs('execução/Certidões', exist_ok=True)
 
 
 def find_by_id(xpath, driver):
@@ -96,12 +96,12 @@ def login(options, cnpj, insc_muni):
         time.sleep(1)
         driver.find_element(by=By.ID, value='btnImprimir').click()
         
-        while not os.path.exists('V:/Setor Robô/Scripts Python/Serviços Prefeitura/Consulta Débitos Municipais Jundiaí/execucao/Certidões/relatorio.pdf'):
+        while not os.path.exists('V:/Setor Robô/Scripts Python/Serviços Prefeitura/Consulta Débitos Municipais Jundiaí/execução/Certidões/relatorio.pdf'):
             time.sleep(1)
-        while os.path.exists('V:/Setor Robô/Scripts Python/Serviços Prefeitura/Consulta Débitos Municipais Jundiaí/execucao/Certidões/relatorio.pdf'):
+        while os.path.exists('V:/Setor Robô/Scripts Python/Serviços Prefeitura/Consulta Débitos Municipais Jundiaí/execução/Certidões/relatorio.pdf'):
             try:
                 arquivo = f'{cnpj_limpo} - Certidão Negativa de Débitos Municipais Jundiaí.pdf'
-                download_folder = "V:\\Setor Robô\\Scripts Python\\Serviços Prefeitura\\Consulta Débitos Municipais Jundiaí\\execucao\\Certidões"
+                download_folder = "V:\\Setor Robô\\Scripts Python\\Serviços Prefeitura\\Consulta Débitos Municipais Jundiaí\\execução\\Certidões"
                 shutil.move(os.path.join(download_folder, 'relatorio.pdf'), os.path.join(download_folder, arquivo))
                 time.sleep(2)
             except:
@@ -134,7 +134,7 @@ def run():
     options.add_argument('--window-size=1920,1080')
     # options.add_argument("--start-maximized")
     options.add_experimental_option('prefs', {
-        "download.default_directory": "V:\\Setor Robô\\Scripts Python\\Serviços Prefeitura\\Consulta Débitos Municipais Jundiaí\\execucao\\Certidões",  # Change default directory for downloads
+        "download.default_directory": "V:\\Setor Robô\\Scripts Python\\Serviços Prefeitura\\Consulta Débitos Municipais Jundiaí\\execução\\Certidões",  # Change default directory for downloads
         "download.prompt_for_download": False,  # To auto download the file
         "download.directory_upgrade": True,
         "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome

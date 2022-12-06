@@ -173,33 +173,33 @@ def pega_empresas_com_exp():
     with fitz.open(os.path.join('ignore', 'Relação de Empregados - Contratos_Vencimento_Modelo_Veiga.pdf')) as pdf:
         for page in pdf:
             andamento = f'Pagina = {str(page.number + 1)}'
-            '''try:'''
-            # Pega o texto da pagina
-            textinho = page.get_text('text', flags=1 + 2 + 8)
-            # Procura o nome da empresa no texto do pdf
-            matchzinho_nome = padraozinho_nome1.search(textinho)
-            if not matchzinho_nome:
-                matchzinho_nome = padraozinho_nome2.search(textinho)
+            try:
+                # Pega o texto da pagina
+                textinho = page.get_text('text', flags=1 + 2 + 8)
+                # Procura o nome da empresa no texto do pdf
+                matchzinho_nome = padraozinho_nome1.search(textinho)
                 if not matchzinho_nome:
-                    matchzinho_nome = padraozinho_nome3.search(textinho)
+                    matchzinho_nome = padraozinho_nome2.search(textinho)
                     if not matchzinho_nome:
-                        matchzinho_nome = padraozinho_nome4.search(textinho)
+                        matchzinho_nome = padraozinho_nome3.search(textinho)
                         if not matchzinho_nome:
-                            continue
-
-            # Guardar o nome da empresa
-            matchtexto_nome = matchzinho_nome.group(2)
-            # Guardar o código da empresa no DPCUCA
-            matchtexto_cod = matchzinho_nome.group(1)
-
-            if matchtexto_nome == prevtexto_nome:
-                continue
-                
-            escreve_dados(matchtexto_cod, matchtexto_nome)
-            prevtexto_nome = matchtexto_nome
-            '''except:
+                            matchzinho_nome = padraozinho_nome4.search(textinho)
+                            if not matchzinho_nome:
+                                continue
+    
+                # Guardar o nome da empresa
+                matchtexto_nome = matchzinho_nome.group(2)
+                # Guardar o código da empresa no DPCUCA
+                matchtexto_cod = matchzinho_nome.group(1)
+    
+                if matchtexto_nome == prevtexto_nome:
+                    continue
+                    
+                escreve_dados(matchtexto_cod, matchtexto_nome)
+                prevtexto_nome = matchtexto_nome
+            except:
                 _escreve_relatorio_csv(andamento, nome='Erros')
-                continue'''
+                continue
     
     # seleciona a planilha gerada para usar no script
     empresas = open_lista_dados(os.path.join('ignore', 'Dados.csv'))

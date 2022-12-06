@@ -13,7 +13,7 @@ from chrome_comum import _initialize_chrome
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
 from captcha_comum import _solve_text_captcha
 
-os.makedirs('execucao/documentos', exist_ok=True)
+os.makedirs('execução/documentos', exist_ok=True)
 
 
 def reset_table(table):
@@ -149,7 +149,7 @@ def login(options, cnpj, insc_muni):
                     _escreve_relatorio_csv(';'.join([cnpj, 'Com débitos']))
                     print('>>> Gerando arquivo')
                     nome_arq = ';'.join([cnpj, 'INF_FISC_REAL', 'Debitos Municipais'])
-                    with open('execucao/documentos/' + nome_arq + r'.pdf', 'w+b') as pdf:
+                    with open('execução/documentos/' + nome_arq + r'.pdf', 'w+b') as pdf:
                         pisa.showLogging()
                         pisa.CreatePDF(str_html, pdf)
                         print('❗ Arquivo gerado')

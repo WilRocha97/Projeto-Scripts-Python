@@ -22,7 +22,7 @@ def open_lista_dados(file, encode='latin-1'):
         with open(file, 'r', encoding=encode) as f:
             dados = f.readlines()
     except Exception as e:
-        alert(title='Mensagem erro', text=f'Não pode abrir arquivo\n{str(e)}')
+        p.alert(title='Mensagem erro', text=f'Não pode abrir arquivo\n{str(e)}')
         return False
 
     print('>>> usando dados de ' + file.split('/')[-1])
@@ -158,47 +158,48 @@ def gera_arquivo(andamento, cod='*', cnpj='', nome=''):
     
 
 def pega_empresas_com_exp():
+    # Definir os padrões de regex
+    padraozinho_nome1 = re.compile(r'Local\n(\d) - (.+)\n')
+    padraozinho_nome2 = re.compile(r'Local\n(\d\d) - (.+)\n')
+    padraozinho_nome3 = re.compile(r'Local\n(\d\d\d) - (.+)\n')
+    padraozinho_nome4 = re.compile(r'Local\n(\d\d\d\d) - (.+)\n')
+    prevtexto_nome = ''
+    
+    # para cada página do pdf
+    if os.path.exists(os.path.join('ignore', 'Dados.csv')):
+        os.remove(os.path.join('ignore', 'Dados.csv'))
+        
     # abre o pdf gerado no domínio com todas as empresas que possuem experiência a vencer
     with fitz.open(os.path.join('ignore', 'Relação de Empregados - Contratos_Vencimento_Modelo_Veiga.pdf')) as pdf:
-        # Definir os padrões de regex
-        padraozinho_nome1 = re.compile(r'Local\n(\d) - (.+)\n')
-        padraozinho_nome2 = re.compile(r'Local\n(\d\d) - (.+)\n')
-        padraozinho_nome3 = re.compile(r'Local\n(\d\d\d) - (.+)\n')
-        padraozinho_nome4 = re.compile(r'Local\n(\d\d\d\d) - (.+)\n')
-        prevtexto_nome = ''
-        
-        # para cada página do pdf
-        if os.path.exists(os.path.join('ignore', 'Dados.csv')):
-            os.remove(os.path.join('ignore', 'Dados.csv'))
         for page in pdf:
             andamento = f'Pagina = {str(page.number + 1)}'
-            try:
-                # Pega o texto da pagina
-                textinho = page.get_text('text', flags=1 + 2 + 8)
-                # Procura o nome da empresa no texto do pdf
-                matchzinho_nome = padraozinho_nome1.search(textinho)
+            '''try:'''
+            # Pega o texto da pagina
+            textinho = page.get_text('text', flags=1 + 2 + 8)
+            # Procura o nome da empresa no texto do pdf
+            matchzinho_nome = padraozinho_nome1.search(textinho)
+            if not matchzinho_nome:
+                matchzinho_nome = padraozinho_nome2.search(textinho)
                 if not matchzinho_nome:
-                    matchzinho_nome = padraozinho_nome2.search(textinho)
+                    matchzinho_nome = padraozinho_nome3.search(textinho)
                     if not matchzinho_nome:
-                        matchzinho_nome = padraozinho_nome3.search(textinho)
+                        matchzinho_nome = padraozinho_nome4.search(textinho)
                         if not matchzinho_nome:
-                            matchzinho_nome = padraozinho_nome4.search(textinho)
-                            if not matchzinho_nome:
-                                continue
+                            continue
 
-                # Guardar o nome da empresa
-                matchtexto_nome = matchzinho_nome.group(2)
-                # Guardar o código da empresa no DPCUCA
-                matchtexto_cod = matchzinho_nome.group(1)
+            # Guardar o nome da empresa
+            matchtexto_nome = matchzinho_nome.group(2)
+            # Guardar o código da empresa no DPCUCA
+            matchtexto_cod = matchzinho_nome.group(1)
 
-                if matchtexto_nome == prevtexto_nome:
-                    continue
-                    
-                escreve_dados(matchtexto_cod, matchtexto_nome)
-                prevtexto_nome = matchtexto_nome
-            except:
-                _escreve_relatorio_csv(andamento, nome='Erros')
+            if matchtexto_nome == prevtexto_nome:
                 continue
+                
+            escreve_dados(matchtexto_cod, matchtexto_nome)
+            prevtexto_nome = matchtexto_nome
+            '''except:
+                _escreve_relatorio_csv(andamento, nome='Erros')
+                continue'''
     
     # seleciona a planilha gerada para usar no script
     empresas = open_lista_dados(os.path.join('ignore', 'Dados.csv'))

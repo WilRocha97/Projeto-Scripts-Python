@@ -14,7 +14,7 @@ from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dad
 from captcha_comum import _solve_text_captcha
 from pyautogui_comum import _find_img, _wait_img, _click_img
 
-os.makedirs('execucao/Certidões', exist_ok=True)
+os.makedirs('execução/Certidões', exist_ok=True)
 
 
 def find_by_id(xpath, driver):
@@ -137,7 +137,7 @@ def salvar_guia(cnpj):
     press('enter')
     time.sleep(0.5)
     
-    copy('V:\Setor Robô\Scripts Python\Serviços Prefeitura\Consulta Débitos Municipais Vinhedo\execucao\Certidões')
+    copy('V:\Setor Robô\Scripts Python\Serviços Prefeitura\Consulta Débitos Municipais Vinhedo\execução\Certidões')
     
     hotkey('ctrl', 'v')
     time.sleep(0.5)

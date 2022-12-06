@@ -210,7 +210,7 @@ def run():
                     print(f'❗ {sid}\n', end='')
                     continue
                 
-                # adiciona os cookies do login no web driver na sessão por request
+                # adiciona os cookies do login da sessão por request no web driver
                 for cookie in cookies:
                     s.cookies.set(cookie['name'], cookie['value'])
         

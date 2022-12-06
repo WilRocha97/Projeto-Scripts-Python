@@ -172,6 +172,8 @@ def transmitir(empresa, comp):
             p.hotkey('alt', 'n')
         if _find_img('processo_finalizado_ass.png', conf=0.9):
             p.press('enter')
+        if _find_img('erro_create_file.png', conf=0.9):
+            p.press('enter')
         time.sleep(1)
     
     p.hotkey('alt', 't')

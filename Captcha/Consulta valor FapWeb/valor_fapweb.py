@@ -9,7 +9,7 @@ from selenium.webdriver.common.by import By
 
 from sys import path
 path.append(r'..\..\_comum')
-from comum_comum import _time_execution, _download_file, _open_lista_dados, _where_to_start, _escreve_relatorio_csv, _indice
+from comum_comum import _time_execution, _download_file, _open_lista_dados, _where_to_start, _escreve_relatorio_csv, _indice, _escreve_header_csv
 from captcha_comum import _solve_recaptcha
 from chrome_comum import _initialize_chrome, _find_by_id
 
@@ -117,12 +117,13 @@ def consulta(driver, cnpj):
 
     try:
         padrao = re.compile(r'(Valor do FAP Original)(\n.+){8}\">(.+)(\n.+){5}\">(.+)')
+        vigencia = re.compile(r'Ano de Vigência: .+\n.+(\d\d\d\d)').search(str(soup)).group(1)
         resposta = padrao.search(str(soup))
         valor = resposta.group(1) + ': ' + resposta.group(3)
         data = resposta.group(5)
 
-        print('✔ {} - {}'.format(valor, data))
-        _escreve_relatorio_csv(';'.join([cnpj, valor, data]), nome=_execucao)
+        print(f'✔ {valor} | Data do cálculo: {data} | Vigência: {vigencia}')
+        _escreve_relatorio_csv(f'{cnpj};{valor};{data};{vigencia}', nome=_execucao)
 
     except:
         try:
@@ -131,10 +132,10 @@ def consulta(driver, cnpj):
             erro = resposta.group(1)
 
             print('❌ {}'.format(erro))
-            _escreve_relatorio_csv(';'.join([cnpj, erro]), nome=_execucao)
+            _escreve_relatorio_csv(f'{cnpj};{erro}', nome=_execucao)
         except:
             print('❌ Valor do FAP Original não encontrado')
-            _escreve_relatorio_csv(';'.join([cnpj, 'Valor do FAP Original não encontrado']), nome=_execucao)
+            _escreve_relatorio_csv(f'{cnpj};Valor do FAP Original não encontrado', nome=_execucao)
             return 'não tem'
 
     return True
@@ -164,6 +165,7 @@ def run():
         
         login(cnpj, options)
 
+    _escreve_header_csv('CNPJ;RESULTADO;DATA DO CÁLCULO;VIGÊNCIA', nome=_execucao)
 
 if __name__ == '__main__':
     run()

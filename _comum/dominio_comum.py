@@ -78,6 +78,12 @@ def _login(empresa, andamentos):
         if p.locateOnScreen(r'imgs_c\aviso_regime.png', confidence=0.9):
             p.hotkey('alt', 'n')
             time.sleep(1)
+
+        if p.locateOnScreen(r'imgs_c\erro_troca_empresa.png', confidence=0.9):
+            p.press('enter')
+            time.sleep(1)
+            p.press('esc', presses=5, interval=1)
+            _login(empresa, andamentos)
     
     p.press('esc', presses=5)
     time.sleep(1)

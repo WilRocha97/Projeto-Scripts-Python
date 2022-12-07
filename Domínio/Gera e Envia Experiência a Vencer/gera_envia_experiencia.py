@@ -6,7 +6,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _indice, _time_execution, _open_lista_dados, _escreve_relatorio_csv, _where_to_start
-from dominio_comum import _login
+from dominio_comum import _login, _login_web
 
 
 def escreve_dados(cod, nome):
@@ -233,7 +233,8 @@ def run():
     andamentos = 'Experiência a Vencer'
     # pergunta se deve gerar uma nova planilha de dados
     novo = p.confirm(title='Script incrível', text='Gerar nova planilha de dados?', buttons=('Sim', 'Não'))
-    
+
+    _login_web()
     # se não for gerar uma nova planilha, seleciona a que já existe e pergunta se vai continuar de onde parou
     if novo == 'Não':
         empresas = _open_lista_dados()

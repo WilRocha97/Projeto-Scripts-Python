@@ -1,3 +1,5 @@
+import time
+
 from win32com.client import Dispatch
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -8,6 +10,14 @@ from os import path, remove
 
 
 s = Service('V:\Setor Robô\Scripts Python\_comum\Chrome driver\chromedriver.exe')
+
+
+def find_by_class(iten, driver):
+    try:
+        elem = driver.find_element(by=By.CLASS_NAME, value=iten)
+        return elem
+    except:
+        return None
 
 
 def get_chrome_version():
@@ -91,20 +101,23 @@ def login():
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     options.add_argument('--window-size=1920,1080')
+    
     status, driver = initialize_chrome()
 
     driver.get('https://www.dominioweb.com.br/')
     send_input('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[1]/span[2]/input', 'robo@veigaepostal.com.br', driver)
     send_input('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[2]/span[2]/input', 'Rb#0086*', driver)
     driver.find_element(by=By.ID, value='enterButton').click()
-    
-    caminho = path.join('imgs', 'abrir_app.png')
-    while not locateOnScreen(caminho, confidence=0.9):
+
+    while not locateOnScreen(path.join('imgs', 'abrir_app.png'), confidence=0.9, grayscale=True):
+        if find_by_class('trta1-btn-primary', driver):
+            driver.find_element(by=By.CLASS_NAME, value='trta1-btn-primary').click()
         sleep(0.5)
-    while locateOnScreen(caminho, confidence=0.9):
-        click(locateOnScreen(caminho, confidence=0.9), button='left')
-    
-    sleep(20)
+    while locateOnScreen(path.join('imgs', 'abrir_app.png'), confidence=0.9, grayscale=True):
+        click(locateOnScreen(path.join('imgs', 'abrir_app.png'), confidence=0.9, grayscale=True), button='left')
+
+    while not locateOnScreen(path.join('imgs', 'modulos.png'), confidence=0.9):
+        sleep(1)
     driver.quit()
     
     

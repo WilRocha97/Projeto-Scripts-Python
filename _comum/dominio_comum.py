@@ -9,7 +9,7 @@ from selenium.webdriver.chrome.service import Service
 
 path.append(r'..\..\_comum')
 from comum_comum import _escreve_relatorio_csv
-from chrome_comum import _initialize_chrome, _send_input
+from chrome_comum import _initialize_chrome, _send_input_xpath, _find_by_class
 
 
 def _login(empresa, andamentos):
@@ -92,24 +92,6 @@ def _login(empresa, andamentos):
     return True
 
 
-def send_input(elem_id, data, driver):
-    while True:
-        try:
-            elem = driver.find_element(by=By.XPATH, value=elem_id)
-            elem.send_keys(data)
-            break
-        except:
-            pass
-        
-
-def find_by_class(iten, driver):
-    try:
-        elem = driver.find_element(by=By.CLASS_NAME, value=iten)
-        return elem
-    except:
-        return None
-
-
 def _login_web():
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
@@ -118,14 +100,14 @@ def _login_web():
     status, driver = _initialize_chrome()
     
     driver.get('https://www.dominioweb.com.br/')
-    send_input('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[1]/span[2]/input', 'robo@veigaepostal.com.br', driver)
-    send_input('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[2]/span[2]/input', 'Rb#0086*', driver)
+    _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[1]/span[2]/input', 'robo@veigaepostal.com.br', driver)
+    _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[2]/span[2]/input', 'Rb#0086*', driver)
     driver.find_element(by=By.ID, value='enterButton').click()
     
     caminho = os.path.join('imgs_c', 'abrir_app.png')
     caminho2 = os.path.join('imgs_c', 'abrir_app_2.png')
     while not p.locateOnScreen(caminho, confidence=0.9):
-        if find_by_class('trta1-btn-primary', driver):
+        if _find_by_class('trta1-btn-primary', driver):
             driver.find_element(by=By.CLASS_NAME, value='trta1-btn-primary').click()
         if p.locateOnScreen(caminho2, confidence=0.9):
             sleep(1)
@@ -141,16 +123,15 @@ def _login_web():
     return True
 
 
-def _abrir_escrita_fiscal(driver):
+def _abrir_modulo(modulo):
     while not p.locateOnScreen(r'imgs_c/modulos.png', confidence=0.9):
         sleep(1)
         try:
             p.getWindowsWithTitle('Lista de Programas')[0].activate()
         except:
             pass
-    sleep(3)
-    driver.quit()
-    p.click(p.locateCenterOnScreen(r'imgs_c/escrita_fiscal.png', confidence=0.9), button='left', clicks=2)
+    sleep(1)
+    p.click(p.locateCenterOnScreen(r'imgs_c/modulo' + modulo + '.png', confidence=0.9), button='left', clicks=2)
     while not p.locateOnScreen(r'imgs_c/login_modulo.png', confidence=0.9):
         sleep(1)
     

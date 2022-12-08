@@ -92,6 +92,17 @@ def send_input(elem_id, data, driver):
 _send_input = send_input
 
 
+def send_input_xpath(elem_id, data, driver):
+    while True:
+        try:
+            elem = driver.find_element(by=By.XPATH, value=elem_id)
+            elem.send_keys(data)
+            break
+        except:
+            pass
+_send_input_xpath = send_input_xpath
+
+
 def send_select(elem_id, data, driver):
     '''try:'''
     select = Select(driver.find_element(by=By.ID, value=elem_id))
@@ -109,6 +120,7 @@ def find_by_id(item, driver):
         return None
 _find_by_id = find_by_id
 
+
 def find_by_path(item, driver):
     try:
         elem = driver.find_element(by=By.XPATH, value=item)
@@ -116,3 +128,12 @@ def find_by_path(item, driver):
     except:
         return None
 _find_by_path = find_by_path
+
+
+def find_by_class(iten, driver):
+    try:
+        elem = driver.find_element(by=By.CLASS_NAME, value=iten)
+        return elem
+    except:
+        return None
+_find_by_class = find_by_class

@@ -60,12 +60,12 @@ def consulta(empresas, index):
             
             print(f'>>> Salvando {documento}')
             if documento == 'Certidao':
-                caminho = os.path.join('execucao', 'Certidões', cnpj + ' - ' + nome + ' - Certidão Negativa.pdf')
-                os.makedirs('execucao\Certidões', exist_ok=True)
+                caminho = os.path.join('execução', 'Certidões', cnpj + ' - ' + nome + ' - Certidão Negativa.pdf')
+                os.makedirs('execução\Certidões', exist_ok=True)
                 print(f"✔ Certidão")
             else:
-                caminho = os.path.join('execucao', 'Pendências', cnpj + ' - ' + nome + ' - Pendências.pdf')
-                os.makedirs('execucao\Pendências', exist_ok=True)
+                caminho = os.path.join('execução', 'Pendências', cnpj + ' - ' + nome + ' - Pendências.pdf')
+                os.makedirs('execução\Pendências', exist_ok=True)
                 print(f"❗ Pendência")
                 
             arquivo = open(caminho, 'wb')

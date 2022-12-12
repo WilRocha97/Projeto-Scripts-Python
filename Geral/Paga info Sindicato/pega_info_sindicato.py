@@ -181,6 +181,7 @@ def analiza():
         
         return final
 
+
 if __name__ == '__main__':
     inicio = datetime.now()
     final = analiza()

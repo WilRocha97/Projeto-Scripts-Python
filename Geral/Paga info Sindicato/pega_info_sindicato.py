@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 
-def escreve_relatorio_csv(texto, local, end='\n', encode='latin-1'):
+def escreve_relatorio_csv(texto, local, encode='latin-1'):
     os.makedirs(local, exist_ok=True)
     
     try:
@@ -14,7 +14,7 @@ def escreve_relatorio_csv(texto, local, end='\n', encode='latin-1'):
     except:
         f = open(os.path.join(local, "Relatório de Sindicatos - erro.csv"), 'a', encoding=encode)
     
-    f.write(texto + end)
+    f.write(texto + '\n')
     f.close()
 
 
@@ -158,16 +158,16 @@ def analiza():
                         continue
                         
                     if nome_empresa != nome_empresa_anterior:
-                        escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_empresa_anterior};{competencia_anterior};{sindicato_anterior};"
-                                              f"{nome_anterior};{totais_rubricas_anterior};{valor_calculado_s_anterior};{valor_calculado_e_anterior}", local=final)
+                        escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_empresa_anterior};"
+                                              f"{competencia_anterior};{valor_calculado_e_anterior};{sindicato_anterior};{valor_calculado_s_anterior};{nome_anterior};{totais_rubricas_anterior}", local=final)
                         
                     elif sindicato != sindicato_anterior:
-                        escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_empresa_anterior};{competencia_anterior};{sindicato_anterior};"
-                                              f"{nome_anterior};{totais_rubricas_anterior};{valor_calculado_s_anterior};{valor_calculado_e_anterior}", local=final)
+                        escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_empresa_anterior};"
+                                              f"{competencia_anterior};;{sindicato_anterior};{valor_calculado_s_anterior};{nome_anterior};{totais_rubricas_anterior}", local=final)
                         
                     else:
-                        escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_empresa_anterior};{competencia_anterior};{sindicato_anterior};"
-                                              f"{nome_anterior};{totais_rubricas_anterior}", local=final)
+                        escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_empresa_anterior};"
+                                              f"{competencia_anterior};;{sindicato_anterior};;{nome_anterior};{totais_rubricas_anterior}", local=final)
 
                     codigo_anterior, cnpj_anterior, nome_empresa_anterior, competencia_anterior, sindicato_anterior, \
                         nome_anterior, totais_rubricas_anterior, valor_calculado_s_anterior, valor_calculado_e_anterior \
@@ -185,7 +185,7 @@ def analiza():
 if __name__ == '__main__':
     inicio = datetime.now()
     final = analiza()
-    escreve_header_csv(';'.join(['CÓDIGO', 'CNPJ', 'NOME', 'COMPETÊNCIA', 'SINDICATO', 'RUBRICA', 'TOTAL DA RUBRICA',
-                                 'TOTAL DO SINDICATO CALCULADO', 'TOTAL DA EMPRESA CALCULADO']), local=final)
+    escreve_header_csv(';'.join(['CÓDIGO', 'CNPJ', 'NOME', 'COMPETÊNCIA', 'TOTAL EMPRESA', 'SINDICATO', 'TOTAL SINDICATO',
+                                 'RUBRICA', 'TOTAL RUBRICA']), local=final)
     
     print(datetime.now() - inicio)

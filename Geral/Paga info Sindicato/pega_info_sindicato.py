@@ -5,42 +5,50 @@ from tkinter.filedialog import askopenfilename, askdirectory, Tk
 from datetime import datetime
 from pathlib import Path
 
-e_dir = Path('execução')
 
-
-def escreve_relatorio_csv(texto, nome='resumo', local=e_dir, end='\n', encode='latin-1'):
-    if local == e_dir:
-        local = Path(local)
+def escreve_relatorio_csv(texto, local, end='\n', encode='latin-1'):
     os.makedirs(local, exist_ok=True)
     
     try:
-        f = open(str(local / f"{nome}.csv"), 'a', encoding=encode)
+        f = open(os.path.join(local, "Relatório de Sindicatos.csv"), 'a', encoding=encode)
     except:
-        f = open(str(local / f"{nome}-erro.csv"), 'a', encoding=encode)
+        f = open(os.path.join(local, "Relatório de Sindicatos - erro.csv"), 'a', encoding=encode)
     
     f.write(texto + end)
     f.close()
 
 
-def escreve_header_csv(texto, nome='resumo.csv', local=e_dir, encode='latin-1'):
+def escreve_header_csv(texto, local, encode='latin-1'):
     os.makedirs(local, exist_ok=True)
     
-    with open(str(local / nome), 'r', encoding=encode) as f:
+    with open(os.path.join(local, 'Relatório de Sindicatos.csv'), 'r', encoding=encode) as f:
         conteudo = f.read()
     
-    with open(str(local / nome), 'w', encoding=encode) as f:
+    with open(os.path.join(local, 'Relatório de Sindicatos.csv'), 'w', encoding=encode) as f:
         f.write(texto + '\n' + conteudo)
 
 
-def ask_for_file(title='Abrir arquivo', filetypes='*', initialdir=os.getcwd()):
+def ask_for_dir():
+    root = Tk()
+    root.withdraw()
+    root.wm_attributes('-topmost', 1)
+    
+    folder = askdirectory(
+        title='Selecione onde salvar a planilha',
+    )
+    
+    return folder if folder else False
+
+
+def ask_for_file():
     root = Tk()
     root.withdraw()
     root.wm_attributes('-topmost', 1)
     
     file = askopenfilename(
-        title=title,
-        filetypes=filetypes,
-        initialdir=initialdir
+        title='Selecione o Relatório de Sindicatos',
+        filetypes=[('PDF files', '*.pdf *')],
+        initialdir=os.getcwd()
     )
     
     return file if file else False
@@ -61,7 +69,8 @@ def guarda_info(codigo, cnpj, nome_empresa, competencia, sindicato, nome, totais
     
 
 def analiza():
-    sindicato = ask_for_file(title='Selecione o Relatório de Sindicatos', filetypes = [('PDF files', '*.pdf *')])
+    sindicato = ask_for_file()
+    final = ask_for_dir()
     # Abrir o pdf
     with fitz.open(sindicato) as pdf:
         # Para cada página do pdf
@@ -150,15 +159,15 @@ def analiza():
                         
                     if nome_empresa != nome_empresa_anterior:
                         escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_empresa_anterior};{competencia_anterior};{sindicato_anterior};"
-                                              f"{nome_anterior};{totais_rubricas_anterior};{valor_calculado_s_anterior};{valor_calculado_e_anterior}")
+                                              f"{nome_anterior};{totais_rubricas_anterior};{valor_calculado_s_anterior};{valor_calculado_e_anterior}", local=final)
                         
                     elif sindicato != sindicato_anterior:
                         escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_empresa_anterior};{competencia_anterior};{sindicato_anterior};"
-                                              f"{nome_anterior};{totais_rubricas_anterior};{valor_calculado_s_anterior};{valor_calculado_e_anterior}")
+                                              f"{nome_anterior};{totais_rubricas_anterior};{valor_calculado_s_anterior};{valor_calculado_e_anterior}", local=final)
                         
                     else:
                         escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_empresa_anterior};{competencia_anterior};{sindicato_anterior};"
-                                              f"{nome_anterior};{totais_rubricas_anterior}")
+                                              f"{nome_anterior};{totais_rubricas_anterior}", local=final)
 
                     codigo_anterior, cnpj_anterior, nome_empresa_anterior, competencia_anterior, sindicato_anterior, \
                         nome_anterior, totais_rubricas_anterior, valor_calculado_s_anterior, valor_calculado_e_anterior \
@@ -168,11 +177,14 @@ def analiza():
                 print(f'\nArquivo: {arq} - ERRO')
                 
         escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_empresa_anterior};{competencia_anterior};{sindicato_anterior};"
-                              f"{nome_anterior};{totais_rubricas_anterior};{valor_calculado_s_anterior};{valor_calculado_e_anterior}")
-
+                              f"{nome_anterior};{totais_rubricas_anterior};{valor_calculado_s_anterior};{valor_calculado_e_anterior}", local=final)
+        
+        return final
 
 if __name__ == '__main__':
     inicio = datetime.now()
-    analiza()
-    escreve_header_csv(';'.join(['CÓDIGO', 'CNPJ', 'NOME', 'COMPETÊNCIA', 'SINDICATO', 'RUBRICA', 'TOTAL DA RUBRICA', 'TOTAL DO SINDICATO CALCULADO', 'TOTAL DA EMPRESA CALCULADO']))
+    final = analiza()
+    escreve_header_csv(';'.join(['CÓDIGO', 'CNPJ', 'NOME', 'COMPETÊNCIA', 'SINDICATO', 'RUBRICA', 'TOTAL DA RUBRICA',
+                                 'TOTAL DO SINDICATO CALCULADO', 'TOTAL DA EMPRESA CALCULADO']), local=final)
+    
     print(datetime.now() - inicio)

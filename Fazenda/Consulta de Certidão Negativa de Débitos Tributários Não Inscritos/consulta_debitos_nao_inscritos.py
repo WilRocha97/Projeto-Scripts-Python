@@ -28,7 +28,7 @@ def salvar_pdf(cnpj, nome, debito=''):
     sleep(0.5)
 
     # cola o caminho que vai salvar o PDF com o pyperclip porque o pyautogui não consegue copiar e colar texto com acentuação
-    docs = 'V:\Setor Robô\Scripts Python\Fazenda\Consulta de Certidão Negativa de Débitos Tributários Não Inscritos\execucao\docs'
+    docs = 'V:\Setor Robô\Scripts Python\Fazenda\Consulta de Certidão Negativa de Débitos Tributários Não Inscritos\execução\docs'
     os.makedirs(r'{}'.format(docs), exist_ok=True)
     copy(docs)
     hotkey('ctrl', 'v')

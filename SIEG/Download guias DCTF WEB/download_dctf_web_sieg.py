@@ -54,7 +54,6 @@ def sieg_iris(driver):
 
 def procura_empresa(empresa, driver):
     cnpj, nome = empresa
-    '''try:'''
     # clica para abrir a barra de pesquisa
     while not localiza_id(driver, 'select2-ddlCompanyIris-container'):
         time.sleep(1)
@@ -90,6 +89,7 @@ def procura_empresa(empresa, driver):
         # clica em download
         driver.find_element(by=By.XPATH, value='/html/body/form/div[5]/div[3]/div[1]/div/div[4]/div/table/tbody/tr[2]/td[9]/div/a[1]').click()
         time.sleep(1)
+        # download dctf
         driver.find_element(by=By.XPATH, value='/html/body/form/div[5]/div[3]/div[1]/div/div[4]/div/table/tbody/tr[2]/td[9]/div/ul/li[3]/a').click()
         time.sleep(1)
 
@@ -109,8 +109,6 @@ def procura_empresa(empresa, driver):
         return driver
             
     return driver
-    # except:
-        # return False, driver
 
 
 @_time_execution

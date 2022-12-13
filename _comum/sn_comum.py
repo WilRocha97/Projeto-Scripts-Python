@@ -20,6 +20,7 @@ from chrome_comum import initialize_chrome
 # variaveis globais
 _servs = {
     'snparc': '37',
+    'parcmei': '48',
     'pertsn': '61',
     'recibos': '60',
     'caixa postal': '41',

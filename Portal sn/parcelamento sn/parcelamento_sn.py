@@ -105,7 +105,7 @@ def consulta_parcelamento(cnpj, tipo, comp, session):
 
 
 def get_tipo():
-    tipos = {'pert/pertsn': 'pertsn', 'das/snparc': 'snparc'}
+    tipos = {'pert/pertsn': 'pertsn', 'das/snparc': 'snparc', 'mei/parcmei': 'parcmei'}
 
     text = 'Quais parcelamentos serão gerados?'
     tipo = confirm(title='Tipo de parcelamento', text=text, buttons=tuple(tipos.keys()))

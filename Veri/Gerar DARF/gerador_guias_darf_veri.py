@@ -8,7 +8,6 @@ from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers
 from chrome_comum import _initialize_chrome
-from pyautogui_comum import _click_img, _wait_img, _find_img
 
 
 def localiza_path(driver, elemento):

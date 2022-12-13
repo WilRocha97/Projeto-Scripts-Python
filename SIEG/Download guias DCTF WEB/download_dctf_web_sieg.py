@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-import os, time, shutil, re, fitz
+import os, time, re
 
 from sys import path
 path.append(r'..\..\_comum')

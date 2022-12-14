@@ -32,9 +32,9 @@ def escolher_relatorio():
     relatorio = StringVar(root)
     relatorio.set("Qual relatório?")  # default value
 
-    relatorios = ["Férias vencidas ou a vencer", "Ficha de Registro de Funcionários", "Folha de Pagamento - Impressão Multipla", "Holerites - Adiantamento",
+    relatorios = ["13º - Impressão Multipla", "Férias vencidas ou a vencer", "Ficha de Registro de Funcionários", "Folha de Pagamento - Impressão Multipla", "Holerites - Adiantamento",
                   "Holerites - Mensal", "Holerite Pro Labore", "Provisões 13º e Ferias", "Relatório de empresas", "Relatório de Experiência geral", "Relatório Geral - Impressão Multipla",
-                  "Rescisão", "Resumo Geral Mensal - Impressão Multipla", "Resumo Mensal - Impressão Multipla", "Resumo por Evento", "Vale Transporte"]
+                  "Rescisão", "Resumo 13º", "Resumo Geral Mensal - Impressão Multipla", "Resumo Mensal - Impressão Multipla", "Resumo por Evento", "Vale Transporte"]
 
     # drop down menu
     Combobox(root, textvariable=relatorio, values=relatorios, width=55).pack()
@@ -492,6 +492,35 @@ def relatoriozinhos(relatorio, andamentos, empresa):
         if not imprimir(relatorio, andamentos, empresa, texto, espera=30, diretorio=relatorio):
             return False
         
+    elif relatorio == 'Resumo 13º':
+        if mes == '11':
+            hotkey('alt', 'l')
+            parcela = '1º'
+            
+        elif mes == '12':
+            hotkey('alt', 'e')
+            parcela = '2º'
+            
+        else:
+            return False
+        
+        time.sleep(2)
+        hotkey('ctrl', 'p')
+        _wait_img('resumo_mensal_13_1.png', conf=0.9)
+        time.sleep(1)
+        press('r')
+        time.sleep(1)
+        press('enter')
+        _wait_img('EscolheEmpresas.png', conf=0.9)
+        time.sleep(1)
+        hotkey('alt', 'a')
+        _wait_img('deseja_csv.png', conf=0.9)
+        time.sleep(1)
+        hotkey('alt', 'n')
+        
+        if not imprimir(relatorio, andamentos, empresa, f'{nome} - {cod} - {relatorio} {parcela} - {mes} - {ano}.PDF', espera=500, diretorio=relatorio):
+            return False
+        
     elif relatorio == 'Resumo por Evento':
         # Verifica se tem funcionário na empresa
         if _find_img('SemFuncionarios.png', conf=0.9):
@@ -559,6 +588,8 @@ def relatoriozinhos(relatorio, andamentos, empresa):
         sleep(2)
         if relatorio == 'Relatório Geral - Impressão Multipla':
             hotkey('ctrl', 't')
+        if relatorio == '13º - Impressão Multipla':
+            _click_img('13Multipla.png', conf=0.9, clicks=2)
         if relatorio == 'Resumo Geral Mensal - Impressão Multipla':
             _click_img('ResumoGeralMensal.png', conf=0.9, clicks=2)
         if relatorio == 'Resumo Mensal - Impressão Multipla':

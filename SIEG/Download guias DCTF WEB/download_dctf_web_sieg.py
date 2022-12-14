@@ -100,8 +100,9 @@ def procura_empresa(empresa, driver):
         guia = os.path.join(download_folder, cnpj + '_DCTFWEB_DarfOrDae_' + data + '.pdf')
         while not os.path.exists(guia):
             time.sleep(1)
-            
-        _escreve_relatorio_csv(f'{cnpj};{nome};Guia salva')
+        
+        data = data.replace('_', '-')
+        _escreve_relatorio_csv(f'{cnpj};{nome};Guia salva {data}')
         print('✔ Download da guia concluído')
     except:
         _escreve_relatorio_csv(f'{cnpj};{nome};Não possuí guia para download')

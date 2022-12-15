@@ -53,24 +53,29 @@ def login_onvio(driver):
 
 
 def procura_empresa(departamento, empresa, driver):
-    cnpj, nome, email = empresa
-
-    driver.get('https://onvio.com.br/br-portal-do-cliente/settings/clients-users')
-    
-    while not localiza_path(driver, '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-list/div[1]/div[1]/bento-combobox/div[1]/input'):
+    numero, email = empresa
+    print('>>> Abrindo lista de usuários')
+    try:
+        driver.get('https://onvio.com.br/br-portal-do-cliente/settings/clients-users')
+        
+        while not localiza_path(driver, '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-list/div[1]/div[1]/bento-combobox/div[1]/input'):
+            time.sleep(1)
+        
+        driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-list/div[1]/div[1]/bento-combobox/div[1]/input')\
+            .click()
+        
         time.sleep(1)
-    
-    driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-list/div[1]/div[1]/bento-combobox/div[1]/input')\
-        .click()
-    
-    time.sleep(1)
-    driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-list/div[1]/div[1]/bento-combobox/div[3]/bento-combobox-list/div[2]/bento-list/cdk-virtual-scroll-viewport/div[1]/div[1]/div[2]')\
-        .click()
-    
-    time.sleep(1)
-    # clica para abrir a barra de pesquisa
-    driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-list/div[2]/on-toolbar/bento-toolbar/div[1]/ul/li/input')\
-        .send_keys(email)
+        driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-list/div[1]/div[1]/bento-combobox/div[3]/bento-combobox-list/div[2]/bento-list/cdk-virtual-scroll-viewport/div[1]/div[1]/div[2]')\
+            .click()
+        
+        time.sleep(1)
+        # clica para abrir a barra de pesquisa
+        driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-list/div[2]/on-toolbar/bento-toolbar/div[1]/ul/li/input')\
+            .send_keys(email)
+    except:
+        driver.close()
+        login_onvio(driver)
+        return 'erro', 'fechado'
     
     time.sleep(2)
 
@@ -81,20 +86,25 @@ def procura_empresa(departamento, empresa, driver):
         nao_encontrada = ''
         
     if nao_encontrada == 'Sua busca não retornou nenhum resultado':
-        _escreve_relatorio_csv(f'{cnpj};{nome};{email};E-mail não encontrado')
+        _escreve_relatorio_csv(f'{numero};{email};E-mail não encontrado')
         print('❗ E-mail não encontrado')
-        return driver
-
-    # clica para selecionar a empresa
-    driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-list/div[2]/on-grid/div[1]/div[1]/div[1]/div[2]/div[1]/div/span[1]')\
-        .click()
+        return 'continue', driver
     
-    time.sleep(1)
-    while not localiza_path(driver, '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/div/div[1]/app-general-data-client/div/form/div[3]/div[1]/app-departments/div/div[1]/bento-multiselect-overlay/div/div/button'):
+    try:
+        # clica para selecionar a empresa
+        driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-list/div[2]/on-grid/div[1]/div[1]/div[1]/div[2]/div[1]/div/span[1]')\
+            .click()
+        
         time.sleep(1)
-
-    driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/div/div[1]/app-general-data-client/div/form/div[3]/div[1]/app-departments/div/div[1]/bento-multiselect-overlay/div/div/button') \
-        .click()
+        while not localiza_path(driver, '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/div/div[1]/app-general-data-client/div/form/div[3]/div[1]/app-departments/div/div[1]/bento-multiselect-overlay/div/div/button'):
+            time.sleep(1)
+    
+        driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/div/div[1]/app-general-data-client/div/form/div[3]/div[1]/app-departments/div/div[1]/bento-multiselect-overlay/div/div/button') \
+            .click()
+    except:
+        driver.close()
+        login_onvio(driver)
+        return 'erro', 'fechado'
     
     time.sleep(1)
     print('>>> Editando departamentos')
@@ -111,7 +121,7 @@ def procura_empresa(departamento, empresa, driver):
         .click()
     
     # clique para tirar a seleção de todos
-    time.sleep(1)
+    time.sleep(0.2)
     driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/div/div[1]/app-general-data-client/div/form/div[3]/div[1]/app-departments/div/div[1]/bento-multiselect-overlay/div/div/div/div[2]/bento-multiselect-list/bento-list/cdk-virtual-scroll-viewport/div[1]/div[1]') \
     .click()
 
@@ -130,10 +140,9 @@ def procura_empresa(departamento, empresa, driver):
                        ]
     
     else:
-        driver.close()
-        return False
+        return 'continue', driver
 
-    _escreve_relatorio_csv(f'{cnpj};{nome};{email}', end=';')
+    _escreve_relatorio_csv(f'{numero};{email}', end=';')
     for botao in botoes:
         
         if departamento == 'Departamento pessoal':
@@ -148,24 +157,25 @@ def procura_empresa(departamento, empresa, driver):
         driver.find_element(by=By.XPATH, value=str(botao[1])).click()
         _escreve_relatorio_csv('Ok', end=';')
         print(f'✔ {botao[0]}')
-        time.sleep(1)
 
     _escreve_relatorio_csv('')
     # clica em concluir
-    driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/div/div[1]/app-general-data-client/div/form/div[3]/div[1]/app-departments/div/div[1]/bento-multiselect-overlay/div/div/button') \
+    driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/div/div[1]/app-general-data-client/div/form/div[3]/div[1]/app-departments/div/div[1]/bento-multiselect-overlay/div/div/div/div[2]/div/button[1]') \
     .click()
 
-    time.sleep(1)
-    # clica em avançai
+    print('>>> Concluíndo alteração')
+    time.sleep(2)
+    # clica em avançar
     i = 1
     while i <= 5:
         driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/footer/button[2]') \
         .click()
-        time.sleep(0.5)
+        time.sleep(0.2)
         i += 1
 
     time.sleep(2)
-    return driver
+    print('✔ Alteração concluída')
+    return 'continue', driver
     
 
 @_time_execution
@@ -184,9 +194,9 @@ def run():
     
     # opções para fazer com que o chome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')
-    # options.add_argument('--window-size=1920,1080')
-    options.add_argument("--start-maximized")
+    options.add_argument('--headless')
+    options.add_argument('--window-size=1920,1080')
+    # options.add_argument("--start-maximized")
     options.add_experimental_option('prefs', {
         "download.default_directory": "V:\\Setor Robô\\Scripts Python\\SIEG\\Download guias DCTF WEB\\execução\\Guias",  # Change default directory for downloads
         "download.prompt_for_download": False,  # To auto download the file
@@ -197,7 +207,7 @@ def run():
     # iniciar o driver do chome
     status, driver = _initialize_chrome(options)
     
-    # fazer login no SIEG
+    # fazer login no Onvio
     login_onvio(driver)
 
     total_empresas = empresas[index:]
@@ -206,10 +216,12 @@ def run():
         # configurar o indice para localizar em qual empresa está
         _indice(count, total_empresas, empresa)
         
-        driver = procura_empresa(departamento, empresa, driver)
-                
+        erro = 'erro'
+        while erro == 'erro':
+            erro, driver = procura_empresa(departamento, empresa, driver)
+        
     driver.close()
-    _escreve_header_csv(texto='CNPJ;NOME;E-MAIL;ADMINISTRATIVO;CLIENTE CONTÁBIL;CONTABIL;FINANCEIRO;FISCAL')
+    _escreve_header_csv(texto='E-MAIL;ADMINISTRATIVO;CLIENTE CONTÁBIL;CONTABIL;FINANCEIRO;FISCAL')
     
 if __name__ == '__main__':
     run()

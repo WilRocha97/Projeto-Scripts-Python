@@ -115,7 +115,6 @@ def procura_empresa(empresa, driver):
 @_time_execution
 def run():
     os.makedirs('execução/Guias', exist_ok=True)
-    # p.mouseInfo()
 
     # abrir a planilha de dados
     empresas = _open_lista_dados()

@@ -123,8 +123,7 @@ def run():
         return False
 
     consulta(empresas, index)
-    cabecalho = ';'.join(['CNPJ', 'NOME', 'OPTANTE DO SIMPLES NACIONAL', 'OPTANTE DO SIMEI', 'EVENTOS SIMPLES NACIONAL', 'EVENTOS SIMEI'])
-    _escreve_header_csv(texto=cabecalho, nome='Optante Simples Nacional.csv')
+    _escreve_header_csv(texto='CNPJ;NOME;OPTANTE DO SIMPLES NACIONAL;OPTANTE DO SIMEI;EVENTOS SN;EVENTOS SIMEI', nome='Optante Simples Nacional.csv')
 
 
 if __name__ == '__main__':

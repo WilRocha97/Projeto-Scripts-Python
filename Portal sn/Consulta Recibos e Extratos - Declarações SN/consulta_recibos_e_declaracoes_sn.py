@@ -107,7 +107,7 @@ def consulta_documento(qual_documento, consulta, cnpj, mes, ano, session):
 
     # salva o PDF do extrato
     nome = f'{qual_documento.lower()} SN - {cnpj} - {mes}{ano}.pdf'
-    _download_file(nome, res, pasta=f'execucao/{consulta}')
+    _download_file(nome, res, pasta=f'execução/{consulta}')
 
     print(f'✔ {qual_documento} disponível')
     return f'{qual_documento} disponível'

@@ -73,7 +73,6 @@ def procura_empresa(departamento, empresa, driver):
         driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-list/div[2]/on-toolbar/bento-toolbar/div[1]/ul/li/input')\
             .send_keys(email)
     except:
-        driver.close()
         login_onvio(driver)
         return 'erro', 'fechado'
     
@@ -102,7 +101,6 @@ def procura_empresa(departamento, empresa, driver):
         driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/div/div[1]/app-general-data-client/div/form/div[3]/div[1]/app-departments/div/div[1]/bento-multiselect-overlay/div/div/button') \
             .click()
     except:
-        driver.close()
         login_onvio(driver)
         return 'erro', 'fechado'
     

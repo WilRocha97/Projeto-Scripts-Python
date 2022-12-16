@@ -138,23 +138,24 @@ def run():
         "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
     })
 
-    # iniciar o driver do chome
-    status, driver = _initialize_chrome(options)
+    while 1 < 2:
+        # iniciar o driver do chome
+        status, driver = _initialize_chrome(options)
+        
+        # fazer login no SIEG
+        login_sieg(driver)
     
-    # fazer login no SIEG
-    login_sieg(driver)
-
-    total_empresas = empresas[index:]
-    for count, empresa in enumerate(empresas[index:], start=1):
-
-        # configurar o indice para localizar em qual empresa está
-        _indice(count, total_empresas, empresa)
-        
-        driver = sieg_iris(driver)
-        
-        driver = procura_empresa(empresa, driver)
-                
-    driver.close()
+        total_empresas = empresas[index:]
+        for count, empresa in enumerate(empresas[index:], start=1):
+    
+            # configurar o indice para localizar em qual empresa está
+            _indice(count, total_empresas, empresa)
+            
+            driver = sieg_iris(driver)
+            
+            driver = procura_empresa(empresa, driver)
+            
+        driver.close()
     
 if __name__ == '__main__':
     run()

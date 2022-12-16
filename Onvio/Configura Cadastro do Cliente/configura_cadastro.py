@@ -6,7 +6,7 @@ import os, time, re
 
 from sys import path
 path.append(r'..\..\_comum')
-from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers
+from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers, _escreve_header_csv
 from chrome_comum import _initialize_chrome
 
 
@@ -144,9 +144,8 @@ def procura_empresa(departamento, empresa, driver):
         return 'continue', driver
 
     # anota o e-mail do andamento atual mantendo na mesma linha para a marcação dos departamentos selecionados
-    _escreve_relatorio_csv(f'{numero};{email}', end=';')
+    
     for botao in botoes:
-        
         # se for departamento pessoal, verifica se o departamento já está selecionado
         if departamento == 'Departamento pessoal':
             try:
@@ -158,7 +157,6 @@ def procura_empresa(departamento, empresa, driver):
         
         # seleciona o botão
         driver.find_element(by=By.XPATH, value=str(botao[1])).click()
-        _escreve_relatorio_csv('Ok', end=';')
         print(f'✔ {botao[0]}')
 
     _escreve_relatorio_csv('')
@@ -177,6 +175,7 @@ def procura_empresa(departamento, empresa, driver):
         i += 1
 
     time.sleep(2)
+    _escreve_relatorio_csv(f'{numero};{email};Departamentos atualizados')
     print('✔ Alteração concluída')
     return 'continue', driver
     

@@ -54,11 +54,16 @@ def sieg_iris(driver):
 
 def procura_empresa(empresa, driver):
     cnpj, nome = empresa
-    # clica para abrir a barra de pesquisa
+    # espera a barra de pesquisa, se não aparecer em 1 minuto, recarrega a página
+    timer = 0
     while not localiza_id(driver, 'select2-ddlCompanyIris-container'):
         time.sleep(1)
-
+        timer += 1
+        if timer >= 60:
+            driver = sieg_iris(driver)
+        
     time.sleep(5)
+    # clica para abrir a barra de pesquisa
     driver.find_element(by=By.ID, value='select2-ddlCompanyIris-container').click()
     time.sleep(1)
 

@@ -33,7 +33,6 @@ def login_onvio(driver):
     
     # inserir o CNPJ no campo
     driver.find_element(by=By.NAME, value='uid').send_keys('robo@veigaepostal.com.br')
-    time.sleep(1)
     
     # inserir a senha no campo
     driver.find_element(by=By.NAME, value='pwd').send_keys('Rb#0086*')

@@ -231,7 +231,10 @@ def run():
                 login_onvio(driver)
         
     driver.close()
-    _escreve_header_csv(texto='E-MAIL;ADMINISTRATIVO;CLIENTE CONTÁBIL;CONTABIL;FINANCEIRO;FISCAL')
-    
+    if departamento == 'Geral':
+        _escreve_header_csv(texto=';E-MAIL;ADMINISTRATIVO;CLIENTE CONTÁBIL;CONTABIL;FINANCEIRO;FISCAL')
+    if departamento == 'Departamento pessoal':
+        _escreve_header_csv(texto=';E-MAIL;CLIENTE FOLHA;DEPARTAMENTO PESSOAL;CONTABIL;FINANCEIRO;FISCAL')
+        
 if __name__ == '__main__':
     run()

@@ -73,8 +73,7 @@ def procura_empresa(departamento, empresa, driver):
         driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-list/div[2]/on-toolbar/bento-toolbar/div[1]/ul/li/input')\
             .send_keys(email)
     except:
-        login_onvio(driver)
-        return 'erro', 'fechado'
+        return 'erro' , driver
     
     time.sleep(2)
 
@@ -101,8 +100,8 @@ def procura_empresa(departamento, empresa, driver):
         driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/div/div[1]/app-general-data-client/div/form/div[3]/div[1]/app-departments/div/div[1]/bento-multiselect-overlay/div/div/button') \
             .click()
     except:
-        login_onvio(driver)
-        return 'erro', 'fechado'
+        
+        return 'erro', driver
     
     time.sleep(1)
     print('>>> Editando departamentos')
@@ -217,6 +216,13 @@ def run():
         erro = 'erro'
         while erro == 'erro':
             erro, driver = procura_empresa(departamento, empresa, driver)
+            if erro == 'erro':
+                driver.close()
+                # iniciar o driver do chome
+                status, driver = _initialize_chrome(options)
+    
+                # fazer login no Onvio
+                login_onvio(driver)
         
     driver.close()
     _escreve_header_csv(texto='E-MAIL;ADMINISTRATIVO;CLIENTE CONTÁBIL;CONTABIL;FINANCEIRO;FISCAL')

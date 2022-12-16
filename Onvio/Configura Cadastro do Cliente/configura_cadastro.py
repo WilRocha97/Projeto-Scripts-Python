@@ -91,11 +91,12 @@ def procura_empresa(departamento, empresa, driver):
         # clica para selecionar a empresa
         driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-list/div[2]/on-grid/div[1]/div[1]/div[1]/div[2]/div[1]/div/span[1]')\
             .click()
-        
-        time.sleep(1)
+
+        # espera o botão de departamentos aparecer
         while not localiza_path(driver, '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/div/div[1]/app-general-data-client/div/form/div[3]/div[1]/app-departments/div/div[1]/bento-multiselect-overlay/div/div/button'):
             time.sleep(1)
-    
+
+        # clica no botão de departamentos
         driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/div/div[1]/app-general-data-client/div/form/div[3]/div[1]/app-departments/div/div[1]/bento-multiselect-overlay/div/div/button') \
             .click()
     except:
@@ -104,23 +105,26 @@ def procura_empresa(departamento, empresa, driver):
     
     time.sleep(1)
     print('>>> Editando departamentos')
-
+    
+    # verifica se todos os departamentos estão selecionados
     try:
         unchecked = re.compile(r'(aria-checked=\"true\")><i aria-hidden=\"true\" class=\"bui-checkbox-unchecked\"></i><i aria-hidden=\"true\" class=\"bui-checkbox-checked\"></i></bento-checkbox><div class=\"bento-multiselect-list-item-label\"> Selecionar todos') \
             .search(driver.page_source).group(1)
     except:
         unchecked = 'unchecked'
-
+    
+    # se todos os departamentos não estão marcados, marca todos
     if unchecked == 'unchecked':
         # clica em Selecionar todos
         driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/div/div[1]/app-general-data-client/div/form/div[3]/div[1]/app-departments/div/div[1]/bento-multiselect-overlay/div/div/div/div[2]/bento-multiselect-list/bento-list/cdk-virtual-scroll-viewport/div[1]/div[1]') \
         .click()
     
-    # clique para tirar a seleção de todos
+    # clique para tirar a seleção de todos, para limpar as seleções
     time.sleep(0.2)
     driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/div/div[1]/app-general-data-client/div/form/div[3]/div[1]/app-departments/div/div[1]/bento-multiselect-overlay/div/div/div/div[2]/bento-multiselect-list/bento-list/cdk-virtual-scroll-viewport/div[1]/div[1]') \
     .click()
-
+    
+    # lista de departamentos gerais sem departamento pessoal e acesso de administrador
     time.sleep(1)
     if departamento == 'Geral':
         botoes = [('Administrativo', '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/div/div[1]/app-general-data-client/div/form/div[3]/div[1]/app-departments/div/div[1]/bento-multiselect-overlay/div/div/div/div[2]/bento-multiselect-list/bento-list/cdk-virtual-scroll-viewport/div[1]/div[3]'),
@@ -130,6 +134,7 @@ def procura_empresa(departamento, empresa, driver):
                        ('Fiscal', '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/div/div[1]/app-general-data-client/div/form/div[3]/div[1]/app-departments/div/div[1]/bento-multiselect-overlay/div/div/div/div[2]/bento-multiselect-list/bento-list/cdk-virtual-scroll-viewport/div[1]/div[9]'),
                        ]
     
+    # lista com departamentos referêntes ao departamento pessoal
     elif departamento == 'Departamento pessoal':
         botoes = [('Cliente folha', '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/div/div[1]/app-general-data-client/div/form/div[3]/div[1]/app-departments/div/div[1]/bento-multiselect-overlay/div/div/div/div[2]/bento-multiselect-list/bento-list/cdk-virtual-scroll-viewport/div[1]/div[5]', 'CLIENTE FOLHA'),
                        ('Departamento pessoal', '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/div/div[1]/app-general-data-client/div/form/div[3]/div[1]/app-departments/div/div[1]/bento-multiselect-overlay/div/div/div/div[2]/bento-multiselect-list/bento-list/cdk-virtual-scroll-viewport/div[1]/div[7]'),
@@ -138,9 +143,11 @@ def procura_empresa(departamento, empresa, driver):
     else:
         return 'continue', driver
 
+    # anota o e-mail do andamento atual mantendo na mesma linha para a marcação dos departamentos selecionados
     _escreve_relatorio_csv(f'{numero};{email}', end=';')
     for botao in botoes:
         
+        # se for departamento pessoal, verifica se o departamento já está selecionado
         if departamento == 'Departamento pessoal':
             try:
                 re.compile(r'title=\"' + str(botao[2]) + '\"><bento-checkbox class=\"ng-untouched ng-pristine ng-valid\"><input type=\"checkbox\" class=\"ng-untouched ng-pristine ng-valid\" tabindex=\"-1\" (aria-checked=\"true\")>') \
@@ -161,7 +168,7 @@ def procura_empresa(departamento, empresa, driver):
 
     print('>>> Concluíndo alteração')
     time.sleep(2)
-    # clica em avançar
+    # clica em avançar 5 vezes
     i = 1
     while i <= 5:
         driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-client-user-container/div/app-client-user-edit/div[1]/on-wizard-add/footer/button[2]') \

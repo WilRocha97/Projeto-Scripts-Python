@@ -17,7 +17,7 @@ from comum_comum import _time_execution, _download_file, _open_lista_dados, _whe
 def renomear(empresa, comp):
     cnpj, cpf, cod, nome = empresa
     download_folder = "V:\\Setor Robô\\Scripts Python\\Portal sn\\Termo de exclusão SN\\ignore\\Termos"
-    final_foder = "V:\\Setor Robô\\Scripts Python\\Portal sn\\Termo de exclusão SN\\execucao\\Termos"
+    final_foder = "V:\\Setor Robô\\Scripts Python\\Portal sn\\Termo de exclusão SN\\execução\\Termos"
     
     count = 0
     while not os.listdir(download_folder):
@@ -91,7 +91,7 @@ def consulta(driver, empresa, comp):
             return 'erro'
         
     try:
-        termo = re.compile(r'TERMO DE EXCLUSÃO DO SIMPLES NACIONAL.+nº (.+), de (.+ de ' + comp + ')<\/a>').search(str(driver.page_source))
+        termo = re.compile(r'TERMO DE EXCLUSÃO DO SIMPLES NACIONAL.+nº (.+), de (.+ de ' + comp + ')</a>').search(str(driver.page_source))
         numero = termo.group(1)
         data = termo.group(2)
     except:
@@ -99,7 +99,7 @@ def consulta(driver, empresa, comp):
         return f'Não possuí termo de exclusão em {comp}'
 
     os.makedirs('ignore/Termos', exist_ok=True)
-    os.makedirs('execucao/Termos', exist_ok=True)
+    os.makedirs('execução/Termos', exist_ok=True)
     
     link_termo = re.compile(r'href=\"(.+)\">TERMO DE EXCLUSÃO DO SIMPLES NACIONAL').search(str(driver.page_source)).group(1)
     driver.get(f'https://www8.receita.fazenda.gov.br{link_termo}')

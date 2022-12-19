@@ -52,7 +52,7 @@ def sieg_iris(driver):
     return driver
 
 
-def procura_empresa(empresa, driver):
+def procura_empresa(empresa, driver, options):
     cnpj, nome = empresa
     # espera a barra de pesquisa, se não aparecer em 1 minuto, recarrega a página
     timer = 0
@@ -60,6 +60,9 @@ def procura_empresa(empresa, driver):
         time.sleep(1)
         timer += 1
         if timer >= 60:
+            driver.close()
+            status, driver = _initialize_chrome(options)
+            driver = login_sieg(driver)
             driver = sieg_iris(driver)
         
     time.sleep(5)
@@ -100,10 +103,14 @@ def procura_empresa(empresa, driver):
 
         data = re.compile(r'td-background-dt hidden-md hidden-sm hidden-xs\">(.+)</td><td class=\"td-background-dt sorting_2\">(\d\d/\d\d\d\d)').search(driver.page_source).group(2)
         data = data.replace('/', '_')
+        data2 = data.split('_')
         
         download_folder = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download guias DCTF WEB\\execução\\Guias"
         guia = os.path.join(download_folder, cnpj + '_DCTFWEB_DarfOrDae_' + data + '.pdf')
+        guia2 = os.path.join(download_folder, cnpj + '_DCTFWEB_DarfOrDae_' + str(data2[1]) + '.pdf')
         while not os.path.exists(guia):
+            if os.path.exists(guia2):
+                break
             time.sleep(1)
         
         data = data.replace('_', '-')
@@ -158,7 +165,7 @@ def run():
             
             driver = sieg_iris(driver)
             
-            driver = procura_empresa(empresa, driver)
+            driver = procura_empresa(empresa, driver, options)
             
         driver.close()
     

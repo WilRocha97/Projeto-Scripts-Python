@@ -67,12 +67,14 @@ def login(empresas, total_empresas, index, options, comp):
                     driver.quit()
                     if text == 'erro':
                         captcha = 'erro'
+                    else:
+                        # escreve na planilha de andamentos o resultado da execução atual
+                        _escreve_relatorio_csv(f'{nome};{cnpj};{cpf};{cod};{text}', nome='Termo de exclusão SN')
                 else:
                     text = session
                     driver.quit()
-                
-                # escreve na planilha de andamentos o resultado da execução atual
-                _escreve_relatorio_csv(f'{nome};{cnpj};{cpf};{cod};{text}', nome='Termo de exclusão SN')
+                    # escreve na planilha de andamentos o resultado da execução atual
+                    _escreve_relatorio_csv(f'{nome};{cnpj};{cpf};{cod};{text}', nome='Termo de exclusão SN')
 
 
 def consulta(driver, empresa, comp):

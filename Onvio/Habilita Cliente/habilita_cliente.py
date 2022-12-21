@@ -28,7 +28,7 @@ def localiza_id(driver, elemento):
 
 def verifica_botao(driver, caminho):
     try:
-        re.compile(r'>' + caminho + '<').search(driver.page_source).group(1)
+        re.compile(caminho).search(driver.page_source).group(1)
         return True
     except:
         return False
@@ -95,34 +95,40 @@ def procura_empresa(empresa, driver):
         time.sleep(1)
     
     # print(driver.page_source)
-    botoes = [('Receita Federal.+role=\"img\" class=\"(bento-toggle-nob-icon bento-toggle-a11y-labels toggle-off)\".+FGTS',
+    botoes = [(r'Receita Federal.+role=\"img\" class=\"(bento-toggle-nob-icon bento-toggle-a11y-labels toggle-off)\".+FGTS</div>',
                      '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[1]/div[2]/bento-toggle',
-                     'Receita Federal.+type=\"checkbox\" (aria-checked=\"true\").+FGTS',
+                     r'Receita Federal.+type=\"checkbox\" (aria-checked=\"true\").+FGTS',
                      '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[1]/div[3]/div[2]/div/label/bento-checkbox/input',
-                     ),
-                    ('FGTS.+role=\"img\" class=\"(bento-toggle-nob-icon bento-toggle-a11y-labels toggle-off)\".+Justiça do Trabalho',
+                    ),
+                    (r'FGTS.+role=\"img\" class=\"(bento-toggle-nob-icon bento-toggle-a11y-labels toggle-off)\".+Justiça do Trabalho</div>',
                      '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[2]/div[2]/bento-toggle',
-                     'FGTS.+type=\"checkbox\" (aria-checked=\"true\").+Justiça do Trabalho',
+                     r'FGTS.+type=\"checkbox\" (aria-checked=\"true\").+Justiça do Trabalho',
                      '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[2]/div[3]/div[2]/div/label/bento-checkbox/input',
                      ),
-                    ('Justiça do Trabalho.+role=\"img\" class=\"(bento-toggle-nob-icon bento-toggle-a11y-labels toggle-off)\".+Receita Estadual - São Paulo',
+                    (r'Justiça do Trabalho.+role=\"img\" class=\"(bento-toggle-nob-icon bento-toggle-a11y-labels toggle-off)\".+Receita Estadual - São Paulo</div>',
                      '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[3]/div[2]/bento-toggle',
-                     'Justiça do Trabalho.+type=\"checkbox\" (aria-checked=\"true\").+Receita Estadual - São Paulo',
+                     r'Justiça do Trabalho.+type=\"checkbox\" (aria-checked=\"true\").+Receita Estadual - São Paulo</div>',
                      '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[3]/div[3]/div[2]/div/label/bento-checkbox/input',
                      ),
-                    ('Receita Estadual - São Paulo.+role=\"img\" class=\"(bento-toggle-nob-icon bento-toggle-a11y-labels toggle-off)\".+Receita Estadual - São Paulo - Não Inscritos na Dívida Ativa',
+                    (r'Receita Estadual - São Paulo.+role=\"img\" class=\"(bento-toggle-nob-icon bento-toggle-a11y-labels toggle-off)\".+Receita Estadual - São Paulo - Não Inscritos na Dívida Ativa</div>',
                      '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[4]/div[2]/bento-toggle',
-                     'Receita Estadual - São Paulo.+type=\"checkbox\" (aria-checked=\"true\").+Receita Estadual - São Paulo - Não Inscritos na Dívida Ativa',
+                     r'Receita Estadual - São Paulo.+type=\"checkbox\" (aria-checked=\"true\").+Receita Estadual - São Paulo - Não Inscritos na Dívida Ativa</div>',
                      '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[4]/div[3]/div[2]/div/label/bento-checkbox/input',
                      ),
-                    ('Receita Estadual - São Paulo - Não Inscritos na Dívida Ativa.+role=\"img\" class=\"(bento-toggle-nob-icon bento-toggle-a11y-labels toggle-off)\".+',
+                    (r'.Receita Estadual - São Paulo - Não Inscritos na Dívida Ativa.+role=\"img\" class=\"(bento-toggle-nob-icon bento-toggle-a11y-labels toggle-off)\".+',
                      '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[5]/div[2]/bento-toggle',
-                     'Receita Estadual - São Paulo - Não Inscritos na Dívida Ativa.+type=\"checkbox\" (aria-checked=\"true\").+',
+                     r'Receita Estadual - São Paulo - Não Inscritos na Dívida Ativa.+type=\"checkbox\" (aria-checked=\"true\").+',
                      '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[5]/div[3]/div[2]/div/label/bento-checkbox/input',
                      ),
               ]
+    if not verifica_botao(driver, r'(Receita Estadual) - São Paulo'):
+        _escreve_relatorio_csv(f'{numero};{cnpj};Erro')
+        print('❌ Erro')
+        return 'continue', driver
     
+    print('>>> Habilitando CNPJ...')
     for botao in botoes:
+       
         while verifica_botao(driver, str(botao[0])):
             # item
             driver.find_element(by=By.XPATH, value=botao[1]).click()
@@ -137,13 +143,14 @@ def procura_empresa(empresa, driver):
     time.sleep(1)
     driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[1]/div[2]/button[1]') \
         .click()
-        
+
     time.sleep(2)
     _escreve_relatorio_csv(f'{numero};{cnpj};CNPJ habiliado')
     print('✔ CNPJ habiliado')
     return 'continue', driver
     
-
+    
+    
 @_time_execution
 def run():
     # abrir a planilha de dados

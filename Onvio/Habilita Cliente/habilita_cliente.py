@@ -26,6 +26,14 @@ def localiza_id(driver, elemento):
         return False
     
 
+def verifica_botao(driver, caminho):
+    try:
+        re.compile(r'>' + caminho + '<').search(driver.page_source).group(1)
+        return True
+    except:
+        return False
+
+
 def login_onvio(driver):
     driver.get('https://onvio.com.br/login/#/')
     print('>>> Acessando o site')
@@ -74,8 +82,8 @@ def procura_empresa(empresa, driver):
         nao_encontrada = ''
         
     if nao_encontrada == 'Sua busca não retornou nenhum resultado':
-        _escreve_relatorio_csv(f'{numero};{cnpj};E-mail não encontrado')
-        print('❗ Cliente não encontrado')
+        _escreve_relatorio_csv(f'{numero};{cnpj};CNPJ não encontrado')
+        print('❗ CNPJ não encontrado')
         return 'continue', driver
     
     # clicar para entrar no cliente
@@ -86,7 +94,7 @@ def procura_empresa(empresa, driver):
     while not localiza_path(driver, '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[6]'):
         time.sleep(1)
     
-    print(driver.page_source)
+    # print(driver.page_source)
     botoes = [('Receita Federal.+role=\"img\" class=\"(bento-toggle-nob-icon bento-toggle-a11y-labels toggle-off)\".+FGTS',
                      '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[1]/div[2]/bento-toggle',
                      'Receita Federal.+type=\"checkbox\" (aria-checked=\"true\").+FGTS',
@@ -107,45 +115,32 @@ def procura_empresa(empresa, driver):
                      'Receita Estadual - São Paulo.+type=\"checkbox\" (aria-checked=\"true\").+Receita Estadual - São Paulo - Não Inscritos na Dívida Ativa',
                      '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[4]/div[3]/div[2]/div/label/bento-checkbox/input',
                      ),
-                    ('Receita Estadual - São Paulo - Não Inscritos na Dívida Ativa.+role=\"img\" class=\"(bento-toggle-nob-icon bento-toggle-a11y-labels toggle-off)\"',
+                    ('Receita Estadual - São Paulo - Não Inscritos na Dívida Ativa.+role=\"img\" class=\"(bento-toggle-nob-icon bento-toggle-a11y-labels toggle-off)\".+',
                      '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[5]/div[2]/bento-toggle',
-                     'Receita Estadual - São Paulo - Não Inscritos na Dívida Ativa.+type=\"checkbox\" (aria-checked=\"true\")',
+                     'Receita Estadual - São Paulo - Não Inscritos na Dívida Ativa.+type=\"checkbox\" (aria-checked=\"true\").+',
                      '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[5]/div[3]/div[2]/div/label/bento-checkbox/input',
                      ),
               ]
     
     for botao in botoes:
-        try:
-            desabilitado = re.compile(r'>' + str(botao[0]) + '<').search(driver.page_source).group(1)
-        except:
-            desabilitado = 'habilitado'
-        
-        if desabilitado != 'habilitado':
+        while verifica_botao(driver, str(botao[0])):
             # item
             driver.find_element(by=By.XPATH, value=botao[1]).click()
+            time.sleep(1)
 
-        time.sleep(2)
-        
-        try:
-            habilitado = re.compile(r'>' + str(botao[2]) + '<').search(driver.page_source).group(1)
-        except:
-            habilitado = 'desabilitado'
-
-        if habilitado != 'desabilitado':
+        while not verifica_botao(driver, str(botao[2])):
             # disponibilizar automaticamente para o cliente
             driver.find_element(by=By.XPATH, value=botao[3]).click()
-            
-            time.sleep(2)
+            time.sleep(1)
         
-
     # salvar
     time.sleep(1)
     driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[1]/div[2]/button[1]') \
         .click()
         
     time.sleep(2)
-    _escreve_relatorio_csv(f'{numero};{cnpj};Cliente habiliado')
-    print('✔ Cliente habiliado')
+    _escreve_relatorio_csv(f'{numero};{cnpj};CNPJ habiliado')
+    print('✔ CNPJ habiliado')
     return 'continue', driver
     
 
@@ -163,9 +158,9 @@ def run():
     
     # opções para fazer com que o chome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')
-    # options.add_argument('--window-size=1920,1080')
-    options.add_argument("--start-maximized")
+    options.add_argument('--headless')
+    options.add_argument('--window-size=1920,1080')
+    # options.add_argument("--start-maximized")
     options.add_experimental_option('prefs', {
         "download.default_directory": "V:\\Setor Robô\\Scripts Python\\SIEG\\Download guias DCTF WEB\\execução\\Guias",  # Change default directory for downloads
         "download.prompt_for_download": False,  # To auto download the file

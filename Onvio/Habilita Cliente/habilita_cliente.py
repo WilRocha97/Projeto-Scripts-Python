@@ -132,13 +132,14 @@ def procura_empresa(empresa, driver):
         while verifica_botao(driver, str(botao[0])):
             # item
             driver.find_element(by=By.XPATH, value=botao[1]).click()
-            time.sleep(1)
-
+            time.sleep(0.5)
+            
+    for botao in botoes:
         while not verifica_botao(driver, str(botao[2])):
             # disponibilizar automaticamente para o cliente
             driver.find_element(by=By.XPATH, value=botao[3]).click()
-            time.sleep(1)
-        
+            time.sleep(0.5)
+            
     # salvar
     time.sleep(1)
     driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[1]/div[2]/button[1]') \

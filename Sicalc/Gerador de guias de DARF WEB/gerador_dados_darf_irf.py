@@ -19,36 +19,45 @@ def gera():
         return False
     
     for count1, empresa in enumerate(empresas, start=1):
-        cnpj, nome, valor, cod = empresa
+        cnpj, nome, nota, valor, cod = empresa
         valor = Decimal(float(valor.replace(',', '.')))
         cnpj_armazenado = cnpj
         nome_armazenado = nome.replace('/', ' ')
+        nota_armazenado = [nota]
         cod_armazenado = cod
         valor_armazenado = valor
         
         for count2, empresa in enumerate(empresas, start=1):
-            cnpj, nome, valor, cod = empresa
+            cnpj, nome, nota, valor, cod = empresa
             valor = Decimal(float(valor.replace(',', '.')))
             
             if count2 != count1:
                 if cnpj_armazenado == cnpj and cod_armazenado == cod:
                     valor_armazenado += valor
+                    nota_armazenado.append(nota)
                     
         valor_armazenado = round(valor_armazenado, 2)
         valor_armazenado = str(valor_armazenado).replace('.', ',')
         
-        _escreve_relatorio_csv(f'{cnpj_armazenado};{nome_armazenado};{valor_armazenado};{cod_armazenado}', nome='Dados Somados')
+        # organiza os números das notas em orden crescente
+        nota_armazenado.sort()
+        notas_armazenadas = ''
+        for nota in nota_armazenado:
+            notas_armazenadas += f'{nota}, '
+
+        notas_armazenadas += ', '
+        _escreve_relatorio_csv(f'{cnpj_armazenado};{nome_armazenado};{notas_armazenadas.replace(", , ", "")};{valor_armazenado};{cod_armazenado}', nome='Dados Somados')
 
 
 def tira_duplicadas():
     with open('execução/Dados Somados.csv', encoding='utf-8') as arquivo_referencia:
         # 2. ler a tabela
         tabela = csv.reader(arquivo_referencia, delimiter=';')
-
-        linha_armazenada = ''
+        
+        linha_armazenada = ['', '', '', '', '']
         for linha in tabela:
             if linha != linha_armazenada:
-                _escreve_relatorio_csv(f'{linha[0]};{linha[1]};{linha[2]};{linha[3]}', nome='Dados', local=e_dir)
+                _escreve_relatorio_csv(f'{linha[0]};{linha[1]};{linha[2]};{linha[3]};{linha[4]}', nome='Dados', local=e_dir)
             linha_armazenada = linha
                     
                 

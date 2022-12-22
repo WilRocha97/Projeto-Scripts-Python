@@ -2,6 +2,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from pyautogui import confirm
+from bs4 import BeautifulSoup
 import os, time, re
 
 from sys import path
@@ -27,8 +28,10 @@ def localiza_id(driver, elemento):
     
 
 def verifica_botao(driver, caminho):
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    html = soup.prettify()
     try:
-        re.compile(caminho).search(driver.page_source).group(1)
+        re.compile(caminho).search(html).group(1)
         return True
     except:
         return False
@@ -94,50 +97,36 @@ def procura_empresa(empresa, driver):
     while not localiza_path(driver, '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[6]'):
         time.sleep(1)
     
-    # print(driver.page_source)
-    botoes = [(r'Receita Federal.+role=\"img\" class=\"(bento-toggle-nob-icon bento-toggle-a11y-labels toggle-off)\".+FGTS</div>',
-                     '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[1]/div[2]/bento-toggle',
-                     r'Receita Federal.+type=\"checkbox\" (aria-checked=\"true\").+FGTS',
-                     '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[1]/div[3]/div[2]/div/label/bento-checkbox/input',
-                    ),
-                    (r'FGTS.+role=\"img\" class=\"(bento-toggle-nob-icon bento-toggle-a11y-labels toggle-off)\".+Justiça do Trabalho</div>',
-                     '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[2]/div[2]/bento-toggle',
-                     r'FGTS.+type=\"checkbox\" (aria-checked=\"true\").+Justiça do Trabalho',
-                     '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[2]/div[3]/div[2]/div/label/bento-checkbox/input',
-                     ),
-                    (r'Justiça do Trabalho.+role=\"img\" class=\"(bento-toggle-nob-icon bento-toggle-a11y-labels toggle-off)\".+Receita Estadual - São Paulo</div>',
-                     '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[3]/div[2]/bento-toggle',
-                     r'Justiça do Trabalho.+type=\"checkbox\" (aria-checked=\"true\").+Receita Estadual - São Paulo</div>',
-                     '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[3]/div[3]/div[2]/div/label/bento-checkbox/input',
-                     ),
-                    (r'Receita Estadual - São Paulo.+role=\"img\" class=\"(bento-toggle-nob-icon bento-toggle-a11y-labels toggle-off)\".+Receita Estadual - São Paulo - Não Inscritos na Dívida Ativa</div>',
-                     '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[4]/div[2]/bento-toggle',
-                     r'Receita Estadual - São Paulo.+type=\"checkbox\" (aria-checked=\"true\").+Receita Estadual - São Paulo - Não Inscritos na Dívida Ativa</div>',
-                     '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[4]/div[3]/div[2]/div/label/bento-checkbox/input',
-                     ),
-                    (r'.Receita Estadual - São Paulo - Não Inscritos na Dívida Ativa.+role=\"img\" class=\"(bento-toggle-nob-icon bento-toggle-a11y-labels toggle-off)\".+',
-                     '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[5]/div[2]/bento-toggle',
-                     r'Receita Estadual - São Paulo - Não Inscritos na Dívida Ativa.+type=\"checkbox\" (aria-checked=\"true\").+',
-                     '/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[5]/div[3]/div[2]/div/label/bento-checkbox/input',
-                     ),
-              ]
-    if not verifica_botao(driver, r'(Receita Estadual) - São Paulo'):
-        _escreve_relatorio_csv(f'{numero};{cnpj};Erro')
-        print('❌ Erro')
-        return 'continue', driver
+    situacao, driver = habilita_agencias(empresa, driver)
+    return situacao, driver
+
+
+def habilita_agencias(empresa, driver):
+    numero, cnpj = empresa
     
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    html = soup.prettify()
+    # print(html)
+
     print('>>> Habilitando CNPJ...')
-    for botao in botoes:
-       
-        while verifica_botao(driver, str(botao[0])):
+    
+    botoes_agencia = re.compile(r'\"name-agency\">\n\s+(.+)\n.+\n.+\n.+(aria-checked=\"false\")').findall(html)
+    indices = coleta_agencia_indices(html)
+    for botao in botoes_agencia:
+        nome_botao = botao[0]
+        while verifica_botao(driver, r'\"name-agency\">\n\s+(' + nome_botao + ')\n.+\n.+\n.+(aria-checked=\"false\")'):
             # item
-            driver.find_element(by=By.XPATH, value=botao[1]).click()
+            driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[' + str(indices[nome_botao]) + ']/div[2]/bento-toggle').click()
             time.sleep(0.5)
-            
-    for botao in botoes:
-        while not verifica_botao(driver, str(botao[2])):
-            # disponibilizar automaticamente para o cliente
-            driver.find_element(by=By.XPATH, value=botao[3]).click()
+    
+    time.sleep(1)
+    botoes_disponibilizar = re.compile(r'\"name-agency\">\n\s+(.+)(\n.+){35}<bento-checkbox.+\n.+(input aria-checked=\"false\")').findall(html)
+    indices = coleta_agencia_indices(html)
+    for botao in botoes_disponibilizar:
+        nome_botao = botao[0]
+        while verifica_botao(driver, r'\"name-agency\">\n\s+(' + nome_botao + ')(\n.+){35}<bento-checkbox.+\n.+(input aria-checked=\"false\")'):
+            # disponibilizar para o cliente
+            driver.find_element(by=By.XPATH, value='/html/body/app-root/div/div/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/main/app-cnd-container/div/app-cnd-issuing-parameters/form/div[2]/div[2]/div[' + str(indices[nome_botao]) + ']/div[3]/div[2]/div/label/bento-checkbox/input').click()
             time.sleep(0.5)
             
     # salvar
@@ -151,6 +140,16 @@ def procura_empresa(empresa, driver):
     return 'continue', driver
     
     
+def coleta_agencia_indices(html):
+    agencias = re.compile(r'\"name-agency\">\n\s+(.+)').findall(html)
+    
+    indice = 1
+    indices = {}
+    for agencia in agencias:
+        indices[agencia]= indice
+        indice += 1
+    return indices
+
     
 @_time_execution
 def run():
@@ -166,9 +165,9 @@ def run():
     
     # opções para fazer com que o chome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--window-size=1920,1080')
-    # options.add_argument("--start-maximized")
+    # options.add_argument('--headless')
+    # options.add_argument('--window-size=1920,1080')
+    options.add_argument("--start-maximized")
     options.add_experimental_option('prefs', {
         "download.default_directory": "V:\\Setor Robô\\Scripts Python\\SIEG\\Download guias DCTF WEB\\execução\\Guias",  # Change default directory for downloads
         "download.prompt_for_download": False,  # To auto download the file

@@ -12,7 +12,7 @@ from pyautogui_comum import _click_img, _wait_img, _find_img
 
 
 def renomear(empresa, apuracao, vencimento):
-    cnpj, nome, valor, cod = empresa
+    cnpj, nome, nota, valor, cod = empresa
     download_folder = "V:\\Setor Robô\\Scripts Python\\Sicalc\\Gerador de guias de DARF WEB\\execução\\Guias"
     guia = os.path.join(download_folder, 'Darf.pdf')
     while not os.path.exists(guia):
@@ -27,7 +27,7 @@ def renomear(empresa, apuracao, vencimento):
 
 
 def login_sicalc(empresa, apuracao, vencimento, driver):
-    cnpj, nome, valor, cod = empresa
+    cnpj, nome, nota, valor, cod = empresa
     driver.get('https://sicalc.receita.economia.gov.br/sicalc/rapido/contribuinte')
     print('>>> Acessando o site')
     time.sleep(1)
@@ -53,13 +53,18 @@ def login_sicalc(empresa, apuracao, vencimento, driver):
 
 
 def gerar(empresa, apuracao, vencimento, driver):
-    cnpj, nome, valor, cod = empresa
+    cnpj, nome, nota, valor, cod = empresa
 
     # esperar o menu referente a guia aparecer
     _wait_img('menu.png', conf=0.9, timeout=-1)
     time.sleep(1)
-
+    
     print('>>> Inserindo informações da guia')
+    
+    # insere observações na guia
+    driver.find_element(by=By.ID, value='observacao').send_keys(f'Nota: {nota} - R. POSTAL SERVICOS CONTABEIS LTDA')
+    time.sleep(1)
+    
     # inserir o código da receita referente a guia
     driver.find_element(by=By.ID, value='codReceitaPrincipal').send_keys(cod)
     time.sleep(1)
@@ -121,17 +126,6 @@ def gerar(empresa, apuracao, vencimento, driver):
 
     renomear(empresa, apuracao, vencimento)
 
-    '''while not os.path.exists('V:/Setor Robô/Scripts Python/Sicalc/Gerador de guias de DARF WEB/execução/Guias/Darf.pdf'):
-        time.sleep(1)
-    while os.path.exists('V:/Setor Robô/Scripts Python/Sicalc/Gerador de guias de DARF WEB/execução/Guias/Darf.pdf'):
-        try:
-            arquivo = f'{nome} - {cnpj} - DARF IRRF {cod} - {apuracao.replace("/", "-")} - venc. {vencimento.replace("/", "-")}.pdf'
-            download_folder = "V:\\Setor Robô\\Scripts Python\\Sicalc\\Gerador de guias de DARF WEB\\execução\\Guias"
-            shutil.move(os.path.join(download_folder, 'Darf.pdf'), os.path.join(download_folder, arquivo))
-            time.sleep(2)
-        except:
-            pass'''
-
     print('✔ Guia gerada')
     _escreve_relatorio_csv('{};{};{};{};Guia gerada'.format(cnpj, nome, valor, cod))
     
@@ -158,7 +152,7 @@ def run():
     # opções para fazer com que o chome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
     # options.add_argument('--headless')
-    # options.add_argument('--window-size=1920,1080')
+    options.add_argument('--window-size=1920,1080')
     options.add_argument("--start-maximized")
     options.add_experimental_option('prefs', {
         "download.default_directory": "V:\\Setor Robô\\Scripts Python\\Sicalc\\Gerador de guias de DARF WEB\\execução\\Guias",  # Change default directory for downloads

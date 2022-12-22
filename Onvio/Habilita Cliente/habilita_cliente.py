@@ -182,7 +182,7 @@ def run():
     # opções para fazer com que o chome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
-    options.add_argument('--window-size=1920,1080')
+    options.add_argument('--window-size=1920,3080')
     # options.add_argument("--start-maximized")
     options.add_experimental_option('prefs', {
         "download.default_directory": "V:\\Setor Robô\\Scripts Python\\SIEG\\Download guias DCTF WEB\\execução\\Guias",  # Change default directory for downloads

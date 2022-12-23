@@ -6,7 +6,7 @@ from sys import path
 import re
 
 path.append(r'..\..\_comum')
-from comum_comum import _time_execution, _open_lista_dados, _where_to_start, _escreve_relatorio_csv, _indice, _escreve_header_csv
+from comum_comum import _time_execution, _open_lista_dados, _where_to_start, _escreve_relatorio_csv, _indice, _escreve_header_csv, _download_file
 from captcha_comum import _solve_hcaptcha
 
 # site key é usado para quebrar o captcha
@@ -53,16 +53,17 @@ def consulta(empresas, index):
                     payload = {'vc': cnpj}
                     s.get('https://consopt.www8.receita.fazenda.gov.br/consultaoptantes/Home/ConsultarCnpj?vc={}'.format(cnpj), data=payload)
                     # verifica a situação da empresa em relação ao simples nacional e simei
-                    
+                    print('>>> Verificando situação...')
                     soup = BeautifulSoup(response.content, 'html.parser')
                     soup = soup.prettify()
-                    padrao_sn = re.compile(r'Situação no Simples Nacional:\n.+\n.......(.+)')
-                    padrao_simei = re.compile(r'Situação no SIMEI:\n.+\n.......(.+)')
+                    sn = re.compile(r'Situação no Simples Nacional:\n.+\n.......(.+)').search(str(soup))
+                    simei = re.compile(r'Situação no SIMEI:\n.+\n.......(.+)').search(str(soup))
+                    stylesheet = re.compile(r'\.css\?v=(.+)\" rel=\"stylesheet\"/>').search(str(soup))
+                    # print(soup)
 
-                    sn = padrao_sn.search(str(soup))
-                    simei = padrao_simei.search(str(soup))
 
                     # abre a tela de mais informações da empresa
+                    print('>>> Verificando eventos...')
                     response = s.get('https://consopt.www8.receita.fazenda.gov.br/consultaoptantes/Home/AjaxMaisInfo?cnpjHdn={}'.format(cnpj))
                     # verifica os eventos futuros em relação ao simples nacional e simei
                     soup = BeautifulSoup(response.content, 'html.parser')
@@ -72,18 +73,22 @@ def consulta(empresas, index):
 
                     # tenta pegar a informação se não conseguir print o código do site e para
                     try:
+                        print('>>> Verificando eventos SN...')
                         evento_sn = padrao_eventos_sn.search(str(soup))
                         evento_sn = str(evento_sn.group(2))
                         
                         if evento_sn == '<thead>':
                             padrao_evento_sn = re.compile(r'Data Efeito(\n.+){6}.\n +(.+)\n.+\n.+\n +(.+)')
-                            evento_sn = padrao_evento_sn.search(str(soup)).group(3)
-                            
+                            evento = padrao_evento_sn.search(str(soup)).group(2)
+                            evento_data = padrao_evento_sn.search(str(soup)).group(3)
+                            evento_sn = f'{evento} - {evento_data}'
+                            # s = download_pdf(s, stylesheet, empresa)
                     except:
                         # print(soup)
                         exit()
 
                     try:
+                        print('>>> Verificando eventos SIMEI...')
                         evento_simei = padrao_eventos_simei.search(str(soup))
                         evento_simei = str(evento_simei.group(2))
                     except:
@@ -113,6 +118,21 @@ def consulta(empresas, index):
                     tentativas += 1
                     s.cookies.clear()
                     s.close()
+
+
+def download_pdf(empresa):
+    with open('css_situacao_simples.css', 'r') as f:
+        css = f.read()
+    style = "<style type='text/css'>" + css + "</style>"
+    html = BeautifulSoup(f'<html><head><meta charset="UTF-8">{style}</head><body></body></html>', 'html.parser')
+    cnpj, nome = empresa
+    
+    nome = f'{nome} - {cnpj} - Evento Futuro Simples Nacional.pdf'
+    with open(nome, 'w+b') as pdf:
+        # pisa.showLogging()
+        pisa.CreatePDF(str(html), pdf)
+    return s
+
 
 
 @_time_execution

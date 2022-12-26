@@ -40,7 +40,15 @@ def salva_pdf_geral():
         while not _find_img('cliente_c.png', conf=0.9):
             _click_img('botao.png', conf=0.9)
             time.sleep(3)
-        _click_img('cliente_c.png', conf=0.9)
+            if _find_img('cliente_r.png', conf=0.9):
+                break
+
+        if _find_img('cliente_r.png', conf=0.9):
+            _click_img('cliente_r.png', conf=0.9)
+
+        else:
+            _click_img('cliente_c.png', conf=0.9)
+
         time.sleep(5)
     
     p.press('enter')

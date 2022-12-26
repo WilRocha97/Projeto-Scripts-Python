@@ -4,15 +4,16 @@ import fitz, re, os
 from tkinter.filedialog import askopenfilename, askdirectory, Tk
 from datetime import datetime
 from pathlib import Path
+from pyautogui import alert
 
 
 def escreve_relatorio_csv(texto, local, encode='latin-1'):
     os.makedirs(local, exist_ok=True)
     
     try:
-        f = open(os.path.join(local, "Relatório de Sindicatos.csv"), 'a', encoding=encode)
+        f = open(os.path.join(local, f"Relatório de Sindicatos.csv"), 'a', encoding=encode)
     except:
-        f = open(os.path.join(local, "Relatório de Sindicatos - erro.csv"), 'a', encoding=encode)
+        f = open(os.path.join(local, "Relatório de Sindicatos - complementar.csv"), 'a', encoding=encode)
     
     f.write(texto + '\n')
     f.close()
@@ -191,11 +192,11 @@ def analiza():
                         = guarda_info(codigo, cnpj, nome_empresa, competencia, sindicato, nome, totais_rubricas, valor_calculado_s, valor_calculado_e)
                     
             except():
-                print(f'\nArquivo: {arq} - ERRO')
+                escreve_relatorio_csv(f"{page.number};Erro", local=final)
         
         # escreve as infos da última página
-        escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_empresa_anterior};{competencia_anterior};{sindicato_anterior};"
-                              f"{nome_anterior};{totais_rubricas_anterior};{valor_calculado_s_anterior};{valor_calculado_e_anterior}", local=final)
+        escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_empresa_anterior};"
+                              f"{competencia_anterior};{valor_calculado_e_anterior};{sindicato_anterior};{valor_calculado_s_anterior};{nome_anterior};{totais_rubricas_anterior}", local=final)
         
         return final
 
@@ -206,3 +207,5 @@ if __name__ == '__main__':
     # escreve o cabeçalho da planilha
     escreve_header_csv(';'.join(['CÓDIGO', 'CNPJ', 'NOME', 'COMPETÊNCIA', 'TOTAL EMPRESA', 'SINDICATO', 'TOTAL SINDICATO',
                                  'RUBRICA', 'TOTAL RUBRICA']), local=final)
+    
+    alert(title='Gera relatório de sindicato', text='Relatóro gerado com sucesso.')

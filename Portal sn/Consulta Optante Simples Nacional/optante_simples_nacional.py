@@ -82,7 +82,7 @@ def consulta(empresas, index):
                             evento = padrao_evento_sn.search(str(soup)).group(2)
                             evento_data = padrao_evento_sn.search(str(soup)).group(3)
                             evento_sn = f'{evento} - {evento_data}'
-                            # s = download_pdf(s, stylesheet, empresa)
+                            # s = download_pdf(response, empresa)
                     except:
                         # print(soup)
                         exit()
@@ -120,7 +120,10 @@ def consulta(empresas, index):
                     s.close()
 
 
-def download_pdf(empresa):
+def download_pdf(pagina, empresa):
+    os.makedirs('execução\documentos', exist_ok=True)
+    soup = BeautifulSoup(pagina.content, 'html.parser')
+    
     with open('css_situacao_simples.css', 'r') as f:
         css = f.read()
     style = "<style type='text/css'>" + css + "</style>"

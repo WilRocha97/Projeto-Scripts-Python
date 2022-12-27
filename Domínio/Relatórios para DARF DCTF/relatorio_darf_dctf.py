@@ -7,7 +7,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
-from dominio_comum import _login
+from dominio_comum import _login, _salvar_pdf
 
 
 def relatorio_darf_dctf(empresa, periodo, andamento):
@@ -92,44 +92,7 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
         if _find_img('resumo_calculado.png', conf=0.9):
             break
 
-    _click_img('salvar_pdf.png', conf=0.9)
-    while not _find_img('salvar_em_pdf.png', conf=0.9):
-        time.sleep(1)
-
-    if not _find_img('cliente_c_selecionado.png', conf=0.9):
-        while not _find_img('cliente_c.png', conf=0.9):
-            _click_img('botao.png', conf=0.9)
-            time.sleep(3)
-        _click_img('cliente_c.png', conf=0.9)
-        time.sleep(5)
-
-    p.press('enter')
-
-    timer = 0
-    while not _find_img('pdf_aberto.png', conf=0.9):
-        if _find_img('substituir.png', conf=0.9):
-            p.hotkey('alt', 'y')
-        if _find_img('adobe.png', conf=0.9):
-            p.press('enter')
-        time.sleep(1)
-        timer += 1
-        if timer > 30:
-            _click_img('salvar_pdf.png', conf=0.9)
-            while not _find_img('salvar_em_pdf.png', conf=0.9):
-                time.sleep(1)
-    
-            if not _find_img('cliente_c_selecionado.png', conf=0.9):
-                while not _find_img('cliente_c.png', conf=0.9):
-                    _click_img('botao.png', conf=0.9)
-                    time.sleep(3)
-                _click_img('cliente_c.png', conf=0.9)
-                time.sleep(5)
-    
-            p.press('enter')
-            timer = 0
-        
-    p.hotkey('alt', 'f4')
-    time.sleep(2)
+    _salvar_pdf()
 
     _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Relatório gerado']), nome=andamento)
     print('✔ Relatório gerado')

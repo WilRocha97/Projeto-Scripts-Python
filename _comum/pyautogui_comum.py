@@ -29,8 +29,8 @@ _focus = focus
 # Procura pela imagem img que atenda ao nivel de correspondencia conf
 # Retorna uma tupla com os valores (x, y, altura, largura) caso ache a img
 # Retorna None caso não ache a img
-def find_img(img, conf=1):
-    path = os.path.join('imgs', img)
+def find_img(img, pasta='imgs', conf=1):
+    path = os.path.join(pasta, img)
     return a.locateOnScreen(path, confidence=conf)
 _find_img = find_img
 
@@ -39,13 +39,13 @@ _find_img = find_img
 # Até que o 'timeout' seja excedido ou indefinidademente para 'timeout' negativo
 # Retorna uma tupla com os valores (x, y, altura, largura) caso ache a img
 # Retorna None caso não ache a imagem ou exceda o 'timeout'
-def wait_img(img, conf=1, delay=1, timeout=20, debug=False):
+def wait_img(img, pasta='imgs', conf=1, delay=1, timeout=20, debug=False):
     if debug:
         print('\tEsperando', img)
 
     aux = 0
     while True:
-        box = find_img(img, conf=conf)
+        box = find_img(img, pasta, conf=conf)
         if box:
             return box
         sleep(delay)
@@ -64,8 +64,8 @@ _wait_img = wait_img
 # que atenda ao nivel de correspondencia 'conf'
 # Retorna True caso ache a img
 # Retorna False caso não ache a imagem ou exceda o 'timeout'
-def click_img(img, conf=1, delay=1, timeout=20, button='left', clicks=1):
-    img = os.path.join('imgs', img)
+def click_img(img, pasta='imgs', conf=1, delay=1, timeout=20, button='left', clicks=1):
+    img = os.path.join(pasta, img)
     for i in range(timeout):
         box = a.locateCenterOnScreen(img, confidence=conf)
         if box:

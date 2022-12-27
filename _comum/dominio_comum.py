@@ -16,8 +16,8 @@ from pyautogui_comum import _find_img, _wait_img, _click_img
 def _login(empresa, andamentos):
     cod, cnpj, nome = empresa
     # espera a tela inicial do domínio
-    while not _find_img('inicial.png', pasta='imgs_c', conf=0.5):
-                    sleep(1)
+    while not _find_img('inicial.png', pasta='imgs_c', conf=0.9):
+        sleep(1)
 
     p.click(833, 384)
 
@@ -87,11 +87,37 @@ def _login(empresa, andamentos):
             p.press('esc', presses=5, interval=1)
             _login(empresa, andamentos)
     
+    if not verifica_empresa(cod):
+        _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Empresa não encontrada']), nome=andamentos)
+        print('❌ Empresa não encontrada')
+        p.press('esc')
+        return False
+    
     p.press('esc', presses=5)
     sleep(1)
 
     return True
 
+
+def verifica_empresa(cod):
+    p.click(1280,82)
+
+    time.sleep(1)
+    p.hotkey('ctrl', 'c')
+    p.hotkey('ctrl', 'c')
+    cnpj_codigo = pyperclip.paste()
+    
+    time.sleep(0.5)
+    codigo = cnpj_codigo.split('-')
+    codigo = str(codigo[1])
+    codigo = codigo.replace(' ', '')
+    
+    if codigo != cod:
+        return False
+    
+    else:
+        return True
+    
 
 def _login_web():
     options = webdriver.ChromeOptions()
@@ -155,7 +181,7 @@ def _abrir_modulo(modulo):
 
 
 def _salvar_pdf():
-    _click_img('salvar_pdf.png', pasta='imgs_c', conf=0.9)
+    p.hotkey('ctrl', 'd')
     while not _find_img('salvar_em_pdf.png', pasta='imgs_c', conf=0.9):
         time.sleep(1)
     
@@ -190,8 +216,12 @@ def _salvar_pdf():
             
             p.press('enter')
             timer = 0
+
+    while _find_img('pdf_aberto.png', pasta='imgs_c', conf=0.9):
+        p.hotkey('alt', 'f4')
+        time.sleep(3)
     
-    p.hotkey('alt', 'f4')
-    time.sleep(2)
-    
+    while _find_img('sera_finalizada.png', pasta='imgs_c', conf=0.9):
+        p.press('esc')
+        
     return True

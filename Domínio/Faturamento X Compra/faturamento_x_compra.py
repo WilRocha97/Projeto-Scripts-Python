@@ -63,7 +63,9 @@ def relatorio_darf_dctf(empresa, andamento):
     p.press('esc', presses=4)
     time.sleep(2)
     
-    mover_demonstrativo(empresa, ano)
+    arquivo = mover_demonstrativo(empresa, ano)
+    
+    captura_info_pdf(arquivo)
     
     _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Demonstrativo Mensal gerado']), nome=andamento)
     print('✔ Demonstrativo Mensal gerado')
@@ -71,17 +73,51 @@ def relatorio_darf_dctf(empresa, andamento):
 def mover_demonstrativo(empresa, ano):
     os.makedirs('execução/Demonstrativos', exist_ok=True)
     cod, cnpj, nome = empresa
+    
     execucoes = "V:\\Setor Robô\\Scripts Python\\Domínio\\Faturamento X Compra\\execução\\Demonstrativos"
     guia = os.path.join('C:', 'Demonstrativo Mensal.pdf')
+    arquivo = f'{cod} - {nome.replace("/", " ")} - Demonstrativo Mensal {ano}.pdf'
+    
     while not os.path.exists(guia):
         time.sleep(1)
     while os.path.exists(guia):
         try:
-            arquivo = f'{cod} - {nome.replace("/", " ")} - Demonstrativo Mensal {ano}.pdf'
             shutil.move(guia, os.path.join(execucoes, arquivo))
             time.sleep(4)
         except:
             pass
+    
+    return arquivo
+    
+
+def captura_info_pdf(arquivo):
+    padrao_cnpj = re.compile(r'Documento de Arrecadação\nde Receitas Federais\n(\d.+)\n')
+    padrao_valor = re.compile(r'Valor Total do Documento\n(.+)\nCNPJ')
+    
+    with fitz.open(arquivo) as pdf:
+        
+        # Para cada página do pdf, se for a segunda página o script ignora
+        for count, page in enumerate(pdf):
+            if count == 1:
+                continue
+            try:
+                # Pega o texto da pagina
+                textinho = page.get_text('text', flags=1 + 2 + 8)
+                print(textinho)
+                time.sleep(55)
+                # Procura o valor a recolher da empresa
+                cnpj = padrao_cnpj.search(textinho).group(1)
+                
+                # Procura a descrição do valor a recolher 1, tem algumas variações do que aparece junto a essa info
+                valor = padrao_valor.search(textinho).group(1)
+                
+                print(f'{cnpj} - {valor}')
+                
+                _escreve_relatorio_csv(f"{cnpj};{valor}")
+            
+            except():
+                print(textinho)
+                print('ERRO')
 
 
 @_time_execution

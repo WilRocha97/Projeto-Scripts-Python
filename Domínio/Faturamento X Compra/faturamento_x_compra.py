@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import shutil, pyperclip, time, os, pyautogui as p
+import fitz, re, shutil, pyperclip, time, os, pyautogui as p
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from sys import path
@@ -47,7 +47,7 @@ def relatorio_darf_dctf(empresa, andamento):
     # espera gerar
     while not _find_img('demonstrativo_mensal_gerado.png', conf=0.9):
         if _find_img('sem_dados.png', conf=0.9):
-            _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para imprimir']), nome=andamento)
+            _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para imprimir']), nome=f'{andamento} - {ano}')
             print('❌ Sem dados para imprimir')
             p.press('enter')
             time.sleep(1)
@@ -63,12 +63,12 @@ def relatorio_darf_dctf(empresa, andamento):
     p.press('esc', presses=4)
     time.sleep(2)
     
-    arquivo = mover_demonstrativo(empresa, ano)
+    execucoes, arquivo = mover_demonstrativo(empresa, ano)
     
-    captura_info_pdf(arquivo)
+    captura_info_pdf(execucoes, arquivo, empresa, andamento)
     
-    _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Demonstrativo Mensal gerado']), nome=andamento)
     print('✔ Demonstrativo Mensal gerado')
+
 
 def mover_demonstrativo(empresa, ano):
     os.makedirs('execução/Demonstrativos', exist_ok=True)
@@ -87,14 +87,13 @@ def mover_demonstrativo(empresa, ano):
         except:
             pass
     
-    return arquivo
+    return execucoes, arquivo
     
 
-def captura_info_pdf(arquivo):
-    padrao_cnpj = re.compile(r'Documento de Arrecadação\nde Receitas Federais\n(\d.+)\n')
-    padrao_valor = re.compile(r'Valor Total do Documento\n(.+)\nCNPJ')
+def captura_info_pdf(execucoes, arquivo, empresa, andamento):
+    cod, cnpj, nome = empresa
     
-    with fitz.open(arquivo) as pdf:
+    with fitz.open(os.path.join(execucoes, arquivo)) as pdf:
         
         # Para cada página do pdf, se for a segunda página o script ignora
         for count, page in enumerate(pdf):
@@ -103,17 +102,116 @@ def captura_info_pdf(arquivo):
             try:
                 # Pega o texto da pagina
                 textinho = page.get_text('text', flags=1 + 2 + 8)
-                print(textinho)
-                time.sleep(55)
-                # Procura o valor a recolher da empresa
-                cnpj = padrao_cnpj.search(textinho).group(1)
                 
-                # Procura a descrição do valor a recolher 1, tem algumas variações do que aparece junto a essa info
-                valor = padrao_valor.search(textinho).group(1)
+                meses = re.compile(r'(\w.+)\n(.+,.+)\n(.+,.+)\n(.+)\n(.+,.+)\n(.+,.+)\n(.+,.+)\n(.+,.+)\n(.+,.+)\n(.+,.+)\n(.+,.+)').findall(textinho)
+                totais = re.compile(r'Totais\n.+\n(.+)\n(.+)\n(.+)').search(textinho)
                 
-                print(f'{cnpj} - {valor}')
+                totais_entrada = totais.group(1)
+                totais_saida = totais.group(2)
+                totais_servico = totais.group(3)
+
+                entrada_jan ,saida_jan, servico_jan= 0, 0, 0
+                entrada_fev, saida_fev, servico_fev = 0, 0, 0
+                entrada_mar, saida_mar, servico_mar = 0, 0, 0
+                entrada_abr, saida_abr, servico_abr = 0, 0, 0
+                entrada_mai, saida_mai, servico_mai = 0, 0, 0
+                entrada_jun, saida_jun, servico_jun = 0, 0, 0
+                entrada_jul, saida_jul, servico_jul = 0, 0, 0
+                entrada_ago, saida_ago, servico_ago = 0, 0, 0
+                entrada_set, saida_set, servico_set = 0, 0, 0
+                entrada_out, saida_out, servico_out = 0, 0, 0
+                entrada_nov, saida_nov, servico_nov = 0, 0, 0
+                entrada_dez, saida_dez, servico_dez = 0, 0, 0
                 
-                _escreve_relatorio_csv(f"{cnpj};{valor}")
+                for mes in meses:
+                    # Procura o valor a recolher da empresa
+                    competencia = mes[0]
+                    ano = mes[3]
+                    entrada = mes[4]
+                    saida = mes[5]
+                    servico = mes[6]
+                    
+                    print(f'{competencia}/{ano} - Entrada: {entrada} - Saída: {saida} - Serviço: {servico}')
+                    
+                    if competencia == 'Janeiro':
+                        entrada_jan = entrada
+                        saida_jan = saida
+                        servico_jan = servico
+                    
+                    if competencia == 'Fevereiro':
+                        entrada_fev = entrada
+                        saida_fev = saida
+                        servico_fev = servico
+                    
+                    if competencia == 'Março':
+                        entrada_mar = entrada
+                        saida_mar = saida
+                        servico_mar = servico
+                    
+                    if competencia == 'Abril':
+                        entrada_abr = entrada
+                        saida_abr = saida
+                        servico_abr = servico
+                    
+                    if competencia == 'Maio':
+                        entrada_mai = entrada
+                        saida_mai = saida
+                        servico_mai = servico
+
+                    if competencia == 'Junho':
+                        entrada_jun = entrada
+                        saida_jun = saida
+                        servico_jun = servico
+                        
+                    if competencia == 'Julho':
+                        entrada_jul = entrada
+                        saida_jul = saida
+                        servico_jul = servico
+                    
+                    if competencia == 'Agosto':
+                        entrada_ago = entrada
+                        saida_ago = saida
+                        servico_ago = servico
+                    
+                    if competencia == 'Setembro':
+                        entrada_set = entrada
+                        saida_set = saida
+                        servico_set = servico
+                        
+                    if competencia == 'Outubro':
+                        entrada_out = entrada
+                        saida_out = saida
+                        servico_out = servico
+                        
+                    if competencia == 'Novembro':
+                        entrada_nov = entrada
+                        saida_nov = saida
+                        servico_nov = servico
+                        
+                    if competencia == 'Dezembro':
+                        entrada_dez = entrada
+                        saida_dez = saida
+                        servico_dez = servico
+
+                print(f'{competencia}/{ano} - Total: {totais_entrada} - Total: {totais_saida} - Total: {totais_servico}')
+                
+                _escreve_relatorio_csv(f"{cod};{cnpj};{nome};Entrada;"
+                                       f"{entrada_jan};{entrada_fev};{entrada_mar};"
+                                       f"{entrada_abr};{entrada_mai};{entrada_jun};"
+                                       f"{entrada_jul};{entrada_ago};{entrada_set};"
+                                       f"{entrada_out};{entrada_nov};{entrada_dez};{totais_entrada}", nome=f'{andamento} - {ano}')
+
+                _escreve_relatorio_csv(f"{cod};{cnpj};{nome};Saída;"
+                                       f"{saida_jan};{saida_fev};{saida_mar};"
+                                       f"{saida_abr};{saida_mai};{saida_jun};"
+                                       f"{saida_jul};{saida_ago};{saida_set};"
+                                       f"{saida_out};{saida_nov};{saida_dez};{totais_saida}", nome=f'{andamento} - {ano}')
+
+                _escreve_relatorio_csv(f"{cod};{cnpj};{nome};Serviço;"
+                                       f"{servico_jan};{servico_fev};{servico_mar};"
+                                       f"{servico_abr};{servico_mai};{servico_jun};"
+                                       f"{servico_jul};{servico_ago};{servico_set};"
+                                       f"{servico_out};{servico_nov};{servico_dez};{totais_servico}", nome=f'{andamento} - {ano}')
             
             except():
                 print(textinho)

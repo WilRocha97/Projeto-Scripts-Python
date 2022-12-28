@@ -10,7 +10,7 @@ from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir,
 from dominio_comum import _login, _salvar_pdf
 
 
-def relatorio_darf_dctf(empresa, andamento):
+def relatorio_darf_dctf(ano, empresa, andamento):
     cod, cnpj, nome = empresa
     _wait_img('relatorios.png', conf=0.9, timeout=-1)
     # Relatórios
@@ -28,9 +28,6 @@ def relatorio_darf_dctf(empresa, andamento):
     while not _find_img('demonstrativo_mensal.png', conf=0.9):
         time.sleep(1)
     
-    # configura o ano e digita no domínio
-    ano = str(datetime.now().year)
-    
     time.sleep(1)
     p.write(f'01{ano}')
     
@@ -47,7 +44,7 @@ def relatorio_darf_dctf(empresa, andamento):
     # espera gerar
     while not _find_img('demonstrativo_mensal_gerado.png', conf=0.9):
         if _find_img('sem_dados.png', conf=0.9):
-            _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para imprimir']), nome=f'{andamento} - {ano}')
+            _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para imprimir']), nome=andamento)
             print('❌ Sem dados para imprimir')
             p.press('enter')
             time.sleep(1)
@@ -199,19 +196,19 @@ def captura_info_pdf(execucoes, arquivo, empresa, andamento):
                                        f"{entrada_jan};{entrada_fev};{entrada_mar};"
                                        f"{entrada_abr};{entrada_mai};{entrada_jun};"
                                        f"{entrada_jul};{entrada_ago};{entrada_set};"
-                                       f"{entrada_out};{entrada_nov};{entrada_dez};{totais_entrada}", nome=f'{andamento} - {ano}')
+                                       f"{entrada_out};{entrada_nov};{entrada_dez};{totais_entrada}", nome=andamento)
 
                 _escreve_relatorio_csv(f"{cod};{cnpj};{nome};Saída;"
                                        f"{saida_jan};{saida_fev};{saida_mar};"
                                        f"{saida_abr};{saida_mai};{saida_jun};"
                                        f"{saida_jul};{saida_ago};{saida_set};"
-                                       f"{saida_out};{saida_nov};{saida_dez};{totais_saida}", nome=f'{andamento} - {ano}')
+                                       f"{saida_out};{saida_nov};{saida_dez};{totais_saida}", nome=andamento)
 
                 _escreve_relatorio_csv(f"{cod};{cnpj};{nome};Serviço;"
                                        f"{servico_jan};{servico_fev};{servico_mar};"
                                        f"{servico_abr};{servico_mai};{servico_jun};"
                                        f"{servico_jul};{servico_ago};{servico_set};"
-                                       f"{servico_out};{servico_nov};{servico_dez};{totais_servico}", nome=f'{andamento} - {ano}')
+                                       f"{servico_out};{servico_nov};{servico_dez};{totais_servico}", nome=andamento)
             
             except():
                 print(textinho)
@@ -220,8 +217,10 @@ def captura_info_pdf(execucoes, arquivo, empresa, andamento):
 
 @_time_execution
 def run():
+    # configura o ano e digita no domínio
+    ano = str(datetime.now().year)
     empresas = _open_lista_dados()
-    andamentos = 'Faturamento X Compra'
+    andamentos = 'Faturamento X Compra - ' + ano
 
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:
@@ -233,7 +232,7 @@ def run():
     
         if not _login(empresa, andamentos):
             continue
-        relatorio_darf_dctf(empresa, andamentos)
+        relatorio_darf_dctf(ano, empresa, andamentos)
 
 
 if __name__ == '__main__':

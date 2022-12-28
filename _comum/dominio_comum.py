@@ -186,9 +186,11 @@ def _salvar_pdf():
         time.sleep(1)
     
     if not _find_img('cliente_c_selecionado.png', pasta='imgs_c', conf=0.9):
-        while not _find_img('cliente_c.png', pasta='imgs_c', conf=0.9):
+        while not _find_img('cliente_c.png', pasta='imgs_c', conf=0.9) or _find_img('cliente_m.png', pasta='imgs_c', conf=0.9):
             _click_img('botao.png', pasta='imgs_c', conf=0.9)
             time.sleep(3)
+                
+        _click_img('cliente_m.png', pasta='imgs_c', conf=0.9)
         _click_img('cliente_c.png', pasta='imgs_c', conf=0.9)
         time.sleep(5)
     

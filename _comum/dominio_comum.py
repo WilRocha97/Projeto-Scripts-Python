@@ -101,22 +101,25 @@ def _login(empresa, andamentos):
 
 def verifica_empresa(cod):
     p.click(1280,82)
-
-    time.sleep(1)
-    p.hotkey('ctrl', 'c')
-    p.hotkey('ctrl', 'c')
-    cnpj_codigo = pyperclip.paste()
     
-    time.sleep(0.5)
-    codigo = cnpj_codigo.split('-')
-    codigo = str(codigo[1])
-    codigo = codigo.replace(' ', '')
-    
-    if codigo != cod:
-        return False
-    
-    else:
-        return True
+    try:
+        time.sleep(1)
+        p.hotkey('ctrl', 'c')
+        p.hotkey('ctrl', 'c')
+        cnpj_codigo = pyperclip.paste()
+        
+        time.sleep(0.5)
+        codigo = cnpj_codigo.split('-')
+        codigo = str(codigo[1])
+        codigo = codigo.replace(' ', '')
+        
+        if codigo != cod:
+            return False
+        
+        else:
+            return True
+    except:
+        verifica_empresa(cod)
     
 
 def _login_web():

@@ -198,6 +198,10 @@ def _salvar_pdf():
     
     timer = 0
     while not _find_img('pdf_aberto.png', pasta='imgs_c', conf=0.9):
+        if _find_img('erro_pdf.png', pasta='imgs_c', conf=0.9):
+            p.press('enter')
+            p.hotkey('alt', 'f4')
+            
         if _find_img('substituir.png', pasta='imgs_c', conf=0.9):
             p.hotkey('alt', 'y')
         if _find_img('adobe.png', pasta='imgs_c', conf=0.9):

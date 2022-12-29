@@ -193,8 +193,8 @@ def _salvar_pdf():
             _click_img('botao.png', pasta='imgs_c', conf=0.9)
             time.sleep(3)
                 
-        _click_img('cliente_m.png', pasta='imgs_c', conf=0.9, timeout=-1)
-        _click_img('cliente_c.png', pasta='imgs_c', conf=0.9, timeout=-1)
+        _click_img('cliente_m.png', pasta='imgs_c', conf=0.9, timeout=1)
+        _click_img('cliente_c.png', pasta='imgs_c', conf=0.9, timeout=1)
         time.sleep(5)
     
     p.press('enter')

@@ -22,7 +22,7 @@ def find_by_id(xpath, driver):
         return None
 
 
-def login(options, cnpj, nome, pis):
+def login(options, cnpj, nome):
     status, driver = _initialize_chrome(options)
     
     print('>>> Consultando cnpj', cnpj)
@@ -46,11 +46,11 @@ def run():
     
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, nome, pis = empresa
+        cnpj, nome = empresa
         
         _indice(count, total_empresas, empresa)
         
-        if not login(options, cnpj, nome, pis):
+        if not login(options, cnpj, nome):
             break
 
 

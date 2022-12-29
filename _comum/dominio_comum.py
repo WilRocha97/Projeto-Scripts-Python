@@ -193,15 +193,15 @@ def _salvar_pdf():
             _click_img('botao.png', pasta='imgs_c', conf=0.9)
             time.sleep(3)
                 
-        _click_img('cliente_m.png', pasta='imgs_c', conf=0.9)
-        _click_img('cliente_c.png', pasta='imgs_c', conf=0.9)
+        _click_img('cliente_m.png', pasta='imgs_c', conf=0.9, timeout=-1)
+        _click_img('cliente_c.png', pasta='imgs_c', conf=0.9, timeout=-1)
         time.sleep(5)
     
     p.press('enter')
     
     timer = 0
     while not _find_img('pdf_aberto.png', pasta='imgs_c', conf=0.9):
-        if _find_img('erro_pdf.png', pasta='imgs_c', conf=0.9):
+        if _find_img('erro_pdf.png', pasta='imgs_c', conf=0.9) or _find_img('erro_pdf_2.png', pasta='imgs_c', conf=0.9):
             p.press('enter')
             p.hotkey('alt', 'f4')
             

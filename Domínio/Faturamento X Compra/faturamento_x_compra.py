@@ -41,6 +41,7 @@ def relatorio_darf_dctf(ano, empresa, andamento):
     time.sleep(1)
     p.hotkey('alt', 'o')
     
+    timer = 0
     # espera gerar
     while not _find_img('demonstrativo_mensal_gerado.png', conf=0.9):
         if _find_img('sem_dados.png', conf=0.9):
@@ -52,6 +53,11 @@ def relatorio_darf_dctf(ano, empresa, andamento):
             time.sleep(1)
             return False
         time.sleep(1)
+        timer += 1
+        
+        if timer >= 30:
+            p.hotkey('alt', 'o')
+            timer = 0
 
     guia = os.path.join('C:', 'Demonstrativo Mensal.pdf')
     while not os.path.exists(guia):

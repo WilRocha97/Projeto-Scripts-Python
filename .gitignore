@@ -37,7 +37,6 @@ debug_screen.png
 #Pastas
 _dev_env/
 Ecac/
-Caixa/
 Domínio/Confirmar/confirmar.py
 Portal sn/Consulta Recibos e Extratos - Declarações SN/consulta_recibos_e_declaracoes_sn - 2.py
 SIGISS/Donwload NFSEs do escritório/ignore/Manual do usuário.docx
@@ -59,3 +58,5 @@ Geral/.idea/.name
 *.tmp
 Domínio/Configura Relatório/
 Portal sn/Consulta Recibos e Extratos - Declarações SN - 2/consulta_recibos_e_declaracoes_sn2.py
+OLD/
+recalculo sefip individual/

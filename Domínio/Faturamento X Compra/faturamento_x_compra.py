@@ -11,7 +11,7 @@ from dominio_comum import _login, _salvar_pdf
 
 
 def relatorio_darf_dctf(ano, empresa, andamento):
-    cod, cnpj, nome = empresa
+    
     _wait_img('relatorios.png', conf=0.9, timeout=-1)
     # Relatórios
     p.hotkey('alt', 'r')
@@ -41,27 +41,16 @@ def relatorio_darf_dctf(ano, empresa, andamento):
     time.sleep(1)
     p.hotkey('alt', 'o')
     
-    timer = 0
-    # espera gerar
-    while not _find_img('demonstrativo_mensal_gerado.png', conf=0.9):
-        if _find_img('sem_dados.png', conf=0.9):
-            _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para imprimir']), nome=andamento)
-            print('❌ Sem dados para imprimir')
-            p.press('enter')
-            time.sleep(1)
-            p.press('esc')
-            time.sleep(1)
-            return False
-        time.sleep(1)
-        timer += 1
-        
-        if timer >= 30:
-            p.hotkey('alt', 'o')
-            timer = 0
+    if not espera_gerar(empresa, andamento):
+        return False
 
     guia = os.path.join('C:', 'Demonstrativo Mensal.pdf')
     while not os.path.exists(guia):
-        _salvar_pdf()
+        if not _salvar_pdf():
+            p.hotkey('alt', 'o')
+            
+            if not espera_gerar(empresa, andamento):
+                return False
     
     p.press('esc', presses=4)
     time.sleep(2)
@@ -71,6 +60,29 @@ def relatorio_darf_dctf(ano, empresa, andamento):
     captura_info_pdf(execucoes, arquivo, empresa, andamento)
     
     print('✔ Demonstrativo Mensal gerado')
+
+
+def espera_gerar(empresa, andamento):
+    cod, cnpj, nome = empresa
+    timer = 0
+    # espera gerar
+    while not _find_img('demonstrativo_mensal_gerado.png', conf=0.9):
+        if _find_img('sem_dados.png', conf=0.9):
+            _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para imprimir']), nome=andamento)
+            print('❌ Sem dados para imprimir')
+            p.press('enter')
+            time.sleep(1)
+            p.press('esc', presses=4, interval=1)
+            time.sleep(1)
+            return False
+        time.sleep(1)
+        timer += 1
+        
+        if timer >= 30:
+            p.hotkey('alt', 'o')
+            timer = 0
+    
+    return True
 
 
 def mover_demonstrativo(empresa, ano):

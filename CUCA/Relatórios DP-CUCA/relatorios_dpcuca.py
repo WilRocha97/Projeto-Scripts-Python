@@ -156,19 +156,19 @@ def imprimir(relatorio, andamentos, empresa, texto, espera=10, diretorio='Relat�
     sleep(0.5)
     hotkey('alt', 'l')
     sleep(1)
-    if _find_img('SalvarComo.png', 0.9):
+    if _find_img('SalvarComo.png', conf=0.9):
         press('s')
         sleep(1)
 
     # espera terminar de salvar o arquivo
-    while _find_img('Progresso.png', 0.9):
+    while _find_img('Progresso.png', conf=0.9):
         sleep(0.5)
 
     # fecha a visualização
-    while _find_img('PDF.png', 0.9):
+    while _find_img('PDF.png', conf=0.9):
         press('esc')
         sleep(1)
-        if _find_img('Comunicado.png', 0.9):
+        if _find_img('Comunicado.png', conf=0.9):
             press(['right', 'enter'], interval=0.2)
             sleep(1)
 
@@ -186,11 +186,11 @@ def holerite(relatorio, andamentos, empresa):
     # Gerar holerite
     if not gerar(relatorio, andamentos, empresa):
         return False
-    while not _find_img('SelecionaHoleriteA.png', 0.9):
+    while not _find_img('SelecionaHoleriteA.png', conf=0.9):
         sleep(1)
         hotkey('alt', 'p')
         # Aviso que às vezes aparece
-        if _find_img('RefaserCalculo.png', 0.9):
+        if _find_img('RefaserCalculo.png', conf=0.9):
             _click_img('RefaserCalculo.png')
             press('enter')
             sleep(1)
@@ -201,8 +201,8 @@ def holerite(relatorio, andamentos, empresa):
     sleep(1)
     hotkey('alt', 'o')
     sleep(1)
-    while _find_img('De.png', 0.9):
-        if _find_img('RefaserCalculo.png', 0.9):
+    while _find_img('De.png', conf=0.9):
+        if _find_img('RefaserCalculo.png', conf=0.9):
             _click_img('RefaserCalculo.png')
             press('enter')
     sleep(2)
@@ -334,7 +334,7 @@ def relatoriozinhos(relatorio, andamentos, empresa):
         press(['r', 'enter'], interval=0.5)
         selecionar_funcionarios()
         _wait_img('OrdemDoRegistro.png', conf=0.9, timeout=-1)
-        if _find_img('OrdemDoRegistro.png', 0.9):
+        if _find_img('OrdemDoRegistro.png', conf=0.9):
             press('right')
             sleep(0.5)
             hotkey('ctrl', 'p')
@@ -402,7 +402,7 @@ def relatoriozinhos(relatorio, andamentos, empresa):
 
         # Calcular provisões
         hotkey('alt', 'c')
-        while not _find_img('Confirmar.png', 0.9):
+        while not _find_img('Confirmar.png', conf=0.9):
             sleep(5)
             if _find_img('JaExisteProvisao.png', conf=0.9):
                 _click_img('JaExisteProvisao.png', conf=0.9)
@@ -420,7 +420,7 @@ def relatoriozinhos(relatorio, andamentos, empresa):
                 sleep(5)
                 hotkey('alt', 'c')
                 sleep(5)
-        if _find_img('Confirmar.png', 0.9):
+        if _find_img('Confirmar.png', conf=0.9):
             press('enter')
             _wait_img('CalcularParaTodos.png', conf=0.9, timeout=-1)
             _click_img('CalcularParaTodos.png', conf=0.9)

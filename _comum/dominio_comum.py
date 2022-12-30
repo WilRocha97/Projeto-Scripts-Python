@@ -54,6 +54,10 @@ def _login(empresa, andamentos):
             p.press('enter')
             sleep(1)
             p.hotkey('alt', 'n')
+            sleep(1)
+            p.press('esc')
+            sleep(1)
+            p.hotkey('alt', 'n')
             while _find_img('trocar_empresa.png', pasta='imgs_c', conf=0.9):
                 sleep(1)
             return False
@@ -185,8 +189,12 @@ def _abrir_modulo(modulo):
 
 def _salvar_pdf():
     p.hotkey('ctrl', 'd')
+    timer = 0
     while not _find_img('salvar_em_pdf.png', pasta='imgs_c', conf=0.9):
         time.sleep(1)
+        timer += 1
+        if timer > 30:
+            return False
     
     if not _find_img('cliente_c_selecionado.png', pasta='imgs_c', conf=0.9):
         while not _find_img('cliente_c.png', pasta='imgs_c', conf=0.9) or _find_img('cliente_m.png', pasta='imgs_c', conf=0.9):

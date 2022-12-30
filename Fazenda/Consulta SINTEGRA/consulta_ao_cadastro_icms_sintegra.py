@@ -68,7 +68,7 @@ def consultar(options, cnpj, nome):
             print(f'Erro no login: {erro}')
             if erro == 'Captcha inválido. Tente novamente.':
                 return False
-            _escreve_relatorio_csv(f'{nome};{cnpj};Erro no login: {erro}', nome='Consulta ao cadastro de ICMS')
+            _escreve_relatorio_csv(f'{cnpj};Erro no login;{erro};{nome}', nome='Consulta ao cadastro de ICMS')
             return True
     
     # pega as infos da empresa para preencher a planilha
@@ -123,7 +123,7 @@ def pega_info(cnpj, nome, driver):
     pattern = re.compile(r'\s\s+')
     enderecos = re.sub(pattern, '', enderecos)
     
-    _escreve_relatorio_csv(f"{nome};{cnpj};Ok;{infos}{enderecos}", nome='Consulta ao cadastro de ICMS')
+    _escreve_relatorio_csv(f"{cnpj};Ok;{infos}{enderecos}", nome='Consulta ao cadastro de ICMS')
     print(f'✔ Dados coletados')
 
 

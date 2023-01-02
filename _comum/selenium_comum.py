@@ -65,7 +65,7 @@ def send_select(find_by, slt_by, driver, delay=0):
 _send_select = send_select
 
 
-# Obtem o dicionario retangulo do elemento 'elem' obtem um
+# Obtem o dicionário retangulo do elemento 'elem' obtem um
 # corte da image que corresponda as coordenadas do 'elem'
 # Retorna o nome do arquivo png cropado caso sucesso
 # Levanta uma excecao caso erro
@@ -86,7 +86,7 @@ _get_elem_img = get_elem_img'''
 
 
 # Obtem o caminho do executal do webdriver, abstraindo
-# o tipo de webdriver ou o sistema operacional
+# o tipo do webdriver ou o sistema operacional
 # Retorna string caminho do driver em caso de sucesso
 # Retorna None em caso de erro
 def check_driver_exe(tipo, version=None):

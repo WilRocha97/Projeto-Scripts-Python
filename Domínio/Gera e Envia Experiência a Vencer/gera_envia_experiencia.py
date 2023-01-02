@@ -6,7 +6,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _indice, _time_execution, _open_lista_dados, _escreve_relatorio_csv, _where_to_start
-from dominio_comum import _login, _login_web, _abrir_modulo
+from dominio_comum import _login, _login_web, _abrir_modulo, _salvar_pdf
 
 
 def escreve_dados(cod, nome):
@@ -27,66 +27,6 @@ def open_lista_dados(file, encode='latin-1'):
 
     print('>>> usando dados de ' + file.split('/')[-1])
     return list(map(lambda x: tuple(x.replace('\n', '').split(';')), dados))
-
-
-def salva_pdf_geral():
-    # clica no botão para salvar em pdf, enquanto espera a tela do windows de salvar o arquivo
-    _click_img('salvar_pdf.png', conf=0.9)
-    while not _find_img('salvar_em_pdf.png', conf=0.9):
-        time.sleep(1)
-    
-    # verifica se está seleciona o diretório da máquina que o script está sendo executado, pois, o domínio coloca para salvar em um servidor por padrão
-    if not _find_img('cliente_c_selecionado.png', conf=0.9):
-        while not _find_img('cliente_c.png', conf=0.9):
-            _click_img('botao.png', conf=0.9)
-            time.sleep(3)
-            if _find_img('cliente_r.png', conf=0.9):
-                break
-
-        if _find_img('cliente_r.png', conf=0.9):
-            _click_img('cliente_r.png', conf=0.9)
-
-        else:
-            _click_img('cliente_c.png', conf=0.9)
-
-        time.sleep(5)
-    
-    p.press('enter')
-    
-    # espera o pdf abrir, enquanto isso verifica se já existe um arquivo com o mesmo nome, se sim, substituí
-    timer = 0
-    while not _find_img('pdf_aberto.png', conf=0.9):
-        if _find_img('substituir.png', conf=0.9):
-            p.hotkey('alt', 'y')
-        if _find_img('adobe.png', conf=0.9):
-            p.press('enter')
-        time.sleep(1)
-        timer += 1
-        
-        # se o timer exceder 30 segundos e o pdf não abriu, salva e espera o pdf abrir novamente
-        if timer > 30:
-            _click_img('salvar_pdf.png', conf=0.9)
-            while not _find_img('salvar_em_pdf.png', conf=0.9):
-                time.sleep(1)
-            
-            if not _find_img('cliente_c_selecionado.png', conf=0.9):
-                while not _find_img('cliente_c.png', conf=0.9):
-                    _click_img('botao.png', conf=0.9)
-                    time.sleep(3)
-                _click_img('cliente_c.png', conf=0.9)
-                time.sleep(5)
-            
-            p.press('enter')
-            timer = 0
-    
-    # fecha o pdf aberto
-    p.hotkey('alt', 'f4')
-    time.sleep(2)
-
-    # move o pdf da pasta 'C:' para a pasta ignore do script
-    shutil.move('C:\Relação de Empregados - Contratos_Vencimento_Modelo_Veiga.pdf', os.path.join('ignore', 'Relação de Empregados - Contratos_Vencimento_Modelo_Veiga.pdf'))
-    print('✔ Relatório gerado')
-    return True
 
 
 def gera_arquivo(andamento, cod='*', cnpj='', nome=''):
@@ -147,7 +87,7 @@ def gera_arquivo(andamento, cod='*', cnpj='', nome=''):
     
     # se gerar o relatório para todas as empresas só salva o pdf, se não tenta enviar o arquivo para o cliente
     if cod == '*':
-        salva_pdf_geral()
+        _salvar_pdf()
     else:
         if not _find_img('enviar_arquivo.png', conf=0.9):
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Não possuí opção de enviar o relatório para o cliente']), nome=andamento)

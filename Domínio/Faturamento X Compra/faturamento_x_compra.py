@@ -10,7 +10,7 @@ from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, _escre
 from dominio_comum import _login, _salvar_pdf
 
 
-def relatorio_darf_dctf(ano, empresa, andamento):
+def faturamento_compra(ano, empresa, andamento):
     
     _wait_img('relatorios.png', conf=0.9, timeout=-1)
     # Relatórios
@@ -236,7 +236,8 @@ def captura_info_pdf(execucoes, arquivo, empresa, andamento):
 @_time_execution
 def run():
     # configura o ano e digita no domínio
-    ano = str(datetime.now().year)
+    # ano = str(datetime.now().year)
+    ano = '2022'
     empresas = _open_lista_dados()
     andamentos = 'Faturamento X Compra - ' + ano
 
@@ -250,7 +251,7 @@ def run():
     
         if not _login(empresa, andamentos):
             continue
-        relatorio_darf_dctf(ano, empresa, andamentos)
+        faturamento_compra(ano, empresa, andamentos)
 
     _escreve_header_csv('CÓDIGO;CNPJ;NOME;SITUAÇÃO;JANEIRO;FEVEREIRO;MARÇO;ABRIL;MAIO;JUNHO;JULHO;AGOSTO;SETEMBRO;OUTUBRO;NOVEMBRO;DEZEMBRO;TOTAIS', nome=andamento)
 

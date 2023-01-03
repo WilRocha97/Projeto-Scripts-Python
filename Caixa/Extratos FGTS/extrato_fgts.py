@@ -51,7 +51,6 @@ def login(cnpj, nome):
     # clica para selecionar o serviço desejado
     _click_img('selecione_o_servico.png', conf=0.9)
 
-
     # espera abrir o dropdown e clica em acessar empresa
     _wait_img('acessar_empresa_outorgante.png', conf=0.9, timeout=-1)
     time.sleep(1)
@@ -64,8 +63,53 @@ def login(cnpj, nome):
     _click_img('insere_cnpj.png', conf=0.9)
     time.sleep(1)
     
-    print('ok')
-    time.sleep(55)
+    p.write(cnpj)
+    time.sleep(1)
+    
+    p.press('enter')
+    time.sleep(1)
+    
+    return True
+
+def solicita_extrato(cnpj, nome, empresas):
+    # clica para selecionar o serviço desejado
+    _click_img('selecione_o_servico.png', conf=0.9)
+    
+    # espera abrir o dropdown e clica em acessar empresa
+    _wait_img('extrato_recisorio.png', conf=0.9, timeout=-1)
+    time.sleep(1)
+    _click_img('extrato_recisorio.png', conf=0.9)
+    time.sleep(1)
+    
+    # espera a janela carregar
+    _wait_img('base_conta.png', conf=0.9, timeout=-1)
+    time.sleep(1)
+    
+    # clica para editar s opção de Base da Conta
+    _click_img('base_conta.png', conf=0.9)
+    time.sleep(1)
+    
+    p.press('down')
+    time.sleep(0.2)
+    p.press('enter')
+    time.sleep(1)
+
+    # clica para inserir o 'NIS' do funcionário
+    _click_img('nis.png', conf=0.9)
+    time.sleep(1)
+    
+    for count, empresa in enumerate(empresas[index:], start=1):
+        cnpj2, nome2, funcionario2, pis2 = empresa
+        
+        if cnpj == cnpj2:
+            p.write(pis2)
+            time.sleep(1)
+            _click_img('adicionar.png', conf=0.9)
+            time.sleep(1)
+
+    _click_img('confirmar.png', conf=0.9)
+    time.sleep(2)
+    _escreve_relatorio_csv(f'{cnpj};{nome};Extrato da empresa solicitado')
     
 
 @_time_execution
@@ -78,13 +122,16 @@ def run():
     
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, nome, pis = empresa
+        cnpj, nome, funcionario, pis = empresa
         
         _indice(count, total_empresas, empresa)
         
         if not login(cnpj, nome):
-            break
-
+            continue
+            
+        solicita_extrato(cnpj, nome, empresas)
+        
+        p.hotkey('alt', 'f4')
 
 if __name__ == '__main__':
     run()

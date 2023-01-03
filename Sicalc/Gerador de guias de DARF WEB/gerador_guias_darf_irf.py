@@ -15,8 +15,6 @@ def renomear(empresa, apuracao, vencimento):
     cnpj, nome, nota, valor, cod = empresa
     download_folder = "V:\\Setor Robô\\Scripts Python\\Sicalc\\Gerador de guias de DARF WEB\\execução\\Guias"
     guia = os.path.join(download_folder, 'Darf.pdf')
-    while not os.path.exists(guia):
-        time.sleep(1)
     while os.path.exists(guia):
         try:
             arquivo = f'{nome.replace("/", " ")} - {cnpj} - DARF IRRF {cod} {apuracao.replace("/", "-")} - venc. {vencimento.replace("/", "-")}.pdf'
@@ -44,26 +42,40 @@ def login_sicalc(empresa, apuracao, vencimento, driver):
     p.press('pgDn')
 
     # esperar o botão de login habilitar e clicar nele
-    _wait_img('continuar.png', conf=0.95, timeout=-1)
+    timer = 0
+    while not _find_img('continuar.png', conf=0.95):
+        time.sleep(1)
+        timer += 1
+        if timer >= 10:
+            return False
+        
     time.sleep(0.5)
     driver.find_element(by=By.XPATH, value='//*[@id="divBotoes"]/input[1]').click()
 
     # gerar a guia de DCTF
-    gerar(empresa, apuracao, vencimento, driver)
-
+    if not gerar(empresa, apuracao, vencimento, driver):
+        return False
+    time.sleep(2)
+    return True
 
 def gerar(empresa, apuracao, vencimento, driver):
     cnpj, nome, nota, valor, cod = empresa
 
     # esperar o menu referente a guia aparecer
-    _wait_img('menu.png', conf=0.9, timeout=-1)
-    time.sleep(1)
+    timer = 0
+    while not _find_img('menu.png', conf=0.9):
+        time.sleep(1)
+        timer += 1
+        if timer >= 10:
+            return False
     
     print('>>> Inserindo informações da guia')
     
-    # insere observações na guia
-    driver.find_element(by=By.ID, value='observacao').send_keys(f'Nota: {nota} - R. POSTAL SERVICOS CONTABEIS LTDA')
-    time.sleep(1)
+    
+    if nota.split(','):
+        # insere observações na guia
+        driver.find_element(by=By.ID, value='observacao').send_keys(f'Referênte à NF: {nota} - R. POSTAL')
+        time.sleep(1)
     
     # inserir o código da receita referente a guia
     driver.find_element(by=By.ID, value='codReceitaPrincipal').send_keys(cod)
@@ -76,9 +88,13 @@ def gerar(empresa, apuracao, vencimento, driver):
     time.sleep(1)
 
     # descer a visualização da página
+    timer = 0
     while not _find_img('apuracao.png', conf=0.95):
         p.press('pgDn')
         time.sleep(1)
+        timer += 1
+        if timer >= 20:
+            return False
         
     # clicar no campo e inserir a data de apuração
     _click_img('apuracao.png', conf=0.95)
@@ -99,19 +115,19 @@ def gerar(empresa, apuracao, vencimento, driver):
     p.press('tab')
     time.sleep(1)
 
-    driver.find_element(by=By.ID, value='btnCalcular').click()
-    print('>>> Guia calculada')
-    
     # espera guia ser calculada
     while not _find_img('checkbox_guia.png', conf=0.95):
+        driver.find_element(by=By.ID, value='btnCalcular').click()
         # descer a visualização da página
         p.press('pgDn')
         time.sleep(1)
-
+        
+    print('>>> Guia calculada')
     time.sleep(1)
     
     # marca a guia que será gerada
     erro = 'sim'
+    timer = 0
     while erro == 'sim':
         try:
             driver.find_element(by=By.XPATH, value='/html/body/div[2]/div[2]/div[1]/div/div/div/div[4]/table/tbody/tr/td[1]/input').click()
@@ -120,16 +136,27 @@ def gerar(empresa, apuracao, vencimento, driver):
         except:
             driver.find_element(by=By.ID, value='btnCalcular').click()
             erro = 'sim'
-            
-    print('>>> Gerando guia')
-    driver.find_element(by=By.ID, value='btnDarf').click()
+        
+        time.sleep(1)
+        timer+= 1
+        if timer >= 15:
+            return False
 
+    print('>>> Gerando guia')
+    download_folder = "V:\\Setor Robô\\Scripts Python\\Sicalc\\Gerador de guias de DARF WEB\\execução\\Guias"
+    guia = os.path.join(download_folder, 'Darf.pdf')
+    while not os.path.exists(guia):
+        driver.find_element(by=By.ID, value='btnDarf').click()
+        time.sleep(5)
+        p.hotkey('Ctrl', 'Shift', 'Tab')
+        
     renomear(empresa, apuracao, vencimento)
 
     print('✔ Guia gerada')
     _escreve_relatorio_csv('{};{};{};{};Guia gerada'.format(cnpj, nome, valor, cod))
     
     driver.close()
+    return True
 
 
 @_time_execution
@@ -152,7 +179,7 @@ def run():
     # opções para fazer com que o chome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
     # options.add_argument('--headless')
-    options.add_argument('--window-size=1920,1080')
+    # options.add_argument('--window-size=1920,1080')
     options.add_argument("--start-maximized")
     options.add_experimental_option('prefs', {
         "download.default_directory": "V:\\Setor Robô\\Scripts Python\\Sicalc\\Gerador de guias de DARF WEB\\execução\\Guias",  # Change default directory for downloads
@@ -166,12 +193,22 @@ def run():
 
         # configurar o indice para localizar em qual empresa está
         _indice(count, total_empresas, empresa)
-
-        # iniciar o driver do chome
-        status, driver = _initialize_chrome(options)
-
-        # fazer login do SICALC
-        login_sicalc(empresa, str(apuracao), vencimento, driver)
+        
+        erro = 'sim'
+        while erro == 'sim':
+            try:
+                # iniciar o driver do chome
+                status, driver = _initialize_chrome(options)
+        
+                # fazer login do SICALC
+                if not login_sicalc(empresa, str(apuracao), vencimento, driver):
+                    driver.close()
+                    erro = 'sim'
+                else:
+                    erro = 'nao'
+            except:
+                driver.close()
+                erro = 'sim'
 
 
 if __name__ == '__main__':

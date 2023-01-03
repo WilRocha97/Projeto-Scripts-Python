@@ -51,7 +51,6 @@ def login(cnpj, nome):
     # clica para selecionar o serviço desejado
     _click_img('selecione_o_servico.png', conf=0.9)
 
-
     # espera abrir o dropdown e clica em acessar empresa
     _wait_img('acessar_empresa_outorgante.png', conf=0.9, timeout=-1)
     time.sleep(1)
@@ -70,9 +69,7 @@ def login(cnpj, nome):
     p.press('enter')
     time.sleep(1)
     
-    print('ok')
-    time.sleep(55)
-
+    return True
 
 def solicita_extrato(cnpj, nome, empresas):
     # clica para selecionar o serviço desejado

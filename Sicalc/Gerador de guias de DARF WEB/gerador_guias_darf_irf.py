@@ -154,8 +154,11 @@ def gerar(empresa, apuracao, vencimento, driver):
 
     print('✔ Guia gerada')
     _escreve_relatorio_csv('{};{};{};{};Guia gerada'.format(cnpj, nome, valor, cod))
-    
+
     driver.close()
+    while _find_img('erro_site.png', conf=0.9):
+        driver.close()
+        time.sleep(2)
     return True
 
 
@@ -203,11 +206,17 @@ def run():
                 # fazer login do SICALC
                 if not login_sicalc(empresa, str(apuracao), vencimento, driver):
                     driver.close()
+                    while _find_img('erro_site.png', conf=0.9):
+                        driver.close()
+                        time.sleep(1)
                     erro = 'sim'
                 else:
                     erro = 'nao'
             except:
                 driver.close()
+                while _find_img('erro_site.png', conf=0.9):
+                    driver.close()
+                    time.sleep(2)
                 erro = 'sim'
 
 

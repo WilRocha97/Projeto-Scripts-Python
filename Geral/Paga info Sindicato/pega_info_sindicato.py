@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 import time
 import fitz, re, os
-from tkinter.filedialog import askopenfilename, askdirectory, Tk
-from datetime import datetime
-from pathlib import Path
-from pyautogui import alert
+import tkinter.filedialog
+import pyautogui
 
 
 def escreve_relatorio_csv(texto, local, encode='latin-1'):
@@ -30,11 +28,11 @@ def escreve_header_csv(texto, local, encode='latin-1'):
 
 
 def ask_for_dir():
-    root = Tk()
+    root = tkinter.filedialog.Tk()
     root.withdraw()
     root.wm_attributes('-topmost', 1)
     
-    folder = askdirectory(
+    folder = tkinter.filedialog.askdirectory(
         title='Selecione onde salvar a planilha',
     )
     
@@ -42,11 +40,11 @@ def ask_for_dir():
 
 
 def ask_for_file():
-    root = Tk()
+    root = tkinter.filedialog.Tk()
     root.withdraw()
     root.wm_attributes('-topmost', 1)
     
-    file = askopenfilename(
+    file = tkinter.filedialog.askopenfilename(
         title='Selecione o Relatório de Sindicatos',
         filetypes=[('PDF files', '*.pdf *')],
         initialdir=os.getcwd()
@@ -202,10 +200,12 @@ def analiza():
 
 
 if __name__ == '__main__':
-    inicio = datetime.now()
+    '''try:'''
     final = analiza()
     # escreve o cabeçalho da planilha
     escreve_header_csv(';'.join(['CÓDIGO', 'CNPJ', 'NOME', 'COMPETÊNCIA', 'TOTAL EMPRESA', 'SINDICATO', 'TOTAL SINDICATO',
                                  'RUBRICA', 'TOTAL RUBRICA']), local=final)
     
-    alert(title='Gera relatório de sindicato', text='Relatóro gerado com sucesso.')
+    pyautogui.alert(title='Gera relatório de sindicato', text='Relatóro gerado com sucesso.')
+    '''except:
+        pyautogui.alert(title='Gera relatório de sindicato', text='Cancelado.')'''

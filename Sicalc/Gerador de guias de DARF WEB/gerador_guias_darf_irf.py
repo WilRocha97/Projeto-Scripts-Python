@@ -58,6 +58,7 @@ def login_sicalc(empresa, apuracao, vencimento, driver):
     time.sleep(2)
     return True
 
+
 def gerar(empresa, apuracao, vencimento, driver):
     cnpj, nome, nota, valor, cod = empresa
 
@@ -213,10 +214,6 @@ def run():
                 else:
                     erro = 'nao'
             except:
-                driver.close()
-                while _find_img('erro_site.png', conf=0.9):
-                    driver.close()
-                    time.sleep(2)
                 erro = 'sim'
 
 

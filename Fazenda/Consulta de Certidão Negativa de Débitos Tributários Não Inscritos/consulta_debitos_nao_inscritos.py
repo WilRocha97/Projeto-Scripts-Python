@@ -95,10 +95,12 @@ def consulta_ipva(cnpj, nome):
         
         for debito in debitos:
             if _find_img(debito, conf=0.9):
-                if _find_img('gia.png', conf=0.9):
-                    salvar_pdf(cnpj, nome, debito=' - GIA')
-                else:
-                    salvar_pdf(cnpj, nome)
+                while not _find_img('emitir_relatorios.png', conf=0.9):
+                    press('pgDn')
+                    if _find_img('gia.png', conf=0.9):
+                        salvar_pdf(cnpj, nome, debito=' - GIA')
+                        
+                salvar_pdf(cnpj, nome)
                 return True
 
     # define o texto que ira escrever na planilha

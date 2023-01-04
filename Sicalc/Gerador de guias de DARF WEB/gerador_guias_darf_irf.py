@@ -55,7 +55,6 @@ def login_sicalc(empresa, apuracao, vencimento, driver):
     # gerar a guia de DCTF
     if not gerar(empresa, apuracao, vencimento, driver):
         return False
-    time.sleep(2)
     return True
 
 
@@ -157,9 +156,6 @@ def gerar(empresa, apuracao, vencimento, driver):
     _escreve_relatorio_csv('{};{};{};{};Guia gerada'.format(cnpj, nome, valor, cod))
 
     driver.close()
-    while _find_img('erro_site.png', conf=0.9):
-        driver.close()
-        time.sleep(2)
     return True
 
 
@@ -192,6 +188,7 @@ def run():
         "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
     })
 
+    p.hotkey('win', 'm')
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
 
@@ -207,15 +204,18 @@ def run():
                 # fazer login do SICALC
                 if not login_sicalc(empresa, str(apuracao), vencimento, driver):
                     driver.close()
-                    while _find_img('erro_site.png', conf=0.9):
-                        driver.close()
-                        time.sleep(1)
                     erro = 'sim'
                 else:
                     erro = 'nao'
             except:
-                erro = 'sim'
+                try:
+                    
+                    driver.close()
+                    erro = 'sim'
+                except:
+                    erro = 'sim'
 
+        p.hotkey('alt', 'f4')
 
 if __name__ == '__main__':
     run()

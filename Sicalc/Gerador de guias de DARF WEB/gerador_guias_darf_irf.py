@@ -209,8 +209,7 @@ def run():
                     erro = 'nao'
             except:
                 try:
-                    
-                    driver.close()
+                    p.hotkey('alt', 'f4')
                     erro = 'sim'
                 except:
                     erro = 'sim'

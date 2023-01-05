@@ -2,7 +2,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import pyautogui as p
-import os, time, shutil
+import os, time, shutil, re
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -11,8 +11,11 @@ from chrome_comum import _initialize_chrome
 from pyautogui_comum import _click_img, _wait_img, _find_img
 
 
-def renomear(empresa, apuracao, vencimento):
+def renomear(driver, empresa, apuracao):
     cnpj, nome, nota, valor, cod = empresa
+    
+    vencimento = re.compile(r'data-darf=\"true\".+(\d\d/\d\d/\d\d\d\d)</td><td>\d\d/\d\d/').search(driver.page_source).group(1)
+    
     download_folder = "V:\\Setor Robô\\Scripts Python\\Sicalc\\Gerador de guias de DARF WEB\\execução\\Guias"
     guia = os.path.join(download_folder, 'Darf.pdf')
     while os.path.exists(guia):
@@ -24,7 +27,7 @@ def renomear(empresa, apuracao, vencimento):
             pass
 
 
-def login_sicalc(empresa, apuracao, vencimento, driver):
+def login_sicalc(empresa, apuracao, driver):
     cnpj, nome, nota, valor, cod = empresa
     driver.get('https://sicalc.receita.economia.gov.br/sicalc/rapido/contribuinte')
     print('>>> Acessando o site')
@@ -53,12 +56,12 @@ def login_sicalc(empresa, apuracao, vencimento, driver):
     driver.find_element(by=By.XPATH, value='//*[@id="divBotoes"]/input[1]').click()
 
     # gerar a guia de DCTF
-    if not gerar(empresa, apuracao, vencimento, driver):
+    if not gerar(empresa, apuracao, driver):
         return False
     return True
 
 
-def gerar(empresa, apuracao, vencimento, driver):
+def gerar(empresa, apuracao, driver):
     cnpj, nome, nota, valor, cod = empresa
 
     # esperar o menu referente a guia aparecer
@@ -150,7 +153,7 @@ def gerar(empresa, apuracao, vencimento, driver):
         time.sleep(5)
         p.hotkey('Ctrl', 'Shift', 'Tab')
         
-    renomear(empresa, apuracao, vencimento)
+    renomear(driver, empresa, apuracao)
 
     print('✔ Guia gerada')
     _escreve_relatorio_csv('{};{};{};{};Guia gerada'.format(cnpj, nome, valor, cod))
@@ -164,7 +167,6 @@ def run():
     os.makedirs('execução/Guias', exist_ok=True)
     # p.mouseInfo()
     apuracao = p.prompt(title='Script incrível', text='Qual o período de apuração?', default='00/0000')
-    vencimento = p.prompt(title='Script incrível', text='Qual o vencimento?\n(Sempre dia 20, se for fim de semana ou feriado, antecipa.)', default='00/00/0000')
     
     # abrir a planilha de dados
     empresas = _open_lista_dados()
@@ -197,22 +199,22 @@ def run():
         
         erro = 'sim'
         while erro == 'sim':
-            try:
-                # iniciar o driver do chome
-                status, driver = _initialize_chrome(options)
-        
-                # fazer login do SICALC
-                if not login_sicalc(empresa, str(apuracao), vencimento, driver):
-                    driver.close()
-                    erro = 'sim'
-                else:
-                    erro = 'nao'
-            except:
-                try:
-                    p.hotkey('alt', 'f4')
-                    erro = 'sim'
-                except:
-                    erro = 'sim'
+            '''try:'''
+            # iniciar o driver do chome
+            status, driver = _initialize_chrome(options)
+    
+            # fazer login do SICALC
+            if not login_sicalc(empresa, str(apuracao), driver):
+                driver.close()
+                erro = 'sim'
+            else:
+                erro = 'nao'
+            #except:
+                #try:
+                    #p.hotkey('alt', 'f4')
+                    #erro = 'sim'
+                #except:
+                    #erro = 'sim'
 
         p.hotkey('alt', 'f4')
 

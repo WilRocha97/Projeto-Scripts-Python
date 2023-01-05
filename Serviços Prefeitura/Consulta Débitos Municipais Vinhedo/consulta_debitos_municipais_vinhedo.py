@@ -146,7 +146,7 @@ def salvar_guia(cnpj):
     time.sleep(0.5)
     hotkey('alt', 'l')
     time.sleep(1)
-    if _find_img('SalvarComo.png', 0.9):
+    if _find_img('SalvarComo.png', conf=0.9):
         press('s')
         time.sleep(1)
     

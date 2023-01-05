@@ -199,22 +199,22 @@ def run():
         
         erro = 'sim'
         while erro == 'sim':
-            '''try:'''
-            # iniciar o driver do chome
-            status, driver = _initialize_chrome(options)
-    
-            # fazer login do SICALC
-            if not login_sicalc(empresa, str(apuracao), driver):
-                driver.close()
-                erro = 'sim'
-            else:
-                erro = 'nao'
-            #except:
-                #try:
-                    #p.hotkey('alt', 'f4')
-                    #erro = 'sim'
-                #except:
-                    #erro = 'sim'
+            try:
+                # iniciar o driver do chome
+                status, driver = _initialize_chrome(options)
+        
+                # fazer login do SICALC
+                if not login_sicalc(empresa, str(apuracao), driver):
+                    driver.close()
+                    erro = 'sim'
+                else:
+                    erro = 'nao'
+            except:
+                try:
+                    p.hotkey('alt', 'f4')
+                    erro = 'sim'
+                except:
+                    erro = 'sim'
 
         p.hotkey('alt', 'f4')
 

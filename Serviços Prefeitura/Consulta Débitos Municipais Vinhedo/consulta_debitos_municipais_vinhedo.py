@@ -17,17 +17,17 @@ from pyautogui_comum import _find_img, _wait_img, _click_img
 os.makedirs('execução/Certidões', exist_ok=True)
 
 
-def find_by_id(xpath, driver):
+def find_by_id(elemento, driver):
     try:
-        elem = driver.find_element(by=By.ID, value=xpath)
+        elem = driver.find_element(by=By.ID, value=elemento)
         return elem
     except:
         return None
 
 
-def find_by_path(xpath, driver):
+def find_by_path(elemento, driver):
     try:
-        elem = driver.find_element(by=By.XPATH, value=xpath)
+        elem = driver.find_element(by=By.XPATH, value=elemento)
         return elem
     except:
         return None

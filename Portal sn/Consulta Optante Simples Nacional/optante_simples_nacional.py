@@ -26,26 +26,26 @@ def consulta(empresas, index):
         x = 'Erro'
         while x == 'Erro':
             with Session() as s:
-                response = s.get(_url)
-                print('>>> Abrindo site...')
-                time.sleep(5)
-                # pega o token de verificação do site
-                soup = BeautifulSoup(response.content, 'html.parser')
-                soup = soup.prettify()
-                padrao_response = re.compile(r'__RequestVerificationToken.+value=\"(.+)\"/>')
-                request_verification = padrao_response.search(soup)
-                request_verification = request_verification.group(1)
-
-                # gera o token para passar pelo captcha
-                recaptcha_data = {'sitekey': _site_key, 'url': _url}
-                token = _solve_hcaptcha(recaptcha_data)
-
-                # payload da requisição do site para fazer o login na empresa
-                payload = {'Cnpj': str(cnpj),
-                           'h-captcha-response': str(token),
-                           '__RequestVerificationToken': str(request_verification)}
-                
                 try:
+                    response = s.get(_url)
+                    print('>>> Abrindo site...')
+                    time.sleep(5)
+                    # pega o token de verificação do site
+                    soup = BeautifulSoup(response.content, 'html.parser')
+                    soup = soup.prettify()
+                    padrao_response = re.compile(r'__RequestVerificationToken.+value=\"(.+)\"/>')
+                    request_verification = padrao_response.search(soup)
+                    request_verification = request_verification.group(1)
+    
+                    # gera o token para passar pelo captcha
+                    recaptcha_data = {'sitekey': _site_key, 'url': _url}
+                    token = _solve_hcaptcha(recaptcha_data)
+    
+                    # payload da requisição do site para fazer o login na empresa
+                    payload = {'Cnpj': str(cnpj),
+                               'h-captcha-response': str(token),
+                               '__RequestVerificationToken': str(request_verification)}
+                
                     # faz login
                     response = s.post('https://consopt.www8.receita.fazenda.gov.br/consultaoptantes', data=payload)
                     # abre a tela de consulta

@@ -172,20 +172,17 @@ def run():
 
         # iniciar o driver do chome
         status, driver = _initialize_chrome(options)
+        driver = login_sieg(driver)
+        driver = sieg_iris(driver)
         
         erro = 'sim'
         while erro == 'sim':
             try:
-                # fazer login no SIEG
-                login_sieg(driver)
-                
                 total_empresas = empresas[index:]
                 for count, empresa in enumerate(empresas[index:], start=1):
             
                     # configurar o indice para localizar em qual empresa está
                     _indice(count, total_empresas, empresa)
-                    
-                    driver = sieg_iris(driver)
                     
                     driver = procura_empresa(empresa, driver, options)
                     

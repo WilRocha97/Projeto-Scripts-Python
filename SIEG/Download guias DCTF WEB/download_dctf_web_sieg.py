@@ -46,8 +46,8 @@ def login_sieg(driver):
     
 
 def sieg_iris(driver):
-    driver.get('https://hub.sieg.com/IriS/#/DCTFWeb')
     print('>>> Acessando IriS DCTF WEB')
+    driver.get('https://hub.sieg.com/IriS/#/DCTFWeb')
 
     return driver
 
@@ -60,12 +60,15 @@ def procura_empresa(empresa, driver, options):
         time.sleep(1)
         timer += 1
         if timer >= 60:
+            print('>>> Teantando novamente\n')
             driver.close()
             status, driver = _initialize_chrome(options)
             driver = login_sieg(driver)
             driver = sieg_iris(driver)
+            timer = 0
         
     time.sleep(5)
+    print('>>> Pesquisando empresa')
     # clica para abrir a barra de pesquisa
     driver.find_element(by=By.ID, value='select2-ddlCompanyIris-container').click()
     time.sleep(1)
@@ -169,32 +172,32 @@ def run():
 
         # configurar um indice para a planilha de dados
         index = 0
-
+        
         # iniciar o driver do chome
         status, driver = _initialize_chrome(options)
         driver = login_sieg(driver)
-        driver = sieg_iris(driver)
         
-        erro = 'sim'
-        while erro == 'sim':
-            try:
-                total_empresas = empresas[index:]
-                for count, empresa in enumerate(empresas[index:], start=1):
-            
-                    # configurar o indice para localizar em qual empresa está
-                    _indice(count, total_empresas, empresa)
-                    
-                    driver = procura_empresa(empresa, driver, options)
-                    
-                erro = 'não'
-                driver.close()
-            except:
+        total_empresas = empresas[index:]
+        for count, empresa in enumerate(empresas[index:], start=1):
+    
+            # configurar o indice para localizar em qual empresa está
+            _indice(count, total_empresas, empresa)
+            erro = 'sim'
+            while erro == 'sim':
                 try:
-                    erro = 'sim'
-                    driver.close()
+                    driver = sieg_iris(driver)
+                    driver = procura_empresa(empresa, driver, options)
+                    erro = 'não'
                 except:
-                    pass
-            
+                    try:
+                        erro = 'sim'
+                        driver.close()
+                        status, driver = _initialize_chrome(options)
+                        driver = login_sieg(driver)
+                    except:
+                        erro = 'sim'
+                        status, driver = _initialize_chrome(options)
+                        driver = login_sieg(driver)
     
 if __name__ == '__main__':
     run()

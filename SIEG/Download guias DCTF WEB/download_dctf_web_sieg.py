@@ -168,28 +168,36 @@ def run():
         empresas = list(map(lambda x: tuple(x.replace('\n', '').split(';')), dados))
 
         # configurar um indice para a planilha de dados
-        index = _where_to_start(tuple(i[0] for i in empresas))
-        if index is None:
-            return False
+        index = 0
 
         # iniciar o driver do chome
         status, driver = _initialize_chrome(options)
-
-        # fazer login no SIEG
-        login_sieg(driver)
         
-        total_empresas = empresas[index:]
-        for count, empresa in enumerate(empresas[index:], start=1):
-    
-            # configurar o indice para localizar em qual empresa está
-            _indice(count, total_empresas, empresa)
+        erro = 'sim'
+        while erro == 'sim':
+            try:
+                # fazer login no SIEG
+                login_sieg(driver)
+                
+                total_empresas = empresas[index:]
+                for count, empresa in enumerate(empresas[index:], start=1):
             
-            driver = sieg_iris(driver)
+                    # configurar o indice para localizar em qual empresa está
+                    _indice(count, total_empresas, empresa)
+                    
+                    driver = sieg_iris(driver)
+                    
+                    driver = procura_empresa(empresa, driver, options)
+                    
+                erro = 'não'
+                driver.close()
+            except:
+                try:
+                    erro = 'sim'
+                    driver.close()
+                except:
+                    pass
             
-            driver = procura_empresa(empresa, driver, options)
-            
-        driver.close()
-        
     
 if __name__ == '__main__':
     run()

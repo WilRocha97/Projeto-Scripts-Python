@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-import os, time, re
+import os, time, re, csv
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -100,7 +100,7 @@ def procura_empresa(empresa, driver, options):
         # download dctf
         driver.find_element(by=By.XPATH, value='/html/body/form/div[5]/div[3]/div[1]/div/div[4]/div/table/tbody/tr[2]/td[9]/div/ul/li[3]/a').click()
         time.sleep(1)
-
+    
         data = re.compile(r'td-background-dt hidden-md hidden-sm hidden-xs\">(.+)</td><td class=\"td-background-dt sorting_2\">(\d\d/\d\d\d\d)').search(driver.page_source).group(2)
         data = data.replace('/', '_')
         data2 = data.split('_')
@@ -114,7 +114,26 @@ def procura_empresa(empresa, driver, options):
             time.sleep(1)
         
         data = data.replace('_', '-')
-        _escreve_relatorio_csv(f'{cnpj};{nome};Guia salva {data}')
+        _escreve_relatorio_csv(f'{cnpj};{nome};Guia salva {data}', nome='Download DCTF web')
+        
+        # deleta o andamento que já baixou a guia
+        file = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download guias DCTF WEB\\ignore\\Dados.csv"
+        with open(file, 'r', encoding='latin-1') as f:
+            dados = f.readlines()
+        
+        dados  = list(map(lambda x: tuple(x.replace('\n', '').split(';')), dados))
+    
+        f = open(file, 'w', encoding='latin-1')
+        f.write('')
+        f.close()
+        
+        for linha in dados:
+            if linha != empresa:
+                cnpj, nome = linha
+                f = open(file, 'a', encoding='latin-1')
+                f.write(f'{cnpj};{nome}\n')
+                f.close()
+            
         print('✔ Download da guia concluído')
     except:
         _escreve_relatorio_csv(f'{cnpj};{nome};Não possuí guia para download')
@@ -127,16 +146,6 @@ def procura_empresa(empresa, driver, options):
 @_time_execution
 def run():
     os.makedirs('execução/Guias', exist_ok=True)
-
-    # abrir a planilha de dados
-    empresas = _open_lista_dados()
-    if not empresas:
-        return False
-
-    # configurar um indice para a planilha de dados
-    index = _where_to_start(tuple(i[0] for i in empresas))
-    if index is None:
-        return False
 
     # opções para fazer com que o chome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
@@ -151,12 +160,24 @@ def run():
     })
 
     while 1 < 2:
+        # abre a planilha de dados
+        file = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download guias DCTF WEB\\ignore\\Dados.csv"
+        with open(file, 'r', encoding='latin-1') as f:
+            dados = f.readlines()
+
+        empresas = list(map(lambda x: tuple(x.replace('\n', '').split(';')), dados))
+
+        # configurar um indice para a planilha de dados
+        index = _where_to_start(tuple(i[0] for i in empresas))
+        if index is None:
+            return False
+
         # iniciar o driver do chome
         status, driver = _initialize_chrome(options)
-        
+
         # fazer login no SIEG
         login_sieg(driver)
-    
+        
         total_empresas = empresas[index:]
         for count, empresa in enumerate(empresas[index:], start=1):
     
@@ -168,6 +189,7 @@ def run():
             driver = procura_empresa(empresa, driver, options)
             
         driver.close()
+        
     
 if __name__ == '__main__':
     run()

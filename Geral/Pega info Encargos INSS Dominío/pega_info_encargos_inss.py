@@ -29,8 +29,11 @@ def analiza():
                 cnpj = padrao_cnpj.search(textinho).group(1)
 
                 # Procura a descrição do valor a recolher 1, tem algumas variações do que aparece junto a essa info
-                valor = padrao_valor.search(textinho).group(1)
-                
+                try:
+                    valor = padrao_valor.search(textinho).group(1)
+                except:
+                    continue
+                    
                 print(f'{cnpj} - {valor}')
 
                 _escreve_relatorio_csv(f"{cnpj};{valor}")

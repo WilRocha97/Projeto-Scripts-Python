@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
 
+import timer
 from bs4 import BeautifulSoup
 from requests import Session
 from time import sleep
@@ -45,8 +46,12 @@ def new_session_sn(cnpj, cpf, cod, serv, driver, usa_driver=False):
         sleep(1)
         
     print('>>> Aguardando site')
+    timer = 0
     while not find_by_id('captcha-img', driver):
         sleep(1)
+        timer += 1
+        if timer >= 60:
+            new_session_sn(cnpj, cpf, cod, serv, driver, usa_driver=False)
         
     element = driver.find_element(by=By.ID, value='captcha-img')
     location = element.location

@@ -92,9 +92,19 @@ def procura_empresa(empresa, driver, options):
     driver.find_element(by=By.XPATH, value='/html/body/span/span/span[2]/ul/li').click()
     time.sleep(1)
 
+    timer = 0
     while not localiza_path(driver, '/html/body/form/div[5]/div[3]/div[1]/div/div[4]/div/table/tbody/tr[2]/td[9]/div/a[1]'):
-        time.sleep(1)
-    
+        ime.sleep(1)
+        timer += 1
+        if timer >= 60:
+            print('>>> Teantando novamente\n')
+            driver.close()
+            status, driver = _initialize_chrome(options)
+            driver = login_sieg(driver)
+            driver = sieg_iris(driver)
+            procura_empresa(empresa, driver, options)
+            return driver
+
     print('>>> Verificando donwload')
     try:
         # clica em download
@@ -162,7 +172,9 @@ def run():
         "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
     })
 
+    contador = 1
     while 1 < 2:
+        print(f'\n\nIniciando rotina Nº {contador} ----------------------------------------------------------\n')
         # abre a planilha de dados
         file = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download guias DCTF WEB\\ignore\\Dados.csv"
         with open(file, 'r', encoding='latin-1') as f:
@@ -198,6 +210,9 @@ def run():
                         erro = 'sim'
                         status, driver = _initialize_chrome(options)
                         driver = login_sieg(driver)
-    
+
+        contador += 1
+
+
 if __name__ == '__main__':
     run()

@@ -15,7 +15,6 @@ def consulta(empresas, index):
     for count, empresa in enumerate(empresas[index:], start=1):
         _indice(count, total_empresas, empresa)
         
-        # cnpjform, cnpj, senha, nome = qual_empresa
         cnpj, senha, nome = empresa
         nome = nome.replace('/', ' ')
         

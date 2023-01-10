@@ -11,7 +11,7 @@ from chrome_comum import _initialize_chrome
 from pyautogui_comum import _click_img, _wait_img, _find_img
 
 
-def renomear(driver, empresa, apuracao):
+def renomear(driver, empresa, apuracao, tipo):
     cnpj, nome, nota, valor, cod = empresa
     
     vencimento = re.compile(r'data-darf=\"true\".+(\d\d/\d\d/\d\d\d\d)</td><td>\d\d/\d\d/').search(driver.page_source).group(1)
@@ -20,14 +20,14 @@ def renomear(driver, empresa, apuracao):
     guia = os.path.join(download_folder, 'Darf.pdf')
     while os.path.exists(guia):
         try:
-            arquivo = f'{nome.replace("/", " ")} - {cnpj} - DARF IRRF {cod} {apuracao.replace("/", "-")} - venc. {vencimento.replace("/", "-")}.pdf'
+            arquivo = f'{nome.replace("/", " ")} - {cnpj} - {tipo} {cod} {apuracao.replace("/", "-")} - venc. {vencimento.replace("/", "-")}.pdf'
             shutil.move(guia, os.path.join(download_folder, arquivo))
             time.sleep(2)
         except:
             pass
 
 
-def login_sicalc(empresa, apuracao, driver):
+def login_sicalc(empresa, apuracao, driver, tipo):
     cnpj, nome, nota, valor, cod = empresa
     driver.get('https://sicalc.receita.economia.gov.br/sicalc/rapido/contribuinte')
     print('>>> Acessando o site')
@@ -56,12 +56,12 @@ def login_sicalc(empresa, apuracao, driver):
     driver.find_element(by=By.XPATH, value='//*[@id="divBotoes"]/input[1]').click()
 
     # gerar a guia de DCTF
-    if not gerar(empresa, apuracao, driver):
+    if not gerar(empresa, apuracao, driver, tipo):
         return False
     return True
 
 
-def gerar(empresa, apuracao, driver):
+def gerar(empresa, apuracao, driver, tipo):
     cnpj, nome, nota, valor, cod = empresa
 
     # esperar o menu referente a guia aparecer
@@ -153,10 +153,10 @@ def gerar(empresa, apuracao, driver):
         time.sleep(5)
         p.hotkey('Ctrl', 'Shift', 'Tab')
         
-    renomear(driver, empresa, apuracao)
+    renomear(driver, empresa, apuracao, tipo)
 
     print('✔ Guia gerada')
-    _escreve_relatorio_csv('{};{};{};{};Guia gerada'.format(cnpj, nome, valor, cod))
+    _escreve_relatorio_csv('{};{};{};{};Guia gerada'.format(cnpj, nome, valor, cod), nome=f'Resumo gerador {tipo}')
 
     driver.close()
     return True
@@ -166,7 +166,9 @@ def gerar(empresa, apuracao, driver):
 def run():
     os.makedirs('execução/Guias', exist_ok=True)
     # p.mouseInfo()
+    tipo = p.confirm(title='Script incrível', text='Qual tipo da guia?', buttons=('DARF IRRF', 'DARF DP'))
     apuracao = p.prompt(title='Script incrível', text='Qual o período de apuração?', default='00/0000')
+    
     
     # abrir a planilha de dados
     empresas = _open_lista_dados()
@@ -204,7 +206,7 @@ def run():
                 status, driver = _initialize_chrome(options)
         
                 # fazer login do SICALC
-                if not login_sicalc(empresa, str(apuracao), driver):
+                if not login_sicalc(empresa, str(apuracao), driver, tipo):
                     driver.close()
                     erro = 'sim'
                 else:

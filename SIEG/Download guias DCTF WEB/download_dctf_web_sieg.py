@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from pyautogui import prompt
 import os, time, re, csv
 
 from sys import path
@@ -52,7 +53,7 @@ def sieg_iris(driver):
     return driver
 
 
-def procura_empresa(empresa, driver, options):
+def procura_empresa(competencia, empresa, driver, options):
     cnpj, nome = empresa
     # espera a barra de pesquisa, se não aparecer em 1 minuto, recarrega a página
     timer = 0
@@ -94,7 +95,7 @@ def procura_empresa(empresa, driver, options):
 
     timer = 0
     while not localiza_path(driver, '/html/body/form/div[5]/div[3]/div[1]/div/div[4]/div/table/tbody/tr[2]/td[9]/div/a[1]'):
-        ime.sleep(1)
+        time.sleep(1)
         timer += 1
         if timer >= 60:
             print('>>> Teantando novamente\n')
@@ -102,10 +103,17 @@ def procura_empresa(empresa, driver, options):
             status, driver = _initialize_chrome(options)
             driver = login_sieg(driver)
             driver = sieg_iris(driver)
-            procura_empresa(empresa, driver, options)
+            procura_empresa(competencia, empresa, driver, options)
             return driver
 
     print('>>> Verificando donwload')
+    try:
+        re.compile(r'>(' + competencia + ')<').search(driver.page_source).group(1)
+    except:
+        _escreve_relatorio_csv(f'{cnpj};{nome};Guia referênte ao mês {competencia} não disponível')
+        print(f'❗ Guia referênte ao mês {competencia} não disponível')
+        return driver
+    
     try:
         # clica em download
         driver.find_element(by=By.XPATH, value='/html/body/form/div[5]/div[3]/div[1]/div/div[4]/div/table/tbody/tr[2]/td[9]/div/a[1]').click()
@@ -158,6 +166,7 @@ def procura_empresa(empresa, driver, options):
 
 @_time_execution
 def run():
+    competencia = prompt(text='Qual competência referênte?', title='Script incrível', default='00/0000')
     os.makedirs('execução/Guias', exist_ok=True)
 
     # opções para fazer com que o chome trabalhe em segundo plano (opcional)
@@ -198,7 +207,7 @@ def run():
             while erro == 'sim':
                 try:
                     driver = sieg_iris(driver)
-                    driver = procura_empresa(empresa, driver, options)
+                    driver = procura_empresa(competencia, empresa, driver, options)
                     erro = 'não'
                 except:
                     try:

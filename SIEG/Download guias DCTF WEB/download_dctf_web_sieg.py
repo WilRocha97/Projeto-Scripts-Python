@@ -168,7 +168,7 @@ def procura_empresa(competencia, empresa, driver, options):
 def run():
     competencia = prompt(text='Qual competência referênte?', title='Script incrível', default='00/0000')
     os.makedirs('execução/Guias', exist_ok=True)
-
+    
     # opções para fazer com que o chome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
@@ -190,9 +190,15 @@ def run():
             dados = f.readlines()
 
         empresas = list(map(lambda x: tuple(x.replace('\n', '').split(';')), dados))
-
-        # configurar um indice para a planilha de dados
-        index = 0
+        
+        if contador == 1:
+            index = _where_to_start(tuple(i[0] for i in empresas))
+            if index is None:
+                return False
+        
+        else:
+            # configurar um indice para a planilha de dados
+            index = 0
         
         # iniciar o driver do chome
         status, driver = _initialize_chrome(options)
@@ -221,7 +227,8 @@ def run():
                         driver = login_sieg(driver)
 
         contador += 1
-
+        os.remove("V:\\Setor Robô\\Scripts Python\\SIEG\\Download guias DCTF WEB\\execução\\resumo.csv")
+        
 
 if __name__ == '__main__':
     run()

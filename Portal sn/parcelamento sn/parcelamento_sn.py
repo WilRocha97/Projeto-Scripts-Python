@@ -30,6 +30,8 @@ def consulta_parcelamento(cnpj, tipo, comp, session):
     try:
         print('>>> Consultando parcelamento')
         res = session.get(url_home, verify=False)
+        
+        
         state, generator = get_info_post(content=res.content)
     except:
         sys.stdout.write('❌ ')
@@ -44,6 +46,7 @@ def consulta_parcelamento(cnpj, tipo, comp, session):
 
     res = session.post(f'{url_home}/default.aspx', data, verify=False)
     soup = BeautifulSoup(res.content, 'html.parser')
+    
     try:
         state, generator = get_info_post(soup=soup)
     except:
@@ -52,16 +55,25 @@ def consulta_parcelamento(cnpj, tipo, comp, session):
     if 'Não há parcelamento' in res.text:
         sys.stdout.write('>>> ')
         return f'Não há parcelamento {tipo}'
-
+    
+    if 'Não há parcela disponível para reimpressão' in res.text:
+        sys.stdout.write(' ')
+        return f'Não há parcela {tipo} disponível para reimpressão'
+    
+    if 'Há um pedido de parcelamento para o contribuinte aguardando confirmação do pagamento da primeira parcela.' in res.text:
+        sys.stdout.write('❌ ')
+        return 'Há um pedido de parcelamento para o contribuinte aguardando confirmação do pagamento da primeira parcela'
+    
+    if 'Há um pedido de parcelamento para o contribuinte com primeira parcela ainda não vencida.' in res.text:
+        sys.stdout.write('❌ ')
+        return 'Há um pedido de parcelamento para o contribuinte com primeira parcela ainda não vencida.'
+    
     for i in ('', 's'):
         id_table = 'ctl00_contentPlaceH_gdvParcela' + i
         if not soup.find('table', attrs={'id': id_table}):
             continue
 
         break
-    else:
-        sys.stdout.write('❌ ')
-        return f'Não carregou tabela {tipo}'
 
     data = {
         '__EVENTTARGET': '', '__EVENTARGUMENT': '',
@@ -151,7 +163,7 @@ def run():
 
         text = 'Erro ao consultar parcelamento'
         session = 'Erro Login - Caracteres anti-robô inválidos. Tente novamente.'
-        while session == 'Erro Login - Caracteres anti-robô inválidos. Tente novamente.' or text == 'Erro ao consultar parcelamento':
+        while session == 'Erro Login - Caracteres anti-robô inválidos. Tente novamente.' or text == 'Erro ao consultar parcelamento' or text == f'Não carregou tabela {tipo}':
             session = new_session_sn(cnpj, cpf, cod, tipo, driver)
             
             if isinstance(session, str):
@@ -161,9 +173,16 @@ def run():
                 text = None
             else:
                 text = consulta_parcelamento(cnpj, tipo, comp, session)
-                if not text == 'Erro ao consultar parcelamento':
+                
+                
+                if text == 'Erro ao consultar parcelamento':
+                    print(text)
+                elif text ==  'Não carregou tabela snparc':
+                    print(text)
+                else:
+                    print(text)
                     escreve_relatorio_csv(f'{cnpj};{text}', nome=resumo)
-                print(text)
+
                 session.close()
 
     driver.quit()

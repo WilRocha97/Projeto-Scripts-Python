@@ -190,14 +190,14 @@ def run():
             dados = f.readlines()
 
         empresas = list(map(lambda x: tuple(x.replace('\n', '').split(';')), dados))
-        
+
+        # configurar um indice para a planilha de dados
         if contador == 1:
             index = _where_to_start(tuple(i[0] for i in empresas))
             if index is None:
                 return False
         
         else:
-            # configurar um indice para a planilha de dados
             index = 0
         
         # iniciar o driver do chome

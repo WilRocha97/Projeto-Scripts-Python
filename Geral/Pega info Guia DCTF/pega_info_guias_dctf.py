@@ -9,9 +9,6 @@ from comum_comum import ask_for_dir
 from comum_comum import _escreve_relatorio_csv, _escreve_header_csv
 
 # Definir os padrões de regex
-padrao_cnpj = re.compile(r'Documento de Arrecadação\nde Receitas Federais\n(\d.+)\n')
-padrao_valor = re.compile(r'Valor Total do Documento\n(.+)\nCNPJ')
-
 
 def analiza():
     documentos = ask_for_dir()
@@ -20,6 +17,7 @@ def analiza():
         print(f'\nArquivo: {arq}')
         # Abrir o pdf
         arq = os.path.join(documentos, arq)
+        
         with fitz.open(arq) as pdf:
 
             # Para cada página do pdf, se for a segunda página o script ignora
@@ -27,6 +25,9 @@ def analiza():
                 if count == 1:
                     continue
                 try:
+                    padrao_cnpj = re.compile(r'Documento de Arrecadação\nde Receitas Federais\n(\d.+)\n')
+                    padrao_valor = re.compile(r'Valor Total do Documento\n(.+)\nCNPJ')
+                    
                     # Pega o texto da pagina
                     textinho = page.get_text('text', flags=1 + 2 + 8)
                     # print(textinho)
@@ -42,8 +43,7 @@ def analiza():
 
                 except():
                     print(textinho)
-                    print('ERRO')
-        
+                    
 
 if __name__ == '__main__':
     inicio = datetime.now()

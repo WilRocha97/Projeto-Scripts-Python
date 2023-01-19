@@ -9,7 +9,7 @@ import os
 
 # variaveis globais
 api_key = os.getenv('APIKEY_2CAPTCHA', '5a87f2de34df98eb1635b8c0f394b98b')
-anticaptcha_api_key = 'f66ac561092312ffd2ab12cf2538aa4e'
+anticaptcha_api_key = '5ad702af396ab0ef9b7c9aec3e2bbae2'
 
 
 # ---------- VVVV 2 Captcha (Não utilizado) VVVV ---------------------------------------------------------------------------------------------------------------------------

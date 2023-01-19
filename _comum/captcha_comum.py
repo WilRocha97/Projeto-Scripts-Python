@@ -7,9 +7,13 @@ from anticaptchaofficial.hcaptchaproxyless import *
 from time import sleep
 import os
 
+dados = "V:\\Setor Robô\\Scripts Python\\_comum\\Dados.txt"
+f = open(dados, 'r', encoding='utf-8')
+key = f.read()
+
 # variaveis globais
 api_key = os.getenv('APIKEY_2CAPTCHA', '5a87f2de34df98eb1635b8c0f394b98b')
-anticaptcha_api_key = '5ad702af396ab0ef9b7c9aec3e2bbae2'
+anticaptcha_api_key = key
 
 
 # ---------- VVVV 2 Captcha (Não utilizado) VVVV ---------------------------------------------------------------------------------------------------------------------------

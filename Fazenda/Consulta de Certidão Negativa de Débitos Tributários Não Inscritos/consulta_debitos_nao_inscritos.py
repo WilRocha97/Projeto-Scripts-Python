@@ -85,8 +85,16 @@ def consulta_ipva(cnpj, nome):
     # espera a tela da empresa abrir e caso apareça a tela de erro da F5 na página
     while not _find_img('dados.png', conf=0.9):
         if _find_img('atencao.png', conf=0.9):
-            press('enter')
-            press('f5')
+            if _find_img('atencao_ok.png', conf=0.9):
+                _click_img('atencao_ok.png', conf=0.9)
+            else:
+                press('enter')
+                press('f5')
+        sleep(1)
+
+    sleep(1)
+    if _find_img('atencao_ok.png', conf=0.9):
+        _click_img('atencao_ok.png', conf=0.9)
 
     debitos = ('ha_debitos.png', 'ha_pendencias.png', 'ha_pendencias_2.png', 'icms_declarado.png', 'icms_parcelado.png', 'aiim.png', 'ipva.png')
     # navega na tela até aparecer o botão de emitir relatório e caso tenha algum débito, salva o relatório
@@ -99,6 +107,7 @@ def consulta_ipva(cnpj, nome):
                     press('pgDn')
                     if _find_img('gia.png', conf=0.9):
                         salvar_pdf(cnpj, nome, debito=' - GIA')
+                        return True
                         
                 salvar_pdf(cnpj, nome)
                 return True

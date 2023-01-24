@@ -146,7 +146,7 @@ _escreve_relatorio_csv = escreve_relatorio_csv
 
 # Recebe um cabeçalho 'texto' e escreve
 # no comeco do arquivo 'nome'
-def escreve_header_csv(texto, nome='resumo.csv', local=e_dir, encode='latin-1'):
+def escreve_header_csv(texto, nome='resumo', local=e_dir, encode='latin-1'):
     os.makedirs(local, exist_ok=True)
     
     with open(str(local / f"{nome}.csv"), 'r', encoding=encode) as f:

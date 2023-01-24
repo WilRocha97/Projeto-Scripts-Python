@@ -40,15 +40,15 @@ def dirf(empresa, ano, andamento):
     time.sleep(0.5)
     p.press('tab')
     
-    arquivos_dirf(empresa, ano, andamento)
+    erro = arquivos_dirf(empresa, ano, andamento)
     
-    relatorio_dirf(empresa, ano, andamento)
+    relatorio_dirf(empresa, ano, andamento, erro)
     
     p.press('esc', presses=4)
     time.sleep(2)
 
     
-def relatorio_dirf(empresa, ano, andamento):
+def relatorio_dirf(empresa, ano, andamento, erro):
     # seleciona para gerar o relatório
     if _find_img('formulario.png', conf=0.9):
         _click_img('formulario.png', conf=0.9)
@@ -72,7 +72,7 @@ def relatorio_dirf(empresa, ano, andamento):
         time.sleep(1)
         p.press('esc')
         
-        _escreve_relatorio_csv('Não é possível editar aba de folha de pagamento', nome=andamento)
+        _escreve_relatorio_csv(f'Não é possível editar aba de folha de pagamento;{erro}', nome=andamento)
         print('❌ Não é possível editar aba de folha de pagamento')
         return False
     
@@ -109,14 +109,14 @@ def relatorio_dirf(empresa, ano, andamento):
 
         if _find_img('sem_dados_arquivo.png', conf=0.9):
             p.press('enter')
-            _escreve_relatorio_csv('Sem dados para emitir', nome=andamento)
+            _escreve_relatorio_csv(f'Sem dados para emitir;{erro}', nome=andamento)
             print('❗ Sem dados para emitir')
             return False
 
     if _find_img('relatorio_gerado.png', conf=0.9):
         salvar_pdf(empresa)
     
-    _escreve_relatorio_csv(f'Relatório DIRF {ano} gerado', nome=andamento)
+    _escreve_relatorio_csv(f'Relatório DIRF {ano} gerado;{erro}', nome=andamento)
     print('✔ Relatório gerado')
 
     return True
@@ -124,6 +124,7 @@ def relatorio_dirf(empresa, ano, andamento):
 
 def arquivos_dirf(empresa, ano, andamento):
     cod, cnpj, nome = empresa
+    erro = ''
     
     # seleciona para gerar o relatório
     if _find_img('arquivo.png', conf=0.9):
@@ -159,20 +160,28 @@ def arquivos_dirf(empresa, ano, andamento):
     
     while not _find_img('dirf_gerada.png', conf=0.9):
         time.sleep(1)
+        if _find_img('outros_dados_nao_digitados.png', conf=0.9):
+            erro = 'Outros dados não digitados'
+            p.hotkey('enter')
         
         if _find_img('sem_dados_arquivo.png', conf=0.9):
             p.press('enter')
             _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Sem dados para emitir', nome=andamento, end=';')
             print('❗ Sem dados para emitir')
-            return False
+            return erro
         
     p.press('enter')
+    time.sleep(2)
+    
+    if _find_img('60_caracteres.png', conf=0.9):
+        erro = 'Descrição de outros rendimentos isentos e não-tributáveis superior a 60 caracteres'
+        p.hotkey('alt', 'f')
+        
     _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Arquivo DIRF {ano} gerado', nome=andamento, end=';')
     print('✔ Arquivo gerado')
-    
-    time.sleep(2)
+
     mover_arquivo(empresa)
-    return True
+    return erro
 
 
 def salvar_pdf(empresa):

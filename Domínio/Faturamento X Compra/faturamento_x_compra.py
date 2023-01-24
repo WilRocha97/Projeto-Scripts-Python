@@ -236,10 +236,13 @@ def captura_info_pdf(execucoes, arquivo, empresa, andamento):
 @_time_execution
 def run():
     # configura o ano e digita no domínio
-    # ano = str(datetime.now().year)
-    ano = '2022'
+    ano = int(datetime.now().year)
+
+    if int(datetime.now().month) < 2:
+        ano -= 1
+
     empresas = _open_lista_dados()
-    andamentos = 'Faturamento X Compra - ' + ano
+    andamentos = 'Faturamento X Compra - ' + str(ano)
 
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:
@@ -251,9 +254,10 @@ def run():
     
         if not _login(empresa, andamentos):
             continue
-        faturamento_compra(ano, empresa, andamentos)
+        faturamento_compra(str(ano), empresa, andamentos)
 
     _escreve_header_csv('CÓDIGO;CNPJ;NOME;SITUAÇÃO;JANEIRO;FEVEREIRO;MARÇO;ABRIL;MAIO;JUNHO;JULHO;AGOSTO;SETEMBRO;OUTUBRO;NOVEMBRO;DEZEMBRO;TOTAIS', nome=andamentos)
+
 
 if __name__ == '__main__':
     run()

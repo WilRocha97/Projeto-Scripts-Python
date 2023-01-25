@@ -93,6 +93,7 @@ def procura_empresa(competencia, empresa, driver, options):
     driver.find_element(by=By.XPATH, value='/html/body/span/span/span[2]/ul/li').click()
     time.sleep(1)
 
+    # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
     timer = 0
     while not localiza_path(driver, '/html/body/form/div[5]/div[3]/div[1]/div/div[4]/div/table/tbody/tr[2]/td[9]/div/a[1]'):
         time.sleep(1)

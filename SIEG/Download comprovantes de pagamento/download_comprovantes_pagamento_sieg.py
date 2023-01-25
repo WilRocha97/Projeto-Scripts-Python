@@ -106,17 +106,14 @@ def procura_empresa(competencia, empresa, driver, options):
     
     print('>>> Consultando comprovantes de pagamento')
     # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
+    contador = 1
     timer = 0
     while not localiza_path(driver, '/html/body/form/div[5]/div[3]/div[1]/div/div[3]/div/table/tbody/tr[1]/td/div/span'):
         time.sleep(1)
         timer += 1
         if timer >= 60:
-            print('>>> Teantando novamente\n')
-            driver.close()
-            status, driver = _initialize_chrome(options)
-            driver = login_sieg(driver)
-            driver = sieg_iris(driver)
-            procura_empresa(competencia, empresa, driver, options)
+            _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento encontrado para esssa empresa')
+            print('❗ Nenhum comprovante de pagamento encontrado para esssa empresa')
             return driver
         
     try:

@@ -144,6 +144,12 @@ def arquivos_dirf(empresa, ano, andamento):
     pyperclip.copy('V:\Setor Robô\Scripts Python\Domínio\Gera Arquivo e Relatório DIRF')
     time.sleep(1)
     p.hotkey('ctrl', 'v')
+    time.sleep(1)
+    
+    # seleciona para gerar com folha de pagamento
+    if _find_img('folha_de_pagamento.png'):
+        _click_img('folha_de_pagamento.png')
+    time.sleep(1)
     
     # abre a janela de outros dados
     p.hotkey('alt', 'u')

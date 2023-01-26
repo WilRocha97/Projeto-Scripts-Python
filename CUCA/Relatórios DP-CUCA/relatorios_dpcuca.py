@@ -84,7 +84,7 @@ def gerar(relatorio, andamentos, empresa):
         return False
     hotkey('alt', 'p')
     return True
-
+    
 
 def imprimir(relatorio, andamentos, empresa, texto, espera=10, diretorio='Relatórios'):
     cod, cnpj, razao, mes, ano = empresa
@@ -341,14 +341,6 @@ def relatoriozinhos(relatorio, andamentos, empresa):
             sleep(0.5)
             hotkey('alt', 'c')
         if not imprimir(relatorio, andamentos, empresa, texto, espera=120, diretorio=relatorio):
-            return False
-
-    elif relatorio == 'Holerites 13':  # Em análise
-        # Aba secundária Adiantamento Obrigatório
-        _click_img('AdiantamentoObrigatorio.png')
-        if not holerite(relatorio, andamentos, empresa):
-            return False
-        if not imprimir(relatorio, andamentos, empresa, texto, espera=30, diretorio=relatorio):
             return False
 
     elif relatorio == 'Holerites - Adiantamento':

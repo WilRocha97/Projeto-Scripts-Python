@@ -30,12 +30,17 @@ def login_onvio(driver):
     driver.get('https://onvio.com.br/login/#/')
     print('>>> Acessando o site')
     time.sleep(1)
-    
+
+    dados = "V:\\Setor Robô\\Scripts Python\\Onvio\\Dados.txt"
+    f = open(dados, 'r', encoding='utf-8')
+    user = f.read()
+    user = user.split('/')
+
     # inserir o CNPJ no campo
-    driver.find_element(by=By.NAME, value='uid').send_keys('robo@veigaepostal.com.br')
-    
+    driver.find_element(by=By.NAME, value='uid').send_keys(user[0])
+
     # inserir a senha no campo
-    driver.find_element(by=By.NAME, value='pwd').send_keys('Rb#0086*')
+    driver.find_element(by=By.NAME, value='pwd').send_keys(user[1])
     time.sleep(1)
     
     # clica em acessar

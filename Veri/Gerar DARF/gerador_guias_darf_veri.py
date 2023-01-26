@@ -58,12 +58,17 @@ def login_veri(empresa, driver):
     print('>>> Acessando o site')
     time.sleep(1)
 
+    dados = "V:\\Setor Robô\\Scripts Python\\SIEG\\Dados.txt"
+    f = open(dados, 'r', encoding='utf-8')
+    user = f.read()
+    user = user.split('/')
+    
     # inserir o CNPJ no campo
-    driver.find_element(by=By.NAME, value='login').send_keys('joao@veigaepostal.com.br')
+    driver.find_element(by=By.NAME, value='login').send_keys(user[0])
     time.sleep(1)
 
     # inserir a senha no campo
-    driver.find_element(by=By.NAME, value='senha').send_keys('Milenio03')
+    driver.find_element(by=By.NAME, value='senha').send_keys(user[1])
     time.sleep(1)
 
     # clica em acessar

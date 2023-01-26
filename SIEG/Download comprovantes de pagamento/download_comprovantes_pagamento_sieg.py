@@ -30,13 +30,18 @@ def login_sieg(driver):
     driver.get('https://auth.sieg.com/')
     print('>>> Acessando o site')
     time.sleep(1)
+
+    dados = "V:\\Setor Robô\\Scripts Python\\SIEG\\Dados.txt"
+    f = open(dados, 'r', encoding='utf-8')
+    user = f.read()
+    user = user.split('/')
     
     # inserir o emailno campo
-    driver.find_element(by=By.ID, value='txtEmail').send_keys('willian.rocha@veigaepostal.com.br')
+    driver.find_element(by=By.ID, value='txtEmail').send_keys(user[0])
     time.sleep(1)
     
     # inserir a senha no campo
-    driver.find_element(by=By.ID, value='txtPassword').send_keys('Milenniumfalcon9')
+    driver.find_element(by=By.ID, value='txtPassword').send_keys(user[1])
     time.sleep(1)
     
     # clica em acessar

@@ -31,7 +31,7 @@ def login_sieg(driver):
     print('>>> Acessando o site')
     time.sleep(1)
     
-    # inserir o CNPJ no campo
+    # inserir o emailno campo
     driver.find_element(by=By.ID, value='txtEmail').send_keys('willian.rocha@veigaepostal.com.br')
     time.sleep(1)
     
@@ -127,7 +127,8 @@ def procura_empresa(competencia, empresa, driver, options):
             return driver
     
     # pega a lista de guias da competência desejada
-    comprovantes = re.compile(r'>\d\d/' + competencia + '</td><td class=\" hidden-sm hidden-xs td-background-dt\">-</td><td class=\" col-md-1 hidden-sm hidden-xs td-background-dt\">R\$.+id=\"(.+)\" class=').findall(driver.page_source)
+    comprovantes = re.compile(r'/\d\d\d\d</td><td class=\" hidden-sm hidden-xs td-background-dt\">\d\d/' + competencia + '</td><td class=\" hidden-sm hidden-xs td-background-dt\">.+</td><td class=\" col-md-1 hidden-sm hidden-xs td-background-dt\">R\$.+id=\"(.+)\" class=')\
+        .findall(driver.page_source)
     
     # verifica se existe algum comprovante referênte a competência digitada
     if not comprovantes:
@@ -138,23 +139,25 @@ def procura_empresa(competencia, empresa, driver, options):
     contador = 0
     # faz o download dos comprovantes
     for comprovante in comprovantes:
-        driver, contador = download_comrpovante(contador, driver, competencia, cnpj, comprovante)
+        download = True
+        while download:
+            driver, contador, download= download_comrpovante(contador, driver, competencia, cnpj, comprovante)
         if contador == 'erro':
             _escreve_relatorio_csv(f'{cnpj};{nome};Existe um comprovante com o botão de download dezabilitado')
             print(f'❌ Existe um comprovante com o botão de download desabilitado')
             return driver
     
-    _escreve_relatorio_csv(f'{cnpj};{nome};Comprovantes baixados;{contador} Arquivos')
+    _escreve_relatorio_csv(f'{cnpj};{nome};Comprovantes {competencia} baixados;{contador} Arquivos')
     
     time.sleep(1)
     return driver
 
 
 def download_comrpovante(contador, driver, competencia, cnpj, comprovante):
-    try:
-        driver.find_element(by=By.ID, value=comprovante).click()
-    except:
-        return driver, 'erro'
+    '''try:'''
+    driver.find_element(by=By.ID, value=comprovante).click()
+    '''except:
+        return driver, 'erro' , False'''
     
     download_folder = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download comprovantes de pagamento\\ignore\\Comprovantes"
     final_folder = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download comprovantes de pagamento\\execução\\Comprovantes"
@@ -165,7 +168,7 @@ def download_comrpovante(contador, driver, competencia, cnpj, comprovante):
     for arquivo in os.listdir(download_folder):
         if re.compile(r'crdownload').search(arquivo) or re.compile(r'.tmp').search(arquivo):
             os.remove(os.path.join(download_folder, arquivo))
-            driver, contador = download_comrpovante(contador, driver, competencia, cnpj, comprovante)
+            return driver, contador, True
 
         else:
             novo_arquivo = arquivo.replace('Pagamento', 'Pagamento_' + competencia.replace('/', '_')).replace('.pdf', f' - {cnpj}.pdf')
@@ -174,7 +177,7 @@ def download_comrpovante(contador, driver, competencia, cnpj, comprovante):
             print(f'✔ {novo_arquivo}')
             contador += 1
             
-    return driver, contador
+    return driver, contador, False
 
 
 @_time_execution
@@ -227,10 +230,9 @@ def run():
                     driver = login_sieg(driver)
                 except:
                     erro = 'sim'
+                    driver.close()
                     status, driver = _initialize_chrome(options)
                     driver = login_sieg(driver)
-
-    os.remove("V:\\Setor Robô\\Scripts Python\\SIEG\\Download comprovantes de pagamento\\execução\\resumo.csv")
         
 
 if __name__ == '__main__':

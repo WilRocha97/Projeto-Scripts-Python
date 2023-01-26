@@ -12,7 +12,7 @@ f = open(dados, 'r', encoding='utf-8')
 key = f.read()
 
 # variaveis globais
-api_key = os.getenv('APIKEY_2CAPTCHA', '5a87f2de34df98eb1635b8c0f394b98b')
+api_key = os.getenv('APIKEY_2CAPTCHA', '')
 anticaptcha_api_key = key
 
 

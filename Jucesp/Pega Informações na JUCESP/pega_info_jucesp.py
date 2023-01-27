@@ -179,15 +179,10 @@ def consulta_empresas(nire, driver):
 @_time_execution
 def run():
     continuar = confirm(text='Continuar consulta existente?', buttons=('Sim', 'Não'))
-    data_abertura_inicio = '01/01/2022'
-    data_abertura_final = '15/01/2022'
-    qual_municipio = 'valinhos'
-    nires = ''
-    # configura a pesquisa manualmente se não for continuar outra
-    if continuar == 'Não':
-        data_abertura_inicio = prompt(text='Data de abertura, de: ', title='Script incrível', default='00/00/0000')
-        data_abertura_final = prompt(text='Até: ', title='Script incrível', default='00/00/0000')
-        qual_municipio = prompt(text='Município', title='Script incrível', default='')
+
+    data_abertura_inicio = prompt(text='Data de abertura, de: ', title='Script incrível', default='00/00/0000')
+    data_abertura_final = prompt(text='Até: ', title='Script incrível', default='00/00/0000')
+    qual_municipio = prompt(text='Município', title='Script incrível', default='')
     
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')

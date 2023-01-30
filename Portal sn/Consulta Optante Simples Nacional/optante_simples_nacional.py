@@ -27,6 +27,7 @@ def consulta(empresas, index):
         while x == 'Erro':
             with Session() as s:
                 try:
+                    s.get('http://www8.receita.fazenda.gov.br/SIMPLESNACIONAL/aplicacoes.aspx?id=21')
                     response = s.get(_url)
                     print('>>> Abrindo site...')
                     time.sleep(5)
@@ -64,7 +65,8 @@ def consulta(empresas, index):
 
                     # abre a tela de mais informações da empresa
                     print('>>> Verificando eventos...')
-                    response = s.get('https://consopt.www8.receita.fazenda.gov.br/consultaoptantes/Home/AjaxMaisInfo?cnpjHdn={}'.format(cnpj))
+                    payload = {'cnpjHdn': cnpj}
+                    response = s.get('https://consopt.www8.receita.fazenda.gov.br/consultaoptantes/Home/AjaxMaisInfo?cnpjHdn={}'.format(cnpj), data=payload)
                     # verifica os eventos futuros em relação ao simples nacional e simei
                     soup = BeautifulSoup(response.content, 'html.parser')
                     soup = soup.prettify()
@@ -146,7 +148,7 @@ def run():
         return False
 
     consulta(empresas, index)
-    _escreve_header_csv(texto='CNPJ;NOME;OPTANTE DO SIMPLES NACIONAL;OPTANTE DO SIMEI;EVENTOS SN;EVENTOS SIMEI', nome='Optante Simples Nacional.csv')
+    _escreve_header_csv(texto='CNPJ;NOME;OPTANTE DO SIMPLES NACIONAL;OPTANTE DO SIMEI;EVENTOS SN;EVENTOS SIMEI', nome='Optante Simples Nacional')
 
 
 if __name__ == '__main__':

@@ -175,7 +175,8 @@ def arquivos_dirf(empresa, ano, andamento):
             _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Sem dados para emitir', nome=andamento, end=';')
             print('❗ Sem dados para emitir')
             return erro
-        
+
+    _click_img('dirf_gerada.png', conf=0.9)
     p.press('enter')
     time.sleep(2)
     

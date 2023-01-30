@@ -163,6 +163,50 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
 
 
 def download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante):
+    if not click(driver,comprovante):
+        return driver, 'erro', False
+    
+    download_folder = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download comprovantes de pagamento\\ignore\\Comprovantes"
+    final_folder = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download comprovantes de pagamento\\execução\\Comprovantes"
+    
+    contador_3 = 0
+    while os.listdir(download_folder) == []:
+        if contador_3 > 10:
+            if not click(driver, comprovante):
+                return driver, 'erro', False
+            contador_3 = 0
+        time.sleep(1)
+        contador_3 += 1
+    
+    # caso exista algum arquivo com problema, tenta de novo o mesmo arquivo
+    for arquivo in os.listdir(download_folder):
+        if re.compile(r'crdownload').search(arquivo) or re.compile(r'.tmp').search(arquivo):
+            os.remove(os.path.join(download_folder, arquivo))
+            return driver, contador, True
+
+        else:
+            if tipo == 'Consulta anual':
+                try:
+                    with fitz.open(os.path.join(download_folder, arquivo)) as pdf:
+                        for page in pdf:
+                            textinho = page.get_text('text', flags=1 + 2 + 8)
+                            try:
+                                competencia = re.compile(r'Data de Vencimento\n.+\n\d\d/(\d\d/\d\d\d\d)').search(textinho).group(1)
+                            except:
+                                competencia = re.compile(r'Data de Vencimento\n.+\n(\d\d/\d\d\d\d)').search(textinho).group(1)
+                except:
+                    return driver, contador, True
+                
+            novo_arquivo = arquivo.replace('Pagamento', 'Pagamento_' + competencia.replace('/', '_')).replace('.pdf', f' - {cnpj}.pdf')
+            shutil.move(os.path.join(download_folder, arquivo), os.path.join(final_folder, novo_arquivo))
+            time.sleep(2)
+            print(f'✔ {novo_arquivo}')
+            contador += 1
+            
+    return driver, contador, False
+
+
+def click(driver, comprovante):
     contador_2 = 0
     click = 'não'
     while click == 'não':
@@ -173,37 +217,9 @@ def download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
             contador_2 += 1
             click = 'não'
         if contador_2 > 5:
-            return driver, 'erro', False
+            return False
     
-    download_folder = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download comprovantes de pagamento\\ignore\\Comprovantes"
-    final_folder = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download comprovantes de pagamento\\execução\\Comprovantes"
-    while os.listdir(download_folder) == []:
-        time.sleep(1)
-    
-    # caso exista algum arquivo com problema, tenta de novo o mesmo arquivo
-    for arquivo in os.listdir(download_folder):
-        if re.compile(r'crdownload').search(arquivo) or re.compile(r'.tmp').search(arquivo):
-            os.remove(os.path.join(download_folder, arquivo))
-            return driver, contador, True
-
-        else:
-            if tipo == 'Consulta anual':
-                with fitz.open(os.path.join(download_folder, arquivo)) as pdf:
-                    for page in pdf:
-                        textinho = page.get_text('text', flags=1 + 2 + 8)
-                        try:
-                            competencia = re.compile(r'Data de Vencimento\n.+\n\d\d/(\d\d/\d\d\d\d)').search(textinho).group(1)
-                        except:
-                            competencia = re.compile(r'Data de Vencimento\n.+\n(\d\d/\d\d\d\d)').search(textinho).group(1)
-                        
-            novo_arquivo = arquivo.replace('Pagamento', 'Pagamento_' + competencia.replace('/', '_')).replace('.pdf', f' - {cnpj}.pdf')
-            shutil.move(os.path.join(download_folder, arquivo), os.path.join(final_folder, novo_arquivo))
-            time.sleep(2)
-            print(f'✔ {novo_arquivo}')
-            contador += 1
-            
-    return driver, contador, False
-
+    return True
 
 @_time_execution
 def run():

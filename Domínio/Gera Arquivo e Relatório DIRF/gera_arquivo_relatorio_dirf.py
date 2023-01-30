@@ -254,7 +254,7 @@ def mover_arquivo(empresa):
 def mover_relatorio(empresa):
     cod, cnpj, nome = empresa
     cnpj = cnpj.replace('/', '').replace('.', '').replace('-', '')
-    nome = nome.replace('/', ' ')
+    nome = nome.replace('/', ' ').replace('?', ' ').replace(':', ' ').replace('"', ' ').replace('*', ' ')
     os.makedirs('execução/Relatórios', exist_ok=True)
 
     download_folder = "C:\\Arquivos"

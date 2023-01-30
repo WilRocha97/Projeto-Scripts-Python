@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from pyautogui import prompt
-import os, time, re, csv, shutil
+from pyautogui import prompt, confirm
+import os, time, re, csv, shutil, fitz
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -58,7 +58,7 @@ def sieg_iris(driver):
     return driver
 
 
-def procura_empresa(competencia, empresa, driver, options):
+def procura_empresa(tipo, competencia, empresa, driver, options):
     cnpj, nome = empresa
     # espera a barra de pesquisa, se não aparecer em 1 minuto, recarrega a página
     timer = 0
@@ -132,9 +132,13 @@ def procura_empresa(competencia, empresa, driver, options):
             return driver
     
     # pega a lista de guias da competência desejada
-    comprovantes = re.compile(r'/\d\d\d\d</td><td class=\" hidden-sm hidden-xs td-background-dt\">\d\d/' + competencia + '</td><td class=\" hidden-sm hidden-xs td-background-dt\">.+</td><td class=\" col-md-1 hidden-sm hidden-xs td-background-dt\">R\$.+id=\"(.+)\" class=')\
-        .findall(driver.page_source)
-    
+    if tipo == 'Consulta mensal':
+        comprovantes = re.compile(r'/\d\d\d\d</td><td class=\" hidden-sm hidden-xs td-background-dt\">\d\d/' + competencia + '</td><td class=\" hidden-sm hidden-xs td-background-dt\">.+</td><td class=\" col-md-1 hidden-sm hidden-xs td-background-dt\">R\$.+id=\"(.+)\" class=')\
+            .findall(driver.page_source)
+    else:
+        comprovantes = re.compile(r'/\d\d\d\d</td><td class=\" hidden-sm hidden-xs td-background-dt\">\d\d/\d\d/' + competencia + '</td><td class=\" hidden-sm hidden-xs td-background-dt\">.+</td><td class=\" col-md-1 hidden-sm hidden-xs td-background-dt\">R\$.+id=\"(.+)\" class=') \
+            .findall(driver.page_source)
+        
     # verifica se existe algum comprovante referênte a competência digitada
     if not comprovantes:
         _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento referênte a {competencia} encontrado para esssa empresa')
@@ -146,7 +150,7 @@ def procura_empresa(competencia, empresa, driver, options):
     for comprovante in comprovantes:
         download = True
         while download:
-            driver, contador, download= download_comrpovante(contador, driver, competencia, cnpj, comprovante)
+            driver, contador, download= download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
         if contador == 'erro':
             _escreve_relatorio_csv(f'{cnpj};{nome};Existe um comprovante com o botão de download dezabilitado')
             print(f'❌ Existe um comprovante com o botão de download desabilitado')
@@ -158,11 +162,18 @@ def procura_empresa(competencia, empresa, driver, options):
     return driver
 
 
-def download_comrpovante(contador, driver, competencia, cnpj, comprovante):
-    '''try:'''
-    driver.find_element(by=By.ID, value=comprovante).click()
-    '''except:
-        return driver, 'erro' , False'''
+def download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante):
+    contador_2 = 0
+    click = 'não'
+    while click == 'não':
+        try:
+            driver.find_element(by=By.ID, value=comprovante).click()
+            click = 'sim'
+        except:
+            contador_2 += 1
+            click = 'não'
+        if contador_2 > 5:
+            return driver, 'erro', False
     
     download_folder = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download comprovantes de pagamento\\ignore\\Comprovantes"
     final_folder = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download comprovantes de pagamento\\execução\\Comprovantes"
@@ -176,6 +187,15 @@ def download_comrpovante(contador, driver, competencia, cnpj, comprovante):
             return driver, contador, True
 
         else:
+            if tipo == 'Consulta anual':
+                with fitz.open(os.path.join(download_folder, arquivo)) as pdf:
+                    for page in pdf:
+                        textinho = page.get_text('text', flags=1 + 2 + 8)
+                        try:
+                            competencia = re.compile(r'Data de Vencimento\n.+\n\d\d/(\d\d/\d\d\d\d)').search(textinho).group(1)
+                        except:
+                            competencia = re.compile(r'Data de Vencimento\n.+\n(\d\d/\d\d\d\d)').search(textinho).group(1)
+                        
             novo_arquivo = arquivo.replace('Pagamento', 'Pagamento_' + competencia.replace('/', '_')).replace('.pdf', f' - {cnpj}.pdf')
             shutil.move(os.path.join(download_folder, arquivo), os.path.join(final_folder, novo_arquivo))
             time.sleep(2)
@@ -187,7 +207,13 @@ def download_comrpovante(contador, driver, competencia, cnpj, comprovante):
 
 @_time_execution
 def run():
-    competencia = prompt(text='Qual competência referênte?', title='Script incrível', default='00/0000')
+    tipo = confirm(title='Script incrível', buttons=('Consulta mensal', 'Consulta anual'))
+    
+    if tipo == 'Consulta mensal':
+        competencia = prompt(title='Script incrível', text='Qual competência referênte?', default='00/0000')
+    else:
+        competencia = prompt(title='Script incrível', text='Qual competência referênte?', default='0000')
+        
     os.makedirs('execução/Comprovantes', exist_ok=True)
     os.makedirs('ignore/Comprovantes', exist_ok=True)
     
@@ -223,11 +249,11 @@ def run():
         _indice(count, total_empresas, empresa)
         erro = 'sim'
         while erro == 'sim':
-            try:
-                driver = sieg_iris(driver)
-                driver = procura_empresa(competencia, empresa, driver, options)
-                erro = 'não'
-            except:
+            '''try:'''
+            driver = sieg_iris(driver)
+            driver = procura_empresa(tipo, competencia, empresa, driver, options)
+            erro = 'não'
+            '''except:
                 try:
                     erro = 'sim'
                     driver.close()
@@ -237,7 +263,7 @@ def run():
                     erro = 'sim'
                     driver.close()
                     status, driver = _initialize_chrome(options)
-                    driver = login_sieg(driver)
+                    driver = login_sieg(driver)'''
         
 
 if __name__ == '__main__':

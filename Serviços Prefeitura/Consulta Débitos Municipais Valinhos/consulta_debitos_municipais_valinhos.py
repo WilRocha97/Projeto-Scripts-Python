@@ -107,7 +107,7 @@ def login(options, cnpj, insc_muni):
 
     if not captcha:
         print('Erro Login - não encontrou captcha')
-        return 'erro captcha'
+        return driver, 'erro captcha'
 
     if captcha is not None:
         while not find_by_id('input1', driver):
@@ -144,14 +144,14 @@ def login(options, cnpj, insc_muni):
                     if erro != 'td':
                         _escreve_relatorio_csv(f'{cnpj};{erro}')
                         print(f'❌ {erro}')
-                        return False
+                        return driver, False
                 except:
                     pass
             timer += 1
             if timer >= 10:
                 _escreve_relatorio_csv(f'{cnpj};Erro no login')
                 print(f'❌ Erro no login')
-                return False
+                return driver, False
             
         html = driver.page_source.encode('utf-8')
         try:
@@ -174,12 +174,11 @@ def login(options, cnpj, insc_muni):
             driver.save_screenshot(r'ignore\debug_screen.png')
             print('❌ Erro na geração do PDF')
 
-        driver.close()
-        return True
+        return driver, True
     else:
         _escreve_relatorio_csv(f'{cnpj};Erro no login')
         print('❌ Erro no login')
-        return True
+        return driver, True
 
 
 @_time_execution
@@ -202,8 +201,10 @@ def run():
 
         resultado = 'erro captcha'
         while resultado == 'erro captcha':
-            resultado = login(options, cnpj, insc_muni)
+            driver, resultado = login(options, cnpj, insc_muni)
 
+        driver.close()
+        
 
 if __name__ == '__main__':
     run()

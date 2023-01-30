@@ -55,8 +55,8 @@ def relatorio_dirf(empresa, ano, andamento, erro):
     time.sleep(1)
     
     # seleciona para gerar com folha de pagamento
-    if _find_img('folha_de_pagamento.png'):
-        _click_img('folha_de_pagamento.png')
+    if _find_img('folha_de_pagamento_selecionado.png', conf=0.99):
+        _click_img('folha_de_pagamento_selecionado.png', conf=0.99)
     time.sleep(1)
     
     # abre a janela de outros dados
@@ -147,8 +147,8 @@ def arquivos_dirf(empresa, ano, andamento):
     time.sleep(1)
     
     # seleciona para gerar com folha de pagamento
-    if _find_img('folha_de_pagamento.png'):
-        _click_img('folha_de_pagamento.png')
+    if _find_img('folha_de_pagamento_selecionado.png', conf=0.99):
+        _click_img('folha_de_pagamento_selecionado.png', conf=0.99)
     time.sleep(1)
     
     # abre a janela de outros dados

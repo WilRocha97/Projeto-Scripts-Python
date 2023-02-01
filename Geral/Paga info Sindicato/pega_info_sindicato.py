@@ -119,6 +119,8 @@ def analiza():
                         cnpj = re.compile(r'Local de trabalho\n.+\n(\d\d\d\.\d\d\d\.\d\d\d-\d\d)').search(textinho)
                         if not cnpj:
                             cnpj = re.compile(r'(\d\d\d\d\d\d\d\d\d\d\d\d)\nRubrica').search(textinho)
+                            if not cnpj:
+                                cnpj = re.compile(r'(\d\d\d.\d\d\d.\d\d\d/\d\d\d-\d\d)\n\d+/\d\d/\d\d\d\d').search(textinho)
                     
                     cnpj = cnpj.group(1)
                     

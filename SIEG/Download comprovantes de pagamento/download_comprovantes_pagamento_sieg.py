@@ -92,22 +92,27 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
                 print('❗ Erro ao pesquisar empresa')
                 return driver
                 
-    # clica para abrir a barra de pesquisa
-    driver.find_element(by=By.CLASS_NAME, value='select2-search__field').send_keys(cnpj)
-    time.sleep(3)
 
-    # busca a mensagem de 'Nenhuma empresa encontrada.'
-    try:
-        re.compile(r'__message\">(Nenhuma empresa encontrada\.)').search(driver.page_source).group(1)
+    localiza_empresa = re.compile(r'(' + cnpj + ')').search(driver.page_source)
+    
+    if not localiza_empresa:
         _escreve_relatorio_csv(f'{cnpj};{nome};Empresa não encontrada')
         print('❗ Empresa não encontrada')
         return driver
+    
+    # busca a mensagem de 'Nenhuma empresa encontrada.'
+    try:
+        # clica para abrir a barra de pesquisa
+        driver.find_element(by=By.CLASS_NAME, value='select2-search__field').send_keys(cnpj)
+        time.sleep(3)
+        
+        # clica para selecionar a empresa
+        driver.find_element(by=By.XPATH, value='/html/body/span/span/span[2]/ul/li').click()
+        time.sleep(1)
     except:
-        pass
-
-    # clica para selecionar a empresa
-    driver.find_element(by=By.XPATH, value='/html/body/span/span/span[2]/ul/li').click()
-    time.sleep(1)
+        _escreve_relatorio_csv(f'{cnpj};{nome};Empresa não encontrada')
+        print('❗ Empresa não encontrada')
+        return driver
     
     print('>>> Consultando comprovantes de pagamento')
     # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
@@ -124,7 +129,7 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
     try:
         # clica para expandir a lista de arquivos
         driver.find_element(by=By.XPATH, value='/html/body/form/div[5]/div[3]/div[1]/div/div[3]/div/table/tbody/tr[1]/td/div/span/span').click()
-        time.sleep(1.5)
+        time.sleep(2)
     except:
             re.compile(r'class=\"\">(Nenhum item encontrado!)<').search(driver.page_source).group(1)
             _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento encontrado para esssa empresa')
@@ -146,17 +151,18 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
         return driver
     
     contador = 0
+    erro = ''
+    sem_recibo = ''
     # faz o download dos comprovantes
     for comprovante in comprovantes:
         download = True
         while download:
-            driver, contador, download= download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
-        if contador == 'erro':
-            _escreve_relatorio_csv(f'{cnpj};{nome};Existe um comprovante com o botão de download dezabilitado')
+            driver, contador, erro, download= download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
+        if erro == 'erro':
+            sem_recibo = 'Existe um comprovante com o botão de download dezabilitado'
             print(f'❌ Existe um comprovante com o botão de download desabilitado')
-            return driver
     
-    _escreve_relatorio_csv(f'{cnpj};{nome};Comprovantes {competencia} baixados;{contador} Arquivos')
+    _escreve_relatorio_csv(f'{cnpj};{nome};Comprovantes {competencia} baixados;{contador} Arquivos;{sem_recibo}')
     
     time.sleep(1)
     return driver
@@ -164,7 +170,7 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
 
 def download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante):
     if not click(driver,comprovante):
-        return driver, 'erro', False
+        return driver, contador, 'erro', False
     
     download_folder = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download comprovantes de pagamento\\ignore\\Comprovantes"
     final_folder = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download comprovantes de pagamento\\execução\\Comprovantes"
@@ -173,17 +179,23 @@ def download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
     while os.listdir(download_folder) == []:
         if contador_3 > 10:
             if not click(driver, comprovante):
-                return driver, 'erro', False
+                return driver, contador, 'erro', False
             contador_3 = 0
         time.sleep(1)
         contador_3 += 1
     
     # caso exista algum arquivo com problema, tenta de novo o mesmo arquivo
     for arquivo in os.listdir(download_folder):
-        if re.compile(r'crdownload').search(arquivo) or re.compile(r'.tmp').search(arquivo):
+        if re.compile(r'.tmp').search(arquivo):
             os.remove(os.path.join(download_folder, arquivo))
-            return driver, contador, True
-
+            return driver, contador, 'ok', True
+        
+        while re.compile(r'crdownload').search(arquivo):
+            print('>>> Aguardando download...')
+            time.sleep(3)
+            for arquivo in os.listdir(download_folder):
+                arquivo = arquivo
+            
         else:
             if tipo == 'Consulta anual':
                 try:
@@ -195,27 +207,34 @@ def download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
                             except:
                                 competencia = re.compile(r'Data de Vencimento\n.+\n(\d\d/\d\d\d\d)').search(textinho).group(1)
                 except:
-                    return driver, contador, True
+                    return driver, contador, 'ok', True
                 
             novo_arquivo = arquivo.replace('Pagamento', 'Pagamento_' + competencia.replace('/', '_')).replace('.pdf', f' - {cnpj}.pdf')
-            shutil.move(os.path.join(download_folder, arquivo), os.path.join(final_folder, novo_arquivo))
-            time.sleep(2)
+            
+            while not os.path.isfile(os.path.join(final_folder, novo_arquivo)):
+                print('>>> Movendo arquivo')
+                shutil.move(os.path.join(download_folder, arquivo), os.path.join(final_folder, novo_arquivo))
+                time.sleep(2)
+                
             print(f'✔ {novo_arquivo}')
             contador += 1
             
-    return driver, contador, False
+            for arquivo in os.listdir(download_folder):
+                os.remove(os.path.join(download_folder, arquivo))
+                
+    return driver, contador, 'ok', False
 
 
 def click(driver, comprovante):
     contador_2 = 0
-    click = 'não'
-    while click == 'não':
+    clicou = 'não'
+    while clicou == 'não':
         try:
             driver.find_element(by=By.ID, value=comprovante).click()
-            click = 'sim'
+            clicou = 'sim'
         except:
             contador_2 += 1
-            click = 'não'
+            clicou = 'não'
         if contador_2 > 5:
             return False
     
@@ -265,11 +284,11 @@ def run():
         _indice(count, total_empresas, empresa)
         erro = 'sim'
         while erro == 'sim':
-            try:
-                driver = sieg_iris(driver)
-                driver = procura_empresa(tipo, competencia, empresa, driver, options)
-                erro = 'não'
-            except:
+            '''try:'''
+            driver = sieg_iris(driver)
+            driver = procura_empresa(tipo, competencia, empresa, driver, options)
+            erro = 'não'
+            '''except:
                 try:
                     erro = 'sim'
                     driver.close()
@@ -279,7 +298,7 @@ def run():
                     erro = 'sim'
                     driver.close()
                     status, driver = _initialize_chrome(options)
-                    driver = login_sieg(driver)
+                    driver = login_sieg(driver)'''
 
     driver.close()
     

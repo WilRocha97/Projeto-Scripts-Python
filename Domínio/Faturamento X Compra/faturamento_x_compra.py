@@ -238,7 +238,7 @@ def run():
     # configura o ano e digita no domínio
     ano = int(datetime.now().year)
 
-    if int(datetime.now().month) < 2:
+    if int(datetime.now().month) < 3:
         ano -= 1
 
     empresas = _open_lista_dados()

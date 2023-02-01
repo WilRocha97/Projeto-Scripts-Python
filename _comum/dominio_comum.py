@@ -85,6 +85,10 @@ def _login(empresa, andamentos):
             p.hotkey('alt', 'n')
             sleep(1)
 
+        if _find_img('aviso.png', pasta='imgs_c', conf=0.9):
+            p.hotkey('alt', 'o')
+            sleep(1)
+
         if _find_img('erro_troca_empresa.png', pasta='imgs_c', conf=0.9):
             p.press('enter')
             sleep(1)

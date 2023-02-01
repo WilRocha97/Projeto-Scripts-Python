@@ -35,6 +35,7 @@ def imprimir(empresa):
     os.makedirs(r'{}\{}'.format(e_dir, 'Boletos'), exist_ok=True)
 
     cnpj, comp, ano, venc = empresa
+    venc = venc.replace('/','-')
     p.moveTo(647, 468)
     p.click()
     _wait_img('SalvarComo.png', conf=0.9, timeout=-1)
@@ -118,7 +119,7 @@ def boleto_mei(empresas, index):
             p.hotkey('ctrl', 'w')
             continue
 
-        if not _find_img('2022.png', conf=0.9):
+        if not _find_img('2023.png', conf=0.9):
             _escreve_relatorio_csv(';'.join([cnpj, 'Ano não liberado', comp, ano]), nome='Boletos MEI')
             print('❌ Ano não liberado\n')
             p.hotkey('ctrl', 'w')
@@ -198,8 +199,6 @@ def boleto_mei(empresas, index):
 
 @_time_execution
 def run():
-    os.makedirs('execucao/Boletos', exist_ok=True)
-
     empresas = _open_lista_dados()
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:

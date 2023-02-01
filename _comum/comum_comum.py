@@ -152,7 +152,7 @@ def escreve_header_csv(texto, nome='resumo', local=e_dir, encode='latin-1'):
     with open(str(local / f"{nome}.csv"), 'r', encoding=encode) as f:
         conteudo = f.read()
 
-    with open(str(local / f"{nome}-auxiliar.csv"), 'w', encoding=encode) as f:
+    with open(str(local / f"{nome}.csv"), 'w', encoding=encode) as f:
         f.write(texto + '\n' + conteudo)
 _escreve_header_csv = escreve_header_csv
 

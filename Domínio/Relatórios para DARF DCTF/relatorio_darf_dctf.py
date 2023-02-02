@@ -56,7 +56,7 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
     time.sleep(1)
     sem_layout = 0
 
-    while not _find_img('resumo_gerado.png', conf=0.9) or not _find_img('resumo_gerado_3.png', conf=0.9):
+    while not _find_img('resumo_gerado_3.png', conf=0.8):
         time.sleep(1)
         if _find_img('imposto_sem_layout.png', conf=0.9):
             sem_layout = 1

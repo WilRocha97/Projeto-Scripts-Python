@@ -284,21 +284,15 @@ def run():
         _indice(count, total_empresas, empresa)
         erro = 'sim'
         while erro == 'sim':
-            '''try:'''
-            driver = sieg_iris(driver)
-            driver = procura_empresa(tipo, competencia, empresa, driver, options)
-            erro = 'não'
-            '''except:
-                try:
-                    erro = 'sim'
-                    driver.close()
-                    status, driver = _initialize_chrome(options)
-                    driver = login_sieg(driver)
-                except:
-                    erro = 'sim'
-                    driver.close()
-                    status, driver = _initialize_chrome(options)
-                    driver = login_sieg(driver)'''
+            try:
+                driver = sieg_iris(driver)
+                driver = procura_empresa(tipo, competencia, empresa, driver, options)
+                erro = 'não'
+            except:
+                erro = 'sim'
+                driver.close()
+                status, driver = _initialize_chrome(options)
+                driver = login_sieg(driver)
 
     driver.close()
     

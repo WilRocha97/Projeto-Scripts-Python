@@ -56,6 +56,7 @@ def analiza():
                         csll = valor[9]
                         inss = valor[6]
                         irrf = valor[7]
+                        nome_destinatario = nome_destinatario.replace('–', '-')
                         _escreve_relatorio_csv(f"{cnpj};{empresa};{emissao};{numero};{nome_destinatario};{cnpj_destinatario};{iss};{pis};{cofins};{csll};{inss};{irrf}")
                 except():
                     print(f'\nArquivo: {arq} - ERRO')

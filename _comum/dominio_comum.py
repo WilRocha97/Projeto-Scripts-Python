@@ -224,7 +224,7 @@ def _salvar_pdf():
         time.sleep(1)
         timer += 1
         if timer > 30:
-            _click_img('salvar_pdf.png', pasta='imgs_c', conf=0.9)
+            p.hotkey('ctrl', 'd')
             while not _find_img('salvar_em_pdf.png', pasta='imgs_c', conf=0.9):
                 time.sleep(1)
             

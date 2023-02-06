@@ -89,6 +89,7 @@ def analiza():
         
         # Para cada página do pdf
         for page in pdf:
+            print(page.number)
             try:
                 # Pega o texto da pagina
                 textinho = page.get_text('text', flags=1 + 2 + 8)
@@ -105,7 +106,11 @@ def analiza():
                     indice = 5
                     while not totais:
                         indice = str(indice)
-                        totais = re.compile(r'(\d.+ - .+)\nEmpregados\n(.+\n){' + indice + '}(.+)\nTotal da Rubrica:\n(' + totais_rubricas + ')').search(textinho)
+                        if re.compile(r'(\d.+ - .+)\nEmpregados\n').search(textinho):
+                            totais = re.compile(r'(\d.+ - .+)\nEmpregados\n(.+\n){' + indice + '}(.+)\nTotal da Rubrica:\n(' + totais_rubricas + ')').search(textinho)
+                        if re.compile(r'(\d.+ - .+)\nContribuintes\n').search(textinho):
+                            totais = re.compile(r'(\d.+ - .+)\nContribuintes\n(.+\n){' + indice + '}(.+)\nTotal da Rubrica:\n(' + totais_rubricas + ')').search(textinho)
+                            
                         indice = int(indice)
                         indice += 1
                         

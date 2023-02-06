@@ -50,7 +50,7 @@ def gera():
 
 
 def tira_duplicadas():
-    with open('execução/Dados Somados.csv', encoding='utf-8') as arquivo_referencia:
+    with open('execução/Dados Somados.csv', encoding='latin-1') as arquivo_referencia:
         # 2. ler a tabela
         tabela = csv.reader(arquivo_referencia, delimiter=';')
         

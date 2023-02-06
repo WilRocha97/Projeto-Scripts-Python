@@ -74,7 +74,6 @@ def gerar(empresa, apuracao, driver, tipo):
     
     print('>>> Inserindo informações da guia')
     
-    
     if nota.split(','):
         # insere observações na guia
         driver.find_element(by=By.ID, value='observacao').send_keys(f'Referênte à NF: {nota} - R. POSTAL')
@@ -119,11 +118,15 @@ def gerar(empresa, apuracao, driver, tipo):
     time.sleep(1)
 
     # espera guia ser calculada
+    timer = 0
     while not _find_img('checkbox_guia.png', conf=0.95):
         driver.find_element(by=By.ID, value='btnCalcular').click()
         # descer a visualização da página
         p.press('pgDn')
         time.sleep(1)
+        timer += 1
+        if timer >= 20:
+            return False
         
     print('>>> Guia calculada')
     time.sleep(1)

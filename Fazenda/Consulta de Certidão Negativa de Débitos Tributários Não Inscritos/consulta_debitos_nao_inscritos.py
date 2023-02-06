@@ -18,7 +18,7 @@ def salvar_pdf(cnpj, nome, debito=''):
     _wait_img('salvar.png', conf=0.9, timeout=-1)
     sleep(1)
     # escreve o nome do PDF
-    copy(f'{nome} - {cnpj} - Certidão Negativa de Débitos Não Inscritos{debito}.pdf')
+    copy(f'{nome} - {cnpj} - CNDNI{debito}.pdf')
     hotkey('ctrl', 'v')
     sleep(1)
     # vai até o campo para inserir o caminho que irá salvar o PDF

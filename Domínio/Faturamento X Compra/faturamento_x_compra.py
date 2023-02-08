@@ -6,7 +6,7 @@ from sys import path
 
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
-from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, _escreve_header_csv, e_dir, _open_lista_dados, _where_to_start
+from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, _escreve_header_csv, e_dir, _open_lista_dados, _where_to_start, ask_for_dir
 from dominio_comum import _login, _salvar_pdf
 
 
@@ -55,9 +55,10 @@ def faturamento_compra(ano, empresa, andamento):
     p.press('esc', presses=4)
     time.sleep(2)
     
-    execucoes, arquivo = mover_demonstrativo(empresa, ano)
+    arquivo = mover_demonstrativo(empresa, ano)
     
-    captura_info_pdf(execucoes, arquivo, empresa, andamento)
+    captura_info_pdf(andamento, arquivo)
+    
     
     print('✔ Demonstrativo Mensal gerado')
 
@@ -89,7 +90,6 @@ def mover_demonstrativo(empresa, ano):
     os.makedirs('execução/Demonstrativos', exist_ok=True)
     cod, cnpj, nome = empresa
     
-    execucoes = "V:\\Setor Robô\\Scripts Python\\Domínio\\Faturamento X Compra\\execução\\Demonstrativos"
     guia = os.path.join('C:', 'Demonstrativo Mensal.pdf')
     arquivo = f'{cod} - {nome.replace("/", " ")} - Demonstrativo Mensal {ano}.pdf'
     
@@ -102,13 +102,20 @@ def mover_demonstrativo(empresa, ano):
         except:
             pass
     
-    return execucoes, arquivo
+    return arquivo
     
 
-def captura_info_pdf(execucoes, arquivo, empresa, andamento):
-    cod, cnpj, nome = empresa
+def captura_info_pdf(andamento, arquivo, refaz_planilha='não'):
+    empresa = re.compile(r'(\d+) - (.+) - Demonstrativo Mensal').search(arquivo)
+    cod = empresa.group(1)
+    nome = empresa.group(2)
     
-    with fitz.open(os.path.join(execucoes, arquivo)) as pdf:
+    if refaz_planilha == 'sim':
+        arquivo = arquivo
+    else:
+        arquivo = os.path.join("V:\\Setor Robô\\Scripts Python\\Domínio\\Faturamento X Compra\\execução\\Demonstrativos", arquivo)
+        
+    with fitz.open(arquivo) as pdf:
         
         # Para cada página do pdf, se for a segunda página o script ignora
         for count, page in enumerate(pdf):
@@ -118,6 +125,7 @@ def captura_info_pdf(execucoes, arquivo, empresa, andamento):
                 # Pega o texto da pagina
                 textinho = page.get_text('text', flags=1 + 2 + 8)
                 
+                cnpj = re.compile(r'(.+)\nCNPJ:').search(textinho).group(1)
                 meses = re.compile(r'(\w.+)\n(.+,.+)\n(.+,.+)\n(.+)\n(.+,.+)\n(.+,.+)\n(.+,.+)\n(.+,.+)\n(.+,.+)\n(.+,.+)\n(.+,.+)').findall(textinho)
                 totais = re.compile(r'Totais\n.+\n(.+)\n(.+)\n(.+)').search(textinho)
                 
@@ -237,25 +245,36 @@ def captura_info_pdf(execucoes, arquivo, empresa, andamento):
 def run():
     # configura o ano e digita no domínio
     ano = int(datetime.now().year)
-
     if int(datetime.now().month) < 3:
         ano -= 1
-
-    empresas = _open_lista_dados()
     andamentos = 'Faturamento X Compra - ' + str(ano)
-
-    index = _where_to_start(tuple(i[0] for i in empresas))
-    if index is None:
-        return False
-
-    total_empresas = empresas[index:]
-    for count, empresa in enumerate(empresas[index:], start=1):
-        _indice(count, total_empresas, empresa)
     
-        if not _login(empresa, andamentos):
-            continue
-        faturamento_compra(str(ano), empresa, andamentos)
-
+    refaz_planilha = p.confirm(title='Script incrível', text='Gerar planilha com os demonstrativos já existentes?', buttons=['Sim', 'Não'])
+    
+    if refaz_planilha == 'Sim':
+        documentos = ask_for_dir()
+        # Analiza cada pdf que estiver na pasta
+        for arq in os.listdir(documentos):
+            print(f'\nArquivo: {arq}')
+            # Abrir o pdf
+            arq = os.path.join(documentos, arq)
+            captura_info_pdf(andamentos, arq, refaz_planilha='sim')
+        
+    else:
+        empresas = _open_lista_dados()
+        
+        index = _where_to_start(tuple(i[0] for i in empresas))
+        if index is None:
+            return andamentos
+    
+        total_empresas = empresas[index:]
+        for count, empresa in enumerate(empresas[index:], start=1):
+            _indice(count, total_empresas, empresa)
+        
+            if not _login(empresa, andamentos):
+                continue
+            faturamento_compra(str(ano), empresa, andamentos)
+    
     _escreve_header_csv('CÓDIGO;CNPJ;NOME;SITUAÇÃO;JANEIRO;FEVEREIRO;MARÇO;ABRIL;MAIO;JUNHO;JULHO;AGOSTO;SETEMBRO;OUTUBRO;NOVEMBRO;DEZEMBRO;TOTAIS', nome=andamentos)
 
 

@@ -625,6 +625,13 @@ def configura_parametros():
     botoes_arredondamento = [('empregados.png', 'empregados_marcado.png'),
                        ('estagiarios.png', 'estagiarios_marcado.png'),
                        ('contribuintes.png', 'contribuintes_marcado.png'), ]
+
+    botoes_adiantamento_definicoes = [('para_estagiarios.png', 'para_estagiarios_marcado.png'),
+                             ('para_contribuintes.png', 'para_contribuintes_marcado.png'),
+                             ('para_aprendiz.png', 'para_aprendiz_marcado.png'), ]
+
+    botoes_adiantamento_proporcionalidade = [('considerar_dias_trabalhados.png', 'considerar_dias_trabalhados_marcado.png'),
+                                      ('considerar_dias_trabalhados.png', 'considerar_dias_trabalhados_marcado.png'),]
     
     botoes_contabil = [('gerar_integracao_contabil_colaborador.png', 'gerar_integracao_contabil_colaborador_marcado.png'),
                     ('folha_mensal.png', 'folha_mensal_marcado.png'),
@@ -637,19 +644,25 @@ def configura_parametros():
               ('gerar_valor_prov_ajust_sefip_pag_encargos.png', 'gerar_valor_prov_ajust_sefip_pag_encargos_marcado.png'),
               ('considerar_ult_dia_mes.png', 'considerar_ult_dia_mes_marcado.png'),]
     
-    abas = [('opcoes_personaliza.png', 'personaliza.png', botoes_personaliza),
-            ('opcoes_dsr.png', 'dsr.png', botoes_dsr),
-            ('opcoes_salario_familia.png', 'salario_familia.png', botoes_salario_familia),
-            ('opcoes_rescisao.png', 'aba_rescisao.png', botoes_rescisao),
-            ('opcoes_arredondamento.png', 'arredondamento.png', botoes_arredondamento),
-            ('opcoes_integracao.png', 'contabilidade.png', botoes_contabil),
-            ('opcoes_parametros_cont.png', 'opcoes.png', botoes_opcoes),]
+    abas = [('opcoes_personaliza.png', 'personaliza.png', botoes_personaliza, ''),
+            ('opcoes_dsr.png', 'dsr.png', botoes_dsr, ''),
+            ('opcoes_salario_familia.png', 'salario_familia.png', botoes_salario_familia, ''),
+            ('opcoes_rescisao.png', 'aba_rescisao.png', botoes_rescisao, ''),
+            ('opcoes_arredondamento.png', 'arredondamento.png', botoes_arredondamento, ''),
+            ('opcoes_adiantamento_definicoes.png', 'adiantamento.png', botoes_adiantamento_definicoes, 'adiantamento_definicoes.png'),
+            ('opcoes_adiantamento_proporcionalidade.png', 'adiantamento.png', botoes_adiantamento_proporcionalidade, 'adiantamento_proporcionalidade.png'),
+            ('opcoes_integracao.png', 'contabilidade.png', botoes_contabil, ''),
+            ('opcoes_parametros_cont.png', 'opcoes.png', botoes_opcoes, ''),]
     
     for aba in abas:
         while not _find_img(aba[0], conf=0.9):
             _click_img(aba[1], conf=0.99)
             time.sleep(1)
-    
+        
+        if aba[3] != '':
+            _click_img(aba[3])
+            time.sleep(1)
+        
         for botao in aba[2]:
             if _find_img(botao[0], conf=0.99):
                 _click_img(botao[0], conf=0.99)
@@ -703,8 +716,8 @@ def run():
                     (configura_dirf_2009(), 'DIRF até 2009', 'CÓDIGO;CNPJ;NOME;'),
                     (configura_gps(), 'GPS', 'CÓDIGO;CNPJ;NOME;'),
                     (configura_grcsu_patronal(), 'GRCSU Patronal', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_avisos_vencimento, 'Avisos de Vencimento', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_parametros, 'Parâmetros', 'CÓDIGO;CNPJ;NOME;'),]
+                    (configura_avisos_vencimento(), 'Avisos de Vencimento', 'CÓDIGO;CNPJ;NOME;'),
+                    (configura_parametros(), 'Parâmetros', 'CÓDIGO;CNPJ;NOME;'),]
         
         for relatorio in relatorios:
             _escreve_relatorio_csv(f'{cod};{cnpj};{nome}', end=';', nome=relatorio[1])

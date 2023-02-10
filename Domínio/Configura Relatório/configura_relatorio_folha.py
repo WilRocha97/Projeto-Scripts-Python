@@ -39,6 +39,8 @@ def configura_provisao_ferias():
             _escreve_relatorio_csv('Erro', end=';', nome='Provisão de Férias')
             print('❌ Erro ao procurar o botão')
 
+    return True
+
 
 def configura_provisao_decimo():
     p.hotkey('alt', 'r')
@@ -538,14 +540,14 @@ def configura_avisos_vencimento():
               ('vencimento_epi.png', 'vencimento_epi_marcado.png', 'vencimento_epi_nome.png'),]
 
     for botao in botoes:
-        while not _find_img(botao[2]):
+        while not _find_img(botao[2], conf=0.9):
             time.sleep(1)
-            _click_img('down', conf=0.9)
+            _click_img('down.png', conf=0.9)
             _click_img('avisos_vencimento.png', conf=0.9)
             
         if _find_img(botao[0], conf=0.99):
             
-            p.moveTo(p.locateCenterOnScreen(path.join('imgs', botao[0])), confidence=0.99)
+            p.moveTo(p.locateCenterOnScreen(os.path.join('imgs', botao[0]), confidence=0.9))
             local_mouse = p.position()
             p.click(int(local_mouse[0] + 110), local_mouse[1])
             time.sleep(0.2)
@@ -596,9 +598,11 @@ def configura_parametros():
     while not _find_img('eventos_sst.png', conf=0.9):
         time.sleep(1)
     
+    p.press('tab')
+    time.sleep(1)
     if _find_img('com_acid_trab.png', conf=0.99):
         _click_img('com_acid_trab.png', conf=0.99)
-        _click_img('opcoes_sst.png', conf=0.9)
+        _click_img('eventos_sst.png', conf=0.9)
         _escreve_relatorio_csv('Ok', end=';', nome='Parâmetros')
 
     elif _find_img('com_acid_trab_marcado.png', conf=0.99):
@@ -632,7 +636,10 @@ def configura_parametros():
 
     botoes_adiantamento_proporcionalidade = [('considerar_dias_trabalhados.png', 'considerar_dias_trabalhados_marcado.png'),
                                       ('considerar_dias_trabalhados.png', 'considerar_dias_trabalhados_marcado.png'),]
-    
+
+    botoes_ferias = [('descontar_faltas_suspensas.png', 'descontar_faltas_suspensas_marcado.png'),
+                     ('nao_calcula_sal_fami_nas_ferias.png', 'nao_calcula_sal_fami_nas_ferias_marcado.png'), ]
+
     botoes_contabil = [('gerar_integracao_contabil_colaborador.png', 'gerar_integracao_contabil_colaborador_marcado.png'),
                     ('folha_mensal.png', 'folha_mensal_marcado.png'),
                     ('ferias.png', 'ferias_marcado.png'),
@@ -651,31 +658,53 @@ def configura_parametros():
             ('opcoes_arredondamento.png', 'arredondamento.png', botoes_arredondamento, ''),
             ('opcoes_adiantamento_definicoes.png', 'adiantamento.png', botoes_adiantamento_definicoes, 'adiantamento_definicoes.png'),
             ('opcoes_adiantamento_proporcionalidade.png', 'adiantamento.png', botoes_adiantamento_proporcionalidade, 'adiantamento_proporcionalidade.png'),
+            ('opcoes_ferias.png', 'aba_ferias.png', botoes_ferias, ''),
             ('opcoes_integracao.png', 'contabilidade.png', botoes_contabil, ''),
             ('opcoes_parametros_cont.png', 'opcoes.png', botoes_opcoes, ''),]
     
     for aba in abas:
         while not _find_img(aba[0], conf=0.9):
             _click_img(aba[1], conf=0.99)
-            time.sleep(1)
-        
-        if aba[3] != '':
-            _click_img(aba[3])
+            if aba[3] != '':
+                _click_img(aba[3], conf=0.99, timeout=1)
             time.sleep(1)
         
         for botao in aba[2]:
+            if aba[3] != '':
+                _click_img(aba[3], conf=0.99, timeout=1)
+                time.sleep(1)
+            else:
+                _click_img(aba[1], conf=0.99, timeout=1)
+                
+            time.sleep(1)
+            count = 0
+            while not _find_img(botao[0], conf=0.99):
+                p.press('tab')
+                count += 1
+                if count > 5:
+                    break
+                    
             if _find_img(botao[0], conf=0.99):
                 _click_img(botao[0], conf=0.99)
-                _click_img('parametros.png', conf=0.9)
                 _escreve_relatorio_csv('Ok', end=';', nome='Parâmetros')
-        
-            elif _find_img(botao[1], conf=0.99):
+                _click_img('parametros.png', conf=0.9)
+                continue
+                
+            count = 0
+            while not _find_img(botao[1], conf=0.99):
+                p.press('tab')
+                count += 1
+                if count > 5:
+                    break
+                    
+            if _find_img(botao[1], conf=0.99):
                 _escreve_relatorio_csv('Ok', end=';', nome='Parâmetros')
         
             else:
                 _escreve_relatorio_csv('Erro', end=';', nome='Parâmetros')
                 print('❌ Erro ao procurar o botão')
-
+            time.sleep(1)
+            
     p.hotkey('alt', 'g')
     time.sleep(1)
     if _find_img('atencao.png', conf=0.9):
@@ -693,6 +722,26 @@ def run():
         return False
     
     total_empresas = empresas[index:]
+
+    relatorios = [(configura_provisao_ferias, 'Provisão de Férias', 'CÓDIGO;CNPJ;NOME;'),
+        (configura_provisao_decimo, 'Provisão de Décimo Terceiro Salário', 'CÓDIGO;CNPJ;NOME;'),
+        (configura_relatorios_admissionais, 'Provisão de Férias', 'CÓDIGO;CNPJ;NOME;'),
+        (configura_ficha_de_empregado, 'Ficha de empregado', 'CÓDIGO;CNPJ;NOME;'),
+        (configura_pagamento_folha, 'Pagamento de Folha', 'CÓDIGO;CNPJ;NOME;'),
+        (configura_requerimento_seguro_desemprego, 'Requerimento de Seguro-Desemprego', 'CÓDIGO;CNPJ;NOME;'),
+        (configura_integracao_contabil, 'Integração Contabil', 'CÓDIGO;CNPJ;NOME;'),
+        (configura_condicao_dif_trabalho, 'Condição Diferênciada de Trabalho', 'CÓDIGO;CNPJ;NOME;'),
+        (configura_quadro_h_de_trabalho, 'Quadro de Horário de Trabalho', 'CÓDIGO;CNPJ;NOME;'),
+        (configura_etiquetas_ctps, 'Etiquetas para CTPS', 'CÓDIGO;CNPJ;NOME;'),
+        (configura_contrato_prazo_determinado, 'Contrato por Prazo Determinado', 'CÓDIGO;CNPJ;NOME;'),
+        (configura_gfip, 'Informativo Mensal GFIP', 'CÓDIGO;CNPJ;NOME;'),
+        (configura_comprovante_rendimentos, 'Comprovante de Rendimentos', 'CÓDIGO;CNPJ;NOME;'),
+        (configura_dirf_2009, 'DIRF até 2009', 'CÓDIGO;CNPJ;NOME;'),
+        (configura_gps, 'GPS', 'CÓDIGO;CNPJ;NOME;'),
+        (configura_grcsu_patronal, 'GRCSU Patronal', 'CÓDIGO;CNPJ;NOME;'),
+        (configura_avisos_vencimento, 'Avisos de Vencimento', 'CÓDIGO;CNPJ;NOME;'),
+        (configura_parametros, 'Parâmetros', 'CÓDIGO;CNPJ;NOME;'), ]
+    
     for count, empresa in enumerate(empresas[index:], start=1):
         cod, cnpj, nome = empresa
         _indice(count, total_empresas, empresa)
@@ -700,36 +749,17 @@ def run():
         if not _login(empresa, andamentos):
             continue
         
-        relatorios = [(configura_provisao_ferias(), 'Provisão de Férias', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_provisao_decimo(), 'Provisão de Décimo Terceiro Salário', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_relatorios_admissionais(), 'Provisão de Férias', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_ficha_de_empregado(), 'Ficha de empregado', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_pagamento_folha(), 'Pagamento de Folha', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_requerimento_seguro_desemprego(), 'Requerimento de Seguro-Desemprego', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_integracao_contabil(), 'Integração Contabil', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_condicao_dif_trabalho(), 'Condição Diferênciada de Trabalho', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_quadro_h_de_trabalho(), 'Quadro de Horário de Trabalho', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_etiquetas_ctps(), 'Etiquetas para CTPS', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_contrato_prazo_determinado(), 'Contrato por Prazo Determinado', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_gfip(), 'Informativo Mensal GFIP', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_comprovante_rendimentos(), 'Comprovante de Rendimentos', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_dirf_2009(), 'DIRF até 2009', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_gps(), 'GPS', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_grcsu_patronal(), 'GRCSU Patronal', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_avisos_vencimento(), 'Avisos de Vencimento', 'CÓDIGO;CNPJ;NOME;'),
-                    (configura_parametros(), 'Parâmetros', 'CÓDIGO;CNPJ;NOME;'),]
-        
         for relatorio in relatorios:
             _escreve_relatorio_csv(f'{cod};{cnpj};{nome}', end=';', nome=relatorio[1])
             
-            relatorio[0]
+            relatorio[0]()
             print(f'✔ {relatorio[1]}')
 
             _escreve_relatorio_csv('\n', end='', nome=relatorio[1])
             p.press('esc', presses=3, interval=0.5)
         
-        for relatorio in relatorios:
-            _escreve_header_csv(relatorio[2], nome=relatorio[1])
+    for relatorio in relatorios:
+        _escreve_header_csv(relatorio[2], nome=relatorio[1])
             
         
 if __name__ == '__main__':

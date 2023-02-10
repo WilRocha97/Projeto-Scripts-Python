@@ -16,16 +16,18 @@ def dirf(empresa, ano, andamento):
     p.hotkey('alt', 'r')
     time.sleep(0.5)
     # Impostos
-    p.press('n')
+    p.press('i')
+    time.sleep(0.5)
+    p.press('enter')
     # federais
     time.sleep(0.5)
-    p.press('f')
+    p.press('a')
     # DIRF
     time.sleep(0.5)
-    p.press('i')
+    p.press('d')
     # apartir de 2010
     time.sleep(0.5)
-    p.press('p')
+    p.press('enter')
     
     while not _find_img('dirf.png', conf=0.9):
         time.sleep(1)
@@ -54,9 +56,9 @@ def relatorio_dirf(empresa, ano, andamento, erro):
         _click_img('formulario.png', conf=0.9)
     time.sleep(1)
     
-    # seleciona para gerar com folha de pagamento
-    if _find_img('folha_de_pagamento_selecionado.png', conf=0.99):
-        _click_img('folha_de_pagamento_selecionado.png', conf=0.99)
+    # seleciona para gerar sem notas fiscais
+    if _find_img('escrita_selecionado.png', conf=0.99):
+        _click_img('escrita_selecionado.png', conf=0.99)
     time.sleep(1)
     
     # abre a janela de outros dados
@@ -145,10 +147,10 @@ def arquivos_dirf(empresa, ano, andamento):
     time.sleep(1)
     p.hotkey('ctrl', 'v')
     time.sleep(1)
-    
-    # seleciona para gerar com folha de pagamento
-    if _find_img('folha_de_pagamento_selecionado.png', conf=0.99):
-        _click_img('folha_de_pagamento_selecionado.png', conf=0.99)
+
+    # seleciona para gerar sem notas fiscais
+    if _find_img('escrita_selecionado.png', conf=0.99):
+        _click_img('escrita_selecionado.png', conf=0.99)
     time.sleep(1)
     
     # abre a janela de outros dados
@@ -234,7 +236,7 @@ def salvar_pdf(empresa):
     while _find_img('sera_finalizada.png', pasta='imgs_c', conf=0.9):
         p.press('esc')
 
-    mover_relatorio(empresa)
+    mover_relatorio_3(empresa)
     return True
 
 

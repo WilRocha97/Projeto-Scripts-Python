@@ -212,20 +212,20 @@ def run():
             _indice(count, total_empresas, empresa)
             erro = 'sim'
             while erro == 'sim':
-                try:
-                    driver = sieg_iris(driver)
-                    driver = procura_empresa(competencia, empresa, driver, options)
-                    erro = 'não'
-                except:
-                    try:
-                        erro = 'sim'
-                        driver.close()
-                        status, driver = _initialize_chrome(options)
-                        driver = login_sieg(driver)
-                    except:
-                        erro = 'sim'
-                        status, driver = _initialize_chrome(options)
-                        driver = login_sieg(driver)
+                '''try:'''
+                driver = sieg_iris(driver)
+                driver = procura_empresa(competencia, empresa, driver, options)
+                erro = 'não'
+                '''except:
+                                                                    try:
+                                                                        erro = 'sim'
+                                                                        driver.close()
+                                                                        status, driver = _initialize_chrome(options)
+                                                                        driver = login_sieg(driver)
+                                                                    except:
+                                                                        erro = 'sim'
+                                                                        status, driver = _initialize_chrome(options)
+                                                                        driver = login_sieg(driver)'''
 
         contador += 1
         os.remove("V:\\Setor Robô\\Scripts Python\\SIEG\\Download guias DCTF WEB\\execução\\resumo.csv")

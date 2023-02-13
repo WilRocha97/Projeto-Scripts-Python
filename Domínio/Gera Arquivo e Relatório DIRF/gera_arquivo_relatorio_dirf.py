@@ -52,6 +52,10 @@ def dirf(empresa, ano, andamento):
     
 def relatorio_dirf(empresa, ano, andamento, erro):
     # seleciona para gerar o relatório
+    if _find_img('dirf_gerada.png', conf=0.9):
+        _click_img('dirf_gerada.png', conf=0.8)
+        p.press('enter')
+    
     if _find_img('formulario.png', conf=0.9):
         _click_img('formulario.png', conf=0.9)
     time.sleep(1)
@@ -66,6 +70,12 @@ def relatorio_dirf(empresa, ano, andamento, erro):
     
     while not _find_img('outros_dados.png', conf=0.9):
         time.sleep(1)
+        if _find_img('dirf_gerada.png', conf=0.9):
+            _click_img('dirf_gerada.png', conf=0.8)
+            p.press('enter')
+            time.sleep(2)
+            # abre a janela de outros dados
+            p.hotkey('alt', 'u')
 
     if _find_img('folha_de_pagamento.png', conf=0.95):
         p.press('esc')
@@ -178,10 +188,12 @@ def arquivos_dirf(empresa, ano, andamento):
             print('❗ Sem dados para emitir')
             return erro
 
-    _click_img('dirf_gerada.png', conf=0.9)
+    _click_img('dirf_gerada.png', conf=0.8)
     p.press('enter')
-    time.sleep(2)
+    time.sleep(3)
     
+    
+
     if _find_img('60_caracteres.png', conf=0.9):
         erro = 'Descrição de outros rendimentos isentos e não-tributáveis superior a 60 caracteres'
         p.hotkey('alt', 'f')
@@ -189,7 +201,7 @@ def arquivos_dirf(empresa, ano, andamento):
     _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Arquivo DIRF {ano} gerado', nome=andamento, end=';')
     print('✔ Arquivo gerado')
 
-    mover_arquivo(empresa)
+    mover_arquivo()
     return erro
 
 
@@ -240,18 +252,13 @@ def salvar_pdf(empresa):
     return True
 
 
-def mover_arquivo(empresa):
-    cod, cnpj, nome = empresa
-
+def mover_arquivo():
     download_folder = "V:\\Setor Robô\\Scripts Python\\Domínio\\Gera Arquivo e Relatório DIRF"
     folder = "V:\\Setor Robô\\Scripts Python\\Domínio\\Gera Arquivo e Relatório DIRF\\execução\\Arquivos"
-    guia = os.path.join(download_folder, f'DIRF{cod}.txt')
-    while os.path.exists(guia):
-        try:
-            shutil.move(guia, os.path.join(folder, f'DIRF{cod}.txt'))
+    for file in os.listdir(download_folder):
+        if file.endswith('.txt'):
+            shutil.move(file, os.path.join(folder, file))
             time.sleep(2)
-        except:
-            pass
 
 
 def mover_relatorio(empresa):

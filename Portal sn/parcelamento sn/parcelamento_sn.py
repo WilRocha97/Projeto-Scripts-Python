@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import time
+
 from pyautogui import confirm
 from selenium import webdriver
 from bs4 import BeautifulSoup
@@ -147,11 +149,11 @@ def run():
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     options.add_argument('--window-size=1920,1080')
-    
+
     status, driver = initialize_chrome(options)
     if isinstance(driver, str):
         raise Exception(driver)
-
+    
     resumo = f'resumo {comp.replace("/", "")} {tipo}'
     print('>>> Executando para', tipo, comp, f"salvando em '{resumo}.csv'\n")
 
@@ -172,9 +174,17 @@ def run():
                 print('>>>', session)
                 text = None
             else:
-                text = consulta_parcelamento(cnpj, tipo, comp, session)
-                
-                
+                try:
+                    text = consulta_parcelamento(cnpj, tipo, comp, session)
+                except:
+                    text = 'Erro ao consultar parcelamento'
+                    driver.quit()
+                    time.sleep(1)
+                    
+                    status, driver = initialize_chrome(options)
+                    if isinstance(driver, str):
+                        raise Exception(driver)
+                    
                 if text == 'Erro ao consultar parcelamento':
                     print(text)
                 elif text ==  'Não carregou tabela snparc':
@@ -186,6 +196,7 @@ def run():
                 session.close()
 
     driver.quit()
+        
     return True
 
 

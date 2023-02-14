@@ -31,12 +31,17 @@ def login_sieg(driver):
     print('>>> Acessando o site')
     time.sleep(1)
     
-    # inserir o CNPJ no campo
-    driver.find_element(by=By.ID, value='txtEmail').send_keys('willian.rocha@veigaepostal.com.br')
+    dados = "V:\\Setor Robô\\Scripts Python\\Veri\\Dados.txt"
+    f = open(dados, 'r', encoding='utf-8')
+    user = f.read()
+    user = user.split('/')
+    
+    # inserir o emailno campo
+    driver.find_element(by=By.ID, value='txtEmail').send_keys(user[0])
     time.sleep(1)
     
     # inserir a senha no campo
-    driver.find_element(by=By.ID, value='txtPassword').send_keys('Milenniumfalcon9')
+    driver.find_element(by=By.ID, value='txtPassword').send_keys(user[1])
     time.sleep(1)
     
     # clica em acessar
@@ -70,6 +75,22 @@ def procura_empresa(competencia, empresa, driver, options):
         
     time.sleep(5)
     print('>>> Pesquisando empresa')
+
+    modal = 'sim'
+    while modal == 'sim':
+        try:
+            driver.find_element(by=By.ID, value='select2-ddlCompanyIris-container').click()
+            time.sleep(1)
+            modal = 'não'
+        except:
+            try:
+                driver.find_element(by=By.CLASS_NAME, value='btn-close-alert').click()
+                modal = 'sim'
+            except:
+                _escreve_relatorio_csv(f'{cnpj};{nome};Erro ao pesquisar empresa')
+                print('❗ Erro ao pesquisar empresa')
+                return driver
+    
     # clica para abrir a barra de pesquisa
     driver.find_element(by=By.ID, value='select2-ddlCompanyIris-container').click()
     time.sleep(1)
@@ -172,9 +193,9 @@ def run():
     
     # opções para fazer com que o chome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--window-size=1920,1080')
-    # options.add_argument("--start-maximized")
+    # options.add_argument('--headless')
+    # options.add_argument('--window-size=1920,1080')
+    options.add_argument("--start-maximized")
     options.add_experimental_option('prefs', {
         "download.default_directory": "V:\\Setor Robô\\Scripts Python\\SIEG\\Download guias DCTF WEB\\execução\\Guias",  # Change default directory for downloads
         "download.prompt_for_download": False,  # To auto download the file
@@ -212,20 +233,20 @@ def run():
             _indice(count, total_empresas, empresa)
             erro = 'sim'
             while erro == 'sim':
-                '''try:'''
-                driver = sieg_iris(driver)
-                driver = procura_empresa(competencia, empresa, driver, options)
-                erro = 'não'
-                '''except:
-                                                                    try:
-                                                                        erro = 'sim'
-                                                                        driver.close()
-                                                                        status, driver = _initialize_chrome(options)
-                                                                        driver = login_sieg(driver)
-                                                                    except:
-                                                                        erro = 'sim'
-                                                                        status, driver = _initialize_chrome(options)
-                                                                        driver = login_sieg(driver)'''
+                try:
+                    driver = sieg_iris(driver)
+                    driver = procura_empresa(competencia, empresa, driver, options)
+                    erro = 'não'
+                except:
+                    try:
+                        erro = 'sim'
+                        driver.close()
+                        status, driver = _initialize_chrome(options)
+                        driver = login_sieg(driver)
+                    except:
+                        erro = 'sim'
+                        status, driver = _initialize_chrome(options)
+                        driver = login_sieg(driver)
 
         contador += 1
         os.remove("V:\\Setor Robô\\Scripts Python\\SIEG\\Download guias DCTF WEB\\execução\\resumo.csv")

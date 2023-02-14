@@ -92,7 +92,6 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
                 print('❗ Erro ao pesquisar empresa')
                 return driver
                 
-
     localiza_empresa = re.compile(r'(' + cnpj + ')').search(driver.page_source)
     
     if not localiza_empresa:

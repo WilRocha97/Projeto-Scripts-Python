@@ -138,6 +138,8 @@ def arquivos_dirf(empresa, ano, andamento):
     cod, cnpj, nome = empresa
     erro = ''
     
+    nome = nome.replace('/', ' ')
+
     # seleciona para gerar o relatório
     if _find_img('arquivo.png', conf=0.9):
         _click_img('arquivo.png', conf=0.9)

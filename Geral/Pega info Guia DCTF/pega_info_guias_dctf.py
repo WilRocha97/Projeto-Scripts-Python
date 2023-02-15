@@ -25,18 +25,21 @@ def analiza():
                 if count == 1:
                     continue
                 try:
-                    padrao_cnpj = re.compile(r'Documento de Arrecadação\nde Receitas Federais\n(\d.+)\n')
-                    padrao_valor = re.compile(r'Valor Total do Documento\n(.+)\nCNPJ')
-                    
                     # Pega o texto da pagina
                     textinho = page.get_text('text', flags=1 + 2 + 8)
                     # print(textinho)
                     # Procura o valor a recolher da empresa
-                    cnpj = padrao_cnpj.search(textinho).group(1)
-
+                    try:
+                        cnpj = re.compile(r'Documento de Arrecadação\nde Receitas Federais\n(\d.+)\n').search(textinho).group(1)
+                    except:
+                        cnpj = re.compile(r'Documento de Arrecadação\ndo eSocial\n(\d.+)\n').search(textinho).group(1)
+                        
                     # Procura a descrição do valor a recolher 1, tem algumas variações do que aparece junto a essa info
-                    valor = padrao_valor.search(textinho).group(1)
-                    
+                    try:
+                        valor = re.compile(r'Valor Total do Documento\n(.+)\nCNPJ').search(textinho).group(1)
+                    except:
+                        valor = re.compile(r'Valor Total do Documento\n(.+)\nCPF').search(textinho).group(1)
+                        
                     print(f'{cnpj} - {valor}')
 
                     _escreve_relatorio_csv(f"{cnpj};{valor}")

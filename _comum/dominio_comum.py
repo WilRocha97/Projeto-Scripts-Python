@@ -12,6 +12,11 @@ from comum_comum import _escreve_relatorio_csv
 from chrome_comum import _initialize_chrome, _send_input_xpath, _find_by_class
 from pyautogui_comum import _find_img, _wait_img, _click_img
 
+dados = "V:\\Setor Robô\\Scripts Python\\_comum\\Dados Domínio.txt"
+f = open(dados, 'r', encoding='utf-8')
+user = f.read()
+user = user.split('/')
+
 
 def _login(empresa, andamentos):
     cod, cnpj, nome = empresa
@@ -136,10 +141,10 @@ def _login_web():
     options.add_argument('--window-size=1920,1080')
     
     status, driver = _initialize_chrome()
-    
+
     driver.get('https://www.dominioweb.com.br/')
-    _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[1]/span[2]/input', 'robo@veigaepostal.com.br', driver)
-    _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[2]/span[2]/input', 'Rb#0086*', driver)
+    _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[1]/span[2]/input', user[0], driver)
+    _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[2]/span[2]/input', user[2], driver)
     driver.find_element(by=By.ID, value='enterButton').click()
     
     caminho = os.path.join('imgs_c', 'abrir_app.png')
@@ -151,17 +156,28 @@ def _login_web():
             sleep(1)
             while p.locateOnScreen(caminho2, confidence=0.9):
                 p.click(p.locateCenterOnScreen(caminho2, confidence=0.9), button='left')
-        
+            break
+            
     if p.locateOnScreen(caminho, confidence=0.9):
         p.click(p.locateCenterOnScreen(caminho, confidence=0.9), button='left')
-
-    while not locateOnScreen(path.join('imgs_c', 'modulos.png'), confidence=0.9):
+    
+    print('>>> Aguardando modulos')
+    while not p.locateOnScreen(r'imgs_c/modulos.png', confidence=0.9):
         sleep(1)
     driver.quit()
     return True
 
 
 def _abrir_modulo(modulo):
+    modulo_nome = ''
+    if modulo == 'escrita_fiscal':
+        modulo_nome = 'Escrita Fiscal'
+    elif modulo == 'folha':
+        modulo_nome = 'Folha'
+    elif modulo == 'conexoes':
+        modulo_nome = 'Conexões'
+        
+    print(f'>>> Abrindo modulo {modulo_nome}\n')
     while not p.locateOnScreen(r'imgs_c/modulos.png', confidence=0.9):
         sleep(1)
         try:
@@ -169,7 +185,7 @@ def _abrir_modulo(modulo):
         except:
             pass
     sleep(1)
-    p.click(p.locateCenterOnScreen(r'imgs_c/modulo' + modulo + '.png', confidence=0.9), button='left', clicks=2)
+    p.click(p.locateCenterOnScreen(r'imgs_c/modulo_' + modulo + '.png', confidence=0.9), button='left', clicks=2)
     while not p.locateOnScreen(r'imgs_c/login_modulo.png', confidence=0.9):
         sleep(1)
     
@@ -179,18 +195,23 @@ def _abrir_modulo(modulo):
     
     sleep(0.5)
     p.press('del', presses=10)
-    p.write('robo')
+    p.write(user[1])
     sleep(0.5)
     p.press('tab')
     sleep(0.5)
     p.press('del', presses=10)
-    p.write('Rb#0086*')
+    p.write(user[2])
     sleep(0.5)
     p.hotkey('alt', 'o')
     while not p.locateOnScreen(r'imgs_c/onvio.png', confidence=0.9):
         sleep(1)
 
-
+    time.sleep(5)
+    
+    if p.locateOnScreen(r'imgs_c/aviso.png', confidence=0.9):
+        p.hotkey('alt', 'o')
+        
+        
 def _salvar_pdf():
     p.hotkey('ctrl', 'd')
     timer = 0

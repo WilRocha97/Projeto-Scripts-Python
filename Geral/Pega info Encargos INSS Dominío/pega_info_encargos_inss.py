@@ -10,7 +10,7 @@ from comum_comum import _escreve_relatorio_csv, _escreve_header_csv
 
 # Definir os padrões de regex
 padrao_cnpj = re.compile(r'Empresa:\n(.+)')
-padrao_valor = re.compile(r'(.+\d)\nTotal')
+padrao_valor = re.compile(r'(.+\d)\nTotal\nSistema')
 
 
 def analiza():

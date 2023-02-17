@@ -19,7 +19,10 @@ def main():
     #filtro = arquivo.query("dt != 0").drop_duplicates(subset=['dt', 'CPF'])
     filtro = arquivo.drop_duplicates(subset=['dt', 'CPF'])
     for item in filtro.itertuples():
-        data = item.dt.strftime('%d/%m/%Y')
+        try:
+            data = item.dt.strftime('%d/%m/%Y')
+        except:
+            data = item.dt
         cpf = ''.join([x for x in str(item.CPF) if x.isdigit()])
         cpf = cpf.rjust(11, '0')
         url = f'http://ws.hubdodesenvolvedor.com.br/v2/cpf/?cpf={cpf}&data={data}&token=8069395DeIFwyYJkP14569048&ignore_db'

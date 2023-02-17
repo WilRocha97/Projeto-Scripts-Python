@@ -29,7 +29,7 @@ def open_lista_dados(file, encode='latin-1'):
     return list(map(lambda x: tuple(x.replace('\n', '').split(';')), dados))
 
 
-def gera_arquivo(andamento, cod='*', cnpj='', nome=''):
+def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
     # espera o botão de relatórios do domínio aparecer na tela
     _wait_img('relatorios.png', conf=0.9, timeout=-1)
     
@@ -77,7 +77,7 @@ def gera_arquivo(andamento, cod='*', cnpj='', nome=''):
     while not _find_img('contrato_experiencia.png', conf=0.9):
         time.sleep(1)
         if _find_img('sem_dados.png', conf=0.9):
-            _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para emitir']), nome=andamento)
+            _escreve_relatorio_csv(';'.join([cod, nome, 'Sem dados para emitir']), nome=andamento)
             print('❌ Sem dados para emitir')
             p.press('enter')
             time.sleep(1)
@@ -90,13 +90,13 @@ def gera_arquivo(andamento, cod='*', cnpj='', nome=''):
         _salvar_pdf()
     else:
         if not _find_img('enviar_arquivo.png', conf=0.9):
-            _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Não possuí opção de enviar o relatório para o cliente']), nome=andamento)
+            _escreve_relatorio_csv(';'.join([cod, nome, 'Não possuí opção de enviar o relatório para o cliente']), nome=andamento)
             print('❌ Não possuí opção de enviar o relatório para o cliente')
             p.press('esc', presses=5)
             return False
             
-        envia_experiencia()
-        _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Relatório enviado']), nome=andamento)
+        envia_experiencia(comp)
+        _escreve_relatorio_csv(';'.join([cod, nome, 'Relatório enviado']), nome=andamento)
         print('✔ Relatório enviado')
 
     # fechar qualquer possível tela aberta
@@ -155,29 +155,39 @@ def pega_empresas_com_exp():
     return empresas
 
 
-def envia_experiencia():
+def envia_experiencia(comp):
     # enquanto a janela de enviar não aparece clica no botão de enviar
     while not _find_img('publicar_doc.png', conf=0.9):
         _click_img('enviar_arquivo.png', conf=0.9)
         time.sleep(1)
     
     # verifica a pasta que está selecionada para inserir o arquivo no sistema
-    if not _find_img('pasta_pessoal_outros.png', conf=0.9):
-        _click_img('drop.png', conf=0.9)
-        time.sleep(0.5)
-        p.press('down')
-        time.sleep(0.5)
-        p.press('enter')
-        time.sleep(0.5)
-    
+    # if not _find_img('pasta_pessoal_outros.png', conf=0.9):
+    _click_img('drop.png', conf=0.9)
+    time.sleep(0.5)
+    p.press('down')
+    time.sleep(0.5)
+    p.press('enter')
+    time.sleep(0.5)
+        
+    p.press('tab')
+    time.sleep(0.5)
+    p.write(f'Relação de Empregados - Contratos_Vencimento_Modelo_Veiga - {comp}')
+        
     # confirma o envio do arquivo
     p.hotkey('Alt', 'g')
-    time.sleep(2)
+    time.sleep(5)
 
 
 @_time_execution
 def run():
     # define o nome da planilha de andamentos
+    dia = datetime.now().day
+    mes = datetime.now().month
+    ano = datetime.now().year
+    
+    comp = f'{dia}-{mes}-{ano}'
+    
     andamentos = 'Experiência a Vencer'
     # pergunta se deve gerar uma nova planilha de dados
     novo = p.confirm(title='Script incrível', text='Gerar nova planilha de dados?', buttons=('Sim', 'Não'))
@@ -205,7 +215,7 @@ def run():
         if not _login(empresa, andamentos):
             continue
         # gera o arquivo específico da empresa
-        gera_arquivo(andamentos, cod=empresa[0], cnpj=empresa[1], nome=empresa[2])
+        gera_arquivo(comp, andamentos, cod=empresa[0], cnpj=empresa[1], nome=empresa[2])
 
 
 if __name__ == '__main__':

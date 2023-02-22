@@ -159,7 +159,7 @@ def envia_experiencia(comp):
     # enquanto a janela de enviar não aparece clica no botão de enviar
     while not _find_img('publicar_doc.png', conf=0.9):
         _click_img('enviar_arquivo.png', conf=0.9)
-        time.sleep(1)
+        time.sleep(2)
     
     # verifica a pasta que está selecionada para inserir o arquivo no sistema
     # if not _find_img('pasta_pessoal_outros.png', conf=0.9):
@@ -204,7 +204,7 @@ def run():
     # gera uma nova planilha e a seleciona
     else:
         index = 0
-        gera_arquivo(andamentos)
+        gera_arquivo(comp, andamentos)
         empresas = pega_empresas_com_exp()
     
     total_empresas = empresas[index:]

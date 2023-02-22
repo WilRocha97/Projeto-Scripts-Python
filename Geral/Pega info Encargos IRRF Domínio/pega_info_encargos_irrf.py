@@ -12,6 +12,7 @@ from comum_comum import _escreve_relatorio_csv, _escreve_header_csv
 def analiza():
     arq = ask_for_file(filetypes=[('PDF files', '*.pdf *')])
     # Abrir o pdf
+    sem_codigo_receita = 'não'
     with fitz.open(file) as pdf:
     
         # Para cada página do pdf, se for a segunda página o script ignora
@@ -29,7 +30,7 @@ def analiza():
                     # se existir uma empresa diferente sem código anterior a empresa atual, anota na planilha
                     if sem_codigo_receita == 'sim':
                         if codigo != codigo_anterior:
-                            _escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_anterior};'Não consta';{periodo_anterior};'Não consta';{valor_anterior};'Não consta';'Não consta';'Não consta'", nome=f'Encargos de IRRF - {periodo.replace("/", "-")}')
+                            _escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_anterior};Não consta;{periodo_anterior};Não consta;{valor_anterior};Não consta;Não consta;Não consta", nome=f'Encargos de IRRF - {periodo.replace("/", "-")}')
                 
                     try:
                         valor_anterior = re.compile(r'Total Geral:\n(.+,\d+)').search(textinho).group(1)
@@ -56,7 +57,7 @@ def analiza():
                         # se existir uma empresa diferente sem código anterior a empresa atual, anota na planilha
                         if sem_codigo_receita == 'sim':
                             if codigo != codigo_anterior:
-                                _escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_anterior};'Não consta';{periodo_anterior};'Não consta';{valor_anterior};'Não consta';'Não consta';'Não consta'", nome=f'Encargos de IRRF - {periodo.replace("/", "-")}')
+                                _escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_anterior};Não consta;{periodo_anterior};Não consta;{valor_anterior};Não consta;Não consta;Não consta", nome=f'Encargos de IRRF - {periodo.replace("/", "-")}')
                                 sem_codigo_receita = 'não'
                     
                         periodicidade = valor[6]

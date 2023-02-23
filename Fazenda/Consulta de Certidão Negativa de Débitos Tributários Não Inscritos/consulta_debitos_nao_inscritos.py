@@ -90,12 +90,20 @@ def consulta_ipva(cnpj, nome):
             else:
                 press('enter')
                 press('f5')
-        sleep(1)
+            if _find_img('falha.png', conf=0.9):
+                press('enter')
+                press('f5')
+                
+        sleep(5)
 
     sleep(1)
     if _find_img('atencao_ok.png', conf=0.9):
         _click_img('atencao_ok.png', conf=0.9)
 
+    if _find_img('falha.png', conf=0.9):
+        press('enter')
+        press('f5')
+     
     debitos = ('ha_debitos.png', 'ha_pendencias.png', 'ha_pendencias_2.png', 'icms_declarado.png', 'icms_parcelado.png', 'aiim.png', 'ipva.png')
     # navega na tela até aparecer o botão de emitir relatório e caso tenha algum débito, salva o relatório
     while not _find_img('emitir_relatorios.png', conf=0.9):

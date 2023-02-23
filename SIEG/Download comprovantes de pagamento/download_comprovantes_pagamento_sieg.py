@@ -127,6 +127,7 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
         
     try:
         # clica para expandir a lista de arquivos
+        print('>>> Expandindo lista de comprovantes de pagamento')
         driver.find_element(by=By.XPATH, value='/html/body/form/div[5]/div[3]/div[1]/div/div[3]/div/table/tbody/tr[1]/td/div/span/span').click()
         time.sleep(2)
     except:
@@ -154,6 +155,7 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
     sem_recibo = ''
     # faz o download dos comprovantes
     for comprovante in comprovantes:
+        print('>>> Tentando baixar o comprovantes de pagamento')
         download = True
         while download:
             driver, contador, erro, download= download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
@@ -253,9 +255,9 @@ def run():
     
     # opções para fazer com que o chome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--window-size=1920,1080')
-    # options.add_argument("--start-maximized")
+    # options.add_argument('--headless')
+    # options.add_argument('--window-size=1920,1080')
+    options.add_argument("--start-maximized")
     options.add_experimental_option('prefs', {
         "download.default_directory": "V:\\Setor Robô\\Scripts Python\\SIEG\\Download comprovantes de pagamento\\ignore\\Comprovantes",  # Change default directory for downloads
         "download.prompt_for_download": False,  # To auto download the file

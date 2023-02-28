@@ -1,96 +1,112 @@
 # -*- coding: utf-8 -*-
-from dados import empresas
 from datetime import datetime
 import pyautogui as p
-import time
-import sys
+import time, os, shutil
 
-sys.path.append('..')
-from comum import _horario, _esperar, _clicar, _login, _fechar, _verificar_empresa, _escrever, _inicial, _iniciar
+from sys import path
+path.append(r'..\..\_comum')
+from cuca_comum import _horario, _login, _fechar, _verificar_empresa, _inicial, _iniciar
+from pyautogui_comum import _find_img, _click_img, _wait_img
+from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
 
 
-def gerar_dirf():
-    for count, empresa in enumerate(empresas, start=1):
-        _hora_limite = datetime.now().replace(hour=17, minute=25, second=0, microsecond=0)
-        # Verificar horário
-        if _horario(_hora_limite, 'DPCUCA'):
-            _iniciar('dpcuca')
-            p.getWindowsWithTitle('DPCUCA')[0].maximize()
-
-        # Cria um indice par saber qual linha dos dados está
-        indice = '[ ' + str(count) + ' de ' + str(len(empresas)) + ' ]'
+def gerar_dirf(index, empresas):
+    total_empresas = empresas[index:]
+    for count, empresa in enumerate(empresas[index:], start=1):
         cod, cnpj, nome, mes, ano = empresa
-        print(' - '.join([indice, cod, cnpj, nome, mes, ano]))
+        
+        # Verificar horário
+        _hora_limite = datetime.now().replace(hour=18, minute=25, second=0, microsecond=0)
+        if _horario(_hora_limite, 'DPCUCA'):
+            _iniciar('DPCUCA')
+            p.getWindowsWithTitle('DPCUCA')[0].maximize()
+        
+        _indice(count, total_empresas, empresa)
+        
+        _inicial('dpcuca')
 
-        # Verificações de login e empresa
-        if not _login(mes, ano, empresa, 'Codigo', 'dpcuca'):
+        # Verificações de login
+        if not _login(empresa, 'Codigo', 'dpcuca', 'Gerador de arquivos DIRF', mes, ano):
             p.press('enter')
-            _escrever('Gerador de arquivos DIRF', ';'.join([cod, cnpj, nome, mes, ano, 'Empresa Inativa']))
-            print('** Empresa Inativa **\n\n')
+            _escreve_relatorio_csv(f'{cod};{cnpj};{nome};{mes};{ano};Empresa Inativa', nome='Gerador de arquivos DIRF')
+            print('❌ Empresa Inativa')
             continue
-        # CNPJ cpm os separadores para poder verificar a empresa no cuca
+
+        # CNPJ com os separadores para poder verificar a empresa no cuca
         if not _verificar_empresa(cnpj, 'dpcuca'):
-            _escrever('Gerador de arquivos DIRF', ';'.join([cod, cnpj, nome, mes, ano, 'Robô sem acesso no DPCUCA']))
-            print('** Robô sem acesso no DPCUCA **\n\n')
+            _escreve_relatorio_csv(f'{cod};{cnpj};{nome};{mes};{ano};Empresa não encontrada no DPCUCA', nome='Gerador de arquivos DIRF')
+            print('❌ Empresa não encontrada no DPCUCA')
             continue
 
         time.sleep(4)
-        _clicar(r'imgComum\TCUCAInicial.png')
+        _click_img('CUCAInicial.png', conf=0.9)
         # Abrir Calculos
         p.hotkey('alt', 'c')
         time.sleep(0.5)
         p.press(['d', 'd', 'enter'], interval=0.5)
-        _esperar(r'imagens\GerarInfo.png')
-        _clicar(r'imagens\Pasta.png')
-        _esperar(r'imagens\procurarPasta.png')
+        _wait_img('GerarInfo.png', conf=0.9)
+        _click_img('Pasta.png', conf=0.9)
+        _wait_img('Pasta.png', conf=0.9)
         time.sleep(0.5)
         p.press(['tab', 'tab', 'tab'], interval=0.5)
         time.sleep(0.5)
-        p.write('T:\DIRF 2021-2020')
+        p.write('T:\DIRF 2023-2022')
         time.sleep(0.5)
         p.press('enter')
         time.sleep(0.5)
-        if p.locateOnScreen(r'imagens\GerarBenefciarios.png'):
-            p.click(r'imagens\GerarBenefciarios.png')
+        if _find_img('GerarBenefciarios.png', conf=0.9):
+            _click_img('GerarBenefciarios.png', conf=0.9)
         time.sleep(0.5)
-        p.click(r'imagens\Gerar.png')
+        _click_img('Gerar.png', conf=0.9)
 
         p.hotkey('alt', 'a')
         time.sleep(1)
-        if p.locateOnScreen(r'imagens\Atencao.png'):
+        if _find_img('Atencao.png', conf=0.9):
             p.press('enter')
         time.sleep(2)
-        while not p.locateOnScreen(r'imagens\Inicio.png'):
+        while not _find_img('Inicio.png', conf=0.9):
             time.sleep(1)
             p.moveTo(683, 384)
             p.moveTo(684, 383)
-            if p.locateOnScreen(r'imagens\OK.png'):
+            if _find_img('OK.png', conf=0.9):
                 p.press('enter')
                 time.sleep(0.5)
-            if p.locateOnScreen(r'imagens\Situacoes.png'):
+            if _find_img('Situacoes.png', conf=0.9):
                 p.press('enter')
                 time.sleep(0.5)
-            if p.locateOnScreen(r'imagens\DIRFgerada.png'):
+            if _find_img('DIRFgerada.png', conf=0.9):
                 p.press('enter')
-                _escrever('Gerador de arquivos DIRF', ';'.join([cod, cnpj, nome, mes, ano, 'Arquivo DIRF gerado!']))
-                print('>>> Arquivo DIRF gerado! <<<\n\n')
-            if p.locateOnScreen(r'imagens\NaoDIRF.png'):
+                _escreve_relatorio_csv(';'.join([cod, cnpj, nome, mes, ano, 'Arquivo DIRF gerado!']), nome='Gerador de arquivos DIRF')
+                print('✔ Arquivo DIRF gerado')
+            if _find_img('NaoDIRF.png', conf=0.9):
                 p.press('enter')
-                _escrever('Gerador de arquivos DIRF', ';'.join([cod, cnpj, nome, mes, ano, 'Não foram encontrados informações para DIRF!']))
-                print('** Não foram encontrados informações para DIRF! **\n\n')
+                _escreve_relatorio_csv(';'.join([cod, cnpj, nome, mes, ano, 'Não foram encontrados informações para DIRF!']), nome='Gerador de arquivos DIRF')
+                print('❌ Não foram encontrados informações para DIRF')
 
-        _clicar(r'imagens\JanelaAGUARDE.png')
+        _click_img('JanelaAGUARDE.png', conf=0.9)
         p.press('esc')
 
         _inicial('dpcuca')
 
+        download_folder = "T:\\DIRF 2023-2022\\DIRF"
+        folder = "\\vpsrv03\\Arq_Robo\\Gera Arquivos DIRF\\DIRF 2022-2023\\Folha\\Arquivos"
+        for file in os.listdir(download_folder):
+            if file.endswith('.txt'):
+                shutil.move(os.path.join(download_folder, file), os.path.join(folder, file))
+            
 
-if __name__ == '__main__':
+@_time_execution
+def run():
     # Perguntar qual relatório
     inicio = datetime.now()
+
+    empresas = _open_lista_dados()
+    index = _where_to_start(tuple(i[0] for i in empresas))
+    if index is None:
+        return False
+    
     try:
-        _iniciar("dpcuca")
-        gerar_dirf()
+        gerar_dirf(index, empresas)
         _fechar()
 
         print(datetime.now() - inicio)
@@ -103,3 +119,8 @@ if __name__ == '__main__':
     except():
         print(datetime.now() - inicio)
         p.alert(title='Script incrível', text='ERRO')
+
+
+if __name__ == '__main__':
+    run()
+    

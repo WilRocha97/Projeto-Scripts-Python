@@ -299,7 +299,6 @@ def mover_relatorio_2(empresa):
             pass
 
 
-
 def mover_relatorio_3(empresa):
     cod, cnpj, nome = empresa
     cnpj = cnpj.replace('/', '').replace('.', '').replace('-', '')

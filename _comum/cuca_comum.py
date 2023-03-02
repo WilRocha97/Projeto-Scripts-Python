@@ -317,7 +317,7 @@ def _verificar_empresa(indice, qual_cuca='falso'):
 
 def _fechar():
     # Fecha os dois cucas se estiverem abertos
-    tipos = [("(SP)", "CUCA"), ("DPCUCA PLUS", "DPCUCA"), ]
+    tipos = [("(SP)", "CUCA"), ("DPCUCA", "DPCUCA"), ]
     p.hotkey('win', 'm')
     for tipo in tipos:
         time.sleep(1)

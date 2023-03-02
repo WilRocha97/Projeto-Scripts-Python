@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 from sys import path
 
 path.append(r'..\..\_comum')
-from pyautogui_comum import _find_img, _click_img, _wait_img, get_comp
+from pyautogui_comum import _find_img, _click_img, _wait_img, get_comp, _click_position_img
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, _escreve_header_csv, e_dir, _open_lista_dados, _where_to_start
 from dominio_comum import _login
 
@@ -546,10 +546,9 @@ def configura_avisos_vencimento():
             _click_img('avisos_vencimento.png', conf=0.9)
             
         if _find_img(botao[0], conf=0.99):
-            
-            p.moveTo(p.locateCenterOnScreen(os.path.join('imgs', botao[0]), confidence=0.9))
-            local_mouse = p.position()
-            p.click(int(local_mouse[0] + 110), local_mouse[1])
+    
+            _click_position_img(botao[0], 'soma', 110, conf=0.9)
+        
             time.sleep(0.2)
             p.press('up')
             time.sleep(0.2)

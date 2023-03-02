@@ -170,7 +170,7 @@ def imprimir(relatorio, andamentos, empresa, texto, espera=10, diretorio='Relat�
     # fecha a visualização
     while _find_img('PDF.png', conf=0.9):
         press('esc')
-            sleep(1)
+        sleep(1)
 
     # se for alguma dessas consultas não escreve na planilha nesse momento
     for i in ['Provisões 13º e Ferias', 'Relatório de empresas', 'Relatório de Experiência geral']:

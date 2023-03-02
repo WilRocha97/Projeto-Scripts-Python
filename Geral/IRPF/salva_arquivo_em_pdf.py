@@ -3,7 +3,7 @@ import os, time, pyperclip, shutil, pyautogui as p
 from sys import path
 
 path.append(r'..\..\_comum')
-from pyautogui_comum import _find_img, _click_img, _wait_img
+from pyautogui_comum import _find_img, _click_img, _wait_img, _click_position_img
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start
 
 
@@ -21,7 +21,7 @@ def abre_arquivo(arquivo):
     
     # aguarda a tela de selecionar arquivo para importar
     _wait_img('importacao.png', conf=0.9)
-    time.sleep(1)
+    time.sleep(2)
     
     # insere o caminho do arquivo que será importado
     caminho_arquivo = 'V:\Setor Robô\Scripts Python\Geral\IRPF\ignore\Arquivos\InsiraAqui'.replace('InsiraAqui', str(arquivo))
@@ -75,7 +75,7 @@ def salva_pdf():
         p.hotkey('alt', 'o')
 
     time.sleep(3)
-    _click_img('fechar.png', conf=0.95)
+    _click_position_img('fechar.png', 'soma', 911, conf=0.9)
     
     return True
 

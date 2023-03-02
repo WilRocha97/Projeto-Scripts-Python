@@ -22,7 +22,7 @@ def gera():
         cnpj, nome, nota, valor, cod = empresa
         valor = Decimal(float(valor.replace(',', '.')))
         cnpj_armazenado = cnpj
-        nome_armazenado = nome.replace('/', ' ')
+        nome_armazenado = nome.replace('/', ' ').replace('/', ' ')
         nota_armazenado = [nota]
         cod_armazenado = cod
         valor_armazenado = valor

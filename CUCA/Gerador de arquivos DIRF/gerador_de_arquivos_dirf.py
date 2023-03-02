@@ -88,11 +88,11 @@ def gerar_dirf(index, empresas):
 
         _inicial('dpcuca')
 
-        download_folder = "T:\\DIRF 2023-2022\\DIRF"
+        '''download_folder = "T:\\DIRF 2023-2022\\DIRF"
         folder = "\\vpsrv03\\Arq_Robo\\Gera Arquivos DIRF\\DIRF 2022-2023\\Folha\\Arquivos"
         for file in os.listdir(download_folder):
             if file.endswith('.txt'):
-                shutil.move(os.path.join(download_folder, file), os.path.join(folder, file))
+                shutil.move(os.path.join(download_folder, file), os.path.join(folder, file))'''
             
 
 @_time_execution

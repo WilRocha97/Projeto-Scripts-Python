@@ -77,6 +77,19 @@ def click_img(img, pasta='imgs', conf=1.0, delay=1, timeout=20, button='left', c
 _click_img = click_img
 
 
+def click_position_img(img, operacao, pixels, pasta='imgs', conf=1.0, clicks=1):
+    img = os.path.join(pasta, img)
+    a.moveTo(a.locateCenterOnScreen(img, confidence=conf))
+    local_mouse = a.position()
+    if operacao == 'soma':
+        a.click(int(local_mouse[0] + int(pixels)), local_mouse[1], clicks=clicks)
+        return True
+    if operacao == 'subtrai':
+        a.click(int(local_mouse[0] - int(pixels)), local_mouse[1], clicks=clicks)
+        return True
+_click_position_img = click_position_img
+
+
 # Exibe caixa de texto pedindo pela compentencia informando o modelo 'printable'
 # e checa se a entrada satisfaz o modelo definido em 'strptime'
 # Retorna a competencia em string em caso de sucesso

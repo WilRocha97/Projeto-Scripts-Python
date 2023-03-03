@@ -10,27 +10,27 @@ from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
 
 
-def verificacoes(empresa):
+def verificacoes(empresa, andamentos):
     cnpj, comp, ano, venc = empresa
     if _find_img('NaoOptante.png'):
-        _escreve_relatorio_csv(';'.join([cnpj, 'Não optante no ano atual', comp, ano]), nome='Boletos MEI')
+        _escreve_relatorio_csv(f'{cnpj};"Não optante no ano atual";{comp};{ano}', nome=andamentos)
         print('❌ Não optante no ano atual')
         p.hotkey('ctrl', 'w')
         return False
     if _find_img('JaExistePag.png'):
-        _escreve_relatorio_csv(';'.join([cnpj, 'Já existe pagamento para essa competência', comp, ano]), nome='Boletos MEI')
+        _escreve_relatorio_csv(f'{cnpj};"Já existe pagamento para essa competência";{comp};{ano}', nome=andamentos)
         print('❌ Já existe pagamento para essa competência')
         p.hotkey('ctrl', 'w')
         return False
     if _find_img('NaoTemAnterior.png'):
-        _escreve_relatorio_csv(';'.join([cnpj, 'Não consta pagamento de anos anteriores', comp, ano]), nome='Boletos MEI')
+        _escreve_relatorio_csv(f'{cnpj};"Não consta pagamento de anos anteriores";{comp};{ano}', nome=andamentos)
         print('❌ Não consta pagamento de anos anteriores')
         p.hotkey('ctrl', 'w')
         return False
     return True
 
 
-def imprimir(empresa):
+def imprimir(empresa, andamentos):
     # cria uma pasta com o nome do relatório para salvar os arquivos
     os.makedirs(r'{}\{}'.format(e_dir, 'Boletos'), exist_ok=True)
 
@@ -58,7 +58,7 @@ def imprimir(empresa):
     if _find_img('Substituir.png'):
         p.press('s')
     time.sleep(1)
-    _escreve_relatorio_csv(';'.join([cnpj, 'Guia gerada', comp, ano]), nome='Boletos MEI')
+    _escreve_relatorio_csv(f'{cnpj};"Guia gerada;{comp};{ano}', nome=andamentos)
     print('✔ Guia gerada')
     time.sleep(5)
     p.hotkey('ctrl', 'w')
@@ -71,7 +71,9 @@ def boleto_mei(empresas, index):
         _indice(count, total_empresas, empresa)
 
         cnpj, comp, ano, venc = empresa
-
+        
+        andamentos = f'Boletos MEi {comp}-{ano}'
+        
         # Abrir o site
         if _find_img('Chrome.png', conf=0.9):
             _click_img('Chrome.png', conf=0.9)
@@ -114,14 +116,14 @@ def boleto_mei(empresas, index):
         time.sleep(1)
 
         if _find_img('NaoOptante2.png', conf=0.95):
-            _escreve_relatorio_csv(';'.join([cnpj, 'Não optante', comp, ano]), nome='Boletos MEI')
-            print('❌ Não optante\n')
+            _escreve_relatorio_csv(f'{cnpj};"Não optante";{comp};{ano}', nome=andamentos)
+            print('❌ Não optante')
             p.hotkey('ctrl', 'w')
             continue
 
         if not _find_img('2023.png', conf=0.9):
-            _escreve_relatorio_csv(';'.join([cnpj, 'Ano não liberado', comp, ano]), nome='Boletos MEI')
-            print('❌ Ano não liberado\n')
+            _escreve_relatorio_csv(f'{cnpj};"Ano não liberado";{comp};{ano}', nome=andamentos)
+            print('❌ Ano não liberado')
             p.hotkey('ctrl', 'w')
             continue
 
@@ -136,21 +138,20 @@ def boleto_mei(empresas, index):
         time.sleep(1)
 
         if _find_img('NaoTemAnterior.png', conf=0.9):
-            _escreve_relatorio_csv(';'.join([cnpj, 'Não consta pagamento de anos anteriores', comp, ano]), nome='Boletos MEI')
-            print('❌ Não consta pagamento de anos anteriores\n')
+            _escreve_relatorio_csv(f'{cnpj};"Não consta pagamento de anos anteriores";{comp};{ano}', nome=andamentos)
+            print('❌ Não consta pagamento de anos anteriores')
             p.hotkey('ctrl', 'w')
             continue
 
         if _find_img('NaoTemAno.png', conf=0.9):
-            _escreve_relatorio_csv(';'.join([cnpj, 'Não optante', comp, ano]), nome='Boletos MEI')
-            print('❌ Não optante\n')
+            _escreve_relatorio_csv(f'{cnpj};"Não optante";{comp};{ano}', nome=andamentos)
+            print('❌ Não optante')
             p.hotkey('ctrl', 'w')
             continue
 
         if _find_img('AntesDeProsseguir.png', conf=0.9):
-            _escreve_relatorio_csv(';'.join(
-                [cnpj, 'Antes de prosseguir, é necessário apresentar a(s) DASN-Simei do(s) ano(s) anteriores', comp, ano]), nome='Boletos MEI')
-            print('❌ Antes de prosseguir, é necessário apresentar a(s) DASN-Simei do(s) ano(s) anteriores\n')
+            _escreve_relatorio_csv(f'{cnpj};"Antes de prosseguir, é necessário apresentar a(s) DASN-Simei do(s) ano(s) anteriores";{comp};{ano}', nome=andamentos)
+            print('❌ Antes de prosseguir, é necessário apresentar a(s) DASN-Simei do(s) ano(s) anteriores')
             p.hotkey('ctrl', 'w')
             continue
 
@@ -162,8 +163,8 @@ def boleto_mei(empresas, index):
             p.press('pgDn')
             time.sleep(5)
             if not _find_img('mes' + comp + '.png', conf=0.99):
-                _escreve_relatorio_csv(';'.join([cnpj, 'Competência não liberada', comp, ano]), nome='Boletos MEI')
-                print('❌ Competência não liberada\n')
+                _escreve_relatorio_csv(f'{cnpj};"Competência não liberada";{comp};{ano}', nome=andamentos)
+                print('❌ Competência não liberada')
                 p.hotkey('ctrl', 'w')
                 continue
 
@@ -177,24 +178,24 @@ def boleto_mei(empresas, index):
         time.sleep(2)
 
         if _find_img('MesBaixado.png', conf=0.9):
-            _escreve_relatorio_csv(';'.join([cnpj, 'Competência não habilitada', comp, ano]), nome='Boletos MEI')
-            print('❌ Competência não habilitada\n')
+            _escreve_relatorio_csv(f'{cnpj};"Competência não habilitada";{comp};{ano}', nome=andamentos)
+            print('❌ Competência não habilitada')
             p.hotkey('ctrl', 'w')
             continue
 
         if _find_img('JaConsta.png', conf=0.9):
-            _escreve_relatorio_csv(';'.join([cnpj, 'Já consta pagamento', comp, ano]), nome='Boletos MEI')
-            print('❗ Já consta pagamento\n')
+            _escreve_relatorio_csv(f'{cnpj};"Já consta pagamento";{comp};{ano}', nome=andamentos)
+            print('❗ Já consta pagamento')
             p.hotkey('ctrl', 'w')
             continue
 
         _wait_img('Voltar.png', conf=0.9, timeout=-1)
 
-        if not verificacoes(empresa):
+        if not verificacoes(empresa, andamentos):
             continue
 
         # Salvar a guia
-        imprimir(empresa)
+        imprimir(empresa, andamentos)
 
 
 @_time_execution
@@ -211,5 +212,4 @@ def run():
 
 
 if __name__ == '__main__':
-    # _new_session_sn_driver('03684902000182')   Não funciona porque o site reconhece o robô
     run()

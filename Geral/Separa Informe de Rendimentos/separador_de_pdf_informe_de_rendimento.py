@@ -19,8 +19,10 @@ def cria_pdf(pdf, page, matchtexto_nome, prevtexto_nome, pagina1, pagina2, andam
     prevtexto_nome = prevtexto_nome.replace('/', '')
     with fitz.open() as new_pdf:
         text = prevtexto_nome + ' - Informe de Rendimento Funcionários.pdf'
+        
         # Define o caminho para salvar o pdf
         text = os.path.join('Separados', text)
+        
         # Define a página inicial e a final
         new_pdf.insertPDF(pdf, from_page=pagina1, to_page=pagina2)
         new_pdf.save(text)
@@ -33,8 +35,12 @@ def cria_pdf(pdf, page, matchtexto_nome, prevtexto_nome, pagina1, pagina2, andam
 
 
 def separa():
+    # Abrir o pdf
+    file = ask_for_file(filetypes=[('PDF files', '*.pdf *')])
+    if not file:
+        return False
     # Abrir o PDF
-    with fitz.open(r'PDFs\Informe de rendimento funcionários parte 11.pdf') as pdf:
+    with fitz.open(file) as pdf:
         # padraozinho_cnpj = re.compile(r'(\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2})')
         # padraozinho_codigo = re.compile(r'(\d{5})')
         padraozinho_nome = re.compile(r'Responsável pelas Informações\n(.+)')

@@ -46,7 +46,8 @@ def cria_pdf(pasta_final, page, periodo, nome, cnpj, codigo, prev_texto_nome, pr
         prev_texto_nome = nome
         prev_texto_cod = codigo
         prev_texto_cnpj = cnpj
-        return prev_pagina, prev_texto_periodo, prev_texto_nome, prev_texto_cnpj, prev_texto_cod
+        
+    return prev_pagina, prev_texto_periodo, prev_texto_nome, prev_texto_cnpj, prev_texto_cod
 
 
 def separa():

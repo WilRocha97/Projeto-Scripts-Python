@@ -4,7 +4,7 @@ import os, time, pyperclip, shutil, pyautogui as p
 from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img, _click_position_img
-from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, ask_for_dir
+from comum_comum import _time_execution, _escreve_relatorio_csv, ask_for_dir
 
 
 def abre_declaracao(documentos, arquivo):
@@ -128,7 +128,6 @@ def abre_recibo():
     _wait_img('impressao_recibo.png', conf=0.9)
     time.sleep(1)
     _click_img('impressao_recibo.png', conf=0.9)
-    
     
 
 @_time_execution

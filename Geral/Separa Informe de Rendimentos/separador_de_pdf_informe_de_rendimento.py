@@ -5,6 +5,9 @@ import sys
 import os
 from datetime import datetime
 
+from sys import path
+path.append(r'..\..\_comum')
+from comum_comum import ask_for_file
 
 def guarda_info(page, matchtexto_nome):
     prevpagina = page.number
@@ -24,7 +27,7 @@ def cria_pdf(pdf, page, matchtexto_nome, prevtexto_nome, pagina1, pagina2, andam
         text = os.path.join('Separados', text)
         
         # Define a página inicial e a final
-        new_pdf.insertPDF(pdf, from_page=pagina1, to_page=pagina2)
+        new_pdf.insert_pdf(pdf, from_page=pagina1, to_page=pagina2)
         new_pdf.save(text)
     print(andamento)
     prevpagina = page.number
@@ -49,7 +52,7 @@ def separa():
         paginas = 0
 
         for page in pdf:
-            textinho = page.getText('text', flags=1+2+8)
+            textinho = page.get_text('text', flags=1+2+8)
             # matchzinho_cnpj = padraozinho.search(textinho)
             # matchzinho_codigo = padraozinho2.search(textinho)
             matchzinho_nome = padraozinho_nome.search(textinho)

@@ -46,7 +46,27 @@ def abre_declaracao(documentos, arquivo):
     return True, 'ok', caminho_arquivo
 
 
-def salva_pdf():
+def abre_recibo():
+    # aguarda o botão de abrir declaração
+    _wait_img('abrir_recibo.png', conf=0.9)
+    time.sleep(1)
+    _click_img('abrir_recibo.png', conf=0.9)
+    
+    # aguarda a tela de imprimir declaração
+    while not _find_img('impressao_recibo.png', conf=0.9):
+        if _find_img('impressao_recibo_2.png', conf=0.9):
+            break
+    time.sleep(1)
+    
+    # clica no arquivo
+    _click_position_img('seleciona_arquivo.png', '+', pixels_y=28, conf=0.9)
+    
+    time.sleep(1)
+    # clica em ok
+    p.hotkey('alt', 'o')
+
+
+def imprimir_arquivo():
     # aguarda o botão de imprimir delcaração
     while not _find_img('imprimir.png', conf=0.9):
         _click_img('abrir_declaracao.png', conf=0.9, timeout=1)
@@ -69,7 +89,9 @@ def salva_pdf():
     time.sleep(1)
     
     p.hotkey('alt', 'o')
-
+    
+    
+def salvar_pdf():
     # aguarda a tela de visualização
     _wait_img('salvar_pdf.png', conf=0.9)
     time.sleep(1)
@@ -88,7 +110,10 @@ def salva_pdf():
             p.hotkey('alt', 'o')
 
     time.sleep(3)
-    _click_position_img('fechar.png', 'soma', 911, conf=0.9)
+    if _find_img('fechar.png', conf=0.9):
+        _click_position_img('fechar.png', '+', pixels_x=911, conf=0.9)
+    elif _find_img('fechar_2.png', conf=0.9):
+        _click_position_img('fechar_2.png', '+', pixels_x=911, conf=0.9)
     
     return True
 
@@ -118,34 +143,43 @@ def exclui_declaracao(andamentos):
     time.sleep(1)
     
 
-def abre_recibo():
-    # aguarda o botão de abrir declaração
-    _wait_img('abrir_recibo.png', conf=0.9)
-    time.sleep(1)
-    _click_img('abrir_recibo.png', conf=0.9)
-
-    # aguarda a tela de imprimir declaração
-    _wait_img('impressao_recibo.png', conf=0.9)
-    time.sleep(1)
-    _click_img('impressao_recibo.png', conf=0.9)
-    
-
 @_time_execution
 def run():
     tipo_arquivo = p.confirm(buttons=['Declarações', 'Recibos'])
     documentos = ask_for_dir()
+    # pega o nome para a pasta final do aqruivo
+    pasta = documentos.split('/')
+    # define as pastas do programa do irpf
+    irpf_folder = f'C:\\Arquivos de Programas RFB\\IRPF{pasta[5]}\\transmitidas'
     
+    if tipo_arquivo == 'Declarações':
+        pasta = documentos.split('/')
+        andamentos = f'Declarações IRPF {pasta[6]}'
+    
+        final_folder_pdf = f'C:\\Users\\robo\\Documents\\Declarações\\{pasta[6]}_PDF'
+        final_folder = f'C:\\Users\\robo\\Documents\\Declarações\\{pasta[6]}'
+    
+        os.makedirs(final_folder_pdf, exist_ok=True)
+        os.makedirs(final_folder, exist_ok=True)
+    
+    else:
+        # cria o nome da planilha de andamentos
+        andamentos = f'Recibos IRPF {pasta[6]}'
+        
+        # define a pasta final do PDF e a pasta final dos arquivos
+        final_folder_pdf = f'C:\\Users\\robo\\Documents\\Recibos\\{pasta[6]}_PDF'
+        final_folder = f'C:\\Users\\robo\\Documents\\Recibos\\{pasta[6]}'
+    
+        os.makedirs(final_folder_pdf, exist_ok=True)
+        os.makedirs(final_folder, exist_ok=True)
+        
+        if os.listdir(irpf_folder) != '[]':
+            for arquivo in os.listdir(irpf_folder):
+                shutil.move(os.path.join(irpf_folder, arquivo), os.path.join(documentos, arquivo))
+        
     # for cnpj in cnpjs:
     for arquivo in os.listdir(documentos):
         if tipo_arquivo == 'Declarações':
-            pasta = documentos.split('/')
-            andamentos = f'Declarações IRPF {pasta[6]}'
-    
-            final_folder_pdf = f'C:\\Users\\robo\\Documents\\Declarações\\{pasta[6]}_PDF'
-            final_folder = f'C:\\Users\\robo\\Documents\\Declarações\\{pasta[6]}'
-            
-            os.makedirs(final_folder_pdf, exist_ok=True)
-            os.makedirs(final_folder, exist_ok=True)
             
             if arquivo.endswith('.DEC'):
                 print(f'\n{arquivo}')
@@ -155,7 +189,8 @@ def run():
                 continue
         
             if funcao:
-                salva_pdf()
+                imprimir_arquivo()
+                salvar_pdf()
                 mover_pdf(final_folder_pdf)
                 
                 print('✔ PDF gerado com sucesso')
@@ -168,34 +203,32 @@ def run():
                 print(f'❌ {situacao}')
                 shutil.move(os.path.join(documentos, arquivo), os.path.join(final_folder, arquivo))
                 _escreve_relatorio_csv(f'{arquivo};{situacao}', nome=andamentos, end=';')
-                
-            _escreve_relatorio_csv('', nome=andamentos)
         
         else:
             if not arquivo.endswith('.REC'):
                 continue
-                
-            # pega o nome para a pasta final do aqruivo
-            pasta = documentos.split('/')
-            # cria o nome da planilha de andamentos
-            andamentos = f'Recibos IRPF {pasta[6]}'
-            
-            # desmebra o nome do arquivo
-            arquivo_text = arquivo.split('-')
-            
+
             # define o nome do arquivo do recibo e do arquivo da declaração
             arquivo_recibo = arquivo
             arquivo_declaracao = arquivo.replace('.REC', '.DEC')
-            
-            # define as pastas do programa do irpf, a pasta final do PDF e a pasta final dos arquivos
-            irpf_folder = f'C:\\Arquivos de Programas RFB\\IRPF{arquivo_text[3]}\\transmitidas'
-            final_folder_pdf = f'C:\\Users\\robo\\Documents\\Recibos\\{pasta[6]}_PDF'
-            final_folder = f'C:\\Users\\robo\\Documents\\Recibos\\{pasta[6]}'
-            
+
             # move os arquivos da declaração e do recibo para a pasta de transmitidas do programa do irpf para poder gerar o PDF do recibo
             shutil.move(os.path.join(documentos, arquivo_declaracao), os.path.join(irpf_folder, arquivo_declaracao))
             shutil.move(os.path.join(documentos, arquivo_recibo), os.path.join(irpf_folder, arquivo_recibo))
-                
+
+            print(f'\n{arquivo}')
+            abre_recibo()
+            salvar_pdf()
+            mover_pdf(final_folder_pdf)
+            
+            # move os arquivos da declaração e do recibo para a pasta final
+            shutil.move(os.path.join(irpf_folder, arquivo_declaracao), os.path.join(final_folder, arquivo_declaracao))
+            shutil.move(os.path.join(irpf_folder, arquivo_recibo), os.path.join(final_folder, arquivo_recibo))
+
+            print('✔ PDF gerado com sucesso')
+            _escreve_relatorio_csv(f'{arquivo};PDF gerado com sucesso', nome=andamentos, end=';')
+
+        _escreve_relatorio_csv('', nome=andamentos)
             
 if __name__ == '__main__':
     run()

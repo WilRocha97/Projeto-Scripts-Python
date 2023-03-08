@@ -77,15 +77,15 @@ def click_img(img, pasta='imgs', conf=1.0, delay=1, timeout=20, button='left', c
 _click_img = click_img
 
 
-def click_position_img(img, operacao, pixels, pasta='imgs', conf=1.0, clicks=1):
+def click_position_img(img, operacao, pixels_x=0, pixels_y=0, pasta='imgs', conf=1.0, clicks=1):
     img = os.path.join(pasta, img)
     a.moveTo(a.locateCenterOnScreen(img, confidence=conf))
     local_mouse = a.position()
-    if operacao == 'soma':
-        a.click(int(local_mouse[0] + int(pixels)), local_mouse[1], clicks=clicks)
+    if operacao == '+':
+        a.click(int(local_mouse[0] + int(pixels_x)), int(local_mouse[1] + int(pixels_y)), clicks=clicks)
         return True
-    if operacao == 'subtrai':
-        a.click(int(local_mouse[0] - int(pixels)), local_mouse[1], clicks=clicks)
+    if operacao == '-':
+        a.click(int(local_mouse[0] - int(pixels_x)), int(local_mouse[1] - int(pixels_y)), clicks=clicks)
         return True
 _click_position_img = click_position_img
 

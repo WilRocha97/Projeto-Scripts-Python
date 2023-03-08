@@ -21,7 +21,9 @@ def abre_declaracao(documentos, arquivo):
             _click_img('importar_declaracao_anual.png', conf=0.8)
         if _find_img('importar_declaracao_anual_2.png', conf=0.8):
             _click_img('importar_declaracao_anual_2.png', conf=0.8)
-
+        if _find_img('importar_declaracao.png', conf=0.8):
+            break
+            
     time.sleep(2)
     # insere o caminho do arquivo que será importado
     caminho_arquivo = str(os.path.join(documentos, arquivo))

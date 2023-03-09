@@ -15,12 +15,9 @@ def abre_declaracao(documentos, arquivo):
     
     # aguarda a tela de selecionar arquivo para importar
     while not _find_img('importacao.png', conf=0.9):
-        if _find_img('importar_declaracao.png', conf=0.8):
-            _click_img('importar_declaracao.png', conf=0.8)
-        if _find_img('importar_declaracao_anual.png', conf=0.8):
-            _click_img('importar_declaracao_anual.png', conf=0.8)
-        if _find_img('importar_declaracao_anual_2.png', conf=0.8):
-            _click_img('importar_declaracao_anual_2.png', conf=0.8)
+        if _find_img('importar_declaracao_anual.png', conf=0.8) or _find_img('importar_declaracao_anual_2.png', conf=0.8):
+            _click_img('importar_declaracao_anual.png', conf=0.8, timeout=1)
+            _click_img('importar_declaracao_anual_2.png', conf=0.8, timeout=1)
         if _find_img('importar_declaracao.png', conf=0.8):
             break
             
@@ -159,6 +156,7 @@ def run():
     # define as pastas do programa do irpf
     irpf_folder = f'C:\\Arquivos de Programas RFB\\IRPF{pasta[5]}\\transmitidas'
     
+    print(f'{pasta[6]}\n')
     if tipo_arquivo == 'Declarações':
         pasta = documentos.split('/')
         andamentos = f'Declarações IRPF {pasta[6]}'
@@ -237,6 +235,8 @@ def run():
             _escreve_relatorio_csv(f'{arquivo};PDF gerado com sucesso', nome=andamentos, end=';')
 
         _escreve_relatorio_csv('', nome=andamentos)
-            
+    print(andamentos)
+    
+    
 if __name__ == '__main__':
     run()

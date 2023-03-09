@@ -121,11 +121,16 @@ def salvar_pdf():
 
 
 def mover_pdf(final_folder_pdf):
-    download_folder = 'C:\\Users\\robo\\Documents'
-    
-    for arquivo in os.listdir(download_folder):
-        if arquivo.endswith('.pdf'):
-            shutil.move(os.path.join(download_folder, arquivo), os.path.join(final_folder_pdf, arquivo))
+    try:
+        download_folder = 'C:\\Users\\robo\\Documents'
+        
+        for arquivo in os.listdir(download_folder):
+            if arquivo.endswith('.pdf'):
+                shutil.move(os.path.join(download_folder, arquivo), os.path.join(final_folder_pdf, arquivo))
+                
+        return True
+    except:
+        return False
 
 
 def exclui_declaracao(andamentos):
@@ -193,7 +198,8 @@ def run():
             if funcao:
                 imprimir_arquivo()
                 salvar_pdf()
-                mover_pdf(final_folder_pdf)
+                while not mover_pdf(final_folder_pdf):
+                    time.sleep(2)
                 
                 print('✔ PDF gerado com sucesso')
                 shutil.move(os.path.join(documentos, arquivo), os.path.join(final_folder, arquivo))

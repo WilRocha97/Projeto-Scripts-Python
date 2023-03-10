@@ -42,7 +42,8 @@ def consulta_parcelamento(cnpj, tipo, comp, session):
             
     data = {
         '__EVENTTARGET': 'ctl00$contentPlaceH$linkButtonEmitirDAS',
-        '__EVENTARGUMENT': '', '__VIEWSTATE': state,
+        '__EVENTARGUMENT': '',
+        '__VIEWSTATE': state,
         '__VIEWSTATEGENERATOR': generator
     }
 
@@ -61,6 +62,10 @@ def consulta_parcelamento(cnpj, tipo, comp, session):
     if 'Não há parcela disponível para reimpressão' in res.text:
         sys.stdout.write(' ')
         return f'Não há parcela {tipo} disponível para reimpressão'
+    
+    if 'Não há parcela disponível para impressão' in res.text:
+        sys.stdout.write(' ')
+        return f'Não há parcela {tipo} disponível para impressão'
     
     if 'Há um pedido de parcelamento para o contribuinte aguardando confirmação do pagamento da primeira parcela.' in res.text:
         sys.stdout.write('❌ ')

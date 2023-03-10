@@ -20,7 +20,7 @@ def abre_declaracao(documentos, arquivo):
             _click_img('importar_declaracao_anual_2.png', conf=0.8, timeout=1)
         if _find_img('importar_declaracao.png', conf=0.8):
             break
-            
+    
     time.sleep(2)
     # insere o caminho do arquivo que será importado
     caminho_arquivo = str(os.path.join(documentos, arquivo))
@@ -38,7 +38,7 @@ def abre_declaracao(documentos, arquivo):
         
         if _find_img('corrompido.png', conf=0.9):
             p.press('enter')
-            return False , 'Erro na importação da Declaração. Este arquivo está corrompido', caminho_arquivo
+            return False, 'Erro na importação da Declaração. Este arquivo está corrompido', caminho_arquivo
     
     # cofirma que foi importado
     p.press('enter')
@@ -74,10 +74,10 @@ def imprimir_arquivo():
         time.sleep(1)
         if _find_img('imprimir_2.png', conf=0.9):
             break
-        
+    
     time.sleep(2)
     p.hotkey('ctrl', 'p')
-
+    
     # aguarda a tela de impressão
     while not _find_img('selecao_de_impressao.png', conf=0.9):
         if _find_img('selecao_de_impressao_2.png', conf=0.9):
@@ -88,14 +88,14 @@ def imprimir_arquivo():
     time.sleep(1)
     
     p.hotkey('alt', 'o')
-    
-    
+
+
 def salvar_pdf():
     # aguarda a tela de visualização
     _wait_img('salvar_pdf.png', conf=0.9)
     time.sleep(1)
     _click_img('salvar_pdf.png', conf=0.9)
-
+    
     # aguarda a tela de salvar
     _wait_img('tela_salvar.png', conf=0.9)
     time.sleep(1)
@@ -107,7 +107,7 @@ def salvar_pdf():
             p.hotkey('alt', 'o')
         if _find_img('sobrescrever_2.png', conf=0.9):
             p.hotkey('alt', 'o')
-
+    
     time.sleep(3)
     if _find_img('fechar.png', conf=0.9):
         _click_position_img('fechar.png', '+', pixels_x=911, conf=0.9)
@@ -124,7 +124,7 @@ def mover_pdf(final_folder_pdf):
         for arquivo in os.listdir(download_folder):
             if arquivo.endswith('.pdf'):
                 shutil.move(os.path.join(download_folder, arquivo), os.path.join(final_folder_pdf, arquivo))
-                
+        
         return True
     except:
         return False
@@ -137,7 +137,7 @@ def exclui_declaracao(andamentos):
         if _find_img('divergencia_1.png', conf=0.9):
             _escreve_relatorio_csv(f'A soma de todos os rendimentos é menor que a das deduções', nome=andamentos, end=';')
             p.hotkey('alt', 's')
-            
+    
     time.sleep(1)
     p.hotkey('alt', 't')
     time.sleep(1)
@@ -145,7 +145,7 @@ def exclui_declaracao(andamentos):
     time.sleep(1)
     p.hotkey('alt', 's')
     time.sleep(1)
-    
+
 
 @_time_execution
 def run():
@@ -160,10 +160,10 @@ def run():
     if tipo_arquivo == 'Declarações':
         pasta = documentos.split('/')
         andamentos = f'Declarações IRPF {pasta[6]}'
-    
+        
         final_folder_pdf = f'C:\\Users\\robo\\Documents\\Declarações\\{pasta[6]}_PDF'
         final_folder = f'C:\\Users\\robo\\Documents\\Declarações\\{pasta[6]}'
-    
+        
         os.makedirs(final_folder_pdf, exist_ok=True)
         os.makedirs(final_folder, exist_ok=True)
     
@@ -174,14 +174,14 @@ def run():
         # define a pasta final do PDF e a pasta final dos arquivos
         final_folder_pdf = f'C:\\Users\\robo\\Documents\\Recibos\\{pasta[6]}_PDF'
         final_folder = f'C:\\Users\\robo\\Documents\\Recibos\\{pasta[6]}'
-    
+        
         os.makedirs(final_folder_pdf, exist_ok=True)
         os.makedirs(final_folder, exist_ok=True)
         
         if os.listdir(irpf_folder) != '[]':
             for arquivo in os.listdir(irpf_folder):
                 shutil.move(os.path.join(irpf_folder, arquivo), os.path.join(documentos, arquivo))
-        
+    
     # for cnpj in cnpjs:
     for arquivo in os.listdir(documentos):
         if tipo_arquivo == 'Declarações':
@@ -192,7 +192,7 @@ def run():
             else:
                 shutil.move(os.path.join(documentos, arquivo), os.path.join(final_folder, arquivo))
                 continue
-        
+            
             if funcao:
                 imprimir_arquivo()
                 salvar_pdf()
@@ -204,7 +204,7 @@ def run():
                 _escreve_relatorio_csv(f'{arquivo};PDF gerado com sucesso', nome=andamentos, end=';')
                 
                 exclui_declaracao(andamentos)
-                
+            
             else:
                 print(f'❌ {situacao}')
                 shutil.move(os.path.join(documentos, arquivo), os.path.join(final_folder, arquivo))
@@ -213,15 +213,15 @@ def run():
         else:
             if not arquivo.endswith('.REC'):
                 continue
-
+            
             # define o nome do arquivo do recibo e do arquivo da declaração
             arquivo_recibo = arquivo
             arquivo_declaracao = arquivo.replace('.REC', '.DEC')
-
+            
             # move os arquivos da declaração e do recibo para a pasta de transmitidas do programa do irpf para poder gerar o PDF do recibo
             shutil.move(os.path.join(documentos, arquivo_declaracao), os.path.join(irpf_folder, arquivo_declaracao))
             shutil.move(os.path.join(documentos, arquivo_recibo), os.path.join(irpf_folder, arquivo_recibo))
-
+            
             print(f'\n{arquivo}')
             abre_recibo()
             salvar_pdf()
@@ -230,13 +230,13 @@ def run():
             # move os arquivos da declaração e do recibo para a pasta final
             shutil.move(os.path.join(irpf_folder, arquivo_declaracao), os.path.join(final_folder, arquivo_declaracao))
             shutil.move(os.path.join(irpf_folder, arquivo_recibo), os.path.join(final_folder, arquivo_recibo))
-
+            
             print('✔ PDF gerado com sucesso')
             _escreve_relatorio_csv(f'{arquivo};PDF gerado com sucesso', nome=andamentos, end=';')
-
+        
         _escreve_relatorio_csv('', nome=andamentos)
     print(andamentos)
-    
-    
+
+
 if __name__ == '__main__':
     run()

@@ -33,7 +33,6 @@ def consulta_parcelamento(cnpj, tipo, comp, session):
         print('>>> Consultando parcelamento')
         res = session.get(url_home, verify=False)
         
-        
         state, generator = get_info_post(content=res.content)
     except:
         sys.stdout.write('❌ ')

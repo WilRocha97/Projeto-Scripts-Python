@@ -91,9 +91,15 @@ def imprimir_arquivo():
 
 
 def salvar_pdf():
+    aviso = ''
     # aguarda a tela de visualização
-    _wait_img('salvar_pdf.png', conf=0.9)
-    time.sleep(1)
+    while not _find_img('salvar_pdf.png', conf=0.9):
+        time.sleep(1)
+        if _find_img('devolucao_auxilio.png', conf=0.9):
+            aviso = f'Rendimentos tributáveis ou de algum(ns) dependentes ultrapssaram o limite previsto no 2°-B do art. 2° da Lei n° 13.982, de 2020, ' \
+                    f'ficando assim obrigado a devolver o valor do auxílio emergencial recebido, inclusive por seus dependentes.'
+            _click_img('ok.png', conf=0.9)
+            
     _click_img('salvar_pdf.png', conf=0.9)
     
     # aguarda a tela de salvar
@@ -113,8 +119,10 @@ def salvar_pdf():
         _click_position_img('fechar.png', '+', pixels_x=911, conf=0.9)
     elif _find_img('fechar_2.png', conf=0.9):
         _click_position_img('fechar_2.png', '+', pixels_x=911, conf=0.9)
+    elif _find_img('fechar_3.png', conf=0.9):
+        _click_position_img('fechar_3.png', '+', pixels_x=911, conf=0.9)
     
-    return True
+    return aviso
 
 
 def mover_pdf(final_folder_pdf):
@@ -195,13 +203,13 @@ def run():
             
             if funcao:
                 imprimir_arquivo()
-                salvar_pdf()
+                aviso = salvar_pdf()
                 while not mover_pdf(final_folder_pdf):
                     time.sleep(2)
                 
                 print('✔ PDF gerado com sucesso')
                 shutil.move(os.path.join(documentos, arquivo), os.path.join(final_folder, arquivo))
-                _escreve_relatorio_csv(f'{arquivo};PDF gerado com sucesso', nome=andamentos, end=';')
+                _escreve_relatorio_csv(f'{arquivo};PDF gerado com sucesso;{aviso}', nome=andamentos, end=';')
                 
                 exclui_declaracao(andamentos)
             
@@ -224,7 +232,7 @@ def run():
             
             print(f'\n{arquivo}')
             abre_recibo()
-            salvar_pdf()
+            aviso = salvar_pdf()
             mover_pdf(final_folder_pdf)
             
             # move os arquivos da declaração e do recibo para a pasta final
@@ -232,7 +240,7 @@ def run():
             shutil.move(os.path.join(irpf_folder, arquivo_recibo), os.path.join(final_folder, arquivo_recibo))
             
             print('✔ PDF gerado com sucesso')
-            _escreve_relatorio_csv(f'{arquivo};PDF gerado com sucesso', nome=andamentos, end=';')
+            _escreve_relatorio_csv(f'{arquivo};PDF gerado com sucesso;{aviso}', nome=andamentos, end=';')
         
         _escreve_relatorio_csv('', nome=andamentos)
     print(andamentos)

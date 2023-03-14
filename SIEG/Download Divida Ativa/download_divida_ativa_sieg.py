@@ -2,7 +2,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from pyautogui import prompt, confirm
-import os, time, re, csv, shutil, fitz
+import os, time, re, csv, shutil, fitz, pdfkit
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -96,10 +96,10 @@ def consulta_lista(driver):
         sem_recibo = ''
         # faz o download dos comprovantes
         for divida in lista_divida:
-            print('>>> Tentando baixar o comprovantes de pagamento')
+            print('>>> Tentando baixar o arquivo')
             download = True
             while download:
-                driver, contador, erro, download= download_comprovante(contador, driver, divida)
+                driver, contador, erro, download= download_divida(contador, driver, divida)
         
         # _escreve_relatorio_csv(f'{cnpj};{nome};Comprovantes {competencia} baixados;{contador} Arquivos;{sem_recibo}')
         
@@ -119,7 +119,7 @@ def espera_pagina(pagina, driver):
         return False
     
 
-def download_comprovante(contador, driver, divida):
+def download_divida(contador, driver, divida):
     while not click(driver,divida):
         time.sleep(5)
     
@@ -148,11 +148,7 @@ def download_comprovante(contador, driver, divida):
                 arquivo = arq
             
         else:
-            while not os.path.isfile(os.path.join(final_folder, arquivo)):
-                print('>>> Movendo arquivo')
-                shutil.move(os.path.join(download_folder, arquivo), os.path.join(final_folder, arquivo))
-                time.sleep(2)
-                
+            converte_html_pdf(download_folder, final_folder, arquivo)
             time.sleep(2)
             print(f'✔ {arquivo}')
             contador += 1
@@ -178,6 +174,17 @@ def click(driver, divida):
             return False
     
     return True
+
+
+def converte_html_pdf(download_folder, final_folder, arquivo):
+    novo_arquivo = ''
+    
+    # Defina o caminho para o arquivo HTML e PDF
+    caminho_html = os.path.join(download_folder, arquivo)
+    caminho_pdf = os.path.join(final_folder, novo_arquivo)
+    
+    # Converta o arquivo HTML para PDF
+    pdfkit.from_file(caminho_html, caminho_pdf)
 
 
 @_time_execution

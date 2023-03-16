@@ -60,7 +60,7 @@ def sieg_iris(driver):
 
 
 def consulta_lista(driver, continuar_pagina):
-    print('>>> Consultando lista de arquivos')
+    print('>>> Consultando lista de arquivos\n')
     
     # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
     while not localiza_path(driver, '/html/body/form/div[5]/div[3]/div/div/div[3]/div/table/tbody/tr[1]/td/div/span'):
@@ -89,7 +89,7 @@ def consulta_lista(driver, continuar_pagina):
         while not espera_pagina(pagina, driver):
             time.sleep(1)
         
-        print(f'>>> Pagina: {pagina}')
+        print(f'>>> Pagina: {pagina}\n')
         
         info_pagina = driver.page_source
         
@@ -132,6 +132,7 @@ def espera_pagina(pagina, driver):
     
 
 def download_divida(contador, driver, divida, pagina, descricao):
+    descricao = descricao.replace('/', ' ')
     download_folder = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download Divida Ativa\\ignore\\Divida Ativa"
     final_folder = f"V:\\Setor Robô\\Scripts Python\\SIEG\\Download Divida Ativa\\execução\\Divida Ativa {descricao}"
 
@@ -223,14 +224,12 @@ def converte_html_pdf(download_folder, final_folder, arquivo, pagina, descricao)
         time.sleep(2)
         pdfkit.from_file(html_path, pdf_path, configuration=config)
     except:
-        try:
-            time.sleep(5)
-            pdfkit.from_file(html_path, pdf_path, configuration=config)
-        except:
-            _escreve_relatorio_csv(f'{arquivo};Erro ao converter arquivo')
-            final_folder = f"V:\\Setor Robô\\Scripts Python\\SIEG\\Download Divida Ativa\\execução\\Divida Ativa"
-            shutil.move(os.path.join(download_folder, arquivo), os.path.join(final_folder, arquivo))
-            return False
+        _escreve_relatorio_csv(f'{arquivo};Erro ao converter arquivo')
+        final_folder = 'V:\\Setor Robô\\Scripts Python\\SIEG\\Download Divida Ativa\\execução\\Arquivos em HTML'
+        os.makedirs(final_folder, exist_ok=True)
+        shutil.move(html_path, os.path.join(final_folder, novo_arquivo.replace('.pdf', '.html')))
+        print(f'❗ Erro ao converter arquivo\n')
+        return False
         
     print(f'✔ {novo_arquivo}\n')
     return True

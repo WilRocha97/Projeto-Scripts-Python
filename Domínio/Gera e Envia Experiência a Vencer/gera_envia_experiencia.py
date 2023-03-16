@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import shutil, fitz, re, pyperclip, time, os, pyautogui as p
+import fitz, re, time, os, pyautogui as p, datetime as date_time
 from datetime import datetime
 
 from sys import path
@@ -68,6 +68,23 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
     p.press('del', presses=4)
     time.sleep(0.5)
     p.press('*')
+
+    hoje, data_subtraida = define_data()
+
+    # insere a data de início e fim do contrato
+    time.sleep(0.5)
+    p.press('tab')
+    time.sleep(0.5)
+    p.press('del', presses=4)
+    time.sleep(0.5)
+    p.write(data_subtraida)
+
+    time.sleep(0.5)
+    p.press('tab')
+    time.sleep(0.5)
+    p.press('del', presses=4)
+    time.sleep(0.5)
+    p.write(hoje)
     
     # executa
     time.sleep(0.5)
@@ -177,6 +194,19 @@ def envia_experiencia(comp):
     # confirma o envio do arquivo
     p.hotkey('Alt', 'g')
     time.sleep(5)
+
+
+def define_data():
+    # Obter a data atual
+    hoje = date_time.date.today()
+
+    # Subtrair 90 dias da data atual
+    data_subtraida = hoje - date_time.timedelta(days=90)
+
+    hoje = hoje.strftime('%d/%m/%Y')
+    data_subtraida = data_subtraida.strftime('%d/%m/%Y')
+
+    return hoje.replace('//', '/'), data_subtraida.replace('//', '/')
 
 
 @_time_execution

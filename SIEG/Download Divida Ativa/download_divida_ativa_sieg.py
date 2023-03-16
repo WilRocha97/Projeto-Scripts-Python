@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
 from pyautogui import prompt, confirm
-import os, time, re, csv, shutil, fitz, pdfkit
+from bs4 import BeautifulSoup
+import os, time, re, csv, shutil, fitz, pdfkit, pyautogui as p
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -57,31 +59,39 @@ def sieg_iris(driver):
     return driver
 
 
-def consulta_lista(driver):
-
+def consulta_lista(driver, continuar_pagina):
     print('>>> Consultando lista de arquivos')
     
     # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
     while not localiza_path(driver, '/html/body/form/div[5]/div[3]/div/div/div[3]/div/table/tbody/tr[1]/td/div/span'):
-        driver.execute_script('document.getElementById("modalYouTube").style="display: none;"')
         time.sleep(1)
+    time.sleep(2)
+    if localiza_id(driver, 'modalYouTube'):
+        # Encontre um elemento que esteja fora do modal e clique nele
+        elemento_fora_modal = driver.find_element(by=By.ID, value='txtDataSearch')
+        ActionChains(driver).move_to_element(elemento_fora_modal).click().perform()
 
-    driver = sieg_iris(driver)
-
-    # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
-    while not localiza_path(driver, '/html/body/form/div[5]/div[3]/div/div/div[3]/div/table/tbody/tr[1]/td/div/span'):
-        time.sleep(1)
-        
+    time.sleep(1)
     paginas = re.compile(r'>(\d+)</a></span><a class=\"paginate_button btn btn-default next').search(driver.page_source).group(1)
     
     for pagina in range(int(paginas)+1):
         if pagina == 0:
             continue
         
+        if pagina < int(continuar_pagina):
+            driver.find_element(by=By.ID, value='tableActiveDebit_next').click()
+            # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
+            while re.compile(r'id=\"tableActiveDebit_processing\" class=\"\" style=\"display: block;').search(driver.page_source):
+                time.sleep(1)
+            time.sleep(3)
+            continue
+        
         while not espera_pagina(pagina, driver):
             time.sleep(1)
         
         print(f'>>> Pagina: {pagina}')
+        
+        info_pagina = driver.page_source
         
         detalhes = re.compile(r'btn-details float-right\" (data-id=\".+\") onclick=\"SeeDetails').findall(driver.page_source)
         for detalhe in detalhes:
@@ -92,19 +102,21 @@ def consulta_lista(driver):
         lista_divida = re.compile(r'excel\"><a id=\"(.+)\" class=\"btn iris-btn iris-btn-orange iris-btn-sm margin-left\"').findall(driver.page_source)
     
         contador = 0
-        erro = ''
-        sem_recibo = ''
         # faz o download dos comprovantes
         for divida in lista_divida:
             print('>>> Tentando baixar o arquivo')
             download = True
             while download:
-                driver, contador, erro, download= download_divida(contador, driver, divida)
+                empresa = re.compile(r"col-md-3 td-background-dt hidden-xs\">(.+)</td><td class=\" td-background-dt hidden-xs\">.+excel\"><a id=\"" + divida + "\" class=\"btn iris-btn iris-btn-orange iris-btn-sm margin-left\"")
+                descricao = empresa.search(driver.page_source).group(1)
+                
+                driver, contador, erro, download= download_divida(contador, driver, divida, pagina, descricao)
+                
+        driver.find_element(by=By.ID, value='tableActiveDebit_next').click()
         
-        # _escreve_relatorio_csv(f'{cnpj};{nome};Comprovantes {competencia} baixados;{contador} Arquivos;{sem_recibo}')
-        
-        if pagina != int(paginas):
-            driver.find_element(by=By.ID, value='tableActiveDebit_next').click()
+        while info_pagina == driver.page_source:
+            print(f'>>> Aguardando Página {pagina}\n')
+            time.sleep(2)
         
         time.sleep(1)
         
@@ -119,18 +131,32 @@ def espera_pagina(pagina, driver):
         return False
     
 
-def download_divida(contador, driver, divida):
+def download_divida(contador, driver, divida, pagina, descricao):
+    download_folder = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download Divida Ativa\\ignore\\Divida Ativa"
+    final_folder = f"V:\\Setor Robô\\Scripts Python\\SIEG\\Download Divida Ativa\\execução\\Divida Ativa {descricao}"
+
+    os.makedirs(download_folder, exist_ok=True)
+    os.makedirs(final_folder, exist_ok=True)
+    
+    for arquivo in os.listdir(download_folder):
+        os.remove(os.path.join(download_folder, arquivo))
+
+    contador_4 = 0
     while not click(driver,divida):
         time.sleep(5)
-    
-    download_folder = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download Divida Ativa\\ignore\\Divida Ativa"
-    final_folder = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download Divida Ativa\\execução\\Divida Ativa"
+        contador_4 += 1
+        if contador_4 > 5:
+            return driver, contador, 'erro', True
     
     contador_3 = 0
     while os.listdir(download_folder) == []:
         if contador_3 > 10:
+            contador_4 = 0
             while not click(driver, divida):
                 time.sleep(5)
+                contador_4 += 1
+                if contador_4 > 5:
+                    return driver, contador, 'erro', True
             contador_3 = 0
         time.sleep(1)
         contador_3 += 1
@@ -146,12 +172,13 @@ def download_divida(contador, driver, divida):
             time.sleep(3)
             for arq in os.listdir(download_folder):
                 arquivo = arq
-            
+        
         else:
-            converte_html_pdf(download_folder, final_folder, arquivo)
             time.sleep(2)
-            print(f'✔ {arquivo}')
-            contador += 1
+            for arq in os.listdir(download_folder):
+                converte_html_pdf(download_folder, final_folder, arq, pagina, descricao)
+                time.sleep(2)
+                contador += 1
             
             for arquivo in os.listdir(download_folder):
                 os.remove(os.path.join(download_folder, arquivo))
@@ -164,33 +191,82 @@ def click(driver, divida):
     contador_2 = 0
     clicou = 'não'
     while clicou == 'não':
-        '''try:'''
-        driver.find_element(by=By.ID, value=divida).click()
-        clicou = 'sim'
-        '''except:
+        try:
+            driver.find_element(by=By.ID, value=divida).click()
+            clicou = 'sim'
+        except:
             contador_2 += 1
-            clicou = 'não'''
+            clicou = 'não'
         if contador_2 > 5:
             return False
     
     return True
 
 
-def converte_html_pdf(download_folder, final_folder, arquivo):
-    novo_arquivo = ''
+def converte_html_pdf(download_folder, final_folder, arquivo, pagina, descricao):
+    # Defina o caminho para o arquivo HTML e PDF
+    html_path  = os.path.join(download_folder, arquivo)
+    
+    # define o novo nome do arquivo PDF
+    novo_arquivo = pega_info_arquivo(html_path, descricao)
     
     # Defina o caminho para o arquivo HTML e PDF
-    caminho_html = os.path.join(download_folder, arquivo)
-    caminho_pdf = os.path.join(final_folder, novo_arquivo)
+    pdf_path = os.path.join(final_folder, novo_arquivo)
     
-    # Converta o arquivo HTML para PDF
-    pdfkit.from_file(caminho_html, caminho_pdf)
+    # Localização do executável do wkhtmltopdf
+    wkhtmltopdf_path = r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe'
+
+    # Configuração do pdfkit para utilizar o wkhtmltopdf
+    config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
+    
+    try:
+        time.sleep(2)
+        pdfkit.from_file(html_path, pdf_path, configuration=config)
+    except:
+        try:
+            time.sleep(5)
+            pdfkit.from_file(html_path, pdf_path, configuration=config)
+        except:
+            _escreve_relatorio_csv(f'{arquivo};Erro ao converter arquivo')
+            final_folder = f"V:\\Setor Robô\\Scripts Python\\SIEG\\Download Divida Ativa\\execução\\Divida Ativa"
+            shutil.move(os.path.join(download_folder, arquivo), os.path.join(final_folder, arquivo))
+            return False
+        
+    print(f'✔ {novo_arquivo}\n')
+    return True
+    
+
+def pega_info_arquivo(html_path, descricao):
+    # abrir o arquivo html
+    with open(html_path, 'r', encoding='utf-8') as file:
+        html = file.read()
+    
+        # extrair o texto do arquivo html usando BeautifulSoup
+        soup = BeautifulSoup(html, 'html.parser')
+        text = soup.get_text()
+        
+        try:
+            nome = re.compile(r'Devedor Principal:\n.+\n\n.+ {2}(.+)\n').search(text).group(1)
+            cpf_cnpj = re.compile(r'CNPJ/CPF:\n.+\n\n.+ {2}(.+)\n').search(text).group(1)
+            inscricao = re.compile(r'Inscrição:\n.+\n\n.+ {2}(.+)\n').search(text).group(1)
+        except:
+            nome = re.compile(r'Devedor Principal:\n(.+)\n').search(text).group(1)
+            cpf_cnpj = re.compile(r'CNPJ/CPF:\n(.+)\n').search(text).group(1)
+            inscricao = re.compile(r'N\.º Inscrição:\n(.+)\n').search(text).group(1)
+            
+        inscricao = inscricao.replace('.', '').replace('-', '').replace(' ', '')
+        cpf_cnpj = cpf_cnpj.replace('.', '').replace('/', '').replace('-', '')
+        
+        nome_pdf = f'{nome} - {cpf_cnpj} - Divida Ativa {descricao} - {inscricao}.pdf'
+    
+    return nome_pdf
 
 
 @_time_execution
 def run():
-    os.makedirs('execução/Divida Ativa', exist_ok=True)
-    os.makedirs('ignore/Divida Ativa', exist_ok=True)
+    
+
+    continuar_pagina = p.prompt(text='Continuar a partir de qual página?')
     
     # opções para fazer com que o chome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
@@ -212,7 +288,7 @@ def run():
     while erro == 'sim':
         '''try:'''
         driver = sieg_iris(driver)
-        driver = consulta_lista(driver)
+        driver = consulta_lista(driver, continuar_pagina)
         erro = 'não'
         '''except:
             erro = 'sim'

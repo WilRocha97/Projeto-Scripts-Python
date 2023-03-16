@@ -8,7 +8,6 @@ path.append(r'..\..\_comum')
 from comum_comum import ask_for_dir
 from comum_comum import _escreve_relatorio_csv, _escreve_header_csv
 
-# Definir os padrões de regex
 
 def analiza():
     documentos = ask_for_dir()

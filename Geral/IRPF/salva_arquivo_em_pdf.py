@@ -227,9 +227,17 @@ def run():
             arquivo_declaracao = arquivo.replace('.REC', '.DEC')
             
             # move os arquivos da declaração e do recibo para a pasta de transmitidas do programa do irpf para poder gerar o PDF do recibo
-            shutil.move(os.path.join(documentos, arquivo_declaracao), os.path.join(irpf_folder, arquivo_declaracao))
-            shutil.move(os.path.join(documentos, arquivo_recibo), os.path.join(irpf_folder, arquivo_recibo))
-            
+            try:
+                shutil.move(os.path.join(documentos, arquivo_declaracao), os.path.join(irpf_folder, arquivo_declaracao))
+            except:
+                _escreve_relatorio_csv(f'{arquivo};Arquivo referênte a declaração não encontrado', nome=andamentos, )
+                continue
+            try:
+                shutil.move(os.path.join(documentos, arquivo_recibo), os.path.join(irpf_folder, arquivo_recibo))
+            except:
+                _escreve_relatorio_csv(f'{arquivo};Arquivo referênte ao recibo não encontrado', nome=andamentos,)
+                continue
+
             print(f'\n{arquivo}')
             abre_recibo()
             aviso = salvar_pdf()

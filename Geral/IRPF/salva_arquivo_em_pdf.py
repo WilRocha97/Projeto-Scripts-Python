@@ -209,7 +209,7 @@ def run():
             
             if funcao:
                 imprimir_arquivo()
-                aviso = salvar_pdf()
+                aviso = salvar_pdf(arquivo, andamentos)
                 while not mover_pdf(final_folder_pdf):
                     time.sleep(2)
                 

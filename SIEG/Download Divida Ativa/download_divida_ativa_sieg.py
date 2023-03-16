@@ -80,7 +80,7 @@ def consulta_lista(driver, continuar_pagina):
         
         if pagina < int(continuar_pagina):
             driver.find_element(by=By.ID, value='tableActiveDebit_next').click()
-            # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
+            # espera a lista de arquivos carregar
             while re.compile(r'id=\"tableActiveDebit_processing\" class=\"\" style=\"display: block;').search(driver.page_source):
                 time.sleep(1)
             time.sleep(3)
@@ -89,7 +89,7 @@ def consulta_lista(driver, continuar_pagina):
         while not espera_pagina(pagina, driver):
             time.sleep(1)
         
-        print(f'>>> Pagina: {pagina}\n')
+        print(f'>>> Página: {pagina}\n')
         
         info_pagina = driver.page_source
         
@@ -109,10 +109,18 @@ def consulta_lista(driver, continuar_pagina):
             while download:
                 empresa = re.compile(r"col-md-3 td-background-dt hidden-xs\">(.+)</td><td class=\" td-background-dt hidden-xs\">.+excel\"><a id=\"" + divida + "\" class=\"btn iris-btn iris-btn-orange iris-btn-sm margin-left\"")
                 descricao = empresa.search(driver.page_source).group(1)
-                
-                driver, contador, erro, download= download_divida(contador, driver, divida, pagina, descricao)
+                    
+                driver, contador, erro, download= download_divida(contador, driver, divida, descricao)
+                if erro == 'erro':
+                    _escreve_relatorio_csv(f'Erro ao baixar arquivo;Pagina: {pagina}')
+                    print('>>> Erro ao baixar o arquivo\n')
+                    break
                 
         driver.find_element(by=By.ID, value='tableActiveDebit_next').click()
+        # espera a lista de arquivos carregar
+        while re.compile(r'id=\"tableActiveDebit_processing\" class=\"\" style=\"display: block;').search(driver.page_source):
+            time.sleep(1)
+        time.sleep(3)
         
         while info_pagina == driver.page_source:
             print(f'>>> Aguardando Página {pagina}\n')
@@ -131,7 +139,7 @@ def espera_pagina(pagina, driver):
         return False
     
 
-def download_divida(contador, driver, divida, pagina, descricao):
+def download_divida(contador, driver, divida, descricao):
     descricao = descricao.replace('/', ' ')
     download_folder = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download Divida Ativa\\ignore\\Divida Ativa"
     final_folder = f"V:\\Setor Robô\\Scripts Python\\SIEG\\Download Divida Ativa\\execução\\Divida Ativa {descricao}"
@@ -142,23 +150,19 @@ def download_divida(contador, driver, divida, pagina, descricao):
     for arquivo in os.listdir(download_folder):
         os.remove(os.path.join(download_folder, arquivo))
 
-    contador_4 = 0
-    while not click(driver,divida):
+    while not click(driver, divida):
         time.sleep(5)
-        contador_4 += 1
-        if contador_4 > 5:
-            return driver, contador, 'erro', True
     
     contador_3 = 0
+    contador_4 = 0
     while os.listdir(download_folder) == []:
         if contador_3 > 10:
-            contador_4 = 0
             while not click(driver, divida):
                 time.sleep(5)
-                contador_4 += 1
-                if contador_4 > 5:
-                    return driver, contador, 'erro', True
+            contador_4 += 1
             contador_3 = 0
+        if contador_4 > 5:
+            return driver, contador, 'erro', True
         time.sleep(1)
         contador_3 += 1
     
@@ -177,7 +181,7 @@ def download_divida(contador, driver, divida, pagina, descricao):
         else:
             time.sleep(2)
             for arq in os.listdir(download_folder):
-                converte_html_pdf(download_folder, final_folder, arq, pagina, descricao)
+                converte_html_pdf(download_folder, final_folder, arq, descricao)
                 time.sleep(2)
                 contador += 1
             
@@ -204,7 +208,7 @@ def click(driver, divida):
     return True
 
 
-def converte_html_pdf(download_folder, final_folder, arquivo, pagina, descricao):
+def converte_html_pdf(download_folder, final_folder, arquivo, descricao):
     # Defina o caminho para o arquivo HTML e PDF
     html_path  = os.path.join(download_folder, arquivo)
     
@@ -232,6 +236,7 @@ def converte_html_pdf(download_folder, final_folder, arquivo, pagina, descricao)
         return False
         
     print(f'✔ {novo_arquivo}\n')
+    _escreve_relatorio_csv(f'{novo_arquivo}')
     return True
     
 
@@ -245,7 +250,10 @@ def pega_info_arquivo(html_path, descricao):
         text = soup.get_text()
         
         try:
-            nome = re.compile(r'Devedor Principal:\n.+\n\n.+ {2}(.+)\n').search(text).group(1)
+            try:
+                nome = re.compile(r'RFB\n\n\n\nNome:\n(.+)').search(text).group(1)
+            except:
+                nome = re.compile(r'Devedor Principal:\n.+\n\n.+ {2}(.+)\n').search(text).group(1)
             cpf_cnpj = re.compile(r'CNPJ/CPF:\n.+\n\n.+ {2}(.+)\n').search(text).group(1)
             inscricao = re.compile(r'Inscrição:\n.+\n\n.+ {2}(.+)\n').search(text).group(1)
         except:
@@ -254,6 +262,7 @@ def pega_info_arquivo(html_path, descricao):
             inscricao = re.compile(r'N\.º Inscrição:\n(.+)\n').search(text).group(1)
             
         inscricao = inscricao.replace('.', '').replace('-', '').replace(' ', '')
+        nome = nome.replace('/', '')
         cpf_cnpj = cpf_cnpj.replace('.', '').replace('/', '').replace('-', '')
         
         nome_pdf = f'{nome} - {cpf_cnpj} - Divida Ativa {descricao} - {inscricao}.pdf'
@@ -263,8 +272,6 @@ def pega_info_arquivo(html_path, descricao):
 
 @_time_execution
 def run():
-    
-
     continuar_pagina = p.prompt(text='Continuar a partir de qual página?')
     
     # opções para fazer com que o chome trabalhe em segundo plano (opcional)
@@ -282,18 +289,8 @@ def run():
     # iniciar o driver do chome
     status, driver = _initialize_chrome(options)
     driver = login_sieg(driver)
-
-    erro = 'sim'
-    while erro == 'sim':
-        '''try:'''
-        driver = sieg_iris(driver)
-        driver = consulta_lista(driver, continuar_pagina)
-        erro = 'não'
-        '''except:
-            erro = 'sim'
-            driver.close()
-            status, driver = _initialize_chrome(options)
-            driver = login_sieg(driver)'''
+    driver = sieg_iris(driver)
+    driver = consulta_lista(driver, continuar_pagina)
 
     driver.close()
     

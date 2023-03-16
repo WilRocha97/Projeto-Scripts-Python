@@ -90,7 +90,7 @@ def imprimir_arquivo():
     p.hotkey('alt', 'o')
 
 
-def salvar_pdf():
+def salvar_pdf(arquivo, andamentos):
     aviso = ''
     # aguarda a tela de visualização
     while not _find_img('salvar_pdf.png', conf=0.9):
@@ -99,7 +99,13 @@ def salvar_pdf():
             aviso = f'Rendimentos tributáveis ou de algum(ns) dependentes ultrapssaram o limite previsto no 2°-B do art. 2° da Lei n° 13.982, de 2020, ' \
                     f'ficando assim obrigado a devolver o valor do auxílio emergencial recebido, inclusive por seus dependentes.'
             _click_img('ok.png', conf=0.9)
-            
+        
+        if _find_img('ocorreu_erro.png', conf=0.9):
+            p.hotkey('alt', 'o')
+            print('❌ Ocorreu um erro inesperado ao obrir o recibo')
+            _escreve_relatorio_csv(f'{arquivo};Ocorreu um erro inesperado ao obrir o recibo', nome=andamentos)
+            return 'erro inesperado'
+
     _click_img('salvar_pdf.png', conf=0.9)
     
     # aguarda a tela de salvar
@@ -240,7 +246,14 @@ def run():
 
             print(f'\n{arquivo}')
             abre_recibo()
-            aviso = salvar_pdf()
+            aviso = salvar_pdf(arquivo, andamentos)
+
+            if aviso == 'erro inesperado':
+                # move os arquivos da declaração e do recibo para a pasta final
+                shutil.move(os.path.join(irpf_folder, arquivo_declaracao), os.path.join(final_folder, arquivo_declaracao))
+                shutil.move(os.path.join(irpf_folder, arquivo_recibo), os.path.join(final_folder, arquivo_recibo))
+                continue
+
             mover_pdf(final_folder_pdf)
             
             # move os arquivos da declaração e do recibo para a pasta final

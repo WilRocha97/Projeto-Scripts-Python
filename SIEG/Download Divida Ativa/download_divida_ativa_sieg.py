@@ -85,8 +85,9 @@ def consulta_lista(driver, continuar_pagina):
                 time.sleep(1)
             time.sleep(3)
             continue
-        
-        while not espera_pagina(pagina, driver):
+
+        # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
+        while not localiza_path(driver, '/html/body/form/div[5]/div[3]/div/div/div[3]/div/table/tbody/tr[1]/td/div/span'):
             time.sleep(1)
         
         print(f'>>> Página: {pagina}\n')
@@ -96,6 +97,7 @@ def consulta_lista(driver, continuar_pagina):
         detalhes = re.compile(r'btn-details float-right\" (data-id=\".+\") onclick=\"SeeDetails').findall(driver.page_source)
         for detalhe in detalhes:
             driver.find_element(by=By.XPATH, value=f'//a[@{detalhe}]').click()
+            time.sleep(1)
         
         time.sleep(1)
         # pega a lista de guias da competência desejada
@@ -112,7 +114,7 @@ def consulta_lista(driver, continuar_pagina):
                     
                 driver, contador, erro, download= download_divida(contador, driver, divida, descricao)
                 if erro == 'erro':
-                    _escreve_relatorio_csv(f'Erro ao baixar arquivo;Pagina: {pagina}')
+                    _escreve_relatorio_csv(f'Use a empresa anterior da lista para localizar este arquivo no site;Erro;Erro ao baixar arquivo;Pagina do site: {pagina}')
                     print('>>> Erro ao baixar o arquivo\n')
                     break
                 
@@ -152,7 +154,8 @@ def download_divida(contador, driver, divida, descricao):
 
     while not click(driver, divida):
         time.sleep(5)
-    
+
+    time.sleep(2)
     contador_3 = 0
     contador_4 = 0
     while os.listdir(download_folder) == []:
@@ -163,14 +166,19 @@ def download_divida(contador, driver, divida, descricao):
             contador_3 = 0
         if contador_4 > 5:
             return driver, contador, 'erro', True
-        time.sleep(1)
+        time.sleep(2)
         contador_3 += 1
     
     for arquivo in os.listdir(download_folder):
         # caso exista algum arquivo com problema, tenta de novo o mesmo arquivo
-        if re.compile(r'.tmp').search(arquivo):
-            os.remove(os.path.join(download_folder, arquivo))
-            return driver, contador, 'ok', True
+        while re.compile(r'.tmp').search(arquivo):
+            try:
+                os.remove(os.path.join(download_folder, arquivo))
+                return driver, contador, 'ok', True
+            except:
+                pass
+            for arq in os.listdir(download_folder):
+                arquivo = arq
         
         while re.compile(r'crdownload').search(arquivo):
             print('>>> Aguardando download...')
@@ -228,7 +236,7 @@ def converte_html_pdf(download_folder, final_folder, arquivo, descricao):
         time.sleep(2)
         pdfkit.from_file(html_path, pdf_path, configuration=config)
     except:
-        _escreve_relatorio_csv(f'{arquivo};Erro ao converter arquivo')
+        _escreve_relatorio_csv(f'{novo_arquivo.replace(".pdf", ".html")};Arquivo HTML salvo;Erro ao converter arquivo')
         final_folder = 'V:\\Setor Robô\\Scripts Python\\SIEG\\Download Divida Ativa\\execução\\Arquivos em HTML'
         os.makedirs(final_folder, exist_ok=True)
         shutil.move(html_path, os.path.join(final_folder, novo_arquivo.replace('.pdf', '.html')))
@@ -236,7 +244,7 @@ def converte_html_pdf(download_folder, final_folder, arquivo, descricao):
         return False
         
     print(f'✔ {novo_arquivo}\n')
-    _escreve_relatorio_csv(f'{novo_arquivo}')
+    _escreve_relatorio_csv(f'{novo_arquivo.replace(" - ", ";")}')
     return True
     
 

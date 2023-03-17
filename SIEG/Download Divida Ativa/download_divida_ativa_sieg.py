@@ -74,7 +74,7 @@ def consulta_lista(driver, continuar_pagina):
     time.sleep(1)
     paginas = re.compile(r'>(\d+)</a></span><a class=\"paginate_button btn btn-default next').search(driver.page_source).group(1)
     
-    for pagina in range(int(paginas)+1):
+    for pagina in range(int(paginas)):
         if pagina == 0:
             continue
         
@@ -270,10 +270,12 @@ def pega_info_arquivo(html_path, descricao):
             inscricao = re.compile(r'N\.º Inscrição:\n(.+)\n').search(text).group(1)
             
         inscricao = inscricao.replace('.', '').replace('-', '').replace(' ', '')
-        nome = nome.replace('/', '')
+        nome = nome[:20]
+        nome = nome.replace('/', '').replace("-", "")
         cpf_cnpj = cpf_cnpj.replace('.', '').replace('/', '').replace('-', '')
         
-        nome_pdf = f'{nome} - {cpf_cnpj} - Divida Ativa {descricao} - {inscricao}.pdf'
+        nome_pdf = f'{nome} - {cpf_cnpj} - {descricao}-{inscricao}.pdf'
+        nome_pdf = nome_pdf.replace('  ', ' ')
     
     return nome_pdf
 

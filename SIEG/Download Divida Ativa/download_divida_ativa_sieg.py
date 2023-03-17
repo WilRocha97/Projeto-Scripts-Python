@@ -89,7 +89,8 @@ def consulta_lista(driver, continuar_pagina):
         # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
         while not localiza_path(driver, '/html/body/form/div[5]/div[3]/div/div/div[3]/div/table/tbody/tr[1]/td/div/span'):
             time.sleep(1)
-        
+
+        time.sleep(1)
         print(f'>>> Página: {pagina}\n')
         
         info_pagina = driver.page_source
@@ -142,19 +143,24 @@ def espera_pagina(pagina, driver):
     
 
 def download_divida(contador, driver, divida, descricao):
+    # formata o texto da descrição da dívida e define as pastas de download do arquivo e a pasta final do PDF
     descricao = descricao.replace('/', ' ')
     download_folder = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download Divida Ativa\\ignore\\Divida Ativa"
     final_folder = f"V:\\Setor Robô\\Scripts Python\\SIEG\\Download Divida Ativa\\execução\\Divida Ativa {descricao}"
-
+    
+    # cria as pastas de download e a pasta final do arquivo
     os.makedirs(download_folder, exist_ok=True)
     os.makedirs(final_folder, exist_ok=True)
     
+    # limpa a pasta de download para não ter conflito com novos arquivos
     for arquivo in os.listdir(download_folder):
         os.remove(os.path.join(download_folder, arquivo))
-
+    
+    # tenta clicar em donwload até conseguir
     while not click(driver, divida):
         time.sleep(5)
-
+    
+    # se conseguir, mas não aparecer nada na pasta, continua tentando baixar até o limite de 6 tentativas
     time.sleep(2)
     contador_3 = 0
     contador_4 = 0
@@ -169,6 +175,7 @@ def download_divida(contador, driver, divida, descricao):
         time.sleep(2)
         contador_3 += 1
     
+    # verifica se os arquivos baixados estão com erro ou ainda não terminaram de baixar
     for arquivo in os.listdir(download_folder):
         # caso exista algum arquivo com problema, tenta de novo o mesmo arquivo
         while re.compile(r'.tmp').search(arquivo):
@@ -188,11 +195,13 @@ def download_divida(contador, driver, divida, descricao):
         
         else:
             time.sleep(2)
+            # se não tiver problema com o arquivo baixado, tenta converter
             for arq in os.listdir(download_folder):
                 converte_html_pdf(download_folder, final_folder, arq, descricao)
                 time.sleep(2)
                 contador += 1
             
+            # limpa a pasta de download caso fique algum arquivo nela
             for arquivo in os.listdir(download_folder):
                 os.remove(os.path.join(download_folder, arquivo))
                 
@@ -200,6 +209,7 @@ def download_divida(contador, driver, divida, descricao):
 
 
 def click(driver, divida):
+    # função para clicar em elementos via ID
     print('>>> Baixando arquivo')
     contador_2 = 0
     clicou = 'não'
@@ -231,7 +241,9 @@ def converte_html_pdf(download_folder, final_folder, arquivo, descricao):
 
     # Configuração do pdfkit para utilizar o wkhtmltopdf
     config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
-    
+
+    # tenta converter o PDF, se não conseguir ano na planilha o nome do arquivo em html que deu erro na conversõa
+    # e coloca ele em uma pasta separada para arquivos em html
     try:
         time.sleep(2)
         pdfkit.from_file(html_path, pdf_path, configuration=config)
@@ -242,7 +254,8 @@ def converte_html_pdf(download_folder, final_folder, arquivo, descricao):
         shutil.move(html_path, os.path.join(final_folder, novo_arquivo.replace('.pdf', '.html')))
         print(f'❗ Erro ao converter arquivo\n')
         return False
-        
+    
+    # anota o arquivo que acabou de baixar e converter
     print(f'✔ {novo_arquivo}\n')
     _escreve_relatorio_csv(f'{novo_arquivo.replace(" - ", ";").replace("-", ";")}')
     return True
@@ -257,6 +270,7 @@ def pega_info_arquivo(html_path, descricao):
         soup = BeautifulSoup(html, 'html.parser')
         text = soup.get_text()
         
+        # pega as infos da empresa e a insncrição do documento porque tem empresas com mais de um arquivo
         try:
             try:
                 nome = re.compile(r'RFB\n\n\n\nNome:\n(.+)').search(text).group(1)
@@ -268,7 +282,8 @@ def pega_info_arquivo(html_path, descricao):
             nome = re.compile(r'Devedor Principal:\n(.+)\n').search(text).group(1)
             cpf_cnpj = re.compile(r'CNPJ/CPF:\n(.+)\n').search(text).group(1)
             inscricao = re.compile(r'N\.º Inscrição:\n(.+)\n').search(text).group(1)
-            
+        
+        # formata os textos
         inscricao = inscricao.replace('.', '').replace('-', '').replace(' ', '')
         nome = nome[:20]
         nome = nome.replace('/', '').replace("-", "")

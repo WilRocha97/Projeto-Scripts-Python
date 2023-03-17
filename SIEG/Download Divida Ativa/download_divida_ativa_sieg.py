@@ -244,7 +244,7 @@ def converte_html_pdf(download_folder, final_folder, arquivo, descricao):
         return False
         
     print(f'✔ {novo_arquivo}\n')
-    _escreve_relatorio_csv(f'{novo_arquivo.replace(" - ", ";")}')
+    _escreve_relatorio_csv(f'{novo_arquivo.replace(" - ", ";").replace("-", ";")}')
     return True
     
 

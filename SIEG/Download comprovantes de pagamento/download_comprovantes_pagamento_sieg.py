@@ -31,7 +31,7 @@ def login_sieg(driver):
     print('>>> Acessando o site')
     time.sleep(1)
 
-    dados = "V:\\Setor Robô\\Scripts Python\\Veri\\Dados.txt"
+    dados = "V:\\Setor Robô\\Scripts Python\\_comum\\DadosVeri-SIEG.txt"
     f = open(dados, 'r', encoding='utf-8')
     user = f.read()
     user = user.split('/')

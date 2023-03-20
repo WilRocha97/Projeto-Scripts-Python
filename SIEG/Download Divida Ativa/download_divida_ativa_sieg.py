@@ -33,7 +33,7 @@ def login_sieg(driver):
     print('>>> Acessando o site')
     time.sleep(1)
 
-    dados = "V:\\Setor Robô\\Scripts Python\\Veri\\Dados.txt"
+    dados = "V:\\Setor Robô\\Scripts Python\\_comum\\DadosVeri-SIEG.txt"
     f = open(dados, 'r', encoding='utf-8')
     user = f.read()
     user = user.split('/')
@@ -74,7 +74,7 @@ def consulta_lista(driver, continuar_pagina):
     time.sleep(1)
     paginas = re.compile(r'>(\d+)</a></span><a class=\"paginate_button btn btn-default next').search(driver.page_source).group(1)
     
-    for pagina in range(int(paginas)):
+    for pagina in range(int(paginas) + 1):
         if pagina == 0:
             continue
         
@@ -118,7 +118,10 @@ def consulta_lista(driver, continuar_pagina):
                     _escreve_relatorio_csv(f'Use a empresa anterior da lista para localizar este arquivo no site;Erro;Erro ao baixar arquivo;Pagina do site: {pagina}')
                     print('>>> Erro ao baixar o arquivo\n')
                     break
-                
+        
+        if pagina == 25:
+            return driver
+        
         driver.find_element(by=By.ID, value='tableActiveDebit_next').click()
         # espera a lista de arquivos carregar
         while re.compile(r'id=\"tableActiveDebit_processing\" class=\"\" style=\"display: block;').search(driver.page_source):
@@ -131,8 +134,6 @@ def consulta_lista(driver, continuar_pagina):
         
         time.sleep(1)
         
-    return driver
-
 
 def espera_pagina(pagina, driver):
     try:
@@ -247,17 +248,19 @@ def converte_html_pdf(download_folder, final_folder, arquivo, descricao):
     try:
         time.sleep(2)
         pdfkit.from_file(html_path, pdf_path, configuration=config)
+        time.sleep(2)
     except:
         _escreve_relatorio_csv(f'{novo_arquivo.replace(".pdf", ".html")};Arquivo HTML salvo;Erro ao converter arquivo')
         final_folder = 'V:\\Setor Robô\\Scripts Python\\SIEG\\Download Divida Ativa\\execução\\Arquivos em HTML'
         os.makedirs(final_folder, exist_ok=True)
         shutil.move(html_path, os.path.join(final_folder, novo_arquivo.replace('.pdf', '.html')))
         print(f'❗ Erro ao converter arquivo\n')
+        time.sleep(2)
         return False
     
     # anota o arquivo que acabou de baixar e converter
     print(f'✔ {novo_arquivo}\n')
-    _escreve_relatorio_csv(f'{novo_arquivo.replace(" - ", ";").replace("-", ";")}')
+    _escreve_relatorio_csv(f'{novo_arquivo.replace(" - ", ";").replace("-", ";").replace("EXTINTA POR PRESCRICAO;ROTINA AUTOMATICA", "EXTINTA POR PRESCRICAO-ROTINA AUTOMATICA")}')
     return True
     
 

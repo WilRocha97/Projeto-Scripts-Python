@@ -29,13 +29,13 @@ def faturamento_compra(ano, empresa, andamento):
         time.sleep(1)
     
     time.sleep(1)
-    p.write(f'01{ano}')
+    p.write(f'012022')
     
     time.sleep(1)
     p.press('tab', presses=2)
     
     time.sleep(1)
-    p.write(f'12{ano}')
+    p.write(f'122022')
     
     # gera o relatório
     time.sleep(1)
@@ -46,6 +46,7 @@ def faturamento_compra(ano, empresa, andamento):
 
     guia = os.path.join('C:', 'Demonstrativo Mensal.pdf')
     while not os.path.exists(guia):
+        print('>>> Aguardando salvar')
         if not _salvar_pdf():
             p.hotkey('alt', 'o')
             
@@ -68,6 +69,7 @@ def espera_gerar(empresa, andamento):
     timer = 0
     # espera gerar
     while not _find_img('demonstrativo_mensal_gerado.png', conf=0.9):
+        print('>>> Aguardando gerar')
         if _find_img('sem_dados.png', conf=0.9):
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para imprimir']), nome=andamento)
             print('❌ Sem dados para imprimir')
@@ -89,7 +91,9 @@ def espera_gerar(empresa, andamento):
 def mover_demonstrativo(empresa, ano):
     os.makedirs('execução/Demonstrativos', exist_ok=True)
     cod, cnpj, nome = empresa
-    
+
+    execucoes = 'V:\\Setor Robô\\Scripts Python\\Domínio\\Faturamento X Compra\\execução\\Demonstrativos'
+
     guia = os.path.join('C:', 'Demonstrativo Mensal.pdf')
     arquivo = f'{cod} - {nome.replace("/", " ")} - Demonstrativo Mensal {ano}.pdf'
     
@@ -269,8 +273,8 @@ def run():
     
         total_empresas = empresas[index:]
 
-        _login_web()
-        _abrir_modulo('escrita_fiscal')
+        # _login_web()
+        # _abrir_modulo('escrita_fiscal')
 
         for count, empresa in enumerate(empresas[index:], start=1):
             _indice(count, total_empresas, empresa)

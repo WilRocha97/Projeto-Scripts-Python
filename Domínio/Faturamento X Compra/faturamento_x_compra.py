@@ -57,9 +57,7 @@ def faturamento_compra(ano, empresa, andamento):
     time.sleep(2)
     
     arquivo = mover_demonstrativo(empresa, ano)
-    
     captura_info_pdf(andamento, arquivo)
-    
     
     print('✔ Demonstrativo Mensal gerado')
 

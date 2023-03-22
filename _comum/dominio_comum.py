@@ -265,5 +265,6 @@ def _salvar_pdf():
     
     while _find_img('sera_finalizada.png', pasta='imgs_c', conf=0.9):
         p.press('esc')
+        time.sleep(2)
         
     return True

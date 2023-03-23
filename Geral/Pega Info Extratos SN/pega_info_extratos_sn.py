@@ -49,7 +49,7 @@ def analiza():
                     
                     print(f'{cnpj} - {nome}')
 
-                    _escreve_relatorio_csv(f"{cnpj};{nome};{mercado_interno};{mercado_externo};{total};Nº {declaracao}")
+                    _escreve_relatorio_csv(f"{cnpj};{nome};{mercado_interno};{mercado_externo};{total};Nº {declaracao}", nome='Receita bruta acumulada no ano-calendário corrente')
 
                 except():
                     print('ERRO')
@@ -58,5 +58,5 @@ def analiza():
 if __name__ == '__main__':
     inicio = datetime.now()
     analiza()
-    _escreve_header_csv(';'.join(['CNPJ', 'NOME', 'MERCADO INTERNO', 'MERCADO EXTERNO', 'TOTAL', 'NÚMERO DA DECLARAÇÃO']))
+    _escreve_header_csv(';'.join(['CNPJ', 'NOME', 'MERCADO INTERNO', 'MERCADO EXTERNO', 'TOTAL', 'NÚMERO DA DECLARAÇÃO']), nome='Receita bruta acumulada no ano-calendário corrente')
     print(datetime.now() - inicio)

@@ -234,6 +234,11 @@ def _salvar_pdf():
     
     timer = 0
     while not _find_img('pdf_aberto.png', pasta='imgs_c', conf=0.9):
+        if _find_img('sera_finalizada.png', pasta='imgs_c', conf=0.9):
+            p.press('esc')
+            time.sleep(2)
+            return False
+        
         if _find_img('erro_pdf.png', pasta='imgs_c', conf=0.9) or _find_img('erro_pdf_2.png', pasta='imgs_c', conf=0.9):
             p.press('enter')
             p.hotkey('alt', 'f4')
@@ -265,5 +270,6 @@ def _salvar_pdf():
     
     while _find_img('sera_finalizada.png', pasta='imgs_c', conf=0.9):
         p.press('esc')
+        time.sleep(2)
         
     return True

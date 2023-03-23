@@ -29,13 +29,13 @@ def faturamento_compra(ano, empresa, andamento):
         time.sleep(1)
     
     time.sleep(1)
-    p.write(f'012022')
+    p.write(f'01{ano}')
     
     time.sleep(1)
     p.press('tab', presses=2)
     
     time.sleep(1)
-    p.write(f'122022')
+    p.write(f'12{ano}')
     
     # gera o relatório
     time.sleep(1)
@@ -57,9 +57,7 @@ def faturamento_compra(ano, empresa, andamento):
     time.sleep(2)
     
     arquivo = mover_demonstrativo(empresa, ano)
-    
     captura_info_pdf(andamento, arquivo)
-    
     
     print('✔ Demonstrativo Mensal gerado')
 

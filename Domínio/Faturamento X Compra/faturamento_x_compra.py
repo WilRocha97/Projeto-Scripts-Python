@@ -7,7 +7,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, _escreve_header_csv, e_dir, _open_lista_dados, _where_to_start, ask_for_dir
-from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf
+from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf, _verifica_dominio
 
 
 def faturamento_compra(ano, empresa, andamento):
@@ -25,6 +25,9 @@ def faturamento_compra(ano, empresa, andamento):
     p.press('enter')
     
     while not _find_img('demonstrativo_mensal.png', conf=0.9):
+        verificacao = _verifica_dominio()
+        if verificacao != 'continue':
+            return verificacao
         time.sleep(1)
     
     time.sleep(1)
@@ -40,8 +43,13 @@ def faturamento_compra(ano, empresa, andamento):
     time.sleep(1)
     p.hotkey('alt', 'o')
     
-    if not espera_gerar(empresa, andamento):
-        return False
+    resultado = espera_gerar(empresa, andamento)
+    if not resultado:
+        return 'ok'
+    elif resultado:
+        pass
+    else:
+        return resultado
 
     guia = os.path.join('C:', 'Demonstrativo Mensal.pdf')
     while not os.path.exists(guia):
@@ -49,9 +57,14 @@ def faturamento_compra(ano, empresa, andamento):
         if not _salvar_pdf():
             p.hotkey('alt', 'o')
             
-            if not espera_gerar(empresa, andamento):
-                return False
-    
+            resultado = espera_gerar(empresa, andamento)
+            if not resultado:
+                return 'ok'
+            elif resultado:
+                pass
+            else:
+                return resultado
+            
     p.press('esc', presses=4)
     time.sleep(2)
     
@@ -59,6 +72,7 @@ def faturamento_compra(ano, empresa, andamento):
     captura_info_pdf(andamento, arquivo)
     
     print('✔ Demonstrativo Mensal gerado')
+    return 'ok'
 
 
 def espera_gerar(empresa, andamento):
@@ -66,6 +80,10 @@ def espera_gerar(empresa, andamento):
     timer = 0
     # espera gerar
     while not _find_img('demonstrativo_mensal_gerado.png', conf=0.9):
+        verificacao = _verifica_dominio()
+        if verificacao != 'continue':
+            return verificacao
+        
         print('>>> Aguardando gerar')
         if _find_img('sem_dados.png', conf=0.9):
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para imprimir']), nome=andamento)
@@ -199,15 +217,25 @@ def run():
     
         total_empresas = empresas[index:]
 
-        # _login_web()
-        # _abrir_modulo('escrita_fiscal')
+        _login_web()
+        _abrir_modulo('escrita_fiscal')
 
         for count, empresa in enumerate(empresas[index:], start=1):
             _indice(count, total_empresas, empresa)
             
             if not _login(empresa, andamentos):
                 continue
-            faturamento_compra(str(ano), empresa, andamentos)
+            
+            resultado = ''
+            while resultado != 'ok':
+                resultado = faturamento_compra(str(ano), empresa, andamentos)
+                
+                if resultado == 'dominio fechou':
+                    _login_web()
+                    _abrir_modulo('escrita_fiscal')
+                    
+                if resultado == 'modulo fechou':
+                    _abrir_modulo('escrita_fiscal')
     
     _escreve_header_csv('CÓDIGO;CNPJ;NOME;SITUAÇÃO;JANEIRO;FEVEREIRO;MARÇO;ABRIL;MAIO;JUNHO;JULHO;AGOSTO;SETEMBRO;OUTUBRO;NOVEMBRO;DEZEMBRO;TOTAIS', nome=andamentos)
 

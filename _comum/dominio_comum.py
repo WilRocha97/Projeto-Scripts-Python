@@ -136,39 +136,50 @@ def verifica_empresa(cod):
     
 
 def _login_web():
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--window-size=1920,1080')
+    if not _find_img('app_controler.png', pasta='imgs_c', conf=0.9):
+        options = webdriver.ChromeOptions()
+        options.add_argument('--headless')
+        options.add_argument('--window-size=1920,1080')
+        
+        status, driver = _initialize_chrome()
     
-    status, driver = _initialize_chrome()
-
-    driver.get('https://www.dominioweb.com.br/')
-    _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[1]/span[2]/input', user[0], driver)
-    _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[2]/span[2]/input', user[2], driver)
-    driver.find_element(by=By.ID, value='enterButton').click()
-    
-    caminho = os.path.join('imgs_c', 'abrir_app.png')
-    caminho2 = os.path.join('imgs_c', 'abrir_app_2.png')
-    while not p.locateOnScreen(caminho, confidence=0.9):
-        if _find_by_class('trta1-btn-primary', driver):
-            driver.find_element(by=By.CLASS_NAME, value='trta1-btn-primary').click()
-        if p.locateOnScreen(caminho2, confidence=0.9):
+        driver.get('https://www.dominioweb.com.br/')
+        _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[1]/span[2]/input', user[0], driver)
+        _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[2]/span[2]/input', user[2], driver)
+        driver.find_element(by=By.ID, value='enterButton').click()
+        
+        caminho = os.path.join('imgs_c', 'abrir_app.png')
+        caminho2 = os.path.join('imgs_c', 'abrir_app_2.png')
+        while not p.locateOnScreen(caminho, confidence=0.9):
+            if _find_by_class('trta1-btn-primary', driver):
+                driver.find_element(by=By.CLASS_NAME, value='trta1-btn-primary').click()
+            if p.locateOnScreen(caminho2, confidence=0.9):
+                sleep(1)
+                while p.locateOnScreen(caminho2, confidence=0.9):
+                    p.click(p.locateCenterOnScreen(caminho2, confidence=0.9), button='left')
+                break
+                
+        if p.locateOnScreen(caminho, confidence=0.9):
+            p.click(p.locateCenterOnScreen(caminho, confidence=0.9), button='left')
+        
+        print('>>> Aguardando modulos')
+        while not p.locateOnScreen(r'imgs_c/modulos.png', confidence=0.9):
             sleep(1)
-            while p.locateOnScreen(caminho2, confidence=0.9):
-                p.click(p.locateCenterOnScreen(caminho2, confidence=0.9), button='left')
-            break
+        driver.quit()
+        return True
+    else:
+        _click_img('app_controler_desfocado.png', pasta='imgs_c', conf=0.9)
+        sleep(2)
+        if _find_img('lista_de_programas.png', pasta='imgs_c', conf=0.9):
+            p.press('right', presses=2, interval=1)
+            sleep(1)
+            p.press('enter')
             
-    if p.locateOnScreen(caminho, confidence=0.9):
-        p.click(p.locateCenterOnScreen(caminho, confidence=0.9), button='left')
-    
-    print('>>> Aguardando modulos')
-    while not p.locateOnScreen(r'imgs_c/modulos.png', confidence=0.9):
-        sleep(1)
-    driver.quit()
-    return True
-
 
 def _abrir_modulo(modulo):
+    if _find_img('inicial.png', pasta='imgs_c', conf=0.9):
+        return True
+    
     modulo_nome = ''
     if modulo == 'escrita_fiscal':
         modulo_nome = 'Escrita Fiscal'
@@ -210,8 +221,9 @@ def _abrir_modulo(modulo):
     
     if p.locateOnScreen(r'imgs_c/aviso.png', confidence=0.9):
         p.hotkey('alt', 'o')
-        
-        
+    return True
+
+
 def _salvar_pdf():
     p.hotkey('ctrl', 'd')
     timer = 0
@@ -273,3 +285,12 @@ def _salvar_pdf():
         time.sleep(2)
         
     return True
+
+
+def _verifica_dominio():
+    if not _find_img('app_controler.png', pasta='imgs_c', conf=0.9):
+        return 'dominio fechou'
+    if _find_img('modulos', pasta='imgs_c', conf=0.9):
+        return 'modulo fechou'
+    else:
+        return 'continue'

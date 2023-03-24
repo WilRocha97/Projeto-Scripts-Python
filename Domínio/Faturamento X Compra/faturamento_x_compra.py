@@ -222,12 +222,11 @@ def run():
 
         for count, empresa in enumerate(empresas[index:], start=1):
             _indice(count, total_empresas, empresa)
-            
-            if not _login(empresa, andamentos):
-                continue
-            
             resultado = ''
             while resultado != 'ok':
+                if not _login(empresa, andamentos):
+                    break
+            
                 resultado = faturamento_compra(str(ano), empresa, andamentos)
                 
                 if resultado == 'dominio fechou':

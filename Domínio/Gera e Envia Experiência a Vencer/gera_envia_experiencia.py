@@ -6,7 +6,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _indice, _time_execution, _open_lista_dados, _escreve_relatorio_csv, _where_to_start
-from dominio_comum import _login, _login_web, _abrir_modulo, _salvar_pdf, _verifica_dominio
+from dominio_comum import _login, _login_web, _abrir_modulo, _salvar_pdf, _verifica_dominio, _encerra_dominio
 
 
 def escreve_dados(cod, nome):
@@ -109,7 +109,7 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
             time.sleep(1)
             p.press('esc')
             time.sleep(1)
-            return False
+            return 'ok'
     
     # se gerar o relatório para todas as empresas só salva o pdf, se não tenta enviar o arquivo para o cliente
     if cod == '*':
@@ -119,7 +119,7 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
             _escreve_relatorio_csv(';'.join([cod, nome, 'Não possuí opção de enviar o relatório para o cliente']), nome=andamento)
             print('❌ Não possuí opção de enviar o relatório para o cliente')
             p.press('esc', presses=5)
-            return False
+            return 'ok'
             
         envia_experiencia(comp)
         _escreve_relatorio_csv(';'.join([cod, nome, 'Relatório enviado']), nome=andamento)
@@ -128,7 +128,7 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
     # fechar qualquer possível tela aberta
     p.press('esc', presses=5)
     time.sleep(2)
-    return True
+    return 'ok'
     
 
 def pega_empresas_com_exp():
@@ -231,28 +231,28 @@ def run():
     # pergunta se deve gerar uma nova planilha de dados
     novo = p.confirm(title='Script incrível', text='Gerar nova planilha de dados?', buttons=('Sim', 'Não'))
 
+    # se não for gerar uma nova planilha, seleciona a que já existe e pergunta se vai continuar de onde parou
+    if novo == 'Não':
+        empresas = _open_lista_dados()
+        index = _where_to_start(tuple(i[0] for i in empresas))
+        if index is None:
+            return False
+        
     _login_web()
     _abrir_modulo('folha')
 
-    resultado = ''
-    # se não for gerar uma nova planilha, seleciona a que já existe e pergunta se vai continuar de onde parou
-    while resultado != 'ok':
-        if novo == 'Não':
-            empresas = _open_lista_dados()
-            index = _where_to_start(tuple(i[0] for i in empresas))
-            if index is None:
-                return False
+    # gera uma nova planilha e a seleciona
+    if novo == 'Sim':
+        index = 0
+        gera_arquivo(comp, andamentos)
+        empresas = pega_empresas_com_exp()
+    
+    total_empresas = empresas[index:]
+    for count, empresa in enumerate(empresas[index:], start=1):
+        _indice(count, total_empresas, empresa)
         
-        # gera uma nova planilha e a seleciona
-        else:
-            index = 0
-            gera_arquivo(comp, andamentos)
-            empresas = pega_empresas_com_exp()
-        
-        total_empresas = empresas[index:]
-        for count, empresa in enumerate(empresas[index:], start=1):
-            _indice(count, total_empresas, empresa)
-            
+        resultado = ''
+        while resultado != 'ok':
             # abre a empresa no domínio
             if not _login(empresa, andamentos):
                 continue
@@ -265,7 +265,9 @@ def run():
 
             if resultado == 'modulo fechou':
                 _abrir_modulo('escrita_fiscal')
-                
+
+    _encerra_dominio()
+    
 
 if __name__ == '__main__':
     run()

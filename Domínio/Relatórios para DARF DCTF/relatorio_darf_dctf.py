@@ -7,7 +7,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
-from dominio_comum import _login, _salvar_pdf
+from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf, _verifica_dominio, _encerra_dominio
 
 
 def relatorio_darf_dctf(empresa, periodo, andamento):
@@ -23,6 +23,9 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
     p.press('m')
 
     while not _find_img('resumo_de_impostos.png', conf=0.9):
+        verificacao = _verifica_dominio()
+        if verificacao != 'continue':
+            return verificacao
         time.sleep(1)
         if _find_img('vigencia_sem_parametro.png', conf=0.9):
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Não existe parametro']), nome=andamento)
@@ -31,7 +34,7 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
             time.sleep(1)
             p.press('esc')
             time.sleep(1)
-            return False
+            return 'ok'
 
     # Período
     p.write(periodo)
@@ -57,18 +60,24 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
     sem_layout = 0
 
     while not _find_img('resumo_gerado_3.png', conf=0.8):
+        verificacao = _verifica_dominio()
+        if verificacao != 'continue':
+            return verificacao
         time.sleep(1)
         if _find_img('imposto_sem_layout.png', conf=0.9):
             sem_layout = 1
             p.press('enter')
         if sem_layout == 1:
             while not _find_img('resumo_de_impostos.png', conf=0.9):
+                verificacao = _verifica_dominio()
+                if verificacao != 'continue':
+                    return verificacao
                 p.press('enter')
                 time.sleep(1)
             p.press('esc', presses=4)
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Imposto sem layout']), nome=andamento)
             print('❌ Imposto sem layout')
-            return False
+            return 'ok'
 
         time.sleep(3)
         if _find_img('sem_dados.png', conf=0.9):
@@ -78,7 +87,7 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
             time.sleep(1)
             p.press('esc')
             time.sleep(1)
-            return False
+            return 'ok'
 
         if _find_img('sem_imposto.png', conf=0.9):
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para imprimir']), nome=andamento)
@@ -87,7 +96,7 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
             time.sleep(1)
             p.press('esc')
             time.sleep(1)
-            return False
+            return 'ok'
 
         if _find_img('resumo_calculado.png', conf=0.9):
             break
@@ -99,6 +108,8 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
 
     p.press('esc', presses=4)
     time.sleep(2)
+    
+    return 'ok'
 
 
 @_time_execution
@@ -112,13 +123,27 @@ def run():
         return False
 
     total_empresas = empresas[index:]
+
+    _login_web()
+    _abrir_modulo('escrita_fiscal')
+
     for count, empresa in enumerate(empresas[index:], start=1):
         _indice(count, total_empresas, empresa)
-    
-        if not _login(empresa, andamentos):
-            continue
-        relatorio_darf_dctf(empresa, periodo, andamentos)
+        resultado = ''
+        while resultado != 'ok':
+            if not _login(empresa, andamentos):
+                continue
+            resultado = relatorio_darf_dctf(empresa, periodo, andamentos)
+        
+            if resultado == 'dominio fechou':
+                _login_web()
+                _abrir_modulo('escrita_fiscal')
+        
+            if resultado == 'modulo fechou':
+                _abrir_modulo('escrita_fiscal')
 
+    _encerra_dominio()
+    
 
 if __name__ == '__main__':
     run()

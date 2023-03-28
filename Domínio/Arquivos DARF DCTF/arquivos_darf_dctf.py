@@ -5,7 +5,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
-from dominio_comum import _login
+from dominio_comum import _login_web, _abrir_modulo, _login, _verifica_dominio, _encerra_dominio
 
 
 def arquivos_darf_dctf(empresa, periodo, andamento):
@@ -27,6 +27,9 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
     p.press('m')
 
     while not _find_img('dctf_mensal.png', conf=0.9):
+        verificacao = _verifica_dominio()
+        if verificacao != 'continue':
+            return verificacao
         if _find_img('dctf_mensal_2.png', conf=0.9):
             break
         time.sleep(1)
@@ -47,6 +50,9 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
     p.hotkey('alt', 'o')
 
     while not _find_img('outros_dados.png', conf=0.9):
+        verificacao = _verifica_dominio()
+        if verificacao != 'continue':
+            return verificacao
         if _find_img('outros_dados_2.png', conf=0.9):
             break
         time.sleep(2)
@@ -74,11 +80,18 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
     time.sleep(1)
 
     while _find_img('outros_dados.png', conf=0.9):
+        verificacao = _verifica_dominio()
+        if verificacao != 'continue':
+            return verificacao
         time.sleep(2)
 
     p.hotkey('alt', 'x')
 
     while _find_img('dctf_mensal.png', conf=0.9) or _find_img('dctf_mensal_2.png', conf=0.9):
+        verificacao = _verifica_dominio()
+        if verificacao != 'continue':
+            return verificacao
+        
         time.sleep(1)
         if _find_img('nao_gerou_arquivo.png', conf=0.9):
             p.press('enter')
@@ -106,7 +119,7 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
             print('❌ Isenta do IRPJ')
             time.sleep(1)
             p.press('esc', presses=5)
-            return False
+            return 'ok'
 
         if _find_img('saldo_nao_calculado.png', conf=0.9) or _find_img('saldo_nao_calculado_2.png', conf=0.9):
             p.press('enter')
@@ -114,7 +127,7 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
             print('❌ Saldo dos impostos não foi calculado no período')
             time.sleep(1)
             p.press('esc', presses=5)
-            return False
+            return 'ok'
 
         if _find_img('nao_tem_parametro.png', conf=0.9):
             p.press('enter')
@@ -122,13 +135,13 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
             print('❌ Não existe parametro para a vigência {}'.format(periodo))
             time.sleep(1)
             p.press('esc', presses=5)
-            return False
+            return 'ok'
 
         if _find_img('exportacao_cancelada.png', conf=0.9):
             p.press('enter')
             time.sleep(1)
             p.press('esc', presses=5)
-            return False
+            return 'ok'
 
         if _find_img('final_da_exportacao.png', conf=0.9) or _find_img('final_da_exportacao_2.png', conf=0.9):
             p.press('enter')
@@ -136,11 +149,11 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
             print('✔ Arquivo gerado')
             time.sleep(1)
             p.press('esc', presses=5)
-            return True
+            return 'ok'
 
     p.press('esc', presses=5)
     time.sleep(3)
-    return True
+    return 'ok'
 
 
 @_time_execution
@@ -154,13 +167,27 @@ def run():
         return False
 
     total_empresas = empresas[index:]
+
+    _login_web()
+    _abrir_modulo('escrita_fiscal')
+    
     for count, empresa in enumerate(empresas[index:], start=1):
         _indice(count, total_empresas, empresa)
-    
-        if not _login(empresa, andamentos):
-            continue
-        arquivos_darf_dctf(empresa, periodo, andamentos)
+        resultado = ''
+        while resultado != 'ok':
+            if not _login(empresa, andamentos):
+                continue
+            resultado = arquivos_darf_dctf(empresa, periodo, andamentos)
 
+            if resultado == 'dominio fechou':
+                _login_web()
+                _abrir_modulo('escrita_fiscal')
+
+            if resultado == 'modulo fechou':
+                _abrir_modulo('escrita_fiscal')
+
+    _encerra_dominio()
+    
 
 if __name__ == '__main__':
     run()

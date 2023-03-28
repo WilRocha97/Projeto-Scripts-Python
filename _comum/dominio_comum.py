@@ -297,10 +297,6 @@ def _verifica_dominio():
 
 
 def _encerra_dominio():
-    '''retorno = os.system("taskkill /f /im AppController.exe 2> NUL")
-    if retorno == 128:
-        print('Domínio Web finalizado')'''
-
     processo = 'AppController.exe'
     with open(os.devnull, 'w') as devnull:
         try:

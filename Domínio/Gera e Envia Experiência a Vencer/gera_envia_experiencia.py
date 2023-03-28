@@ -103,7 +103,7 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
         time.sleep(1)
         
         if _find_img('sem_dados.png', conf=0.9):
-            _escreve_relatorio_csv(';'.join([cod, nome, 'Sem dados para emitir']), nome=andamento)
+            _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para emitir']), nome=andamento)
             print('❌ Sem dados para emitir')
             p.press('enter')
             time.sleep(1)
@@ -116,13 +116,13 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
         _salvar_pdf()
     else:
         if not _find_img('enviar_arquivo.png', conf=0.9):
-            _escreve_relatorio_csv(';'.join([cod, nome, 'Não possuí opção de enviar o relatório para o cliente']), nome=andamento)
+            _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Não possuí opção de enviar o relatório para o cliente']), nome=andamento)
             print('❌ Não possuí opção de enviar o relatório para o cliente')
             p.press('esc', presses=5)
             return 'ok'
             
         envia_experiencia(comp)
-        _escreve_relatorio_csv(';'.join([cod, nome, 'Relatório enviado']), nome=andamento)
+        _escreve_relatorio_csv(';'.join([cod, cnpj,nome, 'Relatório enviado']), nome=andamento)
         print('✔ Relatório enviado')
 
     # fechar qualquer possível tela aberta
@@ -226,6 +226,8 @@ def run():
     ano = datetime.now().year
     
     comp = f'{dia}-{mes}-{ano}'
+    empresas = ''
+    index = ''
     
     andamentos = 'Experiência a Vencer'
     # pergunta se deve gerar uma nova planilha de dados

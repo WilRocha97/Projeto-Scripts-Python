@@ -7,7 +7,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, _escreve_header_csv, e_dir, _open_lista_dados, _where_to_start, ask_for_dir
-from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf, _verifica_dominio
+from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf, _verifica_dominio, _encerra_dominio
 
 
 def faturamento_compra(ano, empresa, andamento):
@@ -237,7 +237,8 @@ def run():
                     _abrir_modulo('escrita_fiscal')
     
     _escreve_header_csv('CÓDIGO;CNPJ;NOME;SITUAÇÃO;JANEIRO;FEVEREIRO;MARÇO;ABRIL;MAIO;JUNHO;JULHO;AGOSTO;SETEMBRO;OUTUBRO;NOVEMBRO;DEZEMBRO;TOTAIS', nome=andamentos)
-
+    _encerra_dominio()
 
 if __name__ == '__main__':
+    _encerra_dominio()
     run()

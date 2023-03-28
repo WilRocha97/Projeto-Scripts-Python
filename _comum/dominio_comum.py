@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import pyperclip, time, os, pyautogui as p
+import pyperclip, time, os, subprocess, pyautogui as p
 from time import sleep
 from datetime import datetime
 from sys import path
@@ -294,3 +294,17 @@ def _verifica_dominio():
         return 'modulo fechou'
     else:
         return 'continue'
+
+
+def _encerra_dominio():
+    '''retorno = os.system("taskkill /f /im AppController.exe 2> NUL")
+    if retorno == 128:
+        print('Domínio Web finalizado')'''
+
+    processo = 'AppController.exe'
+    with open(os.devnull, 'w') as devnull:
+        try:
+            subprocess.call(['kill', str(processo)], stdout=devnull, stderr=subprocess.STDOUT)
+            print('\nDomínio Web finalizado.\n')
+        except:
+            print('\nDomínio Web finalizado.\n')

@@ -56,7 +56,7 @@ def salvar_pdf(cnpj, nome, debito=''):
 
 def consulta_ipva(cnpj, nome):
     # url para entrar no site
-    # url = 'https://www10.fazenda.sp.gov.br/CertidaoNegativaDeb/Pages/Restrita/PesquisarContribuinte.aspx'
+    # url_cnpj = 'https://www10.fazenda.sp.gov.br/CertidaoNegativaDeb/Pages/Restrita/PesquisarContribuinte.aspx'
 
     # espera a pagina inicial para inserir o cnpj
     while not _find_img('cnpj.png', conf=0.9):

@@ -9,27 +9,33 @@ from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
 
 
-def verificacoes(andamento, empresa):
-    cnpj, nome = empresa
+def verificacoes(consulta_tipo, andamento, empresa):
+    identificacao, nome = empresa
     if _find_img('NaoFoiPossivel.png', conf=0.9):
-        _escreve_relatorio_csv('{};{};Não foi possível concluir a consulta'.format(cnpj, nome), nome=andamento)
+        _escreve_relatorio_csv('{};{};Não foi possível concluir a consulta'.format(identificacao, nome), nome=andamento)
         print('❌ Não foi possível concluir a consulta')
         p.hotkey('ctrl', 'w')
         return False
 
     if _find_img('InfoInsuficiente.png', conf=0.9):
         _escreve_relatorio_csv('{};{};As informações disponíveis na Secretaria da Receita Federal do Brasil - RFB sobre o contribuinte '
-                               'são insuficientes para a emissão de certidão por meio da Internet.'.format(cnpj, nome), nome=andamento)
+                               'são insuficientes para a emissão de certidão por meio da Internet.'.format(identificacao, nome), nome=andamento)
         print('❌ Informações insuficientes para a emissão de certidão online')
         p.hotkey('ctrl', 'w')
         return False
 
     if _find_img('Matriz.png', conf=0.9):
-        _escreve_relatorio_csv('{};{};A certidão deve ser emitida para o CNPJ da matriz'.format(cnpj, nome), nome=andamento)
-        print('❌ A certidão deve ser emitida para o CNPJ da matriz')
+        _escreve_relatorio_csv('{};{};A certidão deve ser emitida para o {} da matriz'.format(identificacao, nome, consulta_tipo), nome=andamento)
+        print(f'❌ A certidão deve ser emitida para o {consulta_tipo} da matriz')
         p.hotkey('ctrl', 'w')
         return False
-
+    
+    if _find_img('cpf_invalido.png', conf=0.9):
+        _escreve_relatorio_csv('{};{};CPF inválido'.format(identificacao, nome), nome=andamento)
+        print(f'❌ CPF inválido')
+        p.hotkey('ctrl', 'w')
+        return False
+    
     if _find_img('ErroNaConsulta.png', conf=0.9):
         p.press('enter')
         time.sleep(2)
@@ -38,20 +44,20 @@ def verificacoes(andamento, empresa):
     return True
 
 
-def salvar(andamento, empresa):
-    cnpj, nome = empresa
+def salvar(consulta_tipo, andamento, empresa):
+    identificacao, nome = empresa
     # espera abrir a tela de salvar o arquivo
     while not _find_img('SalvarComo.png', conf=0.9):
         time.sleep(1)
         if _find_img('NovaCertidao.png', conf=0.9):
             _click_img('NovaCertidao.png', conf=0.9)
 
-        if not verificacoes(andamento, empresa):
+        if not verificacoes(consulta_tipo, andamento, empresa):
             return False
 
     # escreve o nome do arquivo (.upper() serve para deixar em letra maiuscula)
     time.sleep(1)
-    p.write(f'{nome.upper()} - {cnpj} - Certidao')
+    p.write(f'{nome.upper()} - {identificacao} - Certidao')
     time.sleep(0.5)
 
     # Selecionar local
@@ -71,34 +77,36 @@ def salvar(andamento, empresa):
     return True
 
 
-def consulta(andamento, empresas, index):
+def consulta(consulta_tipo, andamento, empresas, index):
     total_empresas = empresas[index:]
 
     for count, empresa in enumerate(empresas[index:], start=1):
         _indice(count, total_empresas, empresa)
 
-        cnpj, nome = empresa
+        identificacao, nome = empresa
 
         p.hotkey('win', 'm')
 
         # Abrir o site
-        if _find_img('Chrome.png', conf=0.99):
+        if _find_img('Chrome.png'):
             pass
-        elif _find_img('ChromeAberto.png', conf=0.99):
-            _click_img('ChromeAberto.png', conf=0.99)
+        elif _find_img('ChromeAberto.png'):
+            _click_img('ChromeAberto.png')
         else:
-            p.hotkey('win', 'm')
             time.sleep(0.5)
             _click_img('ChromeAtalho.png', conf=0.9, clicks=2)
             while not _find_img('Google.png', conf=0.9, ):
                 time.sleep(5)
                 p.moveTo(1163, 377)
                 p.click()
+        
+        if consulta_tipo == 'CNPJ':
+            link = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PJ/Emitir'
+        else:
+            link = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PF/Emitir'
 
-        link = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PJ/Emitir'
-
-        _click_img('Maxi.png', conf=0.9, timeout=2)
-        p.click(1208, 51)
+        _click_img('Maxi.png', conf=0.9, timeout=1)
+        p.click(1150, 51)
         time.sleep(1)
         p.write(link.lower())
         time.sleep(1)
@@ -106,21 +114,22 @@ def consulta(andamento, empresas, index):
         time.sleep(3)
 
         # espera o site abrir
-        while not _wait_img('InformeCNPJ.png', conf=0.9, timeout=-1):
+        while not _wait_img(f'Informe{consulta_tipo}.png', conf=0.9, timeout=-1):
             time.sleep(1)
 
-        _click_img('InformeCNPJ.png', conf=0.9)
+        _click_img(f'Informe{consulta_tipo}.png', conf=0.9)
         time.sleep(1)
 
-        p.write(cnpj)
+        p.write(identificacao)
         time.sleep(1)
         p.press('enter')
 
-        if not salvar(andamento, empresa):
+        if not salvar(consulta_tipo, andamento, empresa):
+            p.hotkey('ctrl', 'w')
             continue
 
         print('✔ Certidão gerada')
-        _escreve_relatorio_csv('{};{};{} gerada'.format(cnpj, nome, andamento), nome=andamento)
+        _escreve_relatorio_csv('{};{};{} gerada'.format(identificacao, nome, andamento), nome=andamento)
         time.sleep(1)
 
     p.hotkey('ctrl', 'w')
@@ -128,6 +137,7 @@ def consulta(andamento, empresas, index):
 
 @_time_execution
 def run():
+    consulta_tipo = p.confirm(text='Qual o tipo da consulta?', buttons=('CNPJ', 'CPF'))
     os.makedirs(r'{}\{}'.format(e_dir, 'Certidões'), exist_ok=True)
     andamento = 'Certidão Negativa'
 
@@ -137,7 +147,7 @@ def run():
         return False
 
     try:
-        consulta(andamento, empresas, index)
+        consulta(consulta_tipo, andamento, empresas, index)
     except:
         time.sleep(2)
         p.hotkey('ctrl', 'w')

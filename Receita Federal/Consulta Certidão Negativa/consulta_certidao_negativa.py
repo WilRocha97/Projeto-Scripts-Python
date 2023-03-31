@@ -88,10 +88,10 @@ def consulta(consulta_tipo, andamento, empresas, index):
         p.hotkey('win', 'm')
 
         # Abrir o site
-        if _find_img('Chrome.png'):
+        if _find_img('Chrome.png', conf=0.99):
             pass
-        elif _find_img('ChromeAberto.png'):
-            _click_img('ChromeAberto.png')
+        elif _find_img('ChromeAberto.png', conf=0.99):
+            _click_img('ChromeAberto.png', conf=0.99)
         else:
             time.sleep(0.5)
             _click_img('ChromeAtalho.png', conf=0.9, clicks=2)

@@ -1,1 +1,10 @@
-# Scripts-Python Pasta com os script e executáveis, scripts que usam imegens foram feitos na resolução: 1366x768
+# Scripts-Python Pasta com os script e executáveis
+Scripts que usam imegens foram feitos na resolução: 1366x768
+
+## Ferramentas utilizadas:
+* Python
+* CSS
+
+## Feito por
+### Willian Rodrigues
+### LinkeIn: https://www.linkedin.com/in/willian-rocha-a623b6248/

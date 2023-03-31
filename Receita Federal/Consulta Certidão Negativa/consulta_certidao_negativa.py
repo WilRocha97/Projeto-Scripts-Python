@@ -11,29 +11,30 @@ from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir,
 
 def verificacoes(consulta_tipo, andamento, empresa):
     identificacao, nome = empresa
+    if _find_img('inscricao_cancelada.png', conf=0.9):
+        _escreve_relatorio_csv('{};{};inscrição cancelada de ofício pela Secretaria Especial da Receita Federal do Brasil - RFB'.format(identificacao, nome), nome=andamento)
+        print('❌ inscrição cancelada de ofício pela Secretaria Especial da Receita Federal do Brasil - RFB')
+        return False
+
     if _find_img('NaoFoiPossivel.png', conf=0.9):
         _escreve_relatorio_csv('{};{};Não foi possível concluir a consulta'.format(identificacao, nome), nome=andamento)
         print('❌ Não foi possível concluir a consulta')
-        p.hotkey('ctrl', 'w')
         return False
 
     if _find_img('InfoInsuficiente.png', conf=0.9):
         _escreve_relatorio_csv('{};{};As informações disponíveis na Secretaria da Receita Federal do Brasil - RFB sobre o contribuinte '
                                'são insuficientes para a emissão de certidão por meio da Internet.'.format(identificacao, nome), nome=andamento)
         print('❌ Informações insuficientes para a emissão de certidão online')
-        p.hotkey('ctrl', 'w')
         return False
 
     if _find_img('Matriz.png', conf=0.9):
         _escreve_relatorio_csv('{};{};A certidão deve ser emitida para o {} da matriz'.format(identificacao, nome, consulta_tipo), nome=andamento)
         print(f'❌ A certidão deve ser emitida para o {consulta_tipo} da matriz')
-        p.hotkey('ctrl', 'w')
         return False
     
     if _find_img('cpf_invalido.png', conf=0.9):
         _escreve_relatorio_csv('{};{};CPF inválido'.format(identificacao, nome), nome=andamento)
         print(f'❌ CPF inválido')
-        p.hotkey('ctrl', 'w')
         return False
     
     if _find_img('ErroNaConsulta.png', conf=0.9):
@@ -53,6 +54,7 @@ def salvar(consulta_tipo, andamento, empresa):
             _click_img('NovaCertidao.png', conf=0.9)
 
         if not verificacoes(consulta_tipo, andamento, empresa):
+            p.hotkey('ctrl', 'w')
             return False
 
     # escreve o nome do arquivo (.upper() serve para deixar em letra maiuscula)

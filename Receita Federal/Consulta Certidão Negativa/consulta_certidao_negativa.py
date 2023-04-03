@@ -45,7 +45,7 @@ def verificacoes(consulta_tipo, andamento, empresa):
     return True
 
 
-def salvar(consulta_tipo, andamento, empresa):
+def salvar(consulta_tipo, andamento, empresa, pasta):
     identificacao, nome = empresa
     # espera abrir a tela de salvar o arquivo
     while not _find_img('SalvarComo.png', conf=0.9):
@@ -70,7 +70,7 @@ def salvar(consulta_tipo, andamento, empresa):
     time.sleep(0.5)
     p.press('enter')
     time.sleep(0.5)
-    pyperclip.copy('V:\Setor Robô\Scripts Python\Receita Federal\Consulta Certidão Negativa\{}\{}'.format(e_dir, 'Certidões'))
+    pyperclip.copy('V:\Setor Robô\Scripts Python\Receita Federal\Consulta Certidão Negativa\{}\{}'.format(e_dir, pasta))
     p.hotkey('ctrl', 'v')
     time.sleep(0.5)
     p.press('enter')
@@ -79,12 +79,15 @@ def salvar(consulta_tipo, andamento, empresa):
     time.sleep(0.5)
     p.hotkey('alt', 'l')
     time.sleep(2)
+    
+    if _find_img('substituir.png', conf=0.9):
+        p.hotkey('alt', 's')
+        
     return True
 
 
 def consulta(consulta_tipo, empresa):
     identificacao, nome = empresa
-
     p.hotkey('win', 'm')
 
     # Abrir o site
@@ -130,8 +133,9 @@ def consulta(consulta_tipo, empresa):
 @_time_execution
 def run():
     consulta_tipo = p.confirm(text='Qual o tipo da consulta?', buttons=('CNPJ', 'CPF'))
-    os.makedirs(r'{}\{}'.format(e_dir, 'Certidões'), exist_ok=True)
-    andamento = 'Certidão Negativa'
+    pasta = f'Certidões {consulta_tipo}'
+    os.makedirs(r'{}\{}'.format(e_dir, pasta), exist_ok=True)
+    andamento = f'Certidão Negativa {consulta_tipo}'
 
     empresas = _open_lista_dados()
     index = _where_to_start(tuple(i[0] for i in empresas))
@@ -144,10 +148,11 @@ def run():
         _indice(count, total_empresas, empresa)
         try:
             consulta(consulta_tipo, empresa)
-            if not salvar(consulta_tipo, andamento, empresa):
+            if not salvar(consulta_tipo, andamento, empresa, pasta):
                 p.hotkey('ctrl', 'w')
                 continue
-
+            
+            identificacao, nome = empresa
             print('✔ Certidão gerada')
             _escreve_relatorio_csv('{};{};{} gerada'.format(identificacao, nome, andamento), nome=andamento)
             time.sleep(1)

@@ -50,6 +50,9 @@ def salvar(consulta_tipo, andamento, empresa):
     # espera abrir a tela de salvar o arquivo
     while not _find_img('SalvarComo.png', conf=0.9):
         time.sleep(1)
+        if _find_img('em_processamento.png', conf=0.9):
+            consulta(consulta_tipo, empresa)
+
         if _find_img('NovaCertidao.png', conf=0.9):
             _click_img('NovaCertidao.png', conf=0.9)
 
@@ -79,62 +82,49 @@ def salvar(consulta_tipo, andamento, empresa):
     return True
 
 
-def consulta(consulta_tipo, andamento, empresas, index):
-    total_empresas = empresas[index:]
+def consulta(consulta_tipo, empresa):
+    identificacao, nome = empresa
 
-    for count, empresa in enumerate(empresas[index:], start=1):
-        _indice(count, total_empresas, empresa)
+    p.hotkey('win', 'm')
 
-        identificacao, nome = empresa
+    # Abrir o site
+    if _find_img('Chrome.png', conf=0.99):
+        pass
+    elif _find_img('ChromeAberto.png', conf=0.99):
+        _click_img('ChromeAberto.png', conf=0.99)
+    else:
+        time.sleep(0.5)
+        _click_img('ChromeAtalho.png', conf=0.9, clicks=2)
+        while not _find_img('Google.png', conf=0.9, ):
+            time.sleep(5)
+            p.moveTo(1163, 377)
+            p.click()
 
-        p.hotkey('win', 'm')
+    if consulta_tipo == 'CNPJ':
+        link = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PJ/Emitir'
+    else:
+        link = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PF/Emitir'
 
-        # Abrir o site
-        if _find_img('Chrome.png', conf=0.99):
-            pass
-        elif _find_img('ChromeAberto.png', conf=0.99):
-            _click_img('ChromeAberto.png', conf=0.99)
-        else:
-            time.sleep(0.5)
-            _click_img('ChromeAtalho.png', conf=0.9, clicks=2)
-            while not _find_img('Google.png', conf=0.9, ):
-                time.sleep(5)
-                p.moveTo(1163, 377)
-                p.click()
-        
-        if consulta_tipo == 'CNPJ':
-            link = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PJ/Emitir'
-        else:
-            link = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PF/Emitir'
+    _click_img('Maxi.png', conf=0.9, timeout=1)
+    p.click(1150, 51)
+    time.sleep(1)
+    p.write(link.lower())
+    time.sleep(1)
+    p.press('enter')
+    time.sleep(3)
 
-        _click_img('Maxi.png', conf=0.9, timeout=1)
-        p.click(1150, 51)
-        time.sleep(1)
-        p.write(link.lower())
-        time.sleep(1)
-        p.press('enter')
-        time.sleep(3)
-
-        # espera o site abrir
-        while not _wait_img(f'Informe{consulta_tipo}.png', conf=0.9, timeout=-1):
-            time.sleep(1)
-
-        _click_img(f'Informe{consulta_tipo}.png', conf=0.9)
+    # espera o site abrir
+    while not _wait_img(f'Informe{consulta_tipo}.png', conf=0.9, timeout=-1):
         time.sleep(1)
 
-        p.write(identificacao)
-        time.sleep(1)
-        p.press('enter')
+    _click_img(f'Informe{consulta_tipo}.png', conf=0.9)
+    time.sleep(1)
 
-        if not salvar(consulta_tipo, andamento, empresa):
-            p.hotkey('ctrl', 'w')
-            continue
+    p.write(identificacao)
+    time.sleep(1)
+    p.press('enter')
 
-        print('✔ Certidão gerada')
-        _escreve_relatorio_csv('{};{};{} gerada'.format(identificacao, nome, andamento), nome=andamento)
-        time.sleep(1)
-
-    p.hotkey('ctrl', 'w')
+    return True
 
 
 @_time_execution
@@ -148,11 +138,25 @@ def run():
     if index is None:
         return False
 
-    try:
-        consulta(consulta_tipo, andamento, empresas, index)
-    except:
-        time.sleep(2)
-        p.hotkey('ctrl', 'w')
+    total_empresas = empresas[index:]
+
+    for count, empresa in enumerate(empresas[index:], start=1):
+        _indice(count, total_empresas, empresa)
+        try:
+            consulta(consulta_tipo, empresa)
+            if not salvar(consulta_tipo, andamento, empresa):
+                p.hotkey('ctrl', 'w')
+                continue
+
+            print('✔ Certidão gerada')
+            _escreve_relatorio_csv('{};{};{} gerada'.format(identificacao, nome, andamento), nome=andamento)
+            time.sleep(1)
+
+        except:
+            time.sleep(2)
+            p.hotkey('ctrl', 'w')
+
+    p.hotkey('ctrl', 'w')
 
 
 if __name__ == '__main__':

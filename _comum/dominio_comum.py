@@ -288,6 +288,7 @@ def _salvar_pdf():
 
 
 def _verifica_dominio():
+    
     if not _find_img('app_controler.png', pasta='imgs_c', conf=0.9):
         return 'dominio fechou'
     if _find_img('modulos.png', pasta='imgs_c', conf=0.9):

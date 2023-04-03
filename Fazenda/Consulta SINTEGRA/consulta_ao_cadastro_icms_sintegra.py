@@ -161,9 +161,9 @@ def run():
         while not erro:
             erro = consultar(options, cnpj, nome)
     
-    _escreve_header_csv(';'.join(['CNPJ', 'IE', 'NOME', 'SITUAÇÃO CADASTRAL', 'DATA DA SITUAÇÃO', 'OCORRÊNCIA FISCAL', 'DATA DE INATIVIDADE', 'NATUREZA JURÍDICA',
+    _escreve_header_csv(';'.join(['CNPJ', 'CONSULTA', 'IE', 'NOME', 'SITUAÇÃO CADASTRAL', 'DATA DA SITUAÇÃO', 'OCORRÊNCIA FISCAL', 'DATA DE INATIVIDADE', 'NATUREZA JURÍDICA',
                                   'REGIME DE APURAÇÃO', 'ATIVIDADE ECONÔMICA', 'POSTO FISCAL', 'CREDENCIAMENTO COMO EMISSOR DE NF-E', 'OBRIGATORIEDADE DE NF-E',
-                                  'INÍCIO DA OBRIGATORIEDADE', 'ENDEREÇO']), nome='Consulta ao cadastro de ICMS.csv')
+                                  'INÍCIO DA OBRIGATORIEDADE', 'ENDEREÇO']), nome='Consulta ao cadastro de ICMS')
 
 
 if __name__ == '__main__':

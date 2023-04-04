@@ -60,7 +60,7 @@ def imprimir(empresa, andamentos):
     time.sleep(1)
     _escreve_relatorio_csv(f'{cnpj};Guia gerada;{comp};{ano}', nome=andamentos)
     print('✔ Guia gerada')
-    time.sleep(5)
+    time.sleep(8)
     p.hotkey('ctrl', 'w')
 
 

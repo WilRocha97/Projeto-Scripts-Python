@@ -15,10 +15,10 @@ def analiza():
     with fitz.open(arq) as pdf:
         # Para cada página do pdf, se for a segunda página o script ignora
         for page in pdf:
+            # Pega o texto da pagina
+            textinho = page.get_text('text', flags=1 + 2 + 8)
+            
             try:
-                # Pega o texto da pagina
-                textinho = page.get_text('text', flags=1 + 2 + 8)
-
                 total_entrada = re.compile(r'Total de Entradas:\n(.+,\d\d)').search(textinho).group(1)
                 total_saida = re.compile(r'Total de Saídas:\n(.+,\d\d)').search(textinho).group(1)
                 resultado = re.compile(r'Resultado:\n(.+,\d\d)').search(textinho).group(1)
@@ -29,12 +29,10 @@ def analiza():
                 nome = empresa.group(1)
                 periodo = empresa.group(3)
                 periodo = periodo.replace('/', '-')
-                
                 _escreve_relatorio_csv(f"{cnpj};{nome};{periodo};{total_entrada};{total_saida};{resultado};{porcentagem}", nome=f'Comparativo de Entradas e Saídas - {periodo}')
-        
-            except():
-                print(textinho)
-                print('ERRO')
+            
+            except:
+                continue
 
     return periodo
 

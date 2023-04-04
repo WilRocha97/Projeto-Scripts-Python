@@ -257,7 +257,7 @@ def run():
         while resultado != 'ok':
             # abre a empresa no domínio
             if not _login(empresa, andamentos):
-                continue
+                break
             # gera o arquivo específico da empresa
             resultado = gera_arquivo(comp, andamentos, cod=empresa[0], cnpj=empresa[1], nome=empresa[2])
 

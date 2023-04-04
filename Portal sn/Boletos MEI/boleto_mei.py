@@ -72,7 +72,7 @@ def boleto_mei(empresas, index):
 
         cnpj, comp, ano, venc = empresa
         
-        andamentos = f'Boletos MEi {comp}-{ano}'
+        andamentos = f'Boletos MEI {comp}-{ano}'
         
         # Abrir o site
         if _find_img('Chrome.png', conf=0.9):

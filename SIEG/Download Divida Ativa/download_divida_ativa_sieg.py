@@ -38,7 +38,7 @@ def login_sieg(driver):
     user = f.read()
     user = user.split('/')
     
-    # inserir o emailno campo
+    # inserir o email no campo
     driver.find_element(by=By.ID, value='txtEmail').send_keys(user[0])
     time.sleep(1)
     
@@ -157,7 +157,7 @@ def download_divida(contador, driver, divida, descricao):
     for arquivo in os.listdir(download_folder):
         os.remove(os.path.join(download_folder, arquivo))
     
-    # tenta clicar em donwload até conseguir
+    # tenta clicar em download até conseguir
     while not click(driver, divida):
         time.sleep(5)
     
@@ -243,7 +243,7 @@ def converte_html_pdf(download_folder, final_folder, arquivo, descricao):
     # Configuração do pdfkit para utilizar o wkhtmltopdf
     config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
 
-    # tenta converter o PDF, se não conseguir ano na planilha o nome do arquivo em html que deu erro na conversõa
+    # tenta converter o PDF, se não conseguir ano na planilha o nome do arquivo em html que deu erro na conversão
     # e coloca ele em uma pasta separada para arquivos em html
     try:
         time.sleep(2)
@@ -273,7 +273,7 @@ def pega_info_arquivo(html_path, descricao):
         soup = BeautifulSoup(html, 'html.parser')
         text = soup.get_text()
         
-        # pega as infos da empresa e a insncrição do documento porque tem empresas com mais de um arquivo
+        # pega as infos da empresa e a inscrição do documento porque tem empresas com mais de um arquivo
         try:
             try:
                 nome = re.compile(r'RFB\n\n\n\nNome:\n(.+)').search(text).group(1)

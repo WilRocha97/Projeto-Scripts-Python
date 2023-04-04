@@ -60,7 +60,7 @@ def salvar(consulta_tipo, andamento, empresa, pasta):
             p.hotkey('ctrl', 'w')
             return False
 
-    # escreve o nome do arquivo (.upper() serve para deixar em letra maiuscula)
+    # escreve o nome do arquivo (.upper() serve para deixar em letra maiúscula)
     time.sleep(1)
     p.write(f'{nome.upper()} - {identificacao} - Certidao')
     time.sleep(0.5)

@@ -16,16 +16,14 @@ def analiza():
         if not arq.endswith('.pdf'):
             continue
         print(f'\nArquivo: {arq}')
-        _escreve_relatorio_csv(f"{arq}")
         # Abrir o pdf
         arq = os.path.join(documentos, arq)
         with fitz.open(arq) as pdf:
             # Para cada página do pdf, se for a segunda página o script ignora
             for page in pdf:
+                # Pega o texto da pagina
+                textinho = page.get_text('text', flags=1 + 2 + 8)
                 try:
-                    # Pega o texto da pagina
-                    textinho = page.get_text('text', flags=1 + 2 + 8)
-    
                     total_servico = re.compile(r'Totais\n.+,.+\n(.+,.+)').search(textinho).group(1)
                     nome = re.compile(r'Empresa:\n(.+)').search(textinho).group(1)
                     cnpj = re.compile(r'CNPJ:\n(.+)').search(textinho).group(1)
@@ -34,10 +32,8 @@ def analiza():
                     periodo = periodo.replace('/', '-').replace('\na', ' até ')
                     
                     _escreve_relatorio_csv(f"{cnpj};{nome};{periodo};{total_servico}", nome=f'Relatório de Faturamento Serviço - {periodo}')
-            
-                except():
-                    print(textinho)
-                    print('ERRO')
+                except:
+                    continue
 
     return periodo
 

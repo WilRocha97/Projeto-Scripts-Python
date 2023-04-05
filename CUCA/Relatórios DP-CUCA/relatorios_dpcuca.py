@@ -233,6 +233,7 @@ def relatoriozinhos(relatorio, andamentos, empresa):
     if relatorio == 'Relatório de Experiência geral':
         try:
             _login(empresa, 'Codigo', 'dpcuca')
+            
         except:
             alert(title='Script incrível', text='Erro no login do DPCUCA')
 

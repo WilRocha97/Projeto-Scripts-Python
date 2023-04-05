@@ -19,7 +19,7 @@ def verificacoes(consulta_tipo, andamento, empresa):
     if _find_img('NaoFoiPossivel.png', conf=0.9):
         _escreve_relatorio_csv('{};{};Não foi possível concluir a consulta'.format(identificacao, nome), nome=andamento)
         print('❌ Não foi possível concluir a consulta')
-        return False
+        return 'erro'
 
     if _find_img('InfoInsuficiente.png', conf=0.9):
         _escreve_relatorio_csv('{};{};As informações disponíveis na Secretaria da Receita Federal do Brasil - RFB sobre o contribuinte '
@@ -56,9 +56,14 @@ def salvar(consulta_tipo, andamento, empresa, pasta):
         if _find_img('NovaCertidao.png', conf=0.9):
             _click_img('NovaCertidao.png', conf=0.9)
 
-        if not verificacoes(consulta_tipo, andamento, empresa):
+        situacao = verificacoes(consulta_tipo, andamento, empresa)
+        
+        if not situacao:
             p.hotkey('ctrl', 'w')
             return False
+        
+        if situacao == 'erro':
+            return situacao
 
     # escreve o nome do arquivo (.upper() serve para deixar em letra maiúscula)
     time.sleep(1)
@@ -109,15 +114,19 @@ def consulta(consulta_tipo, empresa):
         link = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PF/Emitir'
 
     _click_img('Maxi.png', conf=0.9, timeout=1)
-    p.click(1150, 51)
-    time.sleep(1)
-    p.write(link.lower())
-    time.sleep(1)
-    p.press('enter')
-    time.sleep(3)
-
-    # espera o site abrir
-    while not _wait_img(f'Informe{consulta_tipo}.png', conf=0.9, timeout=-1):
+    # espera o site abrir e recarrega caso demore
+    while not _find_img(f'Informe{consulta_tipo}.png', conf=0.9):
+        p.click(1150, 51)
+        time.sleep(1)
+        p.write(link.lower())
+        time.sleep(1)
+        p.press('enter')
+        for i in range(10):
+            time.sleep(1)
+            if _find_img(f'Informe{consulta_tipo}.png', conf=0.9):
+                break
+            
+    while not _find_img(f'Informe{consulta_tipo}.png', conf=0.9):
         time.sleep(1)
 
     _click_img(f'Informe{consulta_tipo}.png', conf=0.9)
@@ -143,20 +152,25 @@ def run():
         return False
 
     total_empresas = empresas[index:]
-
+    
     for count, empresa in enumerate(empresas[index:], start=1):
         _indice(count, total_empresas, empresa)
+        situacao = 'erro'
         try:
-            consulta(consulta_tipo, empresa)
-            if not salvar(consulta_tipo, andamento, empresa, pasta):
-                p.hotkey('ctrl', 'w')
-                continue
-            
-            identificacao, nome = empresa
-            print('✔ Certidão gerada')
-            _escreve_relatorio_csv('{};{};{} gerada'.format(identificacao, nome, andamento), nome=andamento)
-            time.sleep(1)
-
+            while situacao == 'erro':
+                consulta(consulta_tipo, empresa)
+                situacao = salvar(consulta_tipo, andamento, empresa, pasta)
+                
+                if not situacao:
+                    p.hotkey('ctrl', 'w')
+                    continue
+                
+                elif situacao:
+                    identificacao, nome = empresa
+                    print('✔ Certidão gerada')
+                    _escreve_relatorio_csv('{};{};{} gerada'.format(identificacao, nome, andamento), nome=andamento)
+                    time.sleep(1)
+                
         except:
             time.sleep(2)
             p.hotkey('ctrl', 'w')

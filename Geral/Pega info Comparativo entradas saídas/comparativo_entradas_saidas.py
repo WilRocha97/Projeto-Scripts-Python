@@ -16,7 +16,6 @@ def analiza():
         if not arq.endswith('.pdf'):
             continue
         print(f'\nArquivo: {arq}')
-        _escreve_relatorio_csv(f"{arq}")
         # Abrir o pdf
         arq = os.path.join(documentos, arq)
         with fitz.open(arq) as pdf:

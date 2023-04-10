@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
 from pyautogui import prompt, confirm
 import os, time, re, csv, shutil, fitz
 
@@ -36,7 +37,7 @@ def login_sieg(driver):
     user = f.read()
     user = user.split('/')
     
-    # inserir o emailno campo
+    # inserir o email no campo
     driver.find_element(by=By.ID, value='txtEmail').send_keys(user[0])
     time.sleep(1)
     
@@ -60,58 +61,46 @@ def sieg_iris(driver):
 
 def procura_empresa(tipo, competencia, empresa, driver, options):
     cnpj, nome = empresa
+    
     # espera a barra de pesquisa, se não aparecer em 1 minuto, recarrega a página
     timer = 0
     while not localiza_id(driver, 'select2-ddlCompanyIris-container'):
         time.sleep(1)
         timer += 1
         if timer >= 60:
-            print('>>> Teantando novamente\n')
+            print('>>> Tentando novamente\n')
             driver.close()
             status, driver = _initialize_chrome(options)
             driver = login_sieg(driver)
             driver = sieg_iris(driver)
             timer = 0
-
+    
     time.sleep(5)
     print('>>> Pesquisando empresa')
     # clica para abrir a barra de pesquisa
     
-    modal = 'sim'
-    while modal == 'sim':
-        try:
-            driver.find_element(by=By.ID, value='select2-ddlCompanyIris-container').click()
-            time.sleep(1)
-            modal = 'não'
-        except:
-            try:
-                driver.find_element(by=By.CLASS_NAME, value='btn-close-alert').click()
-                modal = 'sim'
-            except:
-                _escreve_relatorio_csv(f'{cnpj};{nome};Erro ao pesquisar empresa')
-                print('❗ Erro ao pesquisar empresa')
-                return driver
-                
-    localiza_empresa = re.compile(r'(' + cnpj + ')').search(driver.page_source)
-    
-    if not localiza_empresa:
-        _escreve_relatorio_csv(f'{cnpj};{nome};Empresa não encontrada')
-        print('❗ Empresa não encontrada')
-        return driver
-    
-    # busca a mensagem de 'Nenhuma empresa encontrada.'
-    try:
-        # clica para abrir a barra de pesquisa
-        driver.find_element(by=By.CLASS_NAME, value='select2-search__field').send_keys(cnpj)
-        time.sleep(3)
+    if localiza_id(driver, 'modalYouTube'):
+        # Encontre um elemento que esteja fora do modal e clique nele
+        elemento_fora_modal = driver.find_element(by=By.XPATH, value='/html/body/form/div[5]/div[3]/div/div/div[2]/div[2]/div[1]/input')
+        ActionChains(driver).move_to_element(elemento_fora_modal).click().perform()
         
-        # clica para selecionar a empresa
-        driver.find_element(by=By.XPATH, value='/html/body/span/span/span[2]/ul/li').click()
-        time.sleep(1)
-    except:
+    # clica para abrir a barra de pesquisa
+    driver.find_element(by=By.ID, value='select2-ddlCompanyIris-container').click()
+    time.sleep(1)
+    
+    driver.find_element(by=By.CLASS_NAME, value='select2-search__field').send_keys(cnpj)
+    time.sleep(3)
+    
+    # busca a mensagem de 'Nenhuma empresa encontrada.
+    localiza_empresa = re.compile(r'Nenhuma empresa encontrada.').search(driver.page_source)
+    if localiza_empresa:
         _escreve_relatorio_csv(f'{cnpj};{nome};Empresa não encontrada')
         print('❗ Empresa não encontrada')
         return driver
+    
+    # clica para selecionar a empresa
+    driver.find_element(by=By.XPATH, value='/html/body/span/span/span[2]/ul/li').click()
+    time.sleep(1)
     
     print('>>> Consultando comprovantes de pagamento')
     # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
@@ -121,8 +110,8 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
         time.sleep(1)
         timer += 1
         if timer >= 60:
-            _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento encontrado para esssa empresa')
-            print('❗ Nenhum comprovante de pagamento encontrado para esssa empresa')
+            _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento encontrado para essa empresa')
+            print('❗ Nenhum comprovante de pagamento encontrado para essa empresa')
             return driver
         
     try:
@@ -132,8 +121,8 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
         time.sleep(2)
     except:
             re.compile(r'class=\"\">(Nenhum item encontrado!)<').search(driver.page_source).group(1)
-            _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento encontrado para esssa empresa')
-            print('❗ Nenhum comprovante de pagamento encontrado para esssa empresa')
+            _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento encontrado para essa empresa')
+            print('❗ Nenhum comprovante de pagamento encontrado para essa empresa')
             return driver
     
     # pega a lista de guias da competência desejada
@@ -144,10 +133,10 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
         comprovantes = re.compile(r'/\d\d\d\d</td><td class=\" hidden-sm hidden-xs td-background-dt\">\d\d/\d\d/' + competencia + '</td><td class=\" hidden-sm hidden-xs td-background-dt\">.+</td><td class=\" col-md-1 hidden-sm hidden-xs td-background-dt\">R\$.+id=\"(.+)\" class=') \
             .findall(driver.page_source)
         
-    # verifica se existe algum comprovante referênte a competência digitada
+    # verifica se existe algum comprovante referente a competência digitada
     if not comprovantes:
-        _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento referênte a {competencia} encontrado para esssa empresa')
-        print(f'❗ Nenhum comprovante de pagamento referênte a {competencia} encontrado para esssa empresa')
+        _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento referente a {competencia} encontrado para essa empresa')
+        print(f'❗ Nenhum comprovante de pagamento referente a {competencia} encontrado para essa empresa')
         return driver
     
     contador = 0
@@ -160,7 +149,7 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
         while download:
             driver, contador, erro, download= download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
         if erro == 'erro':
-            sem_recibo = 'Existe um comprovante com o botão de download dezabilitado'
+            sem_recibo = 'Existe um comprovante com o botão de download desabilitado'
             print(f'❌ Existe um comprovante com o botão de download desabilitado')
     
     _escreve_relatorio_csv(f'{cnpj};{nome};Comprovantes {competencia} baixados;{contador} Arquivos;{sem_recibo}')
@@ -246,9 +235,9 @@ def run():
     tipo = confirm(title='Script incrível', buttons=('Consulta mensal', 'Consulta anual'))
     
     if tipo == 'Consulta mensal':
-        competencia = prompt(title='Script incrível', text='Qual competência referênte?', default='00/0000')
+        competencia = prompt(title='Script incrível', text='Qual competência referente?', default='00/0000')
     else:
-        competencia = prompt(title='Script incrível', text='Qual competência referênte?', default='0000')
+        competencia = prompt(title='Script incrível', text='Qual competência referente?', default='0000')
         
     os.makedirs('execução/Comprovantes', exist_ok=True)
     os.makedirs('ignore/Comprovantes', exist_ok=True)

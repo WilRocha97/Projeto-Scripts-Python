@@ -33,7 +33,6 @@ debug_screen.png
 *.REC
 *.iml
 *.DEC
-*envia_doc.py
 
 #Pastas
 _dev_env/
@@ -63,4 +62,4 @@ recalculo sefip individual/
 Caixa/
 Caixa/Extratos FGTS/
 Esocial/
-
+Envia Documento/

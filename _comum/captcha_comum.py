@@ -118,7 +118,7 @@ _break_normal_captcha = break_normal_captcha'''
 # ---------- VVVV Anti Captcha VVVV ---------------------------------------------------------------------------------------------------------------------------
 
 
-# Recebe a url do site com o captcha mais a chave da api resposnável pelo captcha encontrada no código do site
+# Recebe a url do site com o captcha mais a chave da api responsável pelo captcha encontrada no código do site
 # envia para a api e retorna a chave para resolver o captcha
 def solve_recaptcha(data):
     print('>>> Quebrando recaptcha')
@@ -157,7 +157,7 @@ _solve_text_captcha = solve_text_captcha
 
 # Recebe a url do site com o captcha mais a chave da api resposnável pelo captcha encontrada no código do site
 # envia para a api e retorna a chave para resolver o captcha
-def solve_hcaptcha(data):
+def solve_hcaptcha(data, visible=False):
     response = 'ERROR_NO_SLOT_AVAILABLE'
     while response == 'ERROR_NO_SLOT_AVAILABLE':
         print('>>> Quebrando hcaptcha')
@@ -168,7 +168,8 @@ def solve_hcaptcha(data):
         solver.set_website_key(data['sitekey'])
     
         # tell API that Hcaptcha is invisible
-        solver.set_is_invisible(1)
+        if not visible:
+            solver.set_is_invisible(1)
     
         # set here parameters like rqdata, sentry, apiEndpoint, endpoint, reportapi, assethost, imghost
         # solver.set_enterprise_payload({

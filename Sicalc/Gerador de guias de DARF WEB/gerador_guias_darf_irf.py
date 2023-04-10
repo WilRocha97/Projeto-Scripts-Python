@@ -9,6 +9,7 @@ path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers
 from chrome_comum import _initialize_chrome
 from pyautogui_comum import _click_img, _wait_img, _find_img
+from captcha_comum import _solve_hcaptcha
 
 
 def renomear(driver, empresa, apuracao, tipo):
@@ -39,15 +40,27 @@ def login_sicalc(empresa, apuracao, driver, tipo):
     driver.find_element(by=By.ID, value='cnpjFormatado').send_keys(cnpj)
     time.sleep(1)
 
-    # selecionar o checkbox do captcha
+    '''# selecionar o checkbox do captcha
     _click_img('checkbox.png', conf=0.95)
-    p.moveTo(5, 5)
+    p.moveTo(5, 5)'''
     p.press('pgDn')
-
+    
+    hcaptcha_data  = {'url': 'https://sicalc.receita.economia.gov.br/sicalc/rapido/contribuinte', 'sitekey':'20a82aa0-d5ea-4ae2-8b4c-ac341dfe6ee7'}
+    token = _solve_hcaptcha(hcaptcha_data, visible=True)
+    token = str(token)
+    
+    id_captcha_response = driver.find_element(by=By.XPATH, value='/html/body/div[2]/div[2]/div[1]/div/div/div/form/fieldset[2]/div[4]/div/textarea').get_attribute('id')
+    
+    driver.execute_script('document.getElementById("' + id_captcha_response + '").value="' + token + '";')
+    
+    time.sleep(1)
+    
     # esperar o botão de login habilitar e clicar nele
     timer = 0
     while not _find_img('continuar.png', conf=0.95):
         time.sleep(1)
+        driver.execute_script('document.getElementById("divBotoes").querySelectorAll("input")[0].disabled=false;')
+        
         timer += 1
         if timer >= 10:
             return False
@@ -204,22 +217,22 @@ def run():
         
         erro = 'sim'
         while erro == 'sim':
-            try:
-                # iniciar o driver do chome
-                status, driver = _initialize_chrome(options)
-        
-                # fazer login do SICALC
-                if not login_sicalc(empresa, str(apuracao), driver, tipo):
-                    driver.close()
-                    erro = 'sim'
-                else:
-                    erro = 'nao'
-            except:
+            '''try:'''
+            # iniciar o driver do chome
+            status, driver = _initialize_chrome(options)
+    
+            # fazer login do SICALC
+            if not login_sicalc(empresa, str(apuracao), driver, tipo):
+                driver.close()
+                erro = 'sim'
+            else:
+                erro = 'nao'
+            '''except:
                 try:
                     p.hotkey('alt', 'f4')
                     erro = 'sim'
                 except:
-                    erro = 'sim'
+                    erro = 'sim'''
 
         p.hotkey('alt', 'f4')
 

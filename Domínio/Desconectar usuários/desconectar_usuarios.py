@@ -134,8 +134,12 @@ def run():
     # se o botão de desconectar estiver habilitado, clica nele
     if p.locateCenterOnScreen(path.join('imgs', 'desconectar.png'), confidence=0.9):
         p.hotkey('alt', 'd')
-        sleep(1)
+        sleep(2)
     
+    # caso apareça a tela para confirmar desconexão mesmo com usuários não ociosos
+    if p.locateOnScreen(path.join('imgs', 'continuar_desconexao.png')):
+        p.hotkey('alt', 'y')
+        
     # se a tela de usuário e senha aparecer, insere as informações para desconectar o usuário
     if p.locateOnScreen(path.join('imgs', 'usuario_e_senha.png')):
         p.click(p.locateCenterOnScreen(path.join('imgs', 'usuario.png'), confidence=0.9), button='left')
@@ -144,7 +148,11 @@ def run():
         p.write(senha)
         sleep(1)
         p.hotkey('alt', 'o')
-    
+        sleep(2)
+        # caso apareça a tela para confirmar desconexão mesmo com usuários não ociosos
+        if p.locateOnScreen(path.join('imgs', 'continuar_desconexao.png')):
+            p.hotkey('alt', 'y')
+            
     # se der erro de usuário e senha, encerra o script
     sleep(1)
     if p.locateOnScreen(path.join('imgs', 'usuario_ou_senha_invalidos.png'), confidence=0.5):

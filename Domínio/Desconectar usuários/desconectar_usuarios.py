@@ -6,11 +6,12 @@ import pyautogui as p
 from datetime import datetime, date
 import cv2
 
-# 'auto-py-to-exe': para criar o executável e 'Inno setup Compiler': para criar o instalador
 
+# 'auto-py-to-exe': para criar o executável e 'Inno setup Compiler': para criar o instalador
 
 # para cada imagem na pasta selecionada, procura na tela se existe aquele usuário selecionado, se tiver,
 # pega a coordenada do centro da imagem referente e faz um cálculo para clicar na área do check para desmarcar o usuário
+
 def localiza_autorizados():
     # aguarda alguma subtela que possa estar aberta
     aguarda_sub_telas()
@@ -34,12 +35,14 @@ def aguarda_sub_telas():
         tempo += 1
         if tempo >= 60:
             return False
-
+    
     return True
 
 
 # configura o tempo de espera para atualizar a lista de usuários
-def configura_parametro():
+def configura_parametro(timer):
+    if timer == '':
+        timer = '60'
     while not p.locateOnScreen(path.join('imgs', 'menu_controle.png')):
         p.hotkey('alt', 'c')
         sleep(1)
@@ -48,7 +51,7 @@ def configura_parametro():
         sleep(1)
     p.press('del', presses=5)
     sleep(1)
-    p.write('90')
+    p.write(timer)
     sleep(1)
     p.hotkey('alt', 'g')
     while p.locateOnScreen(path.join('imgs', 'tela_parametros.png')):
@@ -75,7 +78,7 @@ def run():
     # espera a tela de carregamento do módulo do domínio fechar
     while p.locateOnScreen(path.join('imgs', 'tela_de_carregamento.png'), confidence=0.9):
         sleep(1)
-
+    
     # aguarda alguma subtela que possa estar aberta
     if not aguarda_sub_telas():
         return False
@@ -85,7 +88,7 @@ def run():
         p.click(p.locateCenterOnScreen(path.join('imgs', 'lista_usuarios.png'), confidence=0.9), button='left', clicks=2)
     if p.locateCenterOnScreen(path.join('imgs', 'estacao.png'), confidence=0.9):
         p.click(p.locateCenterOnScreen(path.join('imgs', 'estacao.png'), confidence=0.9))
-
+    
     # aguarda alguma subtela que possa estar aberta
     if not aguarda_sub_telas():
         return False
@@ -100,14 +103,14 @@ def run():
         if not p.locateOnScreen(path.join('imgs', 'seta_baixo.png'), confidence=0.9):
             localiza_autorizados()
             break
-
+        
         # aguarda alguma subtela que possa estar aberta
         if not aguarda_sub_telas():
             return False
         
         # procura o usuário antes de descer a lista
         localiza_autorizados()
-
+        
         # aguarda alguma subtela que possa estar aberta
         if not aguarda_sub_telas():
             return False
@@ -118,15 +121,15 @@ def run():
         
         # procura o usuário após descer a lista
         localiza_autorizados()
-
+    
     # aguarda alguma subtela que possa estar aberta
     if not aguarda_sub_telas():
         return False
     
     # volta para o topo da lista
     if p.locateCenterOnScreen(path.join('imgs', 'seta_cima.png'), confidence=0.9):
-        p.click(p.locateCenterOnScreen(path.join('imgs', 'seta_cima.png'), confidence=0.9), button='left', clicks=50)
-
+        p.click(p.locateCenterOnScreen(path.join('imgs', 'seta_cima.png'), confidence=0.9), button='left', clicks=150)
+    
     # aguarda alguma subtela que possa estar aberta
     if not aguarda_sub_telas():
         return False
@@ -139,7 +142,7 @@ def run():
     # caso apareça a tela para confirmar desconexão mesmo com usuários não ociosos
     if p.locateOnScreen(path.join('imgs', 'continuar_desconexao.png')):
         p.hotkey('alt', 'y')
-        
+    
     # se a tela de usuário e senha aparecer, insere as informações para desconectar o usuário
     if p.locateOnScreen(path.join('imgs', 'usuario_e_senha.png')):
         p.click(p.locateCenterOnScreen(path.join('imgs', 'usuario.png'), confidence=0.9), button='left')
@@ -152,7 +155,7 @@ def run():
         # caso apareça a tela para confirmar desconexão mesmo com usuários não ociosos
         if p.locateOnScreen(path.join('imgs', 'continuar_desconexao.png')):
             p.hotkey('alt', 'y')
-            
+    
     # se der erro de usuário e senha, encerra o script
     sleep(1)
     if p.locateOnScreen(path.join('imgs', 'usuario_ou_senha_invalidos.png'), confidence=0.5):
@@ -160,15 +163,16 @@ def run():
     
     return True
 
-    
+
 if __name__ == '__main__':
     _hora_limite = datetime.now().replace(hour=7, minute=30, second=0, microsecond=0)
     # tenta pegar o usuário e a senha de um arquivo txt, se não conseguir marca um erro na variável e encerra o robô
     try:
         f = open('Dados.txt', 'r', encoding='utf-8')
         f = f.read().split('\n')
-        usuario = f[0][9:].replace(' ', '')
-        senha = f[1][7:].replace(' ', '')
+        usuario = f[0][8:].replace(' ', '')
+        senha = f[1][6:].replace(' ', '')
+        timer = f[2][6:].replace(' ', '')
         
         dados_erros = False
         if not usuario:
@@ -203,7 +207,7 @@ if __name__ == '__main__':
                 # configura o tempo de espera para atualizar a lista de usuários
                 sleep(1)
                 p.click(p.locateOnScreen(path.join('imgs', 'conexoes.png'), confidence=0.9))
-                configura_parametro()
+                configura_parametro(timer)
             
             # enquanto a tela estiver aberta repete o ciclo, se após 30 segundos não encontrar a tela, o robô é encerrado
             while p.locateOnScreen(path.join('imgs', 'conexoes.png'), confidence=0.9):
@@ -216,7 +220,7 @@ if __name__ == '__main__':
                     horario_limite = True
                     break
                 sleep(30)
-    
+        
         # alerta de robô finalizado
         if not documentos:
             p.alert(text=f'Diretório dos usuários vazio, robô finalizado.')
@@ -226,6 +230,6 @@ if __name__ == '__main__':
             p.alert(text=f'Horário limite atingido, robô finalizado.')
         else:
             p.alert(text=f'Robô finalizado.')
-            
+    
     else:
-        p.alert(text=f'Erro ao utilizar arquivo de dados, robô finalizado.')
+        p.alert(text=f'Usuário e/ou senha não informados, robô finalizado.')

@@ -167,8 +167,8 @@ if __name__ == '__main__':
     try:
         f = open('Dados.txt', 'r', encoding='utf-8')
         f = f.read().split('\n')
-        usuario = f[0][9:].replace(' ', '')
-        senha = f[1][7:].replace(' ', '')
+        usuario = f[0][9:]
+        senha = f[1][7:]
         
         dados_erros = False
         if not usuario:

@@ -38,24 +38,24 @@ def login_sicalc(empresa):
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36'}
     
     with Session() as s:
+        '''erro = 'sim'
+        while erro == 'sim':
+            try:'''
         s.get('https://sicalc.receita.economia.gov.br/sicalc/rapido/contribuinte', headers=headers)
         hcaptcha_data = {'url': 'https://sicalc.receita.economia.gov.br/sicalc/rapido/contribuinte', 'sitekey': '20a82aa0-d5ea-4ae2-8b4c-ac341dfe6ee7'}
         token = _solve_hcaptcha(hcaptcha_data)
         token = str(token)
+
+        payload = {'cnpjFormatado': cnpj_formatado,
+                   'h-captcha-response': token}
+        s.post('https://sicalc.receita.economia.gov.br/sicalc/api/captcha', headers=headers, data=payload)
         
-        erro = 'sim'
-        while erro == 'sim':
-            try:
-                payload = {'cnpjFormatado': cnpj_formatado,
-                           'h-captcha-response': token}
-                s.post('https://sicalc.receita.economia.gov.br/sicalc/api/captcha', headers=headers, data=payload)
-                
-                res = s.get('https://sicalc.receita.economia.gov.br/sicalc/rapido/calculo', headers=headers)
-                soup = BeautifulSoup(res.content, 'html.parser')
-                soup = soup.prettify()
-                erro = 'não'
-            except:
-                erro = 'sim'
+        res = s.get('https://sicalc.receita.economia.gov.br/sicalc/rapido/calculo', headers=headers)
+        soup = BeautifulSoup(res.content, 'html.parser')
+        soup = soup.prettify()
+        erro = 'não'
+        '''except:
+            erro = 'sim'''
             
         # opções para fazer com que o chome trabalhe em segundo plano (opcional)
         options = webdriver.ChromeOptions()
@@ -87,6 +87,7 @@ def login_sicalc(empresa):
         p.moveTo(5, 5)
         p.press('pgDn')
         
+        time.sleep(4)
     return True
 
 

@@ -27,13 +27,13 @@ def localiza_autorizados():
 def aguarda_sub_telas():
     while p.locateOnScreen(path.join('imgs', 'tela_parametros.png')) or p.locateOnScreen(path.join('imgs', 'menu_controle.png')) \
             or p.locateOnScreen(path.join('imgs', 'menu_ajuda.png')) or p.locateOnScreen(path.join('imgs', 'usuario_e_senha.png')):
-        sleep(1)
+        sleep(0.1)
     
     tempo = 0
     while not p.locateOnScreen(path.join('imgs', 'conexoes.png'), confidence=0.9):
-        sleep(1)
-        tempo += 1
-        if tempo >= 60:
+        sleep(0.1)
+        tempo += 0.1
+        if tempo >= 600:
             return False
     
     return True
@@ -63,8 +63,8 @@ def configura_parametro(timer):
 def horario():
     hoje = date.today()  # data de hoje
     if not hoje.weekday() in (5, 6):
-        if datetime.now() >= datetime.now().replace(hour=17, minute=30, second=0, microsecond=0):
-            if datetime.now() <= datetime.now().replace(hour=8, minute=0, second=0, microsecond=0):
+        if datetime.now() >= datetime.now().replace(hour=18, minute=30, second=0, microsecond=0):
+            if datetime.now() <= datetime.now().replace(hour=7, minute=0, second=0, microsecond=0):
                 # Verifica o horário
                 if datetime.now() >= _hora_limite:
                     return True
@@ -97,30 +97,25 @@ def run():
     if p.locateCenterOnScreen(path.join('imgs', 'lista_usuarios.png'), confidence=0.9):
         p.hotkey('alt', 't')
         sleep(2)
-    
-    # enquanto não chegar no final da lista procura os usuários que não iram desconectar e tira a seleção dele
-    while not p.locateOnScreen(path.join('imgs', 'seta_baixo_limite.png'), confidence=0.9):
+        
+        # enquanto não chegar no final da lista procura os usuários que não iram desconectar e tira a seleção dele
         if not p.locateOnScreen(path.join('imgs', 'seta_baixo.png'), confidence=0.9):
             localiza_autorizados()
-            break
-        
-        # aguarda alguma subtela que possa estar aberta
-        if not aguarda_sub_telas():
-            return False
-        
-        # procura o usuário antes de descer a lista
-        localiza_autorizados()
-        
-        # aguarda alguma subtela que possa estar aberta
-        if not aguarda_sub_telas():
-            return False
-        
-        # clica para descer a lista de usuários
-        p.moveTo(p.locateCenterOnScreen(path.join('imgs', 'seta_baixo.png'), confidence=0.9))
-        p.click(p.locateCenterOnScreen(path.join('imgs', 'seta_baixo_selecionada.png'), confidence=0.9), button='left', clicks=10)
-        
-        # procura o usuário após descer a lista
-        localiza_autorizados()
+        else:
+            while not p.locateOnScreen(path.join('imgs', 'seta_baixo_limite.png'), confidence=0.9):
+                # aguarda alguma subtela que possa estar aberta
+                if not aguarda_sub_telas():
+                    return False
+                
+                # procura o usuário antes de descer a lista
+                localiza_autorizados()
+                
+                # clica para descer a lista de usuários
+                p.moveTo(p.locateCenterOnScreen(path.join('imgs', 'seta_baixo.png'), confidence=0.9))
+                p.click(p.locateCenterOnScreen(path.join('imgs', 'seta_baixo_selecionada.png'), confidence=0.9), button='left', clicks=10)
+                
+                if p.locateOnScreen(path.join('imgs', 'seta_baixo_limite.png'), confidence=0.9):
+                    localiza_autorizados()
     
     # aguarda alguma subtela que possa estar aberta
     if not aguarda_sub_telas():
@@ -165,7 +160,7 @@ def run():
 
 
 if __name__ == '__main__':
-    _hora_limite = datetime.now().replace(hour=7, minute=30, second=0, microsecond=0)
+    _hora_limite = datetime.now().replace(hour=6, minute=30, second=0, microsecond=0)
     # tenta pegar o usuário e a senha de um arquivo txt, se não conseguir marca um erro na variável e encerra o robô
     try:
         f = open('Dados.txt', 'r', encoding='utf-8')

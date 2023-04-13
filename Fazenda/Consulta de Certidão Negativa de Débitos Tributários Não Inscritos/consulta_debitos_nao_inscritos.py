@@ -270,10 +270,11 @@ def run():
 
 
 if __name__ == '__main__':
-    try:
-        if not run():
-            p.alert(text='Consulta de Certidão Negativa de Débitos Tributários Não Inscritos finalizada inesperadamente!')
-        else:
-            p.alert(text='Consulta de Certidão Negativa de Débitos Tributários Não Inscritos finalizada')
-    except:
+    '''try:'''
+    if not run():
         p.alert(text='Consulta de Certidão Negativa de Débitos Tributários Não Inscritos finalizada inesperadamente!')
+    else:
+        p.alert(text='Consulta de Certidão Negativa de Débitos Tributários Não Inscritos finalizada')
+    '''except:
+        p.alert(text='Consulta de Certidão Negativa de Débitos Tributários Não Inscritos finalizada inesperadamente!')
+'''

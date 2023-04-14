@@ -48,11 +48,11 @@ def login_sicalc(empresa):
 
         payload = {'cnpjFormatado': cnpj_formatado,
                    'h-captcha-response': token}
-        s.post('https://sicalc.receita.economia.gov.br/sicalc/api/captcha', headers=headers, data=payload)
+        res = s.post('https://sicalc.receita.economia.gov.br/sicalc/api/captcha', headers=headers, data=payload)
         
-        res = s.get('https://sicalc.receita.economia.gov.br/sicalc/rapido/calculo', headers=headers)
-        soup = BeautifulSoup(res.content, 'html.parser')
-        soup = soup.prettify()
+        # res = s.get('https://sicalc.receita.economia.gov.br/sicalc/rapido/calculo', headers=headers)
+        # soup = BeautifulSoup(res.content, 'html.parser')
+        # soup = soup.prettify()
         erro = 'não'
         '''except:
             erro = 'sim'''

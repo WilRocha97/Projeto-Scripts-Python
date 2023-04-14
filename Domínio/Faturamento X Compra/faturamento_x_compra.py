@@ -168,7 +168,7 @@ def captura_info_pdf(andamento, arquivo, refaz_planilha='não'):
                         # percorre uma lista de todos os meses em ondem verificando se o mes coletado no arquivo corresponde ao mesmo da lista
                         # se não adicona 0 na possição do mês não encontrado
                         while not mes[0] == lista_meses[count]:
-                            _escreve_relatorio_csv('0,0', end=';', nome=andamento)
+                            _escreve_relatorio_csv('0,00', end=';', nome=andamento)
                             count += 1
                         else:
                             valor = mes[tipo[0]]
@@ -178,7 +178,7 @@ def captura_info_pdf(andamento, arquivo, refaz_planilha='não'):
                     # apos terminar a lista de meses do arquivo e ainda não ter 12 valores inseridos na linha correspondente ao tipo,
                     # adiciona 0 na linha até completar 12 colunas e só assim insere o valor total do tipo
                     while count < 12:
-                        _escreve_relatorio_csv('0,0', end=';', nome=andamento)
+                        _escreve_relatorio_csv('0,00', end=';', nome=andamento)
                         count += 1
                         
                     _escreve_relatorio_csv(f'{totais.group(tipo[0])}', nome=andamento)

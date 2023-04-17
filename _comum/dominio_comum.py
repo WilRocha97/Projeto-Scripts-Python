@@ -304,4 +304,4 @@ def _encerra_dominio():
             subprocess.call(['kill', str(processo)], stdout=devnull, stderr=subprocess.STDOUT)
             print('\nDomínio Web finalizado.\n')
         except:
-            print('\nDomínio Web finalizado.\n')
+            print('\nDomínio Web não finalizado.\n')

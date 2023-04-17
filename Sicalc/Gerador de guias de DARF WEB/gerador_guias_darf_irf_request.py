@@ -69,8 +69,9 @@ def login_sicalc(empresa):
             "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
         })
         status, driver = _initialize_chrome(options)
-        for cookie in s.get.cookies():
-            driver.cookies.set(cookie['name'], cookie['value'])
+        cookies = s.cookies.get_dict()
+        for name, value in cookies.items():
+            driver.add_cookie({"name": name, "value": value})
         
         driver.get('https://sicalc.receita.economia.gov.br/sicalc/rapido/contribuinte')
         print('>>> Acessando o site')

@@ -5,9 +5,8 @@ import pyautogui as a
 import os
 
 
-
 # Foca na janela que tenha 'title' no meio do título da janela
-# e maximiza a janéla caso 'maximize' seja True
+# e maximiza a janela caso 'maximize' seja True
 # Retorna True e '' caso ache somente uma janela
 # Retorna False e uma mensagem caso ache nenhuma ou mais de uma janela
 def focus(title, maximize=True, ignore_erro=False):

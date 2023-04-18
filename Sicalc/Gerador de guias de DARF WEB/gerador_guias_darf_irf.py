@@ -5,7 +5,7 @@ import os, time, shutil, re
 from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers, e_dir
-from pyautogui_comum import _click_img, _wait_img, _find_img
+from pyautogui_comum import _click_img, _wait_img, _find_img, _click_position_img
 from captcha_comum import _solve_hcaptcha
 
 
@@ -40,7 +40,15 @@ def login_sicalc(empresa):
     p.press('pgDn')
     _click_img('checkbox.png', conf=0.95)
     p.moveTo(5, 5)
-    _wait_img('check.png', conf=0.9, timeout=1)
+    
+    timer = 0
+    while not _find_img('check.png', conf=0.9):
+        if _find_img('erro_login.png', conf=0.95):
+            return False
+        time.sleep(1)
+        timer += 1
+        if timer >= 30:
+            return False
     
     _click_img('possoa_juridica.png', conf=0.95)
     time.sleep(1)
@@ -55,12 +63,14 @@ def login_sicalc(empresa):
     return True
     
 
-def gerar(empresa, apuracao, tipo):
+def gerar(empresa, apuracao):
     cnpj, nome, nota, valor, cod = empresa
 
     # esperar o menu referente a guia aparecer
     timer = 0
     while not _find_img('menu.png', conf=0.9):
+        if _find_img('erro.png', conf=0.95):
+            return False
         time.sleep(1)
         timer += 1
         if timer >= 10:
@@ -91,6 +101,8 @@ def gerar(empresa, apuracao, tipo):
     # descer a visualização da página
     timer = 0
     while not _find_img('apuracao.png', conf=0.95):
+        if _find_img('erro.png', conf=0.95):
+            return False
         p.press('pgDn')
         time.sleep(1)
         timer += 1
@@ -118,7 +130,9 @@ def gerar(empresa, apuracao, tipo):
 
     # espera guia ser calculada
     timer = 0
-    while not _find_img('checkbox_guia.png', conf=0.95):
+    while not _find_img('checkbox_guia.png', conf=0.9):
+        if _find_img('erro.png', conf=0.95):
+            return False
         _click_img('calcular.png', conf=0.95)
         # descer a visualização da página
         p.press('pgDn')
@@ -128,34 +142,20 @@ def gerar(empresa, apuracao, tipo):
             return False
         
     print('>>> Guia calculada')
-    time.sleep(43)
     
     # marca a guia que será gerada
-    erro = 'sim'
-    timer = 0
-    while erro == 'sim':
-        try:
-            _click_img('checkbox_guia.png', conf=0.95)
-            time.sleep(1)
-            erro = 'não'
-        except:
-            _click_img('calcular.png', conf=0.95)
-            erro = 'sim'
-        
-        time.sleep(1)
-        timer+= 1
-        if timer >= 15:
-            return False
-
+    _click_position_img('checkbox_guia.png', '+', pixels_y=12, conf=0.95)
+    time.sleep(1)
+    
     print('>>> Gerando guia')
-    _click_img('emitir_darf.png', conf=0.95)
+    # _click_img('emitir_darf.png', conf=0.95)
     return True
 
 
-def salvar_guia(empresa, vencimento):
+def salvar_guia(empresa, vencimento, tipo):
     cnpj, nome, nota, valor, cod = empresa
     _wait_img('SalvarComo.png', conf=0.9, timeout=-1)
-    # exemplo: NOMEDA EMPRESA - 00000000000 - DARF IRRF 170806 02-2023 - venc. 20-03-2023.pdf
+    # exemplo: NOME DA EMPRESA - 00000000000 - DARF IRRF 170806 02-2023 - venc. 20-03-2023.pdf
     p.write(f'{nome.replace("/", " ")} - {cnpj} - {tipo} {cod} {apuracao.replace("/", "-")} - venc. {vencimento.replace("/", "-")}.pdf')
     time.sleep(0.5)
     
@@ -183,7 +183,7 @@ def run():
     # p.mouseInfo()
     tipo = p.confirm(title='Script incrível', text='Qual tipo da guia?', buttons=('DARF IRRF', 'DARF DP'))
     apuracao = p.prompt(title='Script incrível', text='Qual o período de apuração?', default='00/0000')
-    vencimento = p.prompt(title='Script incrível', text='Qual o vencimento das guias?', default='00/0000')
+    vencimento = p.prompt(title='Script incrível', text='Qual o vencimento das guias? (Dia 20 do mês seguinte)', default='00/00/0000')
     
     # abrir a planilha de dados
     empresas = _open_lista_dados()
@@ -198,34 +198,36 @@ def run():
     p.hotkey('win', 'm')
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-
+        cnpj, nome, nota, valor, cod = empresa
         # configurar o indice para localizar em qual empresa está
         _indice(count, total_empresas, empresa)
         
-       # erro = 'sim'
-        # while erro == 'sim':
-            # try:
-        # fazer login do SICALC
-        if not login_sicalc(empresa):
-            driver.close()
-            erro = 'sim'
-        else:
-            # gerar a guia de DCTF
-            if not gerar(empresa, str(apuracao), tipo):
-                erro = 'sim'
-            else:
-                salvar_guia(empresa, vencimento)
-                print('✔ Guia gerada')
-                _escreve_relatorio_csv('{};{};{};{};Guia gerada'.format(cnpj, nome, valor, cod), nome=f'Resumo gerador {tipo}')
-                erro = 'nao'
-        '''except:
+        erro = 'sim'
+        while erro == 'sim':
             try:
-                p.hotkey('alt', 'f4')
-                erro = 'sim'
+                # fazer login do SICALC
+                if not login_sicalc(empresa):
+                    p.hotkey('ctrl', 'w')
+                    erro = 'sim'
+                else:
+                    # gerar a guia de DCTF
+                    if not gerar(empresa, str(apuracao)):
+                        p.hotkey('ctrl', 'w')
+                        erro = 'sim'
+                    else:
+                        # salvar_guia(empresa, vencimento, tipo)
+                        print('✔ Guia gerada')
+                        _escreve_relatorio_csv('{};{};{};{};Guia gerada'.format(cnpj, nome, valor, cod), nome=f'Resumo gerador {tipo}')
+                        erro = 'nao'
             except:
-                erro = 'sim'''
+                try:
+                    p.hotkey('alt', 'f4')
+                    erro = 'sim'
+                except:
+                    erro = 'sim'
 
-        p.hotkey('alt', 'f4')
+        p.hotkey('ctrl', 'w')
+
 
 if __name__ == '__main__':
     run()

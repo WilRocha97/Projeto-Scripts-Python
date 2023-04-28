@@ -68,7 +68,7 @@ def guarda_info(codigo, cnpj, nome_empresa, competencia, sindicato, nome, totais
     
 
 def analiza():
-    # pergunta qual PDF analizar
+    # pergunta qual PDF analisar
     sindicato = ask_for_file()
     # pergunta onde salvar a planilha com as informações
     final = ask_for_dir()
@@ -101,22 +101,25 @@ def analiza():
                 for total in totais_rubrica:
                     totais_rubricas = total[1]
                     
-                    # procura o nome referênte ao valor da rubrica
+                    # procura o nome referente ao valor da rubrica
                     totais = None
                     indice = 5
+                    
                     while not totais:
                         indice = str(indice)
                         if re.compile(r'(\d.+ - .+)\nEmpregados\n').search(textinho):
                             totais = re.compile(r'(\d.+ - .+)\nEmpregados\n(.+\n){' + indice + '}(.+)\nTotal da Rubrica:\n(' + totais_rubricas + ')').search(textinho)
+                        
                         if re.compile(r'(\d.+ - .+)\nContribuintes\n').search(textinho):
                             totais = re.compile(r'(\d.+ - .+)\nContribuintes\n(.+\n){' + indice + '}(.+)\nTotal da Rubrica:\n(' + totais_rubricas + ')').search(textinho)
-                            
+                        
+                        if re.compile(r'(\d.+ - .+)\nEstagiários\n').search(textinho):
+                            totais = re.compile(r'(\d.+ - .+)\nEstagiários\n(.+\n){' + indice + '}(.+)\nTotal da Rubrica:\n(' + totais_rubricas + ')').search(textinho)
+    
                         indice = int(indice)
                         indice += 1
                         
                     nome = totais.group(1)
-                    '''print(textinho)
-                    time.sleep(555)'''
                     
                     # pega CNPJ, CPF ou CEI da empresa
                     cnpj = re.compile(r'(\d\d\.\d\d\d\.\d\d\d/\d\d\d\d-\d\d)\nRubrica').search(textinho)
@@ -145,7 +148,7 @@ def analiza():
                                             infos = re.compile(r'Local de trabalho\n(\d\d\d) - (.+)\n.+\n(\d\d/\d\d\d\d)\n.+\n.+\n(.+)').search(textinho)
                                             if not infos:
                                                 infos = re.compile(r'Local de trabalho\n(\d\d\d\d) - (.+)\n.+\n(\d\d/\d\d\d\d)\n.+\n.+\n(.+)').search(textinho)
-
+    
                     codigo = infos.group(1)
                     nome_empresa = infos.group(2)
                     competencia = infos.group(3)
@@ -175,17 +178,17 @@ def analiza():
                             nome_anterior, totais_rubricas_anterior, valor_calculado_s_anterior, valor_calculado_e_anterior\
                             = guarda_info(codigo, cnpj, nome_empresa, competencia, sindicato, nome, totais_rubricas, valor_calculado_s, valor_calculado_e)
                         continue
-
-                    # se a emrpresa atual difere da anterior, escreve na planilha as infos coletas da anterior junto dos totais
+    
+                    # se a empresa atual difere da anterior, escreve na planilha as infos coletas da anterior junto dos totais
                     if nome_empresa != nome_empresa_anterior:
                         escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_empresa_anterior};"
                                               f"{competencia_anterior};{valor_calculado_e_anterior};{sindicato_anterior};{valor_calculado_s_anterior};{nome_anterior};{totais_rubricas_anterior}", local=final)
-
+    
                     # se o sindicato atual difere da anterior, escreve na planilha as infos coletas da anterior junto dos totais do sindicato
                     elif sindicato != sindicato_anterior:
                         escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_empresa_anterior};"
                                               f"{competencia_anterior};;{sindicato_anterior};{valor_calculado_s_anterior};{nome_anterior};{totais_rubricas_anterior}", local=final)
-
+    
                     # se for a mesma empresa e o mesmo sindicato apenas escreve as infos apenas com o total da rubrica
                     else:
                         escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_empresa_anterior};"
@@ -207,12 +210,12 @@ def analiza():
 
 
 if __name__ == '__main__':
-    '''try:'''
-    final = analiza()
-    # escreve o cabeçalho da planilha
-    escreve_header_csv(';'.join(['CÓDIGO', 'CNPJ', 'NOME', 'COMPETÊNCIA', 'TOTAL EMPRESA', 'SINDICATO', 'TOTAL SINDICATO',
-                                 'RUBRICA', 'TOTAL RUBRICA']), local=final)
-    
-    pyautogui.alert(title='Gera relatório de sindicato', text='Relatóro gerado com sucesso.')
-    '''except:
-        pyautogui.alert(title='Gera relatório de sindicato', text='Cancelado.')'''
+    try:
+        final = analiza()
+        # escreve o cabeçalho da planilha
+        escreve_header_csv(';'.join(['CÓDIGO', 'CNPJ', 'NOME', 'COMPETÊNCIA', 'TOTAL EMPRESA', 'SINDICATO', 'TOTAL SINDICATO',
+                                     'RUBRICA', 'TOTAL RUBRICA']), local=final)
+        
+        pyautogui.alert(title='Gera relatório de sindicato', text='Relatório gerado com sucesso.')
+    except:
+        pyautogui.alert(title='Gera relatório de sindicato', text='Cancelado.')

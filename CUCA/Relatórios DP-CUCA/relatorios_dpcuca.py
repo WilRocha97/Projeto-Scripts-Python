@@ -139,7 +139,7 @@ def imprimir(relatorio, andamentos, empresa, texto, espera=10, diretorio='Relat�
     elif relatorio == 'Provisões 13º e Ferias':
         if int(mes) < 10:
             mes = f'0{str(mes)}'
-        diretorio = r'\\vpsrv03\Arq_Robo\Provisões 13º e Férias\{}\Provisões {}-{}\Provisões'.format(ano, str(mes), ano)
+        diretorio = r'\\vpsrv03\Arq_Robo\Provisões 13º e Férias\Anos anteriores\{}'.format(razao)
         makedirs(diretorio, exist_ok=True)
         copy(diretorio)
 
@@ -440,7 +440,7 @@ def relatoriozinhos(relatorio, andamentos, empresa):
             while _find_img('Processando.png', conf=0.9):
                 sleep(1)
             # Textos específicos para essa execução
-            if not imprimir(relatorio, andamentos, empresa, ' - '.join([nome, cod, provisao[1], mes, ano]) + '.PDF', espera=500):
+            if not imprimir(relatorio, andamentos, empresa, ' - '.join([nome, cod, provisao[1], mes, ano]) + '.PDF', espera=600):
                 controle = 0
             else:
                 if provisao[0] == '13':
@@ -615,11 +615,11 @@ def relatorio_dpcuca(index, empresas, relatorio, andamentos):
     for count, empresa in enumerate(empresas[index:], start=1):
         cod, cnpj, nome, mes, ano = empresa
 
-        # Verificar horário
+        '''# Verificar horário
         _hora_limite = datetime.now().replace(hour=18, minute=25, second=0, microsecond=0)
         if _horario(_hora_limite, 'DPCUCA'):
             _iniciar('dpcuca')
-            getWindowsWithTitle('DPCUCA')[0].maximize()
+            getWindowsWithTitle('DPCUCA')[0].maximize()'''
 
         _indice(count, total_empresas, empresa)
 

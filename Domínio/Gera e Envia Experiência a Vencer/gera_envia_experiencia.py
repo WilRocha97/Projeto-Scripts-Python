@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import fitz, re, time, os, pyautogui as p, datetime as date_time
+import fitz, re, time, os, pyautogui as p, datetime as date_time, pyperclip as clip
 from datetime import datetime
 
 from sys import path
@@ -198,7 +198,9 @@ def envia_experiencia(comp):
         
     p.press('tab')
     time.sleep(0.5)
-    p.write(f'Relação de Empregados - Contratos_Vencimento_Modelo_Veiga - {comp}')
+    clip.copy(f'Relação de Empregados - Contratos_Vencimento_Modelo_Veiga - {comp}')
+    time.sleep(0.5)
+    p.hotkey('ctrl', 'v')
         
     # confirma o envio do arquivo
     p.hotkey('Alt', 'g')

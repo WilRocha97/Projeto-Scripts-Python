@@ -12,7 +12,7 @@ from captcha_comum import _solve_hcaptcha
 def login_sicalc(empresa):
     cnpj, nome, nota, valor, cod = empresa
     p.hotkey('win', 'm')
-    
+
     # Abrir o site
     if _find_img('Chrome.png', conf=0.99):
         pass
@@ -43,11 +43,19 @@ def login_sicalc(empresa):
     
     timer = 0
     while not _find_img('check.png', conf=0.9):
-        if _find_img('erro_login.png', conf=0.95):
+        if _find_img('erro_login.png', conf=0.9):
+            return False
+        if _find_img('site_morreu.png', conf=0.9):
+            return False
+        if _find_img('site_bugou.png', conf=0.9):
+            return False
+        if _find_img('site_bugou_2.png', conf=0.9):
+            return False
+        if _find_img('site_bugou_3.png', conf=0.9):
             return False
         time.sleep(1)
         timer += 1
-        if timer >= 30:
+        if timer >= 20:
             return False
     
     _click_img('possoa_juridica.png', conf=0.95)
@@ -69,7 +77,7 @@ def gerar(empresa, apuracao):
     # esperar o menu referente a guia aparecer
     timer = 0
     while not _find_img('menu.png', conf=0.9):
-        if _find_img('erro.png', conf=0.95):
+        if _find_img('erro.png', conf=0.9):
             return False
         time.sleep(1)
         timer += 1
@@ -101,7 +109,7 @@ def gerar(empresa, apuracao):
     # descer a visualização da página
     timer = 0
     while not _find_img('apuracao.png', conf=0.95):
-        if _find_img('erro.png', conf=0.95):
+        if _find_img('erro.png', conf=0.9):
             return False
         p.press('pgDn')
         time.sleep(1)
@@ -131,7 +139,7 @@ def gerar(empresa, apuracao):
     # espera guia ser calculada
     timer = 0
     while not _find_img('checkbox_guia.png', conf=0.9):
-        if _find_img('erro.png', conf=0.95):
+        if _find_img('erro.png', conf=0.9):
             return False
         _click_img('calcular.png', conf=0.95)
         # descer a visualização da página

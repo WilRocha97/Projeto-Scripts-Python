@@ -113,7 +113,7 @@ def _login(empresa, andamentos):
 
 
 def verifica_empresa(cod):
-    p.click(1280,82)
+    p.click(1258,82)
     
     try:
         time.sleep(1)
@@ -145,7 +145,7 @@ def _login_web():
     
         driver.get('https://www.dominioweb.com.br/')
         _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[1]/span[2]/input', user[0], driver)
-        _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[2]/span[2]/input', user[2], driver)
+        _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[2]/span[2]/input', user[3], driver)
         driver.find_element(by=By.ID, value='enterButton').click()
         
         caminho = os.path.join('imgs_c', 'abrir_app.png')

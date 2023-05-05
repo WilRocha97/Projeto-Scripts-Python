@@ -51,8 +51,6 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
     
     # escreve o nome da opção para selecionar
     time.sleep(0.5)
-    p.write('Relação de Empregados')
-    time.sleep(0.5)
     p.press('enter')
     # espera aparecer o tipo do relatório que sera usado e depois clica nele
     _wait_img('relatorio_modelo_veiga.png', conf=0.9, timeout=-1)

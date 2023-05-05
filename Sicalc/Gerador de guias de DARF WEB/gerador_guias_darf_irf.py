@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-import pyautogui as p
-import os, time, shutil, re
+import os, time, shutil, re, pyperclip, pyautogui as p
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -25,6 +24,8 @@ def login_sicalc(empresa):
             time.sleep(5)
             p.moveTo(1163, 377)
             p.click()
+    
+    # p.hotkey('ctrl', 'shift', 'del')
     
     link = 'https://sicalc.receita.economia.gov.br/sicalc/rapido/contribuinte'
     
@@ -55,7 +56,7 @@ def login_sicalc(empresa):
             return False
         time.sleep(1)
         timer += 1
-        if timer >= 20:
+        if timer >= 15:
             return False
     
     _click_img('possoa_juridica.png', conf=0.95)
@@ -66,29 +67,28 @@ def login_sicalc(empresa):
     time.sleep(1)
     p.press('tab', presses=5, interval=0.1)
     time.sleep(1)
-    p.press('enter')
     
-    return True
-    
-
-def gerar(empresa, apuracao):
-    cnpj, nome, nota, valor, cod = empresa
-
     # esperar o menu referente a guia aparecer
     timer = 0
     while not _find_img('menu.png', conf=0.9):
         if _find_img('erro.png', conf=0.9):
             return False
         time.sleep(1)
+        p.press('enter')
         timer += 1
         if timer >= 10:
             return False
     
+    return True
+    
+
+def gerar(empresa, apuracao):
+    cnpj, nome, nota, valor, cod = empresa
     print('>>> Inserindo informações da guia')
     
     # insere observação
     nota.split(',')
-    p.write(f'Referente à NF: {nota} - R. POSTAL')
+    p.write(f'NF: {nota}')
     time.sleep(1)
     
     # inserir o código da receita referente a guia
@@ -108,28 +108,21 @@ def gerar(empresa, apuracao):
 
     # descer a visualização da página
     timer = 0
-    while not _find_img('apuracao.png', conf=0.95):
+    while not _find_img('apuracao.png', conf=0.9):
         if _find_img('erro.png', conf=0.9):
             return False
         p.press('pgDn')
         time.sleep(1)
         timer += 1
-        if timer >= 20:
+        if timer >= 15:
             return False
         
     # clicar no campo e inserir a data de apuração
-    _click_img('apuracao.png', conf=0.95)
+    _click_img('apuracao.png', conf=0.9)
     time.sleep(1)
     p.write(apuracao)
     time.sleep(1)
-
-    # descer a visualização da página
-    while not _find_img('valor.png', conf=0.95):
-        p.press('pgDn')
-        time.sleep(1)
-        
-    # clicar no campo e inserir o valor
-    _click_img('valor.png', conf=0.95, clicks=2)
+    p.press('tab', presses=3, interval=1)
     time.sleep(1)
     p.write(valor)
 
@@ -141,12 +134,12 @@ def gerar(empresa, apuracao):
     while not _find_img('checkbox_guia.png', conf=0.9):
         if _find_img('erro.png', conf=0.9):
             return False
-        _click_img('calcular.png', conf=0.95)
+        _click_img('calcular.png', conf=0.95, timeout=1)
         # descer a visualização da página
         p.press('pgDn')
         time.sleep(1)
         timer += 1
-        if timer >= 20:
+        if timer >= 15:
             return False
         
     print('>>> Guia calculada')
@@ -160,30 +153,43 @@ def gerar(empresa, apuracao):
     return True
 
 
-def salvar_guia(empresa, vencimento, tipo):
+def salvar_guia(empresa, apuracao, vencimento, tipo):
     cnpj, nome, nota, valor, cod = empresa
-    _wait_img('SalvarComo.png', conf=0.9, timeout=-1)
+    nome = nome[:10]
+    
+    timer = 0
+    while not _find_img('SalvarComo.png', conf=0.9):
+        _click_img('emitir_darf.png', conf=0.9)
+        time.sleep(2)
+        if _find_img('site_morreu_salvar.png', conf=0.9):
+            p.hotkey('ctrl', 'w')
+        timer += 2
+        if timer >= 15:
+            return False
+            
     # exemplo: NOME DA EMPRESA - 00000000000 - DARF IRRF 170806 02-2023 - venc. 20-03-2023.pdf
     p.write(f'{nome.replace("/", " ")} - {cnpj} - {tipo} {cod} {apuracao.replace("/", "-")} - venc. {vencimento.replace("/", "-")}.pdf')
     time.sleep(0.5)
     
     # Selecionar local
     p.press('tab', presses=6)
-    time.sleep(0.5)
+    time.sleep(1)
     p.press('enter')
-    time.sleep(0.5)
+    time.sleep(1)
     pyperclip.copy('V:\Setor Robô\Scripts Python\Sicalc\Gerador de guias de DARF WEB\{}\{}'.format(e_dir, 'Guias'))
     p.hotkey('ctrl', 'v')
-    time.sleep(0.5)
+    time.sleep(1)
     p.press('enter')
-    time.sleep(0.5)
+    time.sleep(1)
     p.hotkey('alt', 'l')
     time.sleep(1)
-    if _find_img('Substituir.png'):
-        p.press('s')
+    while _find_img('SalvarComo.png', conf=0.9):
+        if _find_img('Substituir.png', conf=0.9):
+            p.press('s')
     time.sleep(1)
     p.hotkey('ctrl', 'w')
-    
+    return True
+
     
 @_time_execution
 def run():
@@ -223,10 +229,12 @@ def run():
                         p.hotkey('ctrl', 'w')
                         erro = 'sim'
                     else:
-                        # salvar_guia(empresa, vencimento, tipo)
-                        print('✔ Guia gerada')
-                        _escreve_relatorio_csv('{};{};{};{};Guia gerada'.format(cnpj, nome, valor, cod), nome=f'Resumo gerador {tipo}')
-                        erro = 'nao'
+                        if not salvar_guia(empresa, apuracao, vencimento, tipo):
+                            erro = 'sim'
+                        else:
+                            print('✔ Guia gerada')
+                            _escreve_relatorio_csv('{};{};{};{};Guia gerada'.format(cnpj, nome, valor, cod), nome=f'Resumo gerador {tipo}')
+                            erro = 'nao'
             except:
                 try:
                     p.hotkey('alt', 'f4')

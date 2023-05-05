@@ -72,7 +72,7 @@ def _login(empresa, andamentos):
             print('❌ Empresa não está marcada para usar este sistema')
             p.press('enter')
             sleep(1)
-            p.press('esc')
+            p.press('esc', presses=5)
             while _find_img('trocar_empresa.png', pasta='imgs_c', conf=0.9):
                 sleep(1)
             return False

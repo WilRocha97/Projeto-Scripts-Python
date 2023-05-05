@@ -132,15 +132,16 @@ def run():
         resultado = ''
         while resultado != 'ok':
             if not _login(empresa, andamentos):
-                continue
-            resultado = relatorio_darf_dctf(empresa, periodo, andamentos)
-        
-            if resultado == 'dominio fechou':
-                _login_web()
-                _abrir_modulo('escrita_fiscal')
-        
-            if resultado == 'modulo fechou':
-                _abrir_modulo('escrita_fiscal')
+                resultado = 'ok'
+            else:
+                resultado = relatorio_darf_dctf(empresa, periodo, andamentos)
+            
+                if resultado == 'dominio fechou':
+                    _login_web()
+                    _abrir_modulo('escrita_fiscal')
+            
+                if resultado == 'modulo fechou':
+                    _abrir_modulo('escrita_fiscal')
 
     _encerra_dominio()
     

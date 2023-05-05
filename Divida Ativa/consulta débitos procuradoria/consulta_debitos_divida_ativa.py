@@ -20,11 +20,10 @@ def verifica_debitos(pagina):
         soup = BeautifulSoup(pagina.content, 'html.parser')
         # debito = soup.find('span', attrs={'id': 'consultaDebitoForm:dataTable:tb'})
         soup = soup.prettify()
-        padrao_response = re.compile(r'(consultaDebitoForm:dataTable:tb)')
-        request_verification = padrao_response.search(soup)
-        request_verification = request_verification.group(1)
+        request_verification = re.compile(r'(consultaDebitoForm:dataTable:tb)').search(soup).group(1)
         return request_verification
     except:
+        re.compile(r'(Nenhum resultado com os critérios de consulta)').search(soup).group(1)
         return False
 
 
@@ -163,7 +162,7 @@ def consulta_debito(s, empresa):
         'javax.faces.ViewState': viewstate,
         'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa': 'CNPJ',
         'ajaxSingle': 'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa',
-        'consultaDebitoForm:decLblTipoConsulta:j_id74': 'consultaDebitoForm:decLblTipoConsulta:j_id74'
+        'consultaDebitoForm:decLblTipoConsulta:j_id76': 'consultaDebitoForm:decLblTipoConsulta:j_id76'
     }
     s.post(url, info)
     
@@ -174,7 +173,7 @@ def consulta_debito(s, empresa):
         'consultaDebitoForm:decTxtTipoConsulta:cnpj': cnpj,
         'consultaDebitoForm:decTxtTipoConsulta:tiposDebitosCnpj': 0,
         'g-recaptcha-response': token,
-        'consultaDebitoForm:j_id102': 'Consultar',
+        'consultaDebitoForm:j_id104': 'Consultar',
         'consultaDebitoForm:modalSelecionarDebitoOpenedState': '',
         'consultaDebitoForm:modalDadosCartorioOpenedState': '',
         'javax.faces.ViewState': viewstate

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import time, pyautogui as p
+import os
+import time, shutil, pyautogui as p
 from sys import path
 
 path.append(r'..\..\_comum')
@@ -10,6 +11,9 @@ from dominio_comum import _login_web, _abrir_modulo, _login, _verifica_dominio, 
 
 def arquivos_darf_dctf(empresa, periodo, andamento):
     cod, cnpj,  nome = empresa
+    
+    nome_arquivo = 'M:\DCTF_{}.RFB'.format(cod)
+    
     _wait_img('relatorios.png', conf=0.9, timeout=-1)
     # Relatórios mensal
     p.hotkey('alt', 'r')
@@ -29,7 +33,7 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
     while not _find_img('dctf_mensal.png', conf=0.9):
         verificacao = _verifica_dominio()
         if verificacao != 'continue':
-            return verificacao
+            return verificacao, nome_arquivo
         if _find_img('dctf_mensal_2.png', conf=0.9):
             break
         time.sleep(1)
@@ -44,7 +48,7 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
     p.press('delete', presses=25)
     time.sleep(1)
 
-    p.write('M:\DCTF_{}.RFB'.format(cod))
+    p.write(nome_arquivo)
     time.sleep(1)
 
     p.hotkey('alt', 'o')
@@ -52,7 +56,7 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
     while not _find_img('outros_dados.png', conf=0.9):
         verificacao = _verifica_dominio()
         if verificacao != 'continue':
-            return verificacao
+            return verificacao, nome_arquivo
         if _find_img('outros_dados_2.png', conf=0.9):
             break
         time.sleep(2)
@@ -82,7 +86,7 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
     while _find_img('outros_dados.png', conf=0.9):
         verificacao = _verifica_dominio()
         if verificacao != 'continue':
-            return verificacao
+            return verificacao, nome_arquivo
         time.sleep(2)
 
     p.hotkey('alt', 'x')
@@ -90,7 +94,7 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
     while _find_img('dctf_mensal.png', conf=0.9) or _find_img('dctf_mensal_2.png', conf=0.9):
         verificacao = _verifica_dominio()
         if verificacao != 'continue':
-            return verificacao
+            return verificacao, nome_arquivo
         
         time.sleep(1)
         if _find_img('nao_gerou_arquivo.png', conf=0.9):
@@ -119,7 +123,7 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
             print('❌ Isenta do IRPJ')
             time.sleep(1)
             p.press('esc', presses=5)
-            return 'ok'
+            return 'ok', nome_arquivo
 
         if _find_img('saldo_nao_calculado.png', conf=0.9) or _find_img('saldo_nao_calculado_2.png', conf=0.9):
             p.press('enter')
@@ -127,7 +131,7 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
             print('❌ Saldo dos impostos não foi calculado no período')
             time.sleep(1)
             p.press('esc', presses=5)
-            return 'ok'
+            return 'ok', nome_arquivo
 
         if _find_img('nao_tem_parametro.png', conf=0.9):
             p.press('enter')
@@ -135,13 +139,13 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
             print('❌ Não existe parametro para a vigência {}'.format(periodo))
             time.sleep(1)
             p.press('esc', presses=5)
-            return 'ok'
+            return 'ok', nome_arquivo
 
         if _find_img('exportacao_cancelada.png', conf=0.9):
             p.press('enter')
             time.sleep(1)
             p.press('esc', presses=5)
-            return 'ok'
+            return 'ok', nome_arquivo
 
         if _find_img('final_da_exportacao.png', conf=0.9) or _find_img('final_da_exportacao_2.png', conf=0.9):
             p.press('enter')
@@ -149,11 +153,19 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
             print('✔ Arquivo gerado')
             time.sleep(1)
             p.press('esc', presses=5)
-            return 'ok'
+            return 'arquivo gerado', nome_arquivo
 
     p.press('esc', presses=5)
     time.sleep(3)
-    return 'ok'
+    return 'ok', nome_arquivo
+
+
+def mover_arquivo(nome_arquivo):
+    nome_arquivo = nome_arquivo.replace('M:\DCTF', 'DCTF')
+    os.makedirs('execução/Arquivos', exist_ok=True)
+    final_folder = 'V:\\Setor Robô\\Scripts Python\\Domínio\\Arquivos DARF DCTF\\execução\\Arquivos'
+    folder = 'C:\\'
+    shutil.move(os.path.join(folder, nome_arquivo), os.path.join(final_folder, nome_arquivo))
 
 
 @_time_execution
@@ -176,15 +188,19 @@ def run():
         resultado = ''
         while resultado != 'ok':
             if not _login(empresa, andamentos):
-                continue
-            resultado = arquivos_darf_dctf(empresa, periodo, andamentos)
-
-            if resultado == 'dominio fechou':
-                _login_web()
-                _abrir_modulo('escrita_fiscal')
-
-            if resultado == 'modulo fechou':
-                _abrir_modulo('escrita_fiscal')
+                resultado = 'ok'
+            else:
+                resultado, nome_arquivo = arquivos_darf_dctf(empresa, periodo, andamentos)
+                if resultado == 'arquivo gerado':
+                    mover_arquivo(nome_arquivo)
+                    resultado = 'ok'
+                
+                if resultado == 'dominio fechou':
+                    _login_web()
+                    _abrir_modulo('escrita_fiscal')
+    
+                if resultado == 'modulo fechou':
+                    _abrir_modulo('escrita_fiscal')
 
     _encerra_dominio()
     

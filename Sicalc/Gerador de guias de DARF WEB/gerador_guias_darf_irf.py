@@ -110,19 +110,23 @@ def gerar(empresa, apuracao):
     timer = 0
     while not _find_img('apuracao.png', conf=0.9):
         if _find_img('erro.png', conf=0.9):
-            return False
+            return False, ''
         p.press('pgDn')
         time.sleep(1)
         timer += 1
         if timer >= 15:
-            return False
+            return False, ''
         
     # clicar no campo e inserir a data de apuração
     _click_img('apuracao.png', conf=0.9)
     time.sleep(1)
     p.write(apuracao)
     time.sleep(1)
-    p.press('tab', presses=3, interval=1)
+    p.press('tab', presses=2, interval=1)
+    time.sleep(1)
+    vencimento = pyperclip.copy
+    time.sleep(1)
+    p.press('tab')
     time.sleep(1)
     p.write(valor)
 
@@ -133,14 +137,14 @@ def gerar(empresa, apuracao):
     timer = 0
     while not _find_img('checkbox_guia.png', conf=0.9):
         if _find_img('erro.png', conf=0.9):
-            return False
+            return False, ''
         _click_img('calcular.png', conf=0.95, timeout=1)
         # descer a visualização da página
         p.press('pgDn')
         time.sleep(1)
         timer += 1
         if timer >= 15:
-            return False
+            return False, ''
         
     print('>>> Guia calculada')
     
@@ -150,7 +154,7 @@ def gerar(empresa, apuracao):
     
     print('>>> Gerando guia')
     # _click_img('emitir_darf.png', conf=0.95)
-    return True
+    return True, vencimento
 
 
 def salvar_guia(empresa, apuracao, vencimento, tipo):
@@ -197,7 +201,6 @@ def run():
     # p.mouseInfo()
     tipo = p.confirm(title='Script incrível', text='Qual tipo da guia?', buttons=('DARF IRRF', 'DARF DP'))
     apuracao = p.prompt(title='Script incrível', text='Qual o período de apuração?', default='00/0000')
-    vencimento = p.prompt(title='Script incrível', text='Qual o vencimento das guias? (Dia 20 do mês seguinte)', default='00/00/0000')
     
     # abrir a planilha de dados
     empresas = _open_lista_dados()
@@ -225,7 +228,8 @@ def run():
                     erro = 'sim'
                 else:
                     # gerar a guia de DCTF
-                    if not gerar(empresa, str(apuracao)):
+                    resultado, vencimento = gerar(empresa, str(apuracao))
+                    if not resultado:
                         p.hotkey('ctrl', 'w')
                         erro = 'sim'
                     else:

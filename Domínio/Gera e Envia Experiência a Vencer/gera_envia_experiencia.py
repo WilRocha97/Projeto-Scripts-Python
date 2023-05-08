@@ -51,7 +51,8 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
     
     # escreve o nome da opção para selecionar
     time.sleep(0.5)
-    p.press('enter')
+    _click_img('relacao_empregados.png', conf=0.9, clicks=2, timeout=1)
+    _click_img('relacao_empregados_2.png', conf=0.9, clicks=2, timeout=1)
     # espera aparecer o tipo do relatório que sera usado e depois clica nele
     _wait_img('relatorio_modelo_veiga.png', conf=0.9, timeout=-1)
     _click_img('relatorio_modelo_veiga.png', conf=0.9)

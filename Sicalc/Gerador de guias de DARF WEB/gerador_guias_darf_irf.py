@@ -19,13 +19,22 @@ def login_sicalc(empresa):
         _click_img('ChromeAberto.png', conf=0.99)
     else:
         time.sleep(0.5)
-        _click_img('ChromeAtalho.png', conf=0.9, clicks=2)
-        while not _find_img('Google.png', conf=0.9, ):
-            time.sleep(5)
+        os.startfile(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
+        while not _find_img('Google.png', conf=0.9):
+            time.sleep(1)
             p.moveTo(1163, 377)
             p.click()
     
-    # p.hotkey('ctrl', 'shift', 'del')
+    """while not _find_img('remover_dados.png', conf=0.9):
+        p.hotkey('ctrl', 'shift', 'del')
+        time.sleep(1)
+        
+    p.press('tab')
+    p.press('enter')
+    while _find_img('remover_dados.png', conf=0.9):
+        time.sleep(1)
+    p.hotkey('ctrl', 'w')
+    time.sleep(1)"""
     
     link = 'https://sicalc.receita.economia.gov.br/sicalc/rapido/contribuinte'
     
@@ -124,7 +133,9 @@ def gerar(empresa, apuracao):
     time.sleep(1)
     p.press('tab', presses=2, interval=1)
     time.sleep(1)
-    vencimento = pyperclip.copy
+    p.hotkey('ctrl', 'c')
+    p.hotkey('ctrl', 'c')
+    vencimento = pyperclip.paste()
     time.sleep(1)
     p.press('tab')
     time.sleep(1)
@@ -160,6 +171,7 @@ def gerar(empresa, apuracao):
 def salvar_guia(empresa, apuracao, vencimento, tipo):
     cnpj, nome, nota, valor, cod = empresa
     nome = nome[:10]
+    nome = nome.replace(' PAU ', ' P ').replace(' CU ', ' C ').replace(' CUS ', ' C ').replace(' CUM ', ' C ')
     
     timer = 0
     while not _find_img('SalvarComo.png', conf=0.9):
@@ -221,30 +233,30 @@ def run():
         
         erro = 'sim'
         while erro == 'sim':
-            try:
-                # fazer login do SICALC
-                if not login_sicalc(empresa):
+            # try:
+            # fazer login do SICALC
+            if not login_sicalc(empresa):
+                p.hotkey('ctrl', 'w')
+                erro = 'sim'
+            else:
+                # gerar a guia de DCTF
+                resultado, vencimento = gerar(empresa, str(apuracao))
+                if not resultado:
                     p.hotkey('ctrl', 'w')
                     erro = 'sim'
                 else:
-                    # gerar a guia de DCTF
-                    resultado, vencimento = gerar(empresa, str(apuracao))
-                    if not resultado:
-                        p.hotkey('ctrl', 'w')
+                    if not salvar_guia(empresa, apuracao, vencimento, tipo):
                         erro = 'sim'
                     else:
-                        if not salvar_guia(empresa, apuracao, vencimento, tipo):
-                            erro = 'sim'
-                        else:
-                            print('✔ Guia gerada')
-                            _escreve_relatorio_csv('{};{};{};{};Guia gerada'.format(cnpj, nome, valor, cod), nome=f'Resumo gerador {tipo}')
-                            erro = 'nao'
-            except:
+                        print('✔ Guia gerada')
+                        _escreve_relatorio_csv('{};{};{};{};Guia gerada'.format(cnpj, nome, valor, cod), nome=f'Resumo gerador {tipo}')
+                        erro = 'nao'
+            """except:
                 try:
                     p.hotkey('alt', 'f4')
                     erro = 'sim'
                 except:
-                    erro = 'sim'
+                    erro = 'sim'"""
 
         p.hotkey('ctrl', 'w')
 

@@ -93,7 +93,7 @@ def gera_boleto(driver, cnpj, valor):
     return driver
   
     
-def run(cnpj, valor):
+def run(cnpj, valor, usuario, senha):
     print('39 - SINTHOJUR - Sindicato dos Trabalhadores em Hotéis, Motéis, Restaurantes, Bares, Lanchonetes e Fast-food de Jundiaí e Região')
     options = webdriver.ChromeOptions()
     #options.add_argument('--headless')

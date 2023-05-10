@@ -2,7 +2,7 @@
 # from selenium.common.exceptions import NoSuchElementException
 import os, time, re
 from sys import path
-import guias_sinthojur
+import guias_sinthojur, guias_sindpd
 
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
@@ -33,7 +33,7 @@ def run():
             '22': '',
             '23': '',
             '25': '',
-            '28': '',
+            '28': guias_sindpd.run,
             '39': guias_sinthojur.run,
             '49': '',
             '58': '',
@@ -44,9 +44,12 @@ def run():
             '131': '',
             '133': '',
             '135': '',
+            '148': '',
+            '162': '',
+            '223': ''
         }
         
-        sindicatos[cod_sindicato](cnpj, valor)
+        sindicatos[cod_sindicato](cnpj, valor, usuario, senha)
         
             
 if __name__ == '__main__':

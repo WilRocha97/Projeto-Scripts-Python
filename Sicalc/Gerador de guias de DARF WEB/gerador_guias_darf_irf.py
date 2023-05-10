@@ -5,7 +5,6 @@ from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers, e_dir
 from pyautogui_comum import _click_img, _wait_img, _find_img, _click_position_img
-from captcha_comum import _solve_hcaptcha
 
 
 def login_sicalc(empresa):

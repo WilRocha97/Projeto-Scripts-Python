@@ -47,7 +47,11 @@ def login(driver, cnpj, senha):
     
     return driver, ''
 
-    
+def gera_boleto(driver, valor):
+    _escreve_relatorio_csv(f'{cnpj};{valor};Não tem nada aqui', nome='Boletos Sindicato')
+    return driver
+
+
 def run(cnpj, valor, usuario, senha, funcionarios):
     print('28 - SINDPD - Sindicato dos Trabalhadores em Processamento de Dados e Tecnologia da Informação do Estado de São Paulo')
     options = webdriver.ChromeOptions()
@@ -59,7 +63,7 @@ def run(cnpj, valor, usuario, senha, funcionarios):
     
     driver, avisos = login(driver, cnpj, senha)
     if not avisos:
-        driver = gera_boleto(driver, cnpj, valor)
+        driver = gera_boleto(driver, valor)
         driver.close()
         return '✔ Boleto gerado'
     else:

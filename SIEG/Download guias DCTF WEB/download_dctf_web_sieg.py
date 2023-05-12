@@ -7,24 +7,8 @@ import os, time, re, csv, shutil
 from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers
-from chrome_comum import _initialize_chrome
+from chrome_comum import _initialize_chrome, _find_by_id, _find_by_path
 
-
-def localiza_path(driver, elemento):
-    try:
-        driver.find_element(by=By.XPATH, value=elemento)
-        return True
-    except:
-        return False
-
-
-def localiza_id(driver, elemento):
-    try:
-        driver.find_element(by=By.ID, value=elemento)
-        return True
-    except:
-        return False
-    
 
 def login_sieg(driver):
     driver.get('https://auth.sieg.com/')
@@ -62,7 +46,7 @@ def procura_empresa(competencia, empresa, driver, options):
     cnpj, nome = empresa
     # espera a barra de pesquisa, se não aparecer em 1 minuto, recarrega a página
     timer = 0
-    while not localiza_id(driver, 'select2-ddlCompanyIris-container'):
+    while not _find_by_id('select2-ddlCompanyIris-container', driver):
         time.sleep(1)
         timer += 1
         if timer >= 60:
@@ -112,7 +96,7 @@ def procura_empresa(competencia, empresa, driver, options):
 
     # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
     timer = 0
-    while not localiza_path(driver, '/html/body/form/div[5]/div[3]/div/div/div[3]/div/table/tbody/tr[1]/td/div/span'):
+    while not _find_by_path('/html/body/form/div[5]/div[3]/div/div/div[3]/div/table/tbody/tr[1]/td/div/span', driver):
         time.sleep(1)
         timer += 1
         if timer >= 60:

@@ -201,7 +201,7 @@ def salvar_guia(empresa, apuracao, vencimento, tipo):
     while _find_img('SalvarComo.png', conf=0.9):
         if _find_img('Substituir.png', conf=0.9):
             p.press('s')
-    time.sleep(1)
+    time.sleep(2)
     p.hotkey('ctrl', 'w')
     return True
 

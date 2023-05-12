@@ -6,26 +6,9 @@ from selenium.webdriver.common.by import By
 from sys import path
 
 path.append(r'..\..\_comum')
-from chrome_comum import _initialize_chrome
-from comum_comum import _escreve_relatorio_csv
+from chrome_comum import _initialize_chrome, _find_by_id, _find_by_path
 from pyautogui_comum import _find_img, _click_img, _wait_img
 
-
-def localiza_path(driver, elemento):
-    try:
-        driver.find_element(by=By.XPATH, value=elemento)
-        return True
-    except:
-        return False
-
-
-def localiza_id(driver, elemento):
-    try:
-        driver.find_element(by=By.ID, value=elemento)
-        return True
-    except:
-        return False
-    
 
 def login(driver, cnpj):
     # entra no site
@@ -34,7 +17,7 @@ def login(driver, cnpj):
     time.sleep(1)
     
     # espera o campo do cnpj aparecer
-    while not localiza_id(driver, 'CnpjTextBox'):
+    while not _find_by_id(driver, 'CnpjTextBox'):
         time.sleep(1)
     time.sleep(1)
     
@@ -93,7 +76,7 @@ def gera_boleto(driver, cnpj, valor):
     return driver
   
     
-def run(cnpj, valor, usuario, senha):
+def run(cnpj, valor, usuario, senha, funcionarios):
     print('39 - SINTHOJUR - Sindicato dos Trabalhadores em Hotéis, Motéis, Restaurantes, Bares, Lanchonetes e Fast-food de Jundiaí e Região')
     options = webdriver.ChromeOptions()
     #options.add_argument('--headless')
@@ -105,8 +88,8 @@ def run(cnpj, valor, usuario, senha):
     driver, avisos = login(driver, cnpj)
     if not avisos:
         driver = gera_boleto(driver, cnpj, valor)
+        driver.close()
+        return '✔ Boleto gerado'
     else:
-        _escreve_relatorio_csv(f'{cnpj};{valor}', nome='Boletos Sindicato')
-        print(f"❌ {avisos}")
-            
-    driver.close()
+        driver.close()
+        return f'❌ {avisos}'

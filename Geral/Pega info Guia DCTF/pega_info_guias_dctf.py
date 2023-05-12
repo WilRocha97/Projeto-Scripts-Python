@@ -12,10 +12,12 @@ from comum_comum import _escreve_relatorio_csv, _escreve_header_csv
 def analiza():
     documentos = ask_for_dir()
     # Analiza cada pdf que estiver na pasta
-    for arq in os.listdir(documentos):
-        print(f'\nArquivo: {arq}')
+    for arq_nome in os.listdir(documentos):
+        if not arq_nome.endswith('.pdf'):
+            continue
+        print(f'\nArquivo: {arq_nome}')
         # Abrir o pdf
-        arq = os.path.join(documentos, arq)
+        arq = os.path.join(documentos, arq_nome)
         
         with fitz.open(arq) as pdf:
 
@@ -31,8 +33,13 @@ def analiza():
                     try:
                         cnpj = re.compile(r'Documento de Arrecadação\nde Receitas Federais\n(\d.+)\n').search(textinho).group(1)
                     except:
-                        cnpj = re.compile(r'Documento de Arrecadação\ndo eSocial\n(\d.+)\n').search(textinho).group(1)
-                        
+                        try:
+                            cnpj = re.compile(r'Documento de Arrecadação\ndo eSocial\n(\d.+)\n').search(textinho).group(1)
+                        except:
+                            print('Erro')
+                            _escreve_relatorio_csv(f'{arq_nome}', nome='Arquivos com erro')
+                            continue
+                            
                     # Procura a descrição do valor a recolher 1, tem algumas variações do que aparece junto a essa info
                     try:
                         valor = re.compile(r'Valor Total do Documento\n(.+)\nCNPJ').search(textinho).group(1)

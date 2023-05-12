@@ -18,7 +18,7 @@ def run():
     
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        cod_sindicato, cnpj, valor = empresa
+        cod_sindicato, cnpj, valor, usuario, senha, funcionarios = empresa
         _indice(count, total_empresas, empresa)
         
         sindicatos = {
@@ -49,7 +49,9 @@ def run():
             '223': ''
         }
         
-        sindicatos[cod_sindicato](cnpj, valor, usuario, senha)
+        resultado = sindicatos[cod_sindicato](cnpj, valor, usuario, senha, funcionarios)
+        _escreve_relatorio_csv(f'{cnpj};{valor};{resultado}', nome='Boletos Sindicato')
+        print(resultado)
         
             
 if __name__ == '__main__':

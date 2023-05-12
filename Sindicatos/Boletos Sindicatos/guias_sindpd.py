@@ -6,26 +6,10 @@ from selenium.webdriver.common.by import By
 from sys import path
 
 path.append(r'..\..\_comum')
-from chrome_comum import _initialize_chrome
+from chrome_comum import _initialize_chrome, _find_by_id, _find_by_path
 from comum_comum import _escreve_relatorio_csv
 from pyautogui_comum import _find_img, _click_img, _wait_img
 
-
-def localiza_path(driver, elemento):
-    try:
-        driver.find_element(by=By.XPATH, value=elemento)
-        return True
-    except:
-        return False
-
-
-def localiza_id(driver, elemento):
-    try:
-        driver.find_element(by=By.ID, value=elemento)
-        return True
-    except:
-        return False
-    
 
 def login(driver, cnpj):
     # entra no site
@@ -38,7 +22,7 @@ def login(driver, cnpj):
     return driver, avisos
 
     
-def run(cnpj, valor, usuario, senha):
+def run(cnpj, valor, usuario, senha, funcionarios):
     print('28 - SINDPD - Sindicato dos Trabalhadores em Processamento de Dados e Tecnologia da Informação do Estado de São Paulo')
     options = webdriver.ChromeOptions()
     #options.add_argument('--headless')

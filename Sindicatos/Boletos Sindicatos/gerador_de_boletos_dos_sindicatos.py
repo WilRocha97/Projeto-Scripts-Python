@@ -12,17 +12,22 @@ from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dad
 
 @_time_execution
 def run():
+    # seleciona a lista de dados
     empresas = _open_lista_dados()
     
+    # configura de qual linha da lista começar a rotina
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:
         return False
     
+    # para cada linha da lista executa
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         cod_sindicato, cnpj, valor, usuario, senha, funcionarios = empresa
+        # printa o indice da lista
         _indice(count, total_empresas, empresa)
         
+        # dicionário de funções, onde cada arquivo referente a execução de um sindicato está vinculado a um número que é o código do sindicato
         sindicatos = {
             '3': '',
             '8': '',
@@ -51,8 +56,9 @@ def run():
             '223': ''
         }
         
+        # armazena o resultado retornado da função chamada através do dicionário
         resultado = sindicatos[cod_sindicato](cnpj, valor, usuario, senha, funcionarios)
-        _escreve_relatorio_csv(f'{cnpj};{valor};{resultado[2:]}', nome='Boletos Sindicato')
+        _escreve_relatorio_csv(f'{cod_sindicato};{cnpj};{valor};{resultado[2:]}', nome='Boletos Sindicato')
         print(resultado)
         
             

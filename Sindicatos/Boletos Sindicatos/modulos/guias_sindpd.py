@@ -42,6 +42,7 @@ def login(driver, cnpj, senha):
     
     avisos = re.compile('ATENÇÃO! (.+).<br> ').search(driver.page_source)
     if avisos:
+        avisos = avisos.replace('<br>', '')
         avisos = avisos.group(1)
         return driver, avisos
     

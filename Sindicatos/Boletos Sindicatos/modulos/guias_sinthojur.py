@@ -17,7 +17,7 @@ def login(driver, cnpj):
     time.sleep(1)
     
     # espera o campo do cnpj aparecer
-    while not _find_by_id(driver, 'CnpjTextBox'):
+    while not _find_by_id('CnpjTextBox', driver):
         time.sleep(1)
     time.sleep(1)
     

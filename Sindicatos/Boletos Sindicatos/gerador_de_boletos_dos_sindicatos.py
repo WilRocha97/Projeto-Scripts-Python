@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 # from selenium.common.exceptions import NoSuchElementException
-import os, time, re
+import os, time
 from sys import path
+
+path.append(r'modulos')
 import guias_sinthojur, guias_sindpd
 
 path.append(r'..\..\_comum')
@@ -50,7 +52,7 @@ def run():
         }
         
         resultado = sindicatos[cod_sindicato](cnpj, valor, usuario, senha, funcionarios)
-        _escreve_relatorio_csv(f'{cnpj};{valor};{resultado}', nome='Boletos Sindicato')
+        _escreve_relatorio_csv(f'{cnpj};{valor};{resultado[2:]}', nome='Boletos Sindicato')
         print(resultado)
         
             

@@ -114,19 +114,19 @@ _send_select = send_select
 
 def find_by_id(item, driver):
     try:
-        elem = driver.find_element(by=By.ID, value=item)
-        return elem
+        driver.find_element(by=By.ID, value=item)
+        return True
     except:
-        return None
+        return False
 _find_by_id = find_by_id
 
 
 def find_by_path(item, driver):
     try:
-        elem = driver.find_element(by=By.XPATH, value=item)
-        return elem
+        driver.find_element(by=By.XPATH, value=item)
+        return True
     except:
-        return None
+        return False
 _find_by_path = find_by_path
 
 

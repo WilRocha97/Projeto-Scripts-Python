@@ -35,7 +35,7 @@ def login(driver, cnpj):
 
 
 def gera_boleto(driver, cnpj, valor):
-    
+    print('>>> Gerando boletos')
     # insere o valor do boleto
     driver.find_element(by=By.ID, value='txtValor').send_keys(valor)
     

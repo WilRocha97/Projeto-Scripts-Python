@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-# from selenium.common.exceptions import NoSuchElementException
 import os, time
 from sys import path
 
 path.append(r'modulos')
-import guias_sinthojur, guias_sindpd
+import guias_sinthojur, guias_sindpd, guias_sitac
 
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
@@ -30,7 +29,7 @@ def run():
         # dicionário de funções, onde cada arquivo referente a execução de um sindicato está vinculado a um número que é o código do sindicato
         sindicatos = {
             '3': '',
-            '8': '',
+            '8': guias_sitac.run,
             '10': '',
             '11': '',
             '16': '',

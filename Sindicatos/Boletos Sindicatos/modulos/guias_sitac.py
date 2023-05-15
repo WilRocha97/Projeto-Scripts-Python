@@ -18,24 +18,29 @@ def login(driver, cnpj, senha):
     time.sleep(1)
     
     # espera o campo do cnpj aparecer
-    while not _find_by_id('radio1_label', driver):
+    while not _find_by_id('radio1', driver):
         time.sleep(1)
     time.sleep(1)
     
     # clica para abrir o menu
-    driver.find_element(by=By.ID, value='radio1_label').click()
+    driver.find_element(by=By.ID, value='radio1').click()
+    time.sleep(1)
     
     # clica em CNPJ
     driver.find_element(by=By.ID, value='radio1_1').click()
+    time.sleep(1)
     
     # insere CNPJ
     driver.find_element(by=By.ID, value='cnpjEmp').send_keys(cnpj)
+    time.sleep(1)
     
     # insere Senha
     driver.find_element(by=By.ID, value='passCnpjEmp').send_keys(senha)
+    time.sleep(1)
     
     # clica em continuar
     driver.find_element(by=By.ID, value='LogarCnpjEmp').click()
+    time.sleep(1)
     
     while not _find_by_id('mn_dashboard', driver):
         time.sleep(1)

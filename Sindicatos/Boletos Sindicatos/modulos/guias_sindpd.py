@@ -42,7 +42,7 @@ def login(driver, cnpj, senha):
         
     print('>>> Verificando boletos')
     
-    avisos = re.compile('ATENÇÃO! (.+).<br> ').search(driver.page_source)
+    avisos = re.compile(r'ATENÇÃO! (.+).<br> ').search(driver.page_source)
     if avisos:
         avisos = avisos.group(1)
         avisos = avisos.replace('<br>', '')
@@ -50,24 +50,50 @@ def login(driver, cnpj, senha):
     
     return driver, ''
 
-def gera_boleto(driver, cnpj, valor, data, funcionarios, responsavel, email):
+def gera_boleto(driver, avisos, cnpj, valor, valor_rem, valor_rec, data, funcionarios, responsavel, email):
     data = data.split('-')
     data = f'{data[1]}/{data[0]}'
     # clica em contribuição assistencial
     driver.find_element(by=By.ID, value='contrib2').click()
     
+    # espera aparecer a tabela
     while not _find_by_path('/html/body/div[4]/b[2]/font/div[2]/table', driver):
         time.sleep(1)
     
-    print(driver.page_source)
-    _escreve_relatorio_csv(f'{cnpj};{valor};Não tem nada aqui', nome='Boletos Sindicato')
-    return driver
+    # verifica se existe um boleto com a data especificada na planilha
+    data = re.compile(r'>(' + data + ')<').search(driver.page_source)
+    if data:
+        data = data.group(1)
+        # captura o nome do atributo onclick referente a data especificada
+        onclick = re.compile(r'>' + data + '<.+onclick=\"(.+;)\"').search(driver.page_source).group(1)
+        # clica no botão para emitir o boleto
+        driver.find_element(by=By.XPATH, value="//a[@onclick='" + onclick + "']").click()
+        
+        # aguarda a tela para inserir o valor do boleto
+        while not _find_by_id('VlDocto', driver):
+            time.sleep(1)
+            
+            if _find_by_id('EMPAC778__ENTREGUE_POR', driver):
+                lista_campos = [('EMPAC778__ENTREGUE_POR', responsavel), ('EMPAC778__EMAIL', email), ('EMPAC778__QTD_EMPREG', funcionarios),
+                                ('EMPAC778__VL_REMUNERACAO', valor_rem), ('EMPAC778__VL_RECOLHIDO', valor_rec)]
+                
+                for campo in lista_campos:
+                    # insere o responsável, email, quantidade de funcionarios, valor de remuneração, valor recolhido
+                    driver.find_element(by=By.ID, value=campo[0]).send_keys(campo[1])
+        
+        
+        return driver, f'em construção - {avisos}'
+        # return driver, f'✔ Boleto gerado - {avisos}'
+    else:
+        return driver, f'❗ Boleto não disponível - {avisos}'
 
 
 def run(empresa):
     # define as variáveis que serão usadas
     cnpj = empresa[1]
-    valor = empresa[2]
+    valor_boleto = empresa[2]
+    valor_rem = empresa [3]
+    valor_rec = empresa[4]
     data = empresa[5]
     senha = empresa[7]
     funcionarios = empresa[8]
@@ -87,7 +113,7 @@ def run(empresa):
     driver, avisos = login(driver, cnpj, senha)
     
     # gera os boletos
-    driver = gera_boleto(driver, cnpj, valor, data, funcionarios, responsavel, email)
+    driver, avisos = gera_boleto(driver, avisos, cnpj, valor_boleto, valor_rem, valor_rec, data, funcionarios, responsavel, email)
     driver.close()
-    return f'✔ Boleto gerado - {avisos}'
+    return avisos
 

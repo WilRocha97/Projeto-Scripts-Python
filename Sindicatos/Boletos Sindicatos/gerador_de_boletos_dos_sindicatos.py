@@ -22,7 +22,7 @@ def run():
     # para cada linha da lista executa
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        cod_sindicato, cnpj, valor, data_referencia, usuario, senha, funcionarios, responsavel, email = empresa
+        cod_sindicato, cnpj, valor_boleto, valor_recolhido, valor_remuneracao, data_referencia, usuario, senha, funcionarios, responsavel, email = empresa
         # printa o indice da lista
         _indice(count, total_empresas, empresa)
         
@@ -40,7 +40,6 @@ def run():
             '23': '',
             '25': '',
             '28': guias_sindpd.run,
-            '39': guias_sinthojur.run,
             '49': '',
             '58': '',
             '65': '',
@@ -49,6 +48,7 @@ def run():
             '100': '',
             '131': '',
             '133': '',
+            '39': guias_sinthojur.run,
             '135': '',
             '148': '',
             '162': '',
@@ -59,9 +59,9 @@ def run():
         resultado = sindicatos[cod_sindicato](empresa)
         resultado = resultado.replace(' - ', ';')
         
-        _escreve_relatorio_csv(f'{cod_sindicato};{cnpj};{valor};{resultado[2:]}', nome='Boletos Sindicato')
+        _escreve_relatorio_csv(f'{cod_sindicato};{cnpj};{valor_boleto};{resultado[2:]}', nome='Boletos Sindicato')
         print(resultado)
-        
-            
+
+
 if __name__ == '__main__':
     run()

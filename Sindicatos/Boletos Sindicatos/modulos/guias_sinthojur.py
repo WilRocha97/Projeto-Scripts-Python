@@ -31,7 +31,7 @@ def login(driver, cnpj):
         avisos = re.compile(r'(CNPJ não Cadastrado. Por favor, insira os dados.)').search(driver.page_source).group(1)
         return driver, avisos
     except:
-        return driver, False
+        return driver, ''
 
 
 def gera_boleto(driver, cnpj, valor):
@@ -76,7 +76,11 @@ def gera_boleto(driver, cnpj, valor):
     return driver
   
     
-def run(cnpj, valor, usuario, senha, funcionarios):
+def run(empresa):
+    # define as variáveis que serão usadas
+    cnpj = empresa[1]
+    valor = empresa[2]
+    
     print('39 - SINTHOJUR - Sindicato dos Trabalhadores em Hotéis, Motéis, Restaurantes, Bares, Lanchonetes e Fast-food de Jundiaí e Região')
     options = webdriver.ChromeOptions()
     #options.add_argument('--headless')
@@ -85,11 +89,10 @@ def run(cnpj, valor, usuario, senha, funcionarios):
     
     status, driver = _initialize_chrome(options)
     
+    # faz login na empresa
     driver, avisos = login(driver, cnpj)
-    if not avisos:
-        driver = gera_boleto(driver, cnpj, valor)
-        driver.close()
-        return '✔ Boleto gerado'
-    else:
-        driver.close()
-        return f'❌ {avisos}'
+    
+    # gera os boletos
+    driver = gera_boleto(driver, cnpj, valor)
+    driver.close()
+    return f'✔ Boleto gerado - {avisos}'

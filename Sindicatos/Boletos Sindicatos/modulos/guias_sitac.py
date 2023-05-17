@@ -56,12 +56,17 @@ def login(driver, cnpj, senha):
     
     return driver, ''
 
-def gera_boleto(driver, valor):
+def gera_boleto(driver, cnpj, valor):
     _escreve_relatorio_csv(f'{cnpj};{valor};Não tem nada aqui', nome='Boletos Sindicato')
     return driver
 
 
-def run(cnpj, valor, usuario, senha, funcionarios):
+def run(empresa):
+    # define as variáveis que serão usadas
+    cnpj = empresa[1]
+    valor = empresa[2]
+    senha = empresa[7]
+    
     print('8 - SITAC - Sindicato dos Trabalhadores nas Indústrias de Alimentação de Campinas')
     options = webdriver.ChromeOptions()
     #options.add_argument('--headless')
@@ -70,11 +75,10 @@ def run(cnpj, valor, usuario, senha, funcionarios):
     
     status, driver = _initialize_chrome(options)
     
+    # faz login na empresa
     driver, avisos = login(driver, cnpj, senha)
-    if not avisos:
-        driver = gera_boleto(driver, valor)
-        driver.close()
-        return '✔ Boleto gerado'
-    else:
-        driver.close()
-        return f'❌ {avisos}'
+    
+    # gera os boletos
+    driver = gera_boleto(driver, cnpj, valor)
+    driver.close()
+    return f'✔ Boleto gerado - {avisos}'

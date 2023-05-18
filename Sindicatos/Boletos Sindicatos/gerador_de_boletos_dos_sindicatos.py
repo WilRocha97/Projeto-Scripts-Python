@@ -3,7 +3,7 @@ import os, time
 from sys import path
 
 path.append(r'modulos')
-import guias_sinthojur, guias_sindpd, guias_sitac
+import guias_sinthojur, guias_sindpd, guias_sitac, guias_seaac
 
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
@@ -11,6 +11,7 @@ from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dad
 
 @_time_execution
 def run():
+    os.makedirs('execução/Boletos', exist_ok=True)
     # seleciona a lista de dados
     empresas = _open_lista_dados()
     
@@ -40,15 +41,15 @@ def run():
             '23': '',
             '25': '',
             '28': guias_sindpd.run,
+            '39': guias_sinthojur.run,
             '49': '',
             '58': '',
             '65': '',
             '69': '',
             '70': '',
-            '100': '',
+            '100': guias_seaac.run,
             '131': '',
             '133': '',
-            '39': guias_sinthojur.run,
             '135': '',
             '148': '',
             '162': '',

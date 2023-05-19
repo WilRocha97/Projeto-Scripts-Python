@@ -50,13 +50,12 @@ def login(driver, cnpj, senha):
     
     while not _find_by_id('tabelaConf', driver):
         time.sleep(1)
-    
-    print('>>> Verificando boletos')
-    time.sleep(66)
-    
+       
     return driver, ''
 
 def gera_boleto(driver, cnpj, valor):
+    print('>>> Verificando boletos')
+
     _escreve_relatorio_csv(f'{cnpj};{valor};Não tem nada aqui', nome='Boletos Sindicato')
     return driver
 
@@ -77,6 +76,9 @@ def run(empresa):
     
     # faz login na empresa
     driver, avisos = login(driver, cnpj, senha)
+    if not driver:
+        driver.close()
+        return f'❌ Erro no login - {avisos}'
     
     # gera os boletos
     driver = gera_boleto(driver, cnpj, valor)

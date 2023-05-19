@@ -29,10 +29,16 @@ def login(driver, cnpj):
     time.sleep(1)
     
     try:
+        print(driver.page_source)
         avisos = re.compile(r'(CNPJ INVÁLIDO!)').search(driver.page_source).group(1)
-        return driver, avisos
+        return False, avisos
     except:
-        return driver, ''
+        try:
+            print(driver.page_source)
+            avisos = re.compile(r'(DIGITE UM DOCUMENTO VÁLIDO!)').search(driver.page_source).group(1)
+            return False, avisos
+        except:
+            return driver, ''
 
 
 def gera_boleto(driver, cnpj, valor, data):
@@ -82,6 +88,9 @@ def run(empresa):
     
     # faz login na empresa
     driver, avisos = login(driver, cnpj)
+    if not driver:
+        driver.close()
+        return f'❌ Erro no login - {avisos}'
     
     # gera os boletos
     driver = gera_boleto(driver, cnpj, valor, data)

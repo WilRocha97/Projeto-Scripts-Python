@@ -91,6 +91,9 @@ def run(empresa):
     
     # faz login na empresa
     driver, avisos = login(driver, cnpj)
+    if not driver:
+        driver.close()
+        return f'❌ Erro no login - {avisos}'
     
     # gera os boletos
     driver = gera_boleto(driver, cnpj, valor)

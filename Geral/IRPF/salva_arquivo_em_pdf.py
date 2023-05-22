@@ -11,15 +11,12 @@ def abre_declaracao(documentos, arquivo):
     # aguarda a tela de importar declaração
     _wait_img('importar.png', conf=0.9)
     time.sleep(1)
-    _click_img('importar.png', conf=0.9)
+    p.hotkey('ctrl', 't')
+    time.sleep(1)
     
     # aguarda a tela de selecionar arquivo para importar
-    while not _find_img('importacao.png', conf=0.9):
-        if _find_img('importar_declaracao_anual.png', conf=0.8) or _find_img('importar_declaracao_anual_2.png', conf=0.8):
-            _click_img('importar_declaracao_anual.png', conf=0.8, timeout=1)
-            _click_img('importar_declaracao_anual_2.png', conf=0.8, timeout=1)
-        if _find_img('importar_declaracao.png', conf=0.8):
-            break
+    while not _find_img('restaurar_copia_seg.png', conf=0.9):
+        p.hotkey('ctrl', 't')
     
     time.sleep(2)
     # insere o caminho do arquivo que será importado
@@ -32,7 +29,7 @@ def abre_declaracao(documentos, arquivo):
     time.sleep(1)
     
     # enquanto o arquivo não importar verifica se já existe o mesmo arquivo importado, se sim, confirma a reimportação
-    while not _find_img('importou_sucesso.png', conf=0.9):
+    while not _find_img('restaurou_sucesso.png', conf=0.9):
         if _find_img('ja_existe_declaracao.png', conf=0.9):
             p.hotkey('alt', 's')
         
@@ -68,21 +65,30 @@ def abre_recibo():
 def imprimir_arquivo():
     # aguarda o botão de imprimir declaração
     while not _find_img('imprimir.png', conf=0.9):
-        _click_img('abrir_declaracao.png', conf=0.9, timeout=1)
-        time.sleep(1)
-        _click_img('abrir_declaracao_2.png', conf=0.9, timeout=1)
+        p.press('tab')
         time.sleep(1)
         if _find_img('imprimir_2.png', conf=0.9):
+            break
+        if _find_img('imprimir_3.png', conf=0.9):
             break
     
     time.sleep(2)
     p.hotkey('ctrl', 'p')
     
+    # aguarda a tela de seleção
+    while not _find_img('seleciona_declaracao.png', conf=0.9):
+        time.sleep(1)
+    
+    # troca de aba
+    p.hotkey('alt', 'r')
+    
     # aguarda a tela de impressão
-    while not _find_img('selecao_de_impressao.png', conf=0.9):
-        if _find_img('selecao_de_impressao_2.png', conf=0.9):
-            break
+    while not _find_img('seleciona_arquivo.png', conf=0.9):
+        time.sleep(1)
+    
+    _click_position_img('seleciona_arquivo.png', '+', pixels_y=25, conf=0.9)
     time.sleep(1)
+    p.hotkey('alt', 'o')
     
     _click_img('toda_a_declaracao.png', conf=0.9)
     time.sleep(1)
@@ -161,13 +167,17 @@ def exclui_declaracao(andamentos):
             p.hotkey('alt', 's')
     
     time.sleep(1)
+    p.hotkey('alt', 'r')
+    time.sleep(1)
     p.hotkey('alt', 't')
     time.sleep(1)
     p.hotkey('alt', 'o')
     time.sleep(1)
     p.hotkey('alt', 's')
     time.sleep(1)
-
+    if _find_img('excluir_definitivamente.png', conf=0.9):
+        _click_img('excluir_definitivamente.png', conf=0.9)
+    
 
 @_time_execution
 def run():

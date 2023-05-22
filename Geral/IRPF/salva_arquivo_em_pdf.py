@@ -40,7 +40,7 @@ def abre_declaracao(documentos, arquivo):
             p.press('enter')
             return False, 'Erro na importação da Declaração. Este arquivo está corrompido', caminho_arquivo
     
-    # cofirma que foi importado
+    # confirma que foi importado
     p.press('enter')
     return True, 'ok', caminho_arquivo
 
@@ -66,7 +66,7 @@ def abre_recibo():
 
 
 def imprimir_arquivo():
-    # aguarda o botão de imprimir delcaração
+    # aguarda o botão de imprimir declaração
     while not _find_img('imprimir.png', conf=0.9):
         _click_img('abrir_declaracao.png', conf=0.9, timeout=1)
         time.sleep(1)
@@ -96,14 +96,14 @@ def salvar_pdf(arquivo, andamentos):
     while not _find_img('salvar_pdf.png', conf=0.9):
         time.sleep(1)
         if _find_img('devolucao_auxilio.png', conf=0.9):
-            aviso = f'Rendimentos tributáveis ou de algum(ns) dependentes ultrapssaram o limite previsto no 2°-B do art. 2° da Lei n° 13.982, de 2020, ' \
+            aviso = f'Rendimentos tributáveis ou de algum(ns) dependentes ultrapassaram o limite previsto no 2°-B do art. 2° da Lei n° 13.982, de 2020, ' \
                     f'ficando assim obrigado a devolver o valor do auxílio emergencial recebido, inclusive por seus dependentes.'
             _click_img('ok.png', conf=0.9)
         
         if _find_img('ocorreu_erro.png', conf=0.9):
             p.hotkey('alt', 'o')
-            print('❌ Ocorreu um erro inesperado ao obrir o recibo')
-            _escreve_relatorio_csv(f'{arquivo};Ocorreu um erro inesperado ao obrir o recibo', nome=andamentos)
+            print('❌ Ocorreu um erro inesperado ao abrir o recibo')
+            _escreve_relatorio_csv(f'{arquivo};Ocorreu um erro inesperado ao abrir o recibo', nome=andamentos)
             return 'erro inesperado'
 
     _click_img('salvar_pdf.png', conf=0.9)
@@ -173,9 +173,9 @@ def exclui_declaracao(andamentos):
 def run():
     tipo_arquivo = p.confirm(buttons=['Declarações', 'Recibos'])
     documentos = ask_for_dir()
-    # pega o nome para a pasta final do aqruivo
+    # pega o nome para a pasta final do arquivo
     pasta = documentos.split('/')
-    # define as pastas do programa do irpf
+    # define as pastas do programa do IRPF
     irpf_folder = f'C:\\Arquivos de Programas RFB\\{pasta[3]}\\transmitidas'
     
     # define a pasta final do PDF e a pasta final dos arquivos
@@ -239,12 +239,12 @@ def run():
             try:
                 shutil.move(os.path.join(documentos, arquivo_declaracao), os.path.join(irpf_folder, arquivo_declaracao))
             except:
-                _escreve_relatorio_csv(f'{arquivo};Arquivo referênte a declaração não encontrado', nome=andamentos, )
+                _escreve_relatorio_csv(f'{arquivo};Arquivo referente a declaração não encontrado', nome=andamentos, )
                 continue
             try:
                 shutil.move(os.path.join(documentos, arquivo_recibo), os.path.join(irpf_folder, arquivo_recibo))
             except:
-                _escreve_relatorio_csv(f'{arquivo};Arquivo referênte ao recibo não encontrado', nome=andamentos,)
+                _escreve_relatorio_csv(f'{arquivo};Arquivo referente ao recibo não encontrado', nome=andamentos,)
                 continue
 
             print(f'\n{arquivo}')

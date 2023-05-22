@@ -111,14 +111,24 @@ def salvar_pdf(arquivo, andamentos):
     # aguarda a tela de salvar
     _wait_img('tela_salvar.png', conf=0.9)
     time.sleep(1)
+    
+    nome_pdf = None
+    
+    while not nome_pdf:
+        p.hotkey('ctrl', 'c')
+        nome_pdf = pyperclip.paste()
+    
+    print(nome_pdf)
     p.press('enter')
     
     while _find_img('tela_salvar.png', conf=0.9):
         time.sleep(1)
         if _find_img('sobrescrever.png', conf=0.9):
-            p.hotkey('alt', 'o')
+            p.hotkey('alt', 'c')
+            aviso = 'Arquivo já existe'
         if _find_img('sobrescrever_2.png', conf=0.9):
-            p.hotkey('alt', 'o')
+            p.hotkey('alt', 'c')
+            aviso = 'Arquivo já existe'
     
     time.sleep(3)
     if _find_img('fechar.png', conf=0.9):
@@ -128,16 +138,14 @@ def salvar_pdf(arquivo, andamentos):
     elif _find_img('fechar_3.png', conf=0.9):
         _click_position_img('fechar_3.png', '+', pixels_x=911, conf=0.9)
     
-    return aviso
+    return aviso, nome_pdf
 
 
-def mover_pdf(final_folder_pdf):
+def mover_pdf(final_folder_pdf, nome_pdf):
     try:
         download_folder = 'C:\\Users\\robo\\Documents'
-        
-        for arquivo in os.listdir(download_folder):
-            if arquivo.endswith('.pdf'):
-                shutil.move(os.path.join(download_folder, arquivo), os.path.join(final_folder_pdf, arquivo))
+
+        shutil.copy2(os.path.join(download_folder, nome_pdf), os.path.join(final_folder_pdf, nome_pdf))
         
         return True
     except:
@@ -168,30 +176,23 @@ def run():
     # pega o nome para a pasta final do aqruivo
     pasta = documentos.split('/')
     # define as pastas do programa do irpf
-    irpf_folder = f'C:\\Arquivos de Programas RFB\\IRPF{pasta[5]}\\transmitidas'
+    irpf_folder = f'C:\\Arquivos de Programas RFB\\{pasta[3]}\\transmitidas'
     
-    print(f'{pasta[6]}\n')
+    # define a pasta final do PDF e a pasta final dos arquivos
+    final_folder_pdf = documentos + '_PDF'
+    final_folder = documentos + ' Feitos'
+    os.makedirs(final_folder_pdf, exist_ok=True)
+    os.makedirs(final_folder, exist_ok=True)
+    
+    print(f'{pasta[4]}\n')
     if tipo_arquivo == 'Declarações':
         pasta = documentos.split('/')
-        andamentos = f'Declarações IRPF {pasta[6]}'
-        
-        final_folder_pdf = f'C:\\Users\\robo\\Documents\\Declarações\\{pasta[6]}_PDF'
-        final_folder = f'C:\\Users\\robo\\Documents\\Declarações\\{pasta[6]}'
-        
-        os.makedirs(final_folder_pdf, exist_ok=True)
-        os.makedirs(final_folder, exist_ok=True)
+        andamentos = f'Declarações IRPF {pasta[4]}'
     
     else:
         # cria o nome da planilha de andamentos
-        andamentos = f'Recibos IRPF {pasta[6]}'
-        
-        # define a pasta final do PDF e a pasta final dos arquivos
-        final_folder_pdf = f'C:\\Users\\robo\\Documents\\Recibos\\{pasta[6]}_PDF'
-        final_folder = f'C:\\Users\\robo\\Documents\\Recibos\\{pasta[6]}'
-        
-        os.makedirs(final_folder_pdf, exist_ok=True)
-        os.makedirs(final_folder, exist_ok=True)
-        
+        andamentos = f'Recibos IRPF {pasta[4]}'
+
         if os.listdir(irpf_folder) != '[]':
             for arquivo in os.listdir(irpf_folder):
                 shutil.move(os.path.join(irpf_folder, arquivo), os.path.join(documentos, arquivo))
@@ -209,9 +210,11 @@ def run():
             
             if funcao:
                 imprimir_arquivo()
-                aviso = salvar_pdf(arquivo, andamentos)
-                while not mover_pdf(final_folder_pdf):
-                    time.sleep(2)
+                aviso, nome_pdf = salvar_pdf(arquivo, andamentos)
+                
+                if aviso != 'Arquivo já existe':
+                    while not mover_pdf(final_folder_pdf, nome_pdf):
+                        time.sleep(2)
                 
                 print('✔ PDF gerado com sucesso')
                 shutil.move(os.path.join(documentos, arquivo), os.path.join(final_folder, arquivo))
@@ -246,15 +249,16 @@ def run():
 
             print(f'\n{arquivo}')
             abre_recibo()
-            aviso = salvar_pdf(arquivo, andamentos)
+            aviso, nome_pdf = salvar_pdf(arquivo, andamentos)
 
             if aviso == 'erro inesperado':
                 # move os arquivos da declaração e do recibo para a pasta final
                 shutil.move(os.path.join(irpf_folder, arquivo_declaracao), os.path.join(final_folder, arquivo_declaracao))
                 shutil.move(os.path.join(irpf_folder, arquivo_recibo), os.path.join(final_folder, arquivo_recibo))
                 continue
-
-            mover_pdf(final_folder_pdf)
+    
+            if aviso != 'Arquivo já existe':
+                mover_pdf(final_folder_pdf, nome_pdf)
             
             # move os arquivos da declaração e do recibo para a pasta final
             shutil.move(os.path.join(irpf_folder, arquivo_declaracao), os.path.join(final_folder, arquivo_declaracao))

@@ -37,15 +37,64 @@ def login(driver, cnpj, usuario, senha):
     driver.find_element(by=By.XPATH, value='/html/body/section/div/div[2]/form[1]/div[2]/input').click()
     time.sleep(1)
     
+    # espera campo para inserir o CNPJ
+    while not _find_by_path('/html/body/section/div/div/form/div[1]/input', driver):
+        time.sleep(1)
+    time.sleep(1)
+    
+    # insere o usuario
+    driver.find_element(by=By.XPATH, value='/html/body/section/div/div/form/div[1]/input').send_keys(usuario)
+    
+    # insere a senha
+    driver.find_element(by=By.XPATH, value='/html/body/section/div/div/form/div[2]/input').send_keys(senha)
+    
+    # clica em continuar
+    driver.find_element(by=By.XPATH, value='/html/body/section/div/div/form/div[3]/input').click()
+    
+    return driver, ''
+
+    
+def gera_boleto(driver, valor):
+    # espera aparecer o botão de gerar boleto
+    while not _find_by_path('/html/body/header/div/nav/ul/li[2]/a', driver):
+        time.sleep(1)
+    time.sleep(1)
+    
+    driver.get('http://sinticomcampinas.consir.com.br/index.php?pg=novoboleto')
+    
+    # espera aparecer o dropdown
+    while not _find_by_path('/html/body/section/div/div/form[2]/div[2]/div[2]/span/span[1]/span/span[1]', driver):
+        time.sleep(1)
+
+    # clica no dropdown
+    driver.find_element(by=By.XPATH, value='/html/body/section/div/div/form[2]/div[2]/div[2]/span/span[1]/span/span[1]').click()
+    time.sleep(2)
+
+    # clica no iten do dropdown
+    driver.find_element(by=By.XPATH, value='/html/body/span/span/span[2]/ul/li[2]').click()
+    time.sleep(1)
+    
+    # espera aparecer a tela para inserir o valor
+    while not _find_by_id('valor', driver):
+        time.sleep(1)
+        
+    # insere o valor
+    driver.find_element(by=By.id, value='/html/body/span/span/span[2]/ul/li[2]').send_keys(valor)
+    time.sleep(1)
+    
+    # clica em gerar
+    driver.find_element(by=By.XPATH, value='/html/body/section/div/div/form[2]/div[6]/div/input').click()
+    time.sleep(1)
     
     return driver, ''
 
 
-def gera_boleto(driver, cnpj, valor):
+def salva_boleto(cnpj):
+    # nome do arquivo
+    p.write(f'Boleto 11-SINTICOM - {cnpj}.pdf')
+    return True
     
-    return driver
-
-
+    
 def run(empresa):
     # define as variáveis que serão usadas
     cnpj = empresa[1]
@@ -68,6 +117,7 @@ def run(empresa):
         return f'❌ Erro no login - {avisos}'
     
     # gera os boletos
-    driver = gera_boleto(driver, cnpj, valor)
+    driver = gera_boleto(driver, valor)
+    resultado = salva_boleto(cnpj)
     driver.close()
     return f'✔ Boleto gerado - {avisos}'

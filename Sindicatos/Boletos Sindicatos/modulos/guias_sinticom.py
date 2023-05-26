@@ -79,7 +79,8 @@ def gera_boleto(driver, valor):
         time.sleep(1)
         
     # insere o valor
-    driver.find_element(by=By.id, value='/html/body/span/span/span[2]/ul/li[2]').send_keys(valor)
+    driver.find_element(by=By.XPATH, value='/html/body/section/div/div/form[2]/div[5]/div[2]/input').send_keys(valor)
+    
     time.sleep(1)
     
     # clica em gerar
@@ -89,10 +90,46 @@ def gera_boleto(driver, valor):
     return driver, ''
 
 
-def salva_boleto(cnpj):
+def salva_boleto(driver, cnpj):
+    cnpj_limpo = cnpj.replace('.', '').replace('/', '').replace('-', '')
+    # espera aparecer o botão de imprimir
+    while not _find_by_path('/html/body/section/div/div[2]/a[1]', driver):
+        time.sleep(1)
+        
+    # clica em imprimir
+    driver.find_element(by=By.XPATH, value='/html/body/section/div/div[2]/a[1]').click()
+    time.sleep(1)
+    
+    while not _find_img('imprimir.png', conf=0.9):
+        time.sleep(1)
+    
+    _click_img('imprimir.png', conf=0.9, timeout=1)
+    
+    while not _find_img('salvar_como.png', conf=0.9):
+        time.sleep(1)
+        
     # nome do arquivo
-    p.write(f'Boleto 11-SINTICOM - {cnpj}.pdf')
-    return True
+    p.write(f'Boleto 11-SINTICOM - {cnpj_limpo}.pdf')
+    time.sleep(0.5)
+    
+    # Selecionar local
+    p.press('tab', presses=6)
+    time.sleep(1)
+    p.press('enter')
+    time.sleep(1)
+    pyperclip.copy('V:\Setor Robô\Scripts Python\Sindicatos\Boletos Sindicatos\execução\Boletos')
+    p.hotkey('ctrl', 'v')
+    time.sleep(1)
+    p.press('enter')
+    time.sleep(1)
+    p.hotkey('alt', 'l')
+    time.sleep(1)
+    while _find_img('salvar_como.png', conf=0.9):
+        if _find_img('substituir.png', conf=0.9):
+            p.press('s')
+    time.sleep(1)
+    
+    return driver, ''
     
     
 def run(empresa):
@@ -117,7 +154,7 @@ def run(empresa):
         return f'❌ Erro no login - {avisos}'
     
     # gera os boletos
-    driver = gera_boleto(driver, valor)
-    resultado = salva_boleto(cnpj)
+    driver, avisos_2 = gera_boleto(driver, valor)
+    driver, avisos_3 = salva_boleto(driver, cnpj)
     driver.close()
     return f'✔ Boleto gerado - {avisos}'

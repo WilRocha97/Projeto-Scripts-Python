@@ -35,14 +35,13 @@ def login(driver, cnpj):
 
 
 def gera_boleto(driver, cnpj, valor):
+    cnpj_limpo = cnpj.replace('.', '').replace('/', '').replace('-', '')
     print('>>> Gerando boletos')
     # insere o valor do boleto
     driver.find_element(by=By.ID, value='txtValor').send_keys(valor)
     
     # clica em emitir
     driver.find_element(by=By.ID, value='cmdConfirmar').click()
-    
-    os.makedirs('execução/Boletos', exist_ok=True)
     
     while not _find_img('imprimir.png', conf=0.9):
         time.sleep(1)
@@ -53,7 +52,7 @@ def gera_boleto(driver, cnpj, valor):
         time.sleep(1)
     
     # nome do arquivo
-    p.write(f'Boleto 39-SINTHOJUR - {cnpj}.pdf')
+    p.write(f'Boleto 39-SINTHOJUR - {cnpj_limpo}.pdf')
     time.sleep(0.5)
     
     # Selecionar local

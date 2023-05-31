@@ -12,73 +12,45 @@ from comum_comum import _escreve_relatorio_csv, _escreve_header_csv
 def analiza():
     arq = ask_for_file(filetypes=[('PDF files', '*.pdf *')])
     # Abrir o pdf
-    sem_codigo_receita = 'não'
-    with fitz.open(file) as pdf:
-    
+    with fitz.open(arq) as pdf:
         # Para cada página do pdf, se for a segunda página o script ignora
         for page in pdf:
-        
             try:
                 # Pega o texto da pagina
                 textinho = page.get_text('text', flags=1 + 2 + 8)
-            
-                # Procura a descrição do valor a recolher
-                valores = re.compile(r'(\d\d\d\d)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(\d\d/\d\d\d\d)\n(.+)').findall(textinho)
-            
-                # se não encontrar valores com o código da receita procura valor de IRRF
-                if not valores:
-                    # se existir uma empresa diferente sem código anterior a empresa atual, anota na planilha
-                    if sem_codigo_receita == 'sim':
-                        if codigo != codigo_anterior:
-                            _escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_anterior};Não consta;{periodo_anterior};Não consta;{valor_anterior};Não consta;Não consta;Não consta", nome=f'Encargos de IRRF - {periodo.replace("/", "-")}')
+                empresa = re.compile(r'(\d+) - (\w.+)\n(.+)').search(textinho)
                 
-                    try:
-                        valor_anterior = re.compile(r'Total Geral:\n(.+,\d+)').search(textinho).group(1)
-                        try:
-                            periodo_anterior = re.compile(r'Mensal (\d\d/\d\d)').search(textinho).group(1)
-                        except:
-                            periodo_anterior = 'Não consta'
-                    
-                        # armazena os valores para compara comparar com a empresa da próxima página
-                        empresa = re.compile(r'(\d+) - (.+)\n(.+)').search(textinho)
-                        codigo_anterior = empresa.group(1)
-                        nome_anterior = empresa.group(2)
-                        cnpj_anterior = empresa.group(3)
-                        sem_codigo_receita = 'sim'
-                    except:
-                        pass
+                try:
+                    cod_empresa = empresa.group(1)
+                    nome = empresa.group(2)
+                    cnpj = empresa.group(3)
+                
+                except:
+                    _escreve_relatorio_csv(f'{page.number};erro empresa', nome='erros')
+                
+                codigos = re.compile(r'(\d\d\d\d)\n(\w+)\n(.+,.+)\n(\d\d/\d\d\d\d)\n(.+,.+)\n(.+,.+)\n(.+,.+)\n(.+,.+)').findall(textinho)
+                if not codigos:
+                    pass
+                
                 else:
-                    for valor in valores:
-                        empresa = re.compile(r'(\d+) - (.+)\n(.+)').search(textinho)
-                        codigo = empresa.group(1)
-                        nome = empresa.group(2)
-                        cnpj = empresa.group(3)
-                    
-                        # se existir uma empresa diferente sem código anterior a empresa atual, anota na planilha
-                        if sem_codigo_receita == 'sim':
-                            if codigo != codigo_anterior:
-                                _escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_anterior};Não consta;{periodo_anterior};Não consta;{valor_anterior};Não consta;Não consta;Não consta", nome=f'Encargos de IRRF - {periodo.replace("/", "-")}')
-                                sem_codigo_receita = 'não'
-                    
-                        periodicidade = valor[6]
-                        periodo = valor[5]
-                        codigo_receita = valor[0]
-                        valor_recolher = valor[1]
-                        valor_compensar = valor[2]
-                        valor_pagar = valor[3]
-                        valor_acumular = valor[4]
-                    
-                        # print(f'{codigo} - {cnpj} - {nome} - {valor}')
-                    
-                        _escreve_relatorio_csv(f"{codigo};{cnpj};{nome};{periodicidade};{periodo};{codigo_receita};{valor_recolher};{valor_compensar};{valor_pagar};{valor_acumular}", nome=f'Encargos de IRRF - {periodo.replace("/", "-")}')
-                        sem_codigo_receita = 'não'
-        
+                    for codigo in codigos:
+                        cod = codigo[0]
+                        periodicidade = codigo[1]
+                        periodo = codigo[3]
+                        val_acumulado = codigo[4]
+                        val_recolher = codigo[5]
+                        val_compensar = codigo[6]
+                        val_pagar = codigo[7]
+                        val_acumular = codigo[2]
+                        
+                        _escreve_relatorio_csv(f'{cod_empresa};{nome};{cnpj};{cod};{periodicidade};{periodo};{val_acumulado};{val_recolher};{val_compensar};{val_pagar};{val_acumular}')
+            
             except():
                 print(textinho)
                 print('ERRO')
-
-    return periodo
-
+            
+            return periodo
+            
 
 if __name__ == '__main__':
     inicio = datetime.now()

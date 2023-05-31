@@ -3,7 +3,7 @@ import os, time
 from sys import path
 
 path.append(r'modulos')
-import guias_sinthojur, guias_sindpd, guias_sitac, guias_seaac, guias_sinticom
+import guias_sitac, guias_sinticom, guias_sindeepres, guias_sindpd, guias_sinthojur, guias_seaac, guias_secriopreto
 
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
@@ -33,7 +33,7 @@ def run():
             '8': guias_sitac.run,
             '10': '',
             '11': guias_sinticom.run,
-            '16': '',
+            '16': guias_sindeepres,
             '17': '',
             '19': '',
             '21': '',
@@ -48,7 +48,7 @@ def run():
             '69': '',
             '70': '',
             '100': guias_seaac.run,
-            '131': '',
+            '131': guias_secriopreto,
             '133': '',
             '135': '',
             '148': '',

@@ -202,7 +202,8 @@ def run():
         while re.compile(r'<div class=\"no-items\" style=\"\">Sem itens para mostrar</div>').search(driver.page_source):
             time.sleep(1)
         
-        titulo = 'x'
+        titulo_sem_emoji = 'x'
+        nao_envia = 'x'
         try:
             driver, titulo, cnpj, cnpj_limpo, vencimento, link_mensagem = captura_link_email(driver)
             
@@ -214,6 +215,7 @@ def run():
                 numero, nome = verifica_o_numero(cnpj_limpo)
             else:
                 numero = False
+                nome = 'x'
             
             verifica_titulo = titulo.split('-')
             emails_diferentes = ['Desconsideração de e', 'Solicitação de documentos ', 'Documentos pendentes de visualização ']

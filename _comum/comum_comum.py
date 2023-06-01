@@ -270,3 +270,16 @@ def indice(count, total_empresas, empresa):
             
     print(f'{indice_dados} - {empresa}')
 _indice = indice
+
+
+def remove_emojis(text):
+    emoji_pattern = re.compile("["
+                               u"\U0001F600-\U0001F64F"  # emoticons
+                               u"\U0001F300-\U0001F5FF"  # símbolos e pictogramas
+                               u"\U0001F680-\U0001F6FF"  # transportes e símbolos de mapa
+                               u"\U0001F1E0-\U0001F1FF"  # bandeiras de país
+                               "]+", flags=re.UNICODE)
+    text = emoji_pattern.sub(r'', text)
+    text = text[1:-1]
+    return text
+_remove_emojis = remove_emojis

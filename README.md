@@ -8,4 +8,3 @@ Scripts que usam imegens foram feitos na resolução: 1366x768
 
 ## Feito por
 ### Willian Rodrigues
-### LinkeIn: https://www.linkedin.com/in/willian-rocha-a623b6248/

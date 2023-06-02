@@ -48,6 +48,12 @@ def login_email(driver):
     
     driver.find_element(by=By.XPATH, value='/html/body/div[2]/div/div/div[1]/div[1]/form/div[2]/div[2]/button').click()
     
+    _wait_img('menu_classificacao.png', conf=0.9)
+    _click_img('menu_classificacao.png', conf=0.9)
+    _wait_img('crescente.png', conf=0.9)
+    _click_img('crescente.png', conf=0.9)
+    _click_img('menu_classificacao.png', conf=0.9)
+    
     return driver
 
 
@@ -160,7 +166,7 @@ def envia(numero, titulo, vencimento, link_mensagem):
         return 'erro'
     
 
-def mover_email(driver, pasta=''):
+def mover_email(pasta=''):
     # clica no menu
     _click_img('menu_email.png', conf=0.9)
     
@@ -182,8 +188,6 @@ def mover_email(driver, pasta=''):
     # confirmar a seleção
     _click_img('confirma_mover_email.png', conf=0.9)
     time.sleep(10)
-    
-    return driver
 
 
 @_time_execution
@@ -250,14 +254,14 @@ def run():
             # se não tiver como enviar
             if nao_envia:
                 time.sleep(1)
-                driver = mover_email(driver, 'nao_enviados')
+                mover_email('nao_enviados')
                 _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji}', nome=nome_planilha)
                 print(f'❗ {titulo}\n')
             
             # se não encontrar o número da planilha
             elif not numero:
                 time.sleep(1)
-                driver = mover_email(driver, 'nao_enviados')
+                mover_email('nao_enviados')
                 _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji};Número não encontrado', nome=nome_planilha)
                 print('❌ Número não encontrado\n')
             
@@ -267,26 +271,27 @@ def run():
                 # se der erro ao enviar
                 if resultado == 'erro':
                     time.sleep(1)
-                    driver = mover_email(driver, 'nao_enviados')
+                    mover_email('nao_enviados')
                     _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};Erro ao enviar a mensagem', nome=nome_planilha)
                     print('❌ Erro ao enviar a mensagem\n')
                 # se conseguir enviar
                 elif resultado == 'ok':
                     time.sleep(1)
-                    driver = mover_email(driver, 'enviados')
+                    mover_email('enviados')
                     _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};Mensagem enviada', nome=nome_planilha)
                     print('✔ Mensagem enviada\n')
                 # se der algum erro específico ao enviar
                 else:
                     time.sleep(1)
-                    driver = mover_email(driver, 'nao_enviados')
+                    mover_email('nao_enviados')
                     _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};{resultado}', nome=nome_planilha)
                     print(f'❌ {resultado}\n')
         
         # se der erro em qualquer etapa
         except:
             time.sleep(1)
-            driver = mover_email(driver, 'nao_enviados')
+            print(driver.page_source)
+            mover_email('nao_enviados')
             _escreve_relatorio_csv(f'x;x;x;{titulo_sem_emoji};Erro ao enviar a mensagem', nome=nome_planilha)
             print('❌ Erro ao enviar a mensagem\n')
 

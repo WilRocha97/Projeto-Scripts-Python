@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import datetime
 import os
 
 from selenium import webdriver
@@ -60,6 +61,7 @@ def captura_link_email(driver):
     titulo = titulo.replace('-&nbsp;', '- ').replace(' &nbsp;', ' ').replace('&nbsp; ', ' ').replace('&nbsp;', ' ')
     
     print(titulo)
+    
     # Encontra o elemento do frame pelo nome ou índice
     frame = driver.find_element(by=By.ID, value='messageViewFrame')
     # frame = driver.find_element_by_index(0)
@@ -75,9 +77,8 @@ def captura_link_email(driver):
         print(cnpj_limpo)
     except:
         try:
-            print(driver.page_source)
             # pega cnpj da empresa que vai receber a mensagem
-            cnpj = re.compile(r'da empresa (\d.+) ').search(driver.page_source).group(1)
+            cnpj = re.compile(r'CNPJ:</strong> (\d\d\d\d\d\d\d\d\d\d\d)&nbsp;').search(driver.page_source).group(1)
             cnpj_limpo = cnpj.replace('.', '').replace('/', '').replace('-', '')
             print(cnpj)
             print(cnpj_limpo)
@@ -187,6 +188,7 @@ def mover_email(driver, pasta=''):
 
 @_time_execution
 def run():
+    
     print('>>> Aguardando documentos...')
     
     # opções para fazer com que o chrome trabalhe em segundo plano (opcional)
@@ -202,6 +204,10 @@ def run():
     })
     
     while 0 < 1:
+        mes = datetime.datetime.now().month
+        ano = datetime.datetime.now().year
+        nome_planilha = f'Envia link {mes}-{ano}'
+        
         try:
             os.remove(os.path.join('ignore', 'controle', arquivo))
         except:
@@ -244,13 +250,13 @@ def run():
             if nao_envia:
                 time.sleep(1)
                 driver = mover_email(driver, 'nao_enviados')
-                _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji}', nome='Envia link')
+                _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji}', nome=nome_planilha)
                 print(f'❗ {titulo}\n')
             
             elif not numero:
                 time.sleep(1)
                 driver = mover_email(driver, 'nao_enviados')
-                _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji};Número não encontrado', nome='Envia link')
+                _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji};Número não encontrado', nome=nome_planilha)
                 print('❌ Número não encontrado\n')
                 
             else:
@@ -258,23 +264,23 @@ def run():
                 if resultado == 'erro':
                     time.sleep(1)
                     driver = mover_email(driver, 'nao_enviados')
-                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};Erro ao enviar a mensagem', nome='Envia link')
+                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};Erro ao enviar a mensagem', nome=nome_planilha)
                     print('❌ Erro ao enviar a mensagem\n')
                 elif resultado == 'ok':
                     time.sleep(1)
                     driver = mover_email(driver, 'enviados')
-                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};Mensagem enviada', nome='Envia link')
+                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};Mensagem enviada', nome=nome_planilha)
                     print('✔ Mensagem enviada\n')
                 else:
                     time.sleep(1)
                     driver = mover_email(driver, 'nao_enviados')
-                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};{resultado}', nome='Envia link')
+                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};{resultado}', nome=nome_planilha)
                     print(f'❌ {resultado}\n')
             
         except:
             time.sleep(1)
             driver = mover_email(driver, 'nao_enviados')
-            _escreve_relatorio_csv(f'x;x;x;{titulo_sem_emoji};Erro ao enviar a mensagem', nome='Envia link')
+            _escreve_relatorio_csv(f'x;x;x;{titulo_sem_emoji};Erro ao enviar a mensagem', nome=nome_planilha)
             print('❌ Erro ao enviar a mensagem\n')
 
         driver.close()

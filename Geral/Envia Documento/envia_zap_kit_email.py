@@ -12,8 +12,13 @@ from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dad
 from chrome_comum import _initialize_chrome
 from pyautogui_comum import _find_img, _click_img, _wait_img
 
-email = 'whatsapp@veigaepostal.com.br'
-senha = 'n38HX4l!v@Wjg1FU@2%s'
+dados = "V:\\Setor Robô\\Scripts Python\\_comum\\Dados e-mail.txt"
+f = open(dados, 'r', encoding='utf-8')
+user = f.read()
+user = user.split('/')
+
+email = user[0]
+senha = user[1]
 
 
 def localiza_path(driver, elemento):
@@ -69,7 +74,15 @@ def captura_link_email(driver):
         print(cnpj)
         print(cnpj_limpo)
     except:
-        return driver, titulo, 'x', 'x', 'x', 'x'
+        try:
+            print(driver.page_source)
+            # pega cnpj da empresa que vai receber a mensagem
+            cnpj = re.compile(r'da empresa (\d.+) ').search(driver.page_source).group(1)
+            cnpj_limpo = cnpj.replace('.', '').replace('/', '').replace('-', '')
+            print(cnpj)
+            print(cnpj_limpo)
+        except:
+            return driver, titulo, 'x', 'x', 'x', 'x'
         
     # pega a data de vencimento do documento que está no link da mensagem
     try:

@@ -247,36 +247,43 @@ def run():
             
             titulo_sem_emoji = _remove_emojis(titulo)
             
+            # se não tiver como enviar
             if nao_envia:
                 time.sleep(1)
                 driver = mover_email(driver, 'nao_enviados')
                 _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji}', nome=nome_planilha)
                 print(f'❗ {titulo}\n')
             
+            # se não encontrar o número da planilha
             elif not numero:
                 time.sleep(1)
                 driver = mover_email(driver, 'nao_enviados')
                 _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji};Número não encontrado', nome=nome_planilha)
                 print('❌ Número não encontrado\n')
-                
+            
+            # se tiver como enviar e encontrar o número na planilha
             else:
                 resultado = envia(numero, titulo, vencimento, link_mensagem)
+                # se der erro ao enviar
                 if resultado == 'erro':
                     time.sleep(1)
                     driver = mover_email(driver, 'nao_enviados')
                     _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};Erro ao enviar a mensagem', nome=nome_planilha)
                     print('❌ Erro ao enviar a mensagem\n')
+                # se conseguir enviar
                 elif resultado == 'ok':
                     time.sleep(1)
                     driver = mover_email(driver, 'enviados')
                     _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};Mensagem enviada', nome=nome_planilha)
                     print('✔ Mensagem enviada\n')
+                # se der algum erro específico ao enviar
                 else:
                     time.sleep(1)
                     driver = mover_email(driver, 'nao_enviados')
                     _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};{resultado}', nome=nome_planilha)
                     print(f'❌ {resultado}\n')
-            
+        
+        # se der erro em qualquer etapa
         except:
             time.sleep(1)
             driver = mover_email(driver, 'nao_enviados')

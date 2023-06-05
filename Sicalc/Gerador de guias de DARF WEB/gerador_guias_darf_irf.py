@@ -15,7 +15,7 @@ def login_sicalc(empresa):
     if _find_img('Chrome.png', conf=0.99):
         pass
     elif _find_img('ChromeAberto.png', conf=0.99):
-        _click_img('ChromeAberto.png', conf=0.99)
+        _click_img('ChromeAberto.png', conf=0.99, timeout=1)
     else:
         time.sleep(0.5)
         os.startfile(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
@@ -38,7 +38,7 @@ def login_sicalc(empresa):
     link = 'https://sicalc.receita.economia.gov.br/sicalc/rapido/contribuinte'
     
     _click_img('Maxi.png', conf=0.9, timeout=1)
-    p.click(1150, 51)
+    p.click(1100, 51)
     time.sleep(1)
     p.write(link.lower())
     time.sleep(1)

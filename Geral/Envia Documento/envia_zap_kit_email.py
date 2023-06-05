@@ -225,7 +225,7 @@ def run():
         while re.compile(r'<div class=\"no-items\" style=\"\">Sem itens para mostrar</div>').search(driver.page_source):
             time.sleep(1)
         
-        titulo_sem_emoji = 'x'
+        titulo = 'x'
         nao_envia = 'x'
         try:
             driver, titulo, cnpj, cnpj_limpo, vencimento, link_mensagem = captura_link_email(driver)
@@ -292,7 +292,7 @@ def run():
             time.sleep(1)
             print(driver.page_source)
             mover_email('nao_enviados')
-            _escreve_relatorio_csv(f'x;x;x;{titulo_sem_emoji};Erro ao enviar a mensagem', nome=nome_planilha)
+            _escreve_relatorio_csv(f'x;x;x;{titulo};Erro ao enviar a mensagem', nome=nome_planilha)
             print('❌ Erro ao enviar a mensagem\n')
 
         driver.close()

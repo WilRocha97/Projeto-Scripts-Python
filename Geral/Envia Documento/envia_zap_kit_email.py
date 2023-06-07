@@ -64,7 +64,7 @@ def captura_link_email(driver):
         time.sleep(1)
     
     titulo = re.compile(r'<div id=\"subject\">(.+)</div>').search(driver.page_source).group(1)
-    titulo = titulo.replace('-&nbsp;', '- ').replace(' &nbsp;', ' ').replace('&nbsp; ', ' ').replace('&nbsp;', ' ')
+    titulo = titulo.replace('-&nbsp;', '- ').replace(' &nbsp;', ' ').replace('&nbsp; ', ' ').replace('&nbsp;', ' ').replace('&amp;', '&')
     
     print(titulo)
     
@@ -241,21 +241,30 @@ def run():
                 nome = 'x'
             
             verifica_titulo = titulo.split('-')
+            
             emails_diferentes = ['Desconsideração de e', 'Solicitação de documentos ', 'Documentos pendentes de visualização ']
             for diferente in emails_diferentes:
                 if verifica_titulo[0] == diferente:
                     nao_envia = 'ok'
                     break
                 else:
-                    nao_envia = False
-            
+                    dias = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15',
+                            '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']
+                    for dia in dias:
+                        if verifica_titulo[0] == f'Tarefa Boleto sistema de Gestão vencimento dia {dia} concluída ':
+                            nao_envia = 'ok'
+                            break
+                        else:
+                            nao_envia = False
+                    break
+                    
             titulo_sem_emoji = _remove_emojis(titulo)
             
             # se não tiver como enviar
             if nao_envia:
                 time.sleep(1)
                 mover_email('nao_enviados')
-                _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji}', nome=nome_planilha)
+                _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo}', nome=nome_planilha)
                 print(f'❗ {titulo}\n')
             
             # se não encontrar o número da planilha

@@ -186,12 +186,14 @@ def salvar_guia(empresa, apuracao, vencimento, tipo):
     p.write(f'{nome.replace("/", " ")} - {cnpj} - {tipo} {cod} {apuracao.replace("/", "-")} - venc. {vencimento.replace("/", "-")}.pdf')
     time.sleep(0.5)
     
+    pasta_final = r'\\vpsrv03\Arq_Robo\Gerador de guias de DARF IRRF\Ref. ' + apuracao.replace("/", "-") + '\Guias'
+    os.makedirs(pasta_final, exist_ok=True)
     # Selecionar local
     p.press('tab', presses=6)
     time.sleep(1)
     p.press('enter')
     time.sleep(1)
-    pyperclip.copy('V:\Setor Robô\Scripts Python\Sicalc\Gerador de guias de DARF WEB\{}\{}'.format(e_dir, 'Guias'))
+    pyperclip.copy(pasta_final)
     p.hotkey('ctrl', 'v')
     time.sleep(1)
     p.press('enter')
@@ -208,7 +210,6 @@ def salvar_guia(empresa, apuracao, vencimento, tipo):
     
 @_time_execution
 def run():
-    os.makedirs('execução/Guias', exist_ok=True)
     # p.mouseInfo()
     tipo = p.confirm(title='Script incrível', text='Qual tipo da guia?', buttons=('DARF IRRF', 'DARF DP'))
     apuracao = p.prompt(title='Script incrível', text='Qual o período de apuração?', default='00/0000')

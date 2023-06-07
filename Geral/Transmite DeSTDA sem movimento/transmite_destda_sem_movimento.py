@@ -228,25 +228,30 @@ def transmitir(empresa, comp):
     _click_img('salvar_recibo.png', conf=0.9)
 
     _wait_img('salvar_como.png', conf=0.9, timeout=-1)
-    time.sleep(1)
+    time.sleep(2)
+    
+    _click_img('insere_nome.png', conf=0.9)
+    _click_img('insere_nome_2.png', conf=0.9, timeout=2)
 
     copy(f'Recibo de entrega SN - {mes}-{ano} - {cnpj}')
+    copy(f'Recibo de entrega SN - {mes}-{ano} - {cnpj}')
+    copy(f'Recibo de entrega SN - {mes}-{ano} - {cnpj}')
     p.hotkey('ctrl', 'v')
-    time.sleep(0.5)
+    time.sleep(2)
 
     # Selecionar local
     p.press('tab', presses=6)
-    time.sleep(0.5)
+    time.sleep(1)
     p.press('enter')
-    time.sleep(0.5)
+    time.sleep(1)
     
     os.makedirs(r'V:\Setor Robô\Scripts Python\Geral\Transmite DeSTDA sem movimento\execução\Recibos', exist_ok=True)
     copy('V:\Setor Robô\Scripts Python\Geral\Transmite DeSTDA sem movimento\execução\Recibos')
     p.hotkey('ctrl', 'v')
-    time.sleep(0.5)
+    time.sleep(1)
     
     p.press('enter')
-    time.sleep(0.5)
+    time.sleep(1)
     p.hotkey('alt', 'l')
     time.sleep(1)
     

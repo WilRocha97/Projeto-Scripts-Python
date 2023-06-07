@@ -25,7 +25,7 @@ def main():
             data = item.dt
         cpf = ''.join([x for x in str(item.CPF) if x.isdigit()])
         cpf = cpf.rjust(11, '0')
-        url = f'http://ws.hubdodesenvolvedor.com.br/v2/cpf/?cpf={cpf}&data={data}&token=8069395DeIFwyYJkP14569048&ignore_db'
+        url = f'http://ws.hubdodesenvolvedor.com.br/v2/cpf/?cpf={cpf}&data={data}&token=127243300ATsRJGZvWi229733920&ignore_db'
         urls[cpf] = url
 
     #urls = {

@@ -20,20 +20,25 @@ def abre_declaracao(documentos, arquivo):
     
     time.sleep(2)
     # insere o caminho do arquivo que será importado
-    caminho_arquivo = str(os.path.join(documentos, arquivo))
-    pyperclip.copy(caminho_arquivo)
-    p.hotkey('ctrl', 'v')
+    erro = 'sim'
+    while erro == 'sim':
+        try:
+            caminho_arquivo = str(os.path.join(documentos, arquivo))
+            pyperclip.copy(caminho_arquivo)
+            p.hotkey('ctrl', 'v')
+            erro = 'não'
+        except:
+            erro = 'sim'
+    
     time.sleep(1)
     
     p.press('enter')
-    time.sleep(1)
-    
     # enquanto o arquivo não importar verifica se já existe o mesmo arquivo importado, se sim, confirma a reimportação
     while not _find_img('restaurou_sucesso.png', conf=0.9):
         if _find_img('ja_existe_declaracao.png', conf=0.9):
             p.hotkey('alt', 's')
         
-        if _find_img('corrompido.png', conf=0.9):
+        if _find_img('corrompido.png', conf=0.9) or _find_img('corrompido_2.png', conf=0.9):
             p.press('enter')
             return False, 'Erro na importação da Declaração. Este arquivo está corrompido', caminho_arquivo
     
@@ -121,8 +126,14 @@ def salvar_pdf(arquivo, andamentos):
     nome_pdf = None
     
     while not nome_pdf:
-        p.hotkey('ctrl', 'c')
-        nome_pdf = pyperclip.paste()
+        erro = 'sim'
+        while erro == 'sim':
+            try:
+                p.hotkey('ctrl', 'c')
+                nome_pdf = pyperclip.paste()
+                erro = 'não'
+            except:
+                erro = 'sim'
     
     print(nome_pdf)
     p.press('enter')

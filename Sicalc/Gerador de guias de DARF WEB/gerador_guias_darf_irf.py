@@ -131,10 +131,17 @@ def gerar(empresa, apuracao):
     p.write(apuracao)
     time.sleep(1)
     p.press('tab', presses=2, interval=1)
-    time.sleep(1)
-    p.hotkey('ctrl', 'c')
-    p.hotkey('ctrl', 'c')
-    vencimento = pyperclip.paste()
+    
+    erro = 'sim'
+    while erro == 'sim':
+        try:
+            time.sleep(1)
+            p.hotkey('ctrl', 'c')
+            p.hotkey('ctrl', 'c')
+            vencimento = pyperclip.paste()
+            erro = 'não'
+        except:
+            erro = 'sim'
     time.sleep(1)
     p.press('tab')
     time.sleep(1)
@@ -193,8 +200,16 @@ def salvar_guia(empresa, apuracao, vencimento, tipo):
     time.sleep(1)
     p.press('enter')
     time.sleep(1)
-    pyperclip.copy(pasta_final)
-    p.hotkey('ctrl', 'v')
+    
+    erro = 'sim'
+    while erro == 'sim':
+        try:
+            pyperclip.copy(pasta_final)
+            p.hotkey('ctrl', 'v')
+            erro = 'não'
+        except:
+            erro = 'sim'
+            
     time.sleep(1)
     p.press('enter')
     time.sleep(1)

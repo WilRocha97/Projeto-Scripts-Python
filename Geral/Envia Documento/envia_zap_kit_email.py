@@ -13,6 +13,7 @@ from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dad
 from chrome_comum import _initialize_chrome
 from pyautogui_comum import _find_img, _click_img, _wait_img
 
+e_dir = Path('//vpsrv03/Arq_Robo/Envia WP por e-mail/Execução')
 dados = "V:\\Setor Robô\\Scripts Python\\_comum\\Dados e-mail.txt"
 f = open(dados, 'r', encoding='utf-8')
 user = f.read()
@@ -123,7 +124,7 @@ def verifica_o_numero(cnpj):
         # Definir o nome das colunas
         colunas = ['cnpj', 'numero', 'nome']
         # Localiza a planilha
-        caminho = Path('V:/Setor Robô/Scripts Python/Geral/Envia Documento/ignore/Dados.csv')
+        caminho = Path('//vpsrv03/Arq_Robo/Envia WP por e-mail/Dados/Dados.csv')
         # Abrir a planilha
         lista = pd.read_csv(caminho, header=None, names=colunas, sep=';', encoding='latin-1')
         # Definir o index da planilha
@@ -264,14 +265,14 @@ def run():
             if nao_envia:
                 time.sleep(1)
                 mover_email('nao_enviados')
-                _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo}', nome=nome_planilha)
+                _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo}', nome=nome_planilha, local=e_dir)
                 print(f'❗ {titulo}\n')
             
             # se não encontrar o número da planilha
             elif not numero:
                 time.sleep(1)
                 mover_email('nao_enviados')
-                _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji};Número não encontrado', nome=nome_planilha)
+                _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji};Número não encontrado', nome=nome_planilha + ' erros', local=e_dir)
                 print('❌ Número não encontrado\n')
             
             # se tiver como enviar e encontrar o número na planilha
@@ -281,19 +282,19 @@ def run():
                 if resultado == 'erro':
                     time.sleep(1)
                     mover_email('nao_enviados')
-                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};Erro ao enviar a mensagem', nome=nome_planilha)
+                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};Erro ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
                     print('❌ Erro ao enviar a mensagem\n')
                 # se conseguir enviar
                 elif resultado == 'ok':
                     time.sleep(1)
                     mover_email('enviados')
-                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};Mensagem enviada', nome=nome_planilha)
+                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};Mensagem enviada', nome=nome_planilha, local=e_dir)
                     print('✔ Mensagem enviada\n')
                 # se der algum erro específico ao enviar
                 else:
                     time.sleep(1)
                     mover_email('nao_enviados')
-                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};{resultado}', nome=nome_planilha)
+                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};{resultado}', nome=nome_planilha + ' erros', local=e_dir)
                     print(f'❌ {resultado}\n')
         
         # se der erro em qualquer etapa
@@ -301,7 +302,7 @@ def run():
             time.sleep(1)
             print(driver.page_source)
             mover_email('nao_enviados')
-            _escreve_relatorio_csv(f'x;x;x;{titulo};Erro ao enviar a mensagem', nome=nome_planilha)
+            _escreve_relatorio_csv(f'x;x;x;{titulo};Erro ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
             print('❌ Erro ao enviar a mensagem\n')
 
         driver.close()

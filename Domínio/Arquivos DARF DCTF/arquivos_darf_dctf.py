@@ -59,6 +59,16 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
             return verificacao, nome_arquivo
         if _find_img('outros_dados_2.png', conf=0.9):
             break
+            
+        if _find_img('data_inicio.png', conf=0.9):
+            _click_img('data_inicio.png', conf=0.9)
+            p.press('enter')
+            _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Competência informada menor que a data de início efetivo das atividades.']), nome=andamento)
+            print('❗ Competência informada menor que a data de início efetivo das atividades.')
+            time.sleep(1)
+            p.press('esc', presses=5)
+            return 'ok', nome_arquivo
+        
         time.sleep(2)
 
     p.click(1214, 488)
@@ -90,7 +100,7 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
         time.sleep(2)
 
     p.hotkey('alt', 'x')
-
+    print('>>> Gerando arquivo')
     while _find_img('dctf_mensal.png', conf=0.9) or _find_img('dctf_mensal_2.png', conf=0.9):
         verificacao = _verifica_dominio()
         if verificacao != 'continue':
@@ -154,7 +164,8 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
             time.sleep(1)
             p.press('esc', presses=5)
             return 'arquivo gerado', nome_arquivo
-
+        
+    print('❗ Erro inesperado')
     p.press('esc', presses=5)
     time.sleep(3)
     return 'ok', nome_arquivo

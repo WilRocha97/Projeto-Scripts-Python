@@ -175,14 +175,21 @@ def salvar(consulta_tipo, andamento, empresa, pasta):
     
     # Selecionar local
     p.press('tab', presses=6)
-    time.sleep(0.5)
+    time.sleep(1)
     p.press('enter')
-    time.sleep(0.5)
-    pyperclip.copy('V:\Setor Robô\Scripts Python\Receita Federal\Consulta Certidão Negativa\execução\Certidões CPF')
-    p.hotkey('ctrl', 'v')
-    time.sleep(0.5)
+    time.sleep(1)
+    erro = 'sim'
+    while erro == 'sim':
+        try:
+            pyperclip.copy('V:\Setor Robô\Scripts Python\Receita Federal\Consulta Certidão Negativa\execução\Certidões CPF')
+            p.hotkey('ctrl', 'v')
+            time.sleep(1)
+            erro = 'não'
+        except:
+            print('Erro no clipboard...')
+            erro = 'sim'
     p.press('enter')
-    time.sleep(0.5)
+    time.sleep(1)
     
     p.hotkey('alt', 'l')
     time.sleep(2)

@@ -45,9 +45,16 @@ def configura(empresa, comp):
     
     p.write(nome)
     time.sleep(5)
-    p.hotkey('ctrl', 'a')
-    p.hotkey('ctrl', 'c')
-    text = pyperclip.paste()
+    
+    erro = 'sim'
+    while erro == 'sim':
+        try:
+            p.hotkey('ctrl', 'a')
+            p.hotkey('ctrl', 'c')
+            text = pyperclip.paste()
+            erro = 'não'
+        except:
+            erro = 'sim'
     print(text)
     
     if text != nome:

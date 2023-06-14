@@ -282,7 +282,10 @@ def run():
                 if resultado == 'erro':
                     time.sleep(1)
                     mover_email('nao_enviados')
-                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};Erro ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
+                    try:
+                        _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo};Erro ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
+                    except:
+                        _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};Erro ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
                     print('❌ Erro ao enviar a mensagem\n')
                 # se conseguir enviar
                 elif resultado == 'ok':
@@ -294,7 +297,10 @@ def run():
                 else:
                     time.sleep(1)
                     mover_email('nao_enviados')
-                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};{resultado}', nome=nome_planilha + ' erros', local=e_dir)
+                    try:
+                        _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo};{resultado}', nome=nome_planilha + ' erros', local=e_dir)
+                    except:
+                        _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};{resultado}', nome=nome_planilha + ' erros', local=e_dir)
                     print(f'❌ {resultado}\n')
         
         # se der erro em qualquer etapa
@@ -302,7 +308,10 @@ def run():
             time.sleep(1)
             print(driver.page_source)
             mover_email('nao_enviados')
-            _escreve_relatorio_csv(f'x;x;x;{titulo};Erro ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
+            try:
+                _escreve_relatorio_csv(f'x;x;x;{titulo};Erro ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
+            except:
+                _escreve_relatorio_csv(f'x;x;x;{titulo_sem_emoji};Erro ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
             print('❌ Erro ao enviar a mensagem\n')
 
         driver.close()

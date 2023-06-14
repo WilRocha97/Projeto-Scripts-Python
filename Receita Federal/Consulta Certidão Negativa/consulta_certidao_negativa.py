@@ -225,7 +225,7 @@ def consulta(consulta_tipo, empresa):
     click_img('Maxi.png', conf=0.9, timeout=1)
     # espera o site abrir e recarrega caso demore
     while not find_img(f'Informe{consulta_tipo}.png', conf=0.9):
-        p.click(1150, 51)
+        p.click(1110, 51)
         time.sleep(1)
         p.write(link.lower())
         time.sleep(1)

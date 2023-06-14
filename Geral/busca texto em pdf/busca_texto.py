@@ -197,15 +197,15 @@ for file in os.listdir(documentos):
     
     for page in doc:
         texto = page.get_text('text', flags=1 + 2 + 8)
-        #print(texto)
-        #time.sleep(55)
+        # print(texto)
+        # time.sleep(55)
         # regex_termo = re.compile(r'{}'.format(cnpj))
         # regex_termo = re.compile(r'Não foram detectadas pendências/exigibilidades suspensas nos controles da Receita Federal e da Procuradoria-Geral da Fazenda Nacional.')
         # regex_termo = re.compile(r'Não foram detectadas pendências/exigibilidades suspensas para esse contribuinte nos controles da Procuradoria-Geral da Fazenda Nacional.')
         # regex_termo = re.compile(r'CP-SEGUR.\n11/2021')
         # regex_termo = re.compile(r'GIA ST-1/1')
         # regex_termo = re.compile(r'GIA-1/1')
-        regex_termo = re.compile(r'GIA')
+        regex_termo = re.compile(r'14/06/2023 ')
         # regex_termo = re.compile(r'SIMPLES NAC.\n05/2021')
         resultado = regex_termo.search(texto)
         

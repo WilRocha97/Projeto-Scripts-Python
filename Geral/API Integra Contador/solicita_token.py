@@ -76,8 +76,11 @@ def solicita_token(usuario_b64, certificado, senha):
 
 
 def run():
-    consumerKey = p.password(text='Informe a consumerKey:')
-    consumerSecret = p.password(text='Informe a consumerSecret:')
+    # consumerKey = p.password(text='Informe a consumerKey:')
+    # consumerSecret = p.password(text='Informe a consumerSecret:')
+    consumerKey = ''
+    consumerSecret = ''
+    
     usuario = consumerKey + ":" + consumerSecret
     usuario_b64 = converter_base64(usuario)
     

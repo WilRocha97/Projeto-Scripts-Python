@@ -2,15 +2,38 @@
 from os import listdir, path
 from time import sleep
 from tkinter.filedialog import askdirectory, Tk
-import pyautogui as p
+import cv2, pyautogui as p
 from datetime import datetime, date
-import cv2
 
 
 # 'auto-py-to-exe': para criar o executável e 'Inno setup Compiler': para criar o instalador
 
 # para cada imagem na pasta selecionada, procura na tela se existe aquele usuário selecionado, se tiver,
 # pega a coordenada do centro da imagem referente e faz um cálculo para clicar na área do check para desmarcar o usuário
+
+def captura_dados():
+    f = open('Dados.txt', 'r', encoding='utf-8')
+    f = f.read().split('\n')
+    usuario = f[0][8:].replace(' ', '')
+    senha = f[1][6:].replace(' ', '')
+    timer = f[2][17:].replace(' ', '')
+    
+    hora = f[3][8:].replace(' ', '')
+    hora_iniciar = hora.split(':')
+    inicio_horario = datetime.now().replace(hour=int(hora_iniciar[0]), minute=int(hora_iniciar[1]), second=0, microsecond=0)
+    
+    hora = f[4][7:].replace(' ', '')
+    hora_finalizar = hora.split(':')
+    fim_horario = datetime.now().replace(hour=int(hora_finalizar[0]), minute=int(hora_finalizar[1]), second=0, microsecond=0)
+    
+    dados_erros = False
+    if not usuario:
+        dados_erros = True
+    if not senha:
+        dados_erros = True
+    
+    return timer, inicio_horario, fim_horario, dados_erros
+
 
 def localiza_autorizados():
     # aguarda alguma subtela que possa estar aberta
@@ -62,17 +85,14 @@ def configura_parametro(timer):
 
 # se for entre segunda ou sexta-feira, verifica o horário limite para ser encerrado
 def horario():
-    if hora == ['0']:
-        return False
-    hoje = date.today()  # data de hoje
-    if not hoje.weekday() in (5, 6):
-        if datetime.now() >= datetime.now().replace(hour=int(hora[0]), minute=int(hora[1]), second=0, microsecond=0):
-            if datetime.now() <= datetime.now().replace(hour=int(hora[0]), minute=int(hora[1]), second=59, microsecond=999999):
-                return True
+    if inicio_horario != 0:
+        while True:
+            now = datetime.datetime.now().time()
+            if inicio_horario <= now <= fim_horario:
+                break
             else:
-                return False
-    
-    return False
+                print("Aguardando horário personalizado...")
+                sleep(60)  # Espera por 1 minuto antes de verificar novamente
 
 
 def run():
@@ -104,9 +124,7 @@ def run():
         localiza_autorizados()
     else:
         while not p.locateOnScreen(path.join('imgs', 'seta_baixo_limite.png'), confidence=0.9):
-            if horario():
-                horario_limite = 'Hora_limite'
-                return horario_limite
+            horario()
                 
             # aguarda alguma subtela que possa estar aberta
             if not aguarda_sub_telas():
@@ -165,23 +183,9 @@ def run():
 
 
 if __name__ == '__main__':
-    
     # tenta pegar o usuário e a senha de um arquivo txt, se não conseguir marca um erro na variável e encerra o robô
     try:
-        f = open('Dados.txt', 'r', encoding='utf-8')
-        f = f.read().split('\n')
-        usuario = f[0][8:].replace(' ', '')
-        senha = f[1][6:].replace(' ', '')
-        timer = f[2][17:].replace(' ', '')
-        hora = f[3][12:].replace(' ', '')
-        hora = hora.split(':')
-        
-        dados_erros = False
-        if not usuario:
-            dados_erros = True
-        if not senha:
-            dados_erros = True
-        
+        timer, inicio_horario, fim_horario, dados_erros = captura_dados()
     except:
         dados_erros = True
     
@@ -197,9 +201,7 @@ if __name__ == '__main__':
             while not p.locateOnScreen(path.join('imgs', 'conexoes.png'), confidence=0.9):
                 sleep(1)
                 
-                if horario():
-                    horario_limite = True
-                    break
+                horario()
                 
                 tempo += 1
                 if tempo >= 60:
@@ -214,36 +216,25 @@ if __name__ == '__main__':
             
             # enquanto a tela estiver aberta repete o ciclo, se após 30 segundos não encontrar a tela, o robô é encerrado
             while p.locateOnScreen(path.join('imgs', 'conexoes.png'), confidence=0.9):
-                if horario():
-                    horario_limite = True
-                    break
+                horario()
                     
                 situacao = run()
                 if not situacao:
                     break
-                if situacao == 'Hora_limite':
-                    horario_limite = True
-                    break
-                    
-                if horario():
-                    horario_limite = True
-                    break
+                
+                horario()
                     
                 timer = 1
                 while timer < 30:
                     sleep(1)
                     timer += 1
-                    if horario():
-                        horario_limite = True
-                        break
+                    horario()
         
         # alerta de robô finalizado
         if not documentos:
             p.alert(text=f'Diretório dos usuários vazio, robô finalizado.')
         elif tempo == 'inativo':
             p.alert(text=f'Tela de conexões com a banco de dados não encontrada, robô finalizado.')
-        elif horario_limite:
-            p.alert(text=f'Horário limite atingido, robô finalizado.')
         else:
             p.alert(text=f'Robô finalizado.')
     

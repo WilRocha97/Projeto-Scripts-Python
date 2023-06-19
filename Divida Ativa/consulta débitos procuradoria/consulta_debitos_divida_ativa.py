@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-import time
-import re
+import time, re, os
 from bs4 import BeautifulSoup
 from requests import Session
 from xhtml2pdf import pisa
@@ -12,7 +11,6 @@ path.append(r'..\..\_comum')
 from captcha_comum import _solve_recaptcha
 from chrome_comum import _initialize_chrome
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
-import os
 
 
 def verifica_debitos(pagina):

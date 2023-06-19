@@ -6,15 +6,15 @@ from tkinter.filedialog import askopenfilename, Tk
 e_dir = Path('Execução')
 
 
-def escreve_token(texto, local=e_dir, encode='latin-1'):
+def escreve_doc(texto, nome='doc', local=e_dir, encode='latin-1'):
     if local == e_dir:
         local = Path(local)
     os.makedirs(local, exist_ok=True)
 
     try:
-        f = open(str(local / "token.txt"), 'a', encoding=encode)
+        f = open(str(local / f"{nome}.txt"), 'a', encoding=encode)
     except:
-        f = open(str(local / "token - auxiliar.txt"), 'a', encoding=encode)
+        f = open(str(local / f"{nome} - auxiliar.txt"), 'a', encoding=encode)
 
     f.write(texto)
     f.close()
@@ -34,8 +34,8 @@ def ask_for_file():
     return file if file else False
 
 
-# converte as credenciais para base64
 def converter_base64(usuario):
+    # converte as credenciais para base64
     return base64.b64encode(usuario.encode("utf8")).decode("utf8")
     
 
@@ -53,9 +53,12 @@ def solicita_token(usuario_b64, certificado, senha):
                                   pkcs12_filename=certificado,
                                   pkcs12_password=senha)
     
-    resposta = json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True)
-    print(pagina.status_code)
-    print(resposta)
+    resposta_string_json = json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True)
+    resposta = pagina.json()
+    
+    escreve_doc(pagina.status_code, nome='status_code')
+    escreve_doc(resposta, nome='resposta_jason')
+    escreve_doc(resposta_string_json, nome='string_json')
     
     #
     # Output:
@@ -85,7 +88,7 @@ def run():
     
     jwt_token, access_token = solicita_token(usuario_b64, certificado, senha)
     tokens = jwt_token + ' | ' + access_token
-    escreve_token(tokens)
+    escreve_doc(tokens, nome='tokens')
     
 
 if __name__ == '__main__':

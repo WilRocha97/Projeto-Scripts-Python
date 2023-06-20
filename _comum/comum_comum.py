@@ -149,6 +149,17 @@ _escreve_relatorio_csv = escreve_relatorio_csv
 def escreve_header_csv(texto, nome='resumo', local=e_dir, encode='latin-1'):
     os.makedirs(local, exist_ok=True)
     
+    root = Tk()
+    root.withdraw()
+    root.wm_attributes('-topmost', 1)
+    
+    file = askopenfilename(
+        title=title,
+        filetypes=filetypes,
+        initialdir=initialdir
+    )
+    
+    return file if file else False
     with open(str(local / f"{nome}.csv"), 'r', encoding=encode) as f:
         conteudo = f.read()
 
@@ -159,17 +170,7 @@ _escreve_header_csv = escreve_header_csv
 
 # wrapper para askopenfilename
 def ask_for_file(title='Abrir arquivo', filetypes='*', initialdir=os.getcwd()):
-    root = Tk()
-    root.withdraw()
-    root.wm_attributes('-topmost', 1)
 
-    file = askopenfilename(
-        title=title,
-        filetypes=filetypes,
-        initialdir=initialdir
-    )
-    
-    return file if file else False
 
 
 # wrapper para askdirectory

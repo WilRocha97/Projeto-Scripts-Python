@@ -3,7 +3,7 @@ import requests_pkcs12, os, requests, time, base64, json, io, chardet, pyautogui
 from pathlib import Path
 from tkinter.filedialog import askopenfilename, Tk
 
-e_dir = Path('Execução')
+e_dir = Path('T:\ROBO\Teste\Execução')
 
 
 def escreve_doc(texto, nome='doc', local=e_dir, encode='latin-1'):
@@ -76,10 +76,8 @@ def solicita_token(usuario_b64, certificado, senha):
 
 
 def run():
-    # consumerKey = p.password(text='Informe a consumerKey:')
-    # consumerSecret = p.password(text='Informe a consumerSecret:')
-    consumerKey = ''
-    consumerSecret = ''
+    consumerKey = p.password(text='Informe a consumerKey:')
+    consumerSecret = p.password(text='Informe a consumerSecret:')
     
     usuario = consumerKey + ":" + consumerSecret
     usuario_b64 = converter_base64(usuario)

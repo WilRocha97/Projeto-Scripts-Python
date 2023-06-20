@@ -1,30 +1,107 @@
 # -*- coding: utf-8 -*-
-import requests_pkcs12, requests, time, base64, json, io
-from sys import path
-path.append(r'..\..\_comum')
-from comum_comum import _indice, _escreve_relatorio_csv, _escreve_header_csv, _time_execution, _open_lista_dados, _where_to_start
+import requests_pkcs12, os, requests, time, base64, json, io, chardet, OpenSSL.crypto, contextlib, tempfile, pyautogui as p
+from pathlib import Path
+from functools import wraps
+from tkinter.filedialog import askopenfilename, Tk
 
-dados = "Dados\\Dados Integra Contador.txt"
-f = open(dados, 'r', encoding='utf-8')
-user = f.read()
-user = user.split('/')
-consumerKey = user[0]
-consumerSecret = user[1]
-usuario = consumerKey + ":" + consumerSecret
+e_dir = Path('T:\ROBO\Teste\Execução')
 
-# arquivo exportado em formato PFX ou P12 com a chave privada e senha
-# certificado eCNPJ ICP Brasil do contratante na loja Serpro
-certificado = "Dados\\" + user[2]
-senha = user[3]
 
-# converte as credenciais para base64
-def converter_base64():
+def open_lista_dados(i_dir='ignore', encode='latin-1'):
+    ftypes = [('Plain text files', '*.txt *.csv')]
+
+    file = ask_for_file(filetypes=ftypes, initialdir=i_dir)
+    if not file:
+        return False
+
+    try:
+        with open(file, 'r', encoding=encode) as f:
+            dados = f.readlines()
+    except Exception as e:
+        alert(title='Mensagem erro', text=f'Não pode abrir arquivo\n{str(e)}')
+        return False
+
+    print('>>> usando dados de ' + file.split('/')[-1])
+    return list(map(lambda x: tuple(x.replace('\n', '').split(';')), dados))
+
+
+def escreve_relatorio_csv(texto, nome='resumo', local=e_dir, end='\n', encode='latin-1'):
+    if local == e_dir:
+        local = Path(local)
+    os.makedirs(local, exist_ok=True)
+
+    try:
+        f = open(str(local / f"{nome}.csv"), 'a', encoding=encode)
+    except:
+        f = open(str(local / f"{nome}-auxiliar.csv"), 'a', encoding=encode)
+
+    f.write(texto + end)
+    f.close()
+
+
+def where_to_start(idents, encode='latin-1'):
+    title = 'Execucao anterior'
+    text = 'Deseja continuar execucao anterior?'
+    
+    res = confirm(title=title, text=text, buttons=('sim', 'não'))
+    if not res:
+        return None
+    if res == 'não':
+        return 0
+    
+    ftypes = [('Plain text files', '*.txt *.csv')]
+    file = ask_for_file(filetypes=ftypes)
+    if not file:
+        return None
+    
+    try:
+        with open(file, 'r', encoding=encode) as f:
+            dados = f.readlines()
+    except Exception as e:
+        alert(title='Mensagem erro', text=f'Não pode abrir arquivo\n{str(e)}')
+        return None
+    
+    try:
+        elem = dados[-1].split(';')[0]
+        return idents.index(elem) + 1
+    except ValueError:
+        return 0
+    
+    
+def escreve_doc(texto, nome='doc', local=e_dir, encode='latin-1'):
+    if local == e_dir:
+        local = Path(local)
+    os.makedirs(local, exist_ok=True)
+    
+    try:
+        f = open(str(local / f"{nome}.txt"), 'a', encoding=encode)
+    except:
+        f = open(str(local / f"{nome} - auxiliar.txt"), 'a', encoding=encode)
+    
+    f.write(texto)
+    f.close()
+
+
+def ask_for_file(title='Abrir arquivo', filetypes='*', initialdir=os.getcwd()):
+    root = Tk()
+    root.withdraw()
+    root.wm_attributes('-topmost', 1)
+    
+    file = askopenfilename(
+        title=title,
+        filetypes=filetypes,
+        initialdir=initialdir
+    )
+    
+    return file if file else False
+
+
+def converter_base64(usuario):
+    # converte as credenciais para base64
     return base64.b64encode(usuario.encode("utf8")).decode("utf8")
-    
 
-def token():
-    usuario_b64 = converter_base64()
-    
+
+def solicita_token(usuario_b64, certificado, senha):
     headers = {
         "Authorization": "Basic " + usuario_b64,
         "role-type": "TERCEIROS",
@@ -38,8 +115,12 @@ def token():
                                   pkcs12_filename=certificado,
                                   pkcs12_password=senha)
     
-    print(pagina.status_code)
-    print(json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True))
+    resposta_string_json = json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True)
+    resposta = pagina.json()
+    
+    escreve_doc(pagina.status_code, nome='status_code')
+    escreve_doc(resposta, nome='resposta_jason')
+    escreve_doc(resposta_string_json, nome='string_json')
     
     #
     # Output:
@@ -53,6 +134,7 @@ def token():
     #       "token_type": "Bearer"
     #   }
     #
+    return resposta['jwt_token'], resposta['access_token']
     
     
 def solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, access_token):
@@ -83,9 +165,15 @@ def solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, ac
     
     pagina = requests.post('https://gateway.apiserpro.serpro.gov.br/integra-contador/v1/Emitir', data=body, headers=header)
     
-    print(pagina)
-    print(json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True))
+    resposta = pagina.json()
+    resposta_string_json = json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True)
     
+    escreve_doc(resposta, nome='resposta_jason_guia')
+    escreve_doc(resposta_string_json, nome='string_json_guia')
+    escreve_doc(resposta['dados'], nome='pdf_base_64')
+    
+    return resposta['dados'].split('"')[3], resposta['mensagens']
+
     
 def cria_pdf(pdf_base64, cnpj_empresa, nome_empresa):
     pdf_bytes = base64.b64decode(pdf_base64)
@@ -94,26 +182,39 @@ def cria_pdf(pdf_base64, cnpj_empresa, nome_empresa):
         file.write(pdf_bytes)
 
 
-@_time_execution
 def run():
-    print(user[0], user[1], user[2], user[3])
+    cnpj_contratante = p.prompt(text='Informe o CNPJ do contratante do serviço SERPRO')
+    cpf_certificado = p.prompt(text='Informe o CPF do certificado digital usado pera contratar o serviço SERPRO')
+    consumerKey = p.password(text='Informe a consumerKey:')
+    consumerSecret = p.password(text='Informe a consumerSecret:')
+    
+    usuario = consumerKey + ":" + consumerSecret
+    usuario_b64 = converter_base64(usuario)
+    
+    senha = p.password(text='Informe a senha do certificado digital:')
+    
+    # pergunta qual o arquivo do certificado
+    certificado = ask_for_file()
+    
+    jwt_token, access_token = solicita_token(usuario_b64, certificado, senha)
+    tokens = jwt_token + ' | ' + access_token
+    escreve_doc(tokens, nome='tokens')
+    
     # abrir a planilha de dados
-    empresas = _open_lista_dados()
+    empresas = open_lista_dados()
     if not empresas:
         return False
 
     # configurar um indice para a planilha de dados
-    index = _where_to_start(tuple(i[0] for i in empresas))
+    index = where_to_start(tuple(i[0] for i in empresas))
     if index is None:
         return False
 
-    total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         cnpj_empresa, nome_empresa = empresa
-        _indice(count, total_empresas, empresa)
-        jwt_token, access_token = solicita_token()
-        pdf_base64 = solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, access_token)
+        pdf_base64, mensagens = solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, access_token)
         cria_pdf(pdf_base64, cnpj_empresa, nome_empresa)
+        escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens}')
         
 
 if __name__ == '__main__':

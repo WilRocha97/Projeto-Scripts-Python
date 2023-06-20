@@ -32,7 +32,7 @@ def run():
             '3': '',
             '8': guias_sitac.run,
             '10': '',
-            '11': guias_sinticom.run,
+            '11': guias_sinticom.run,            #ok
             '16': guias_sindeepres,
             '17': '',
             '19': '',
@@ -41,7 +41,7 @@ def run():
             '23': '',
             '25': '',
             '28': guias_sindpd.run,
-            '39': guias_sinthojur.run,
+            '39': guias_sinthojur.run,           #ok
             '49': '',
             '58': '',
             '65': '',

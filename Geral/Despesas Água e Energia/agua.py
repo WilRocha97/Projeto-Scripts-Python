@@ -6,11 +6,13 @@ path.append(r'..\..\_comum')
 from comum_comum import _indice, _time_execution, _escreve_header_csv, _escreve_relatorio_csv, _open_lista_dados, _where_to_start
 
 
-def consulta(ref, cod_ae, nome, matricula):
+def consulta(ref, nome_planilha, cod_ae, nome, matricula):
     url = 'https://valinhos.strategos.com.br:9096/api/agenciavirtual/faturasPagas?ftMatricula=' + str(matricula[:-1])
     pagina = requests.get(url)
+    comp = ''
     for fatura in pagina.json():
         referencia = fatura['vwFtReferenciaMesAnoFormatado']
+        ref_ano = referencia.split('/')[1]
         vencimento = fatura['vwFtVencimentoFormatado']
         emissao = fatura['vwFtEmissaoFormatado']
         valor = fatura['vwFtValorTotal']
@@ -18,17 +20,26 @@ def consulta(ref, cod_ae, nome, matricula):
         local_pag = fatura['vwFtLocalPagamento']
         
         if str(referencia) == str(ref):
-            _escreve_relatorio_csv(f'{cod_ae};{nome};{referencia};{vencimento};{emissao};{valor};{data_pag};{local_pag}', nome=nome)
+            _escreve_relatorio_csv(f'{cod_ae};{nome};{referencia};{vencimento};{emissao};{valor};{data_pag};{local_pag}', nome=nome_planilha)
             print(f'✔ {referencia};{vencimento};{emissao};{valor};{data_pag};{local_pag}')
             return True
+        
+        if str(ref_ano) == str(ref):
+            comp = 'anual'
+            _escreve_relatorio_csv(f'{cod_ae};{nome};{referencia};{vencimento};{emissao};{valor};{data_pag};{local_pag}', nome=nome_planilha)
+            print(f'✔ {referencia};{vencimento};{emissao};{valor};{data_pag};{local_pag}')
     
-    return False
+    if comp == '':
+        return False
+    if comp == 'anual':
+        return True
     
 
 @_time_execution
 def run():
-    ref = prompt(text='Informe a competência')
-    nome = 'Faturas DAEV pagas'
+    ref = prompt(text='Informe a competência (00/0000 para mês | 0000 para ano)')
+    ref_planilha = ref.replace('/', '-')
+    nome_planilha = f'Faturas DAEV pagas ref. {str(ref_planilha)}'
     # seleciona a lista de dados
     empresas = _open_lista_dados()
     
@@ -43,11 +54,11 @@ def run():
         cod_ae, nome, hidrometro, matricula, senha = empresa
         # printa o indice da lista
         _indice(count, total_empresas, empresa)
-        if not consulta(ref, cod_ae, nome, matricula):
-            _escreve_relatorio_csv(f'{cod_ae};{nome};Não encontrou fatura paga referente a {ref}' , nome=nome)
+        if not consulta(ref, nome_planilha, cod_ae, nome, matricula):
+            _escreve_relatorio_csv(f'{cod_ae};{nome};Não encontrou fatura paga referente a {ref}', nome=nome_planilha)
             print(f'❌ Não encontrou fatura paga referente a {ref}')
     
-    _escreve_header_csv('CÓDIGO AE;NOME;REFERENCIA;VENCIMENTO;EMISSÃO;VALOR;DATA DE PAGAMENTO;LOCAL DE PAGAMENTO', nome=nome)
+    _escreve_header_csv('CÓDIGO AE;NOME;REFERENCIA;VENCIMENTO;EMISSÃO;VALOR;DATA DE PAGAMENTO;LOCAL DE PAGAMENTO', nome=nome_planilha)
     
     
 if __name__ == '__main__':

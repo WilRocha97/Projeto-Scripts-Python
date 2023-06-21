@@ -172,7 +172,7 @@ def solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, ac
     escreve_doc(resposta_string_json, nome='string_json_guia')
     escreve_doc(resposta['dados'], nome='pdf_base_64')
     
-    return resposta['dados'].split('"')[3], resposta['mensagens']
+    return resposta['dados']['PDFByteArrayBase64'], resposta['mensagens'][0]['texto']
 
     
 def cria_pdf(pdf_base64, cnpj_empresa, nome_empresa):

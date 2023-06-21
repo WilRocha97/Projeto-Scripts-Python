@@ -80,9 +80,9 @@ def boleto_mei(empresa, andamentos):
         _click_img('chrome_aberto.png', conf=0.99)
     else:
         time.sleep(0.5)
-        _click_img('chrome_atalho.png', conf=0.9, clicks=2)
-        while not _find_img('google.png', conf=0.9, ):
-            time.sleep(5)
+        os.startfile(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
+        while not _find_img('google.png', conf=0.9):
+            time.sleep(1)
             p.moveTo(1163, 377)
             p.click()
 

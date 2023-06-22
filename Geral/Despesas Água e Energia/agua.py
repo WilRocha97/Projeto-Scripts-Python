@@ -8,10 +8,14 @@ from comum_comum import _indice, _time_execution, _escreve_header_csv, _escreve_
 
 def consulta(ref, nome_planilha, cod_ae, nome, matricula):
     url = 'https://valinhos.strategos.com.br:9096/api/agenciavirtual/faturasPagas?ftMatricula=' + str(matricula[:-1])
+    # fas um get na api usando o número da matrícula sem o último digito
     pagina = requests.get(url)
+    # usa a variável 'comp' para saber se é uma consulta anual ou mensal
     comp = ''
     for fatura in pagina.json():
+        # com o json capturado, pega as infos desejadas
         referencia = fatura['vwFtReferenciaMesAnoFormatado']
+        # separa a data de referência para usar caso a consulta seja anual
         ref_ano = referencia.split('/')[1]
         vencimento = fatura['vwFtVencimentoFormatado']
         emissao = fatura['vwFtEmissaoFormatado']

@@ -23,11 +23,13 @@ def consulta(ref, nome_planilha, cod_ae, nome, matricula):
         data_pag = fatura['vwFtDataPagamentoFormatado']
         local_pag = fatura['vwFtLocalPagamento']
         
+        # escreve se for consulta mensal e se encontrar alguma conta do mês procurado
         if str(referencia) == str(ref):
             _escreve_relatorio_csv(f'{cod_ae};{nome};{referencia};{vencimento};{emissao};{valor};{data_pag};{local_pag}', nome=nome_planilha)
             print(f'✔ {referencia};{vencimento};{emissao};{valor};{data_pag};{local_pag}')
             return True
         
+        # escreve se for consulta anual e todas as contas do ano procurado se existir
         if str(ref_ano) == str(ref):
             comp = 'anual'
             _escreve_relatorio_csv(f'{cod_ae};{nome};{referencia};{vencimento};{emissao};{valor};{data_pag};{local_pag}', nome=nome_planilha)

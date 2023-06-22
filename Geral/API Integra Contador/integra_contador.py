@@ -134,7 +134,10 @@ def solicita_token(usuario_b64, certificado, senha):
     #       "token_type": "Bearer"
     #   }
     #
-    return resposta['jwt_token'], resposta['access_token']
+    try:
+        return resposta['jwt_token'], resposta['access_token']
+    except:
+        return resposta['message'], resposta['description']
     
     
 def solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, access_token):

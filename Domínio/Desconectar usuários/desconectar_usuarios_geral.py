@@ -29,10 +29,12 @@ def captura_dados():
     dados_erros = False
     if not usuario:
         dados_erros = True
+        usuario = ''
     if not senha:
         dados_erros = True
+        senha = ''
     
-    return timer, inicio_horario, fim_horario, dados_erros
+    return timer, inicio_horario, fim_horario, dados_erros, usuario, senha
 
 
 def localiza_autorizados():
@@ -87,7 +89,15 @@ def configura_parametro(timer):
 def horario():
     if inicio_horario != 0:
         while True:
-            now = datetime.datetime.now().time()
+            
+            timer = 0
+            while not p.locateOnScreen(path.join('imgs', 'conexoes.png'), confidence=0.9):
+                sleep(1)
+                timer += 1
+                if timer > 60:
+                    return False
+            
+            now = datetime.now()
             if inicio_horario <= now <= fim_horario:
                 break
             else:
@@ -124,7 +134,8 @@ def run():
         localiza_autorizados()
     else:
         while not p.locateOnScreen(path.join('imgs', 'seta_baixo_limite.png'), confidence=0.9):
-            horario()
+            if not horario():
+                return False
             
             # aguarda alguma subtela que possa estar aberta
             if not aguarda_sub_telas():
@@ -185,12 +196,12 @@ def run():
 if __name__ == '__main__':
     # tenta pegar o usuário e a senha de um arquivo txt, se não conseguir marca um erro na variável e encerra o robô
     try:
-        timer, inicio_horario, fim_horario, dados_erros = captura_dados()
+        timer, inicio_horario, fim_horario, dados_erro, usuario, senha = captura_dados()
     except:
-        dados_erros = True
+        dados_erro = True
     
     # se conseguir pegar o usuário e a senha no txt segue o processo
-    if not dados_erros:
+    if not dados_erro:
         tempo = 0
         horario_limite = False
         # verifica se existem arquivos na pasta de usuários que não iram desconectar, se sim, continua
@@ -201,7 +212,9 @@ if __name__ == '__main__':
             while not p.locateOnScreen(path.join('imgs', 'conexoes.png'), confidence=0.9):
                 sleep(1)
                 
-                horario()
+                if not horario():
+                    tempo = 'inativo'
+                    break
                 
                 tempo += 1
                 if tempo >= 60:
@@ -216,13 +229,17 @@ if __name__ == '__main__':
             
             # enquanto a tela estiver aberta repete o ciclo, se após 30 segundos não encontrar a tela, o robô é encerrado
             while p.locateOnScreen(path.join('imgs', 'conexoes.png'), confidence=0.9):
-                horario()
+                if not horario():
+                    tempo = 'inativo'
+                    break
                 
                 situacao = run()
                 if not situacao:
                     break
                 
-                horario()
+                if not horario():
+                    tempo = 'inativo'
+                    break
                 
                 timer = 1
                 while timer < 30:

@@ -29,7 +29,7 @@ def open_lista_dados(i_dir='ignore', encode='latin-1'):
 def escreve_relatorio_csv(texto, nome='resumo', local=e_dir, end='\n', encode='latin-1'):
     if local == e_dir:
         local = Path(local)
-    os.makedirs(local, exist_ok=True)
+    # os.makedirs(local, exist_ok=True)
 
     try:
         f = open(str(local / f"{nome}.csv"), 'a', encoding=encode)
@@ -72,14 +72,14 @@ def where_to_start(idents, encode='latin-1'):
 def escreve_doc(texto, nome='doc', local=e_dir, encode='latin-1'):
     if local == e_dir:
         local = Path(local)
-    os.makedirs(local, exist_ok=True)
+    # os.makedirs(local, exist_ok=True)
     
     try:
         f = open(str(local / f"{nome}.txt"), 'a', encoding=encode)
     except:
         f = open(str(local / f"{nome} - auxiliar.txt"), 'a', encoding=encode)
-    
-    f.write(texto)
+
+    f.write(str(texto))
     f.close()
 
 
@@ -191,7 +191,7 @@ def solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, ac
     
 def cria_pdf(pdf_base64, cnpj_empresa, nome_empresa):
     pdf_bytes = base64.b64decode(pdf_base64)
-    os.makedirs('Execução/DCTFWEB', exist_ok=True)
+    # os.makedirs('Execução/DCTFWEB', exist_ok=True)
     with open(os.path.join('Execução', 'DCTFWEB', f'DCTFWEB - {cnpj_empresa} - {nome_empresa}.pdf'), "wb") as file:
         file.write(pdf_bytes)
 

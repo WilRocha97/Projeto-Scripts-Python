@@ -83,7 +83,7 @@ def escreve_doc(texto, nome='doc', local=e_dir, encode='latin-1'):
     f.close()
 
 
-def ask_for_file(title='Abrir arquivo', initialdir=os.getcwd()):
+def ask_for_file(title='Selecione o Certificado Digital', initialdir=os.getcwd()):
     root = Tk()
     root.withdraw()
     root.wm_attributes('-topmost', 1)

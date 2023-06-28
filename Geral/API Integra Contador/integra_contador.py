@@ -5,6 +5,7 @@ from functools import wraps
 from tkinter.filedialog import askopenfilename, Tk
 
 e_dir = Path('T:\ROBO\Teste\Execução')
+e_dir_2 = Path('Execução')
 
 
 def open_lista_dados(i_dir='ignore', encode='latin-1'):
@@ -82,14 +83,14 @@ def escreve_doc(texto, nome='doc', local=e_dir, encode='latin-1'):
     f.close()
 
 
-def ask_for_file(title='Abrir arquivo', filetypes='*', initialdir=os.getcwd()):
+def ask_for_file(title='Abrir arquivo', initialdir=os.getcwd()):
     root = Tk()
     root.withdraw()
     root.wm_attributes('-topmost', 1)
     
     file = askopenfilename(
         title=title,
-        filetypes=filetypes,
+        filetypes=[('PFX files', '*.pfx *')],
         initialdir=initialdir
     )
     
@@ -118,9 +119,14 @@ def solicita_token(usuario_b64, certificado, senha):
     resposta_string_json = json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True)
     resposta = pagina.json()
     
-    escreve_doc(pagina.status_code, nome='status_code')
-    escreve_doc(resposta, nome='resposta_jason')
-    escreve_doc(resposta_string_json, nome='string_json')
+    try:
+        escreve_doc(pagina.status_code, nome='status_code')
+        escreve_doc(resposta, nome='resposta_jason')
+        escreve_doc(resposta_string_json, nome='string_json')
+    except:
+        escreve_doc(pagina.status_code, nome='status_code', local=e_dir_2)
+        escreve_doc(resposta, nome='resposta_jason', local=e_dir_2)
+        escreve_doc(resposta_string_json, nome='string_json', local=e_dir_2)
     
     #
     # Output:
@@ -171,10 +177,15 @@ def solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, ac
     resposta = pagina.json()
     resposta_string_json = json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True)
     
-    escreve_doc(resposta, nome='resposta_jason_guia')
-    escreve_doc(resposta_string_json, nome='string_json_guia')
-    escreve_doc(resposta['dados'], nome='pdf_base_64')
-    
+    try:
+        escreve_doc(resposta, nome='resposta_jason_guia')
+        escreve_doc(resposta_string_json, nome='string_json_guia')
+        escreve_doc(resposta['dados'], nome='pdf_base_64')
+    except:
+        escreve_doc(resposta, nome='resposta_jason_guia', local=e_dir_2)
+        escreve_doc(resposta_string_json, nome='string_json_guia', local=e_dir_2)
+        escreve_doc(resposta['dados'], nome='pdf_base_64', local=e_dir_2)
+        
     return resposta['dados']['PDFByteArrayBase64'], resposta['mensagens'][0]['texto']
 
     
@@ -201,8 +212,11 @@ def run():
     
     jwt_token, access_token = solicita_token(usuario_b64, certificado, senha)
     tokens = jwt_token + ' | ' + access_token
-    escreve_doc(tokens, nome='tokens')
-    
+    try:
+        escreve_doc(tokens, nome='tokens')
+    except:
+        escreve_doc(tokens, nome='tokens', local=e_dir_2)
+        
     # abrir a planilha de dados
     empresas = open_lista_dados()
     if not empresas:
@@ -216,8 +230,15 @@ def run():
     for count, empresa in enumerate(empresas[index:], start=1):
         cnpj_empresa, nome_empresa = empresa
         pdf_base64, mensagens = solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, access_token)
-        cria_pdf(pdf_base64, cnpj_empresa, nome_empresa)
-        escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens}')
+        try:
+            cria_pdf(pdf_base64, cnpj_empresa, nome_empresa)
+            mensagen_2 = ''
+        except:
+            mensagen_2 = 'Não gerou PDF'
+        try:
+            escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens};{mensagen_2}')
+        except:
+            escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens};{mensagen_2}', local=e_dir_2)
         
 
 if __name__ == '__main__':

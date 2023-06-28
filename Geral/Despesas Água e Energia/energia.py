@@ -13,30 +13,6 @@ from chrome_comum import _initialize_chrome
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
 
 
-def login():
-    options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')
-    # options.add_argument('--window-size=1920,1080')
-    options.add_argument('start-maximized')
-    
-    status, driver = _initialize_chrome(options)
-    
-    url = 'https://servicosonline.cpfl.com.br/agencia-webapp/#/via-pagamento'
-    driver.get(url)
-    
-    data = {
-        'url': url,
-        'sitekey': '6LcJDCwUAAAAAPZsx3c7deGx7REdi5U3eNERQ_0j',
-    }
-    
-    token = _solve_recaptcha(data)
-    
-    url = 'https://servicosonline.cpfl.com.br/agencia-webapi/api/captcha/token?encodedResponse=' + token
-    driver.post(url)
-    
-    time.sleep(33)
-    
-    
 def login_request():
     with Session() as s:
         # entra no site

@@ -20,7 +20,7 @@ def login_sieg(driver):
     user = f.read()
     user = user.split('/')
     
-    # inserir o emailno campo
+    # inserir o email no campo
     driver.find_element(by=By.ID, value='txtEmail').send_keys(user[0])
     time.sleep(1)
     
@@ -50,7 +50,7 @@ def procura_empresa(competencia, empresa, driver, options):
         time.sleep(1)
         timer += 1
         if timer >= 60:
-            print('>>> Teantando novamente\n')
+            print('>>> Tentando novamente\n')
             driver.close()
             status, driver = _initialize_chrome(options)
             driver = login_sieg(driver)
@@ -102,11 +102,11 @@ def procura_empresa(competencia, empresa, driver, options):
         if timer >= 60:
             try:
                 re.compile(r'class=\"\">(Nenhum item encontrado!)<').search(driver.page_source).group(1)
-                _escreve_relatorio_csv(f'{cnpj};{nome};Nenhuma guia de pagamento encontrado para esssa empresa')
-                print('❗ Nenhuma guia de pagamento encontrado para esssa empresa')
+                _escreve_relatorio_csv(f'{cnpj};{nome};Nenhuma guia de pagamento encontrado para essa empresa')
+                print('❗ Nenhuma guia de pagamento encontrado para essa empresa')
                 return driver
             except:
-                print('>>> Teantando novamente\n')
+                print('>>> Tentando novamente\n')
                 driver.close()
                 status, driver = _initialize_chrome(options)
                 driver = login_sieg(driver)
@@ -114,25 +114,25 @@ def procura_empresa(competencia, empresa, driver, options):
                 procura_empresa(competencia, empresa, driver, options)
                 return driver
     
-    print('>>> Verificando donwload')
+    print('>>> Verificando download')
     try:
         # clica para expandir a lista de arquivos
         driver.find_element(by=By.XPATH, value='/html/body/form/div[5]/div[3]/div[1]/div/div[3]/div/table/tbody/tr[1]/td/div/span/span').click()
         time.sleep(2)
     except:
         re.compile(r'class=\"\">(Nenhum item encontrado!)<').search(driver.page_source).group(1)
-        _escreve_relatorio_csv(f'{cnpj};{nome};Nenhuma guia de pagamento encontrado para esssa empresa')
-        print('❗ Nenhuma guia de pagamento encontrado para esssa empresa')
+        _escreve_relatorio_csv(f'{cnpj};{nome};Nenhuma guia de pagamento encontrado para essa empresa')
+        print('❗ Nenhuma guia de pagamento encontrado para essa empresa')
         return driver
     
     # pega a lista de guias da competência desejada
     guias = re.compile(r'</td><td class=\"td-background-dt sorting_2\">' + competencia + '</td><td class=\" td-background-dt\">.+</td><td class=\" td-background-dt\">R\$&nbsp;.+</td><td class=\" td-background-dt hidden-sm hidden-xs\">.+\n.+\n.+<a id=\"(.+)\" class=\"btn iris-') \
         .findall(driver.page_source)
 
-    # verifica se existe alguma guia referênte a competência digitada
+    # verifica se existe alguma guia referente a competência digitada
     if not guias:
-        _escreve_relatorio_csv(f'{cnpj};{nome};Nenhuma guia de pagamento referênte a {competencia} encontrado para esssa empresa')
-        print(f'❗ Nenhuma guia de pagamento referênte a {competencia} encontrado para esssa empresa')
+        _escreve_relatorio_csv(f'{cnpj};{nome};Nenhuma guia de pagamento referente a {competencia} encontrado para essa empresa')
+        print(f'❗ Nenhuma guia de pagamento referente a {competencia} encontrado para essa empresa')
         return driver
 
     contador = 0
@@ -144,7 +144,7 @@ def procura_empresa(competencia, empresa, driver, options):
         while download:
             driver, contador, erro, download = download_comprovante(contador, driver, cnpj, guia)
         if erro == 'erro':
-            sem_guia = 'Existe uma guia com o botão de download dezabilitado'
+            sem_guia = 'Existe uma guia com o botão de download desabilitado'
             print(f'❌ Existe uma guia com o botão de download desabilitado')
             _escreve_relatorio_csv(f'{cnpj};{nome};{sem_guia}')
             return driver
@@ -239,7 +239,7 @@ def click(driver, cnpj, guia):
 
 @_time_execution
 def run():
-    competencia = prompt(text='Qual competência referênte?', title='Script incrível', default='00/0000')
+    competencia = prompt(text='Qual competência referente?', title='Script incrível', default='00/0000')
     os.makedirs('execução/Guias', exist_ok=True)
     os.makedirs('ignore/Guias', exist_ok=True)
     

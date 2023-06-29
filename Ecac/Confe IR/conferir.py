@@ -44,9 +44,23 @@ def consulta(driver, cpf):
     driver.find_element(by=By.XPATH, value=pesquisa).send_keys(cpf)
     time.sleep(2)
     press('enter')
-    time.sleep(10)
-    if not re.compile(r'<span _ngcontent-urj-c115=\"\" class=\"f-w-600\">Cpf/Cnpj:</span> ' + cpf +' ').search(driver.page_source):
+    time.sleep(5)
+    if not re.compile(r'class=\"f-w-600\">Cpf/Cnpj:</span> ' + cpf +' ').search(driver.page_source):
         return driver, 'Cliente não encontrado'
+    else:
+        url_cliente = re.compile(r'iconNewTab\" href=\"/(.+)\"><app-icon _ngcontent-\w\w\w-c115').search(driver.page_source).group(1)
+        cliente_id = url_cliente.split('=')[1]
+        
+    driver.get('https://portal.conferironline.com.br/customer-profile/actions?customerId=' + cliente_id)
+    time.sleep(3)
+    
+    driver.find_element(by=By.XPATH,
+                        value='/html/body/app-root/app-content-layout/div/div/div/div[2]/main/div/div/div/app-customer-profile-page/app-profile-customer/app-overlay-loading/div/app-profile-tabset/app-overlay-loading/div/div/div[2]/app-actions-ecac/app-card/div/div/div/div[3]/a')\
+                        .click()
+    
+    abas = driver.window_handles
+    driver.switch_to.window(abas[1])
+    time.sleep(22)
     return driver, ''
     
 

@@ -210,8 +210,8 @@ def run():
         try:
             cria_pdf(pdf_base64, cnpj_empresa, nome_empresa)
             mensagen_2 = ''
-        except:
-            mensagen_2 = 'Não gerou PDF'
+        except Exception as e:
+            mensagen_2 = f'Não gerou PDF {e}'
             
         escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens};{mensagen_2}', local=e_dir_2)
         

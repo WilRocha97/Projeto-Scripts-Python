@@ -15,4 +15,17 @@ def run():
     # options.add_argument('--headless')
     # options.add_argument('--window-size=1366,768')
     options.add_argument("--start-maximized")
+    options.add_extension('C:/Users/willianr/AppData/Local/Google/Chrome/User Data/Default/Extensions/odncgaobfipblkjnmdpngmglgbngaabp/0.0.9_0.crx')
     
+    # iniciar o driver do chome
+    status, driver = _initialize_chrome(options)
+    driver = login_sieg(driver)
+    
+    total_empresas = empresas[index:]
+    for count, empresa in enumerate(empresas[index:], start=1):
+        # configurar o indice para localizar em qual empresa está
+        _indice(count, total_empresas, empresa)
+        
+
+if __name__ == '__main__':
+    run()

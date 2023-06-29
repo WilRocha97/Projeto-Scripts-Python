@@ -38,34 +38,6 @@ def escreve_relatorio_csv(texto, nome='resumo', local=e_dir, end='\n', encode='l
     f.close()
 
 
-def where_to_start(idents, encode='latin-1'):
-    title = 'Execucao anterior'
-    text = 'Deseja continuar execucao anterior?'
-    
-    res = confirm(title=title, text=text, buttons=('sim', 'não'))
-    if not res:
-        return None
-    if res == 'não':
-        return 0
-    
-    file = ask_for_file_dados()
-    if not file:
-        return None
-    
-    try:
-        with open(file, 'r', encoding=encode) as f:
-            dados = f.readlines()
-    except Exception as e:
-        alert(title='Mensagem erro', text=f'Não pode abrir arquivo\n{str(e)}')
-        return None
-    
-    try:
-        elem = dados[-1].split(';')[0]
-        return idents.index(elem) + 1
-    except ValueError:
-        return 0
-    
-    
 def escreve_doc(texto, nome='doc', local=e_dir, encode='latin-1'):
     if local == e_dir:
         local = Path(local)
@@ -158,6 +130,10 @@ def solicita_token(usuario_b64, certificado, senha):
     
     
 def solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, access_token):
+    comp = p.prompt(text='Informe a competência das guias que deseja solicitar', default='00/0000')
+    mes = comp.split('/')[0]
+    ano = comp.split('/')[1]
+    
     body = {
               "contratante": {
                 "numero": cnpj_contratante,
@@ -188,14 +164,9 @@ def solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, ac
     resposta = pagina.json()
     resposta_string_json = json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True)
     
-    try:
-        escreve_doc(resposta, nome='resposta_jason_guia')
-        escreve_doc(resposta_string_json, nome='string_json_guia')
-        escreve_doc(resposta['dados'], nome='pdf_base_64')
-    except:
-        escreve_doc(resposta, nome='resposta_jason_guia', local=e_dir_2)
-        escreve_doc(resposta_string_json, nome='string_json_guia', local=e_dir_2)
-        escreve_doc(resposta['dados'], nome='pdf_base_64', local=e_dir_2)
+    escreve_doc(resposta, nome='resposta_jason_guia', local=e_dir_2)
+    escreve_doc(resposta_string_json, nome='string_json_guia', local=e_dir_2)
+    escreve_doc(resposta['dados'], nome='pdf_base_64', local=e_dir_2)
         
     return resposta['dados']['PDFByteArrayBase64'], resposta['mensagens'][0]['texto']
 
@@ -233,12 +204,7 @@ def run():
     if not empresas:
         return False
 
-    # configurar um indice para a planilha de dados
-    index = where_to_start(tuple(i[0] for i in empresas))
-    if index is None:
-        return False
-
-    for count, empresa in enumerate(empresas[index:], start=1):
+    for count, empresa in enumerate(empresas, start=1):
         cnpj_empresa, nome_empresa = empresa
         pdf_base64, mensagens = solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, access_token)
         try:
@@ -246,12 +212,12 @@ def run():
             mensagen_2 = ''
         except:
             mensagen_2 = 'Não gerou PDF'
-        try:
-            escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens};{mensagen_2}')
-        except:
-            escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens};{mensagen_2}', local=e_dir_2)
+            
+        escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens};{mensagen_2}', local=e_dir_2)
         
-
+    p.alert(text='Robô finalizado!')
+    
+    
 if __name__ == '__main__':
     run()
 

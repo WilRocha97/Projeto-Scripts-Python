@@ -8,10 +8,8 @@ e_dir = Path('T:\ROBO\Teste\Execução')
 e_dir_2 = Path('Execução')
 
 
-def open_lista_dados(i_dir='ignore', encode='latin-1'):
-    ftypes = [('Plain text files', '*.txt *.csv')]
-
-    file = ask_for_file(filetypes=ftypes, initialdir=i_dir)
+def open_lista_dados(encode='latin-1'):
+    file = ask_for_file_dados()
     if not file:
         return False
 
@@ -50,8 +48,7 @@ def where_to_start(idents, encode='latin-1'):
     if res == 'não':
         return 0
     
-    ftypes = [('Plain text files', '*.txt *.csv')]
-    file = ask_for_file(filetypes=ftypes)
+    file = ask_for_file_dados()
     if not file:
         return None
     
@@ -91,6 +88,20 @@ def ask_for_file(title='Selecione o Certificado Digital', initialdir=os.getcwd()
     file = askopenfilename(
         title=title,
         filetypes=[('PFX files', '*.pfx *')],
+        initialdir=initialdir
+    )
+    
+    return file if file else False
+
+
+def ask_for_file_dados(title='Selecione a planilha de dados das empresas', initialdir=os.getcwd()):
+    root = Tk()
+    root.withdraw()
+    root.wm_attributes('-topmost', 1)
+    
+    file = askopenfilename(
+        title=title,
+        filetypes=[('Plain text files', '*.txt *.csv')],
         initialdir=initialdir
     )
     

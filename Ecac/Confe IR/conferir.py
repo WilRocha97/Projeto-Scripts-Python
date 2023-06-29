@@ -44,7 +44,7 @@ def consulta(driver, cpf):
     driver.find_element(by=By.XPATH, value=pesquisa).send_keys(cpf)
     time.sleep(2)
     press('enter')
-    time.sleep(5)
+    time.sleep(10)
     if not re.compile(r'<span _ngcontent-urj-c115=\"\" class=\"f-w-600\">Cpf/Cnpj:</span> ' + cpf +' ').search(driver.page_source):
         return driver, 'Cliente não encontrado'
     return driver, ''
@@ -57,7 +57,7 @@ def run():
     # options.add_argument('--headless')
     # options.add_argument('--window-size=1366,768')
     options.add_argument("--start-maximized")
-    options.add_extension('C:/Users/willianr/AppData/Local/Google/Chrome/User Data/Default/Extensions/odncgaobfipblkjnmdpngmglgbngaabp/0.0.9_0.crx')
+    options.add_extension('V:/Setor Robô/Scripts Python/Ecac/Confe IR/ignore/0.0.9_0.crx')
     
     # abrir a planilha de dados
     empresas = _open_lista_dados()

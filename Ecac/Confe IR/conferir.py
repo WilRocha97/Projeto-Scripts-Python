@@ -18,16 +18,19 @@ user = user.split('/')
 
 
 def login(driver):
+    # abre o site e espera carregar
     driver.get('https://portal.conferironline.com.br/login?returnUrl=%2Fdownloads-center')
     email = '/html/body/app-root/app-full-layout/div/app-login-page/app-login/div/div/div/div[2]/div/app-form/div/div/form/app-overlay-loading/div/div/app-input[1]/div/input'
     senha = '/html/body/app-root/app-full-layout/div/app-login-page/app-login/div/div/div/div[2]/div/app-form/div/div/form/app-overlay-loading/div/div/app-input[2]/div/input'
     while not _find_by_path(email, driver):
         time.sleep(1)
     
+    # insere login e senha
     driver.find_element(by=By.XPATH, value=email).send_keys(user[0])
     driver.find_element(by=By.XPATH, value=senha).send_keys(user[1])
     time.sleep(1)
     
+    # clica em entrar
     driver.find_element(by=By.XPATH,
                         value='/html/body/app-root/app-full-layout/div/app-login-page/app-login/div/div/div/div[2]/div/app-form/div/div/form/app-overlay-loading/div/button')\
                         .click()
@@ -36,11 +39,14 @@ def login(driver):
 
 
 def consulta(driver, cpf):
+    # abre tela de clientes
     driver.get('https://portal.conferironline.com.br/customers')
     pesquisa = '/html/body/app-root/app-content-layout/div/div/app-header/div/div/div[2]/ul/li[1]/app-search-bar/form/div/input'
     while not _find_by_path(pesquisa, driver):
         time.sleep(1)
     
+    # insere cpf do cliente e aperta enter para confirmar, se não encontrar o cpf dentro da lista de clientes encontrados, retorna "Cliente não encontrado"
+    # se sim, pega a id do cliente
     driver.find_element(by=By.XPATH, value=pesquisa).send_keys(cpf)
     time.sleep(2)
     press('enter')
@@ -50,14 +56,17 @@ def consulta(driver, cpf):
     else:
         url_cliente = re.compile(r'iconNewTab\" href=\"/(.+)\"><app-icon _ngcontent-\w\w\w-c115').search(driver.page_source).group(1)
         cliente_id = url_cliente.split('=')[1]
-        
+    
+    # concatena a url com a id do cliente para entrar direto no perfil dele na aba de acesso ao ecac
     driver.get('https://portal.conferironline.com.br/customer-profile/actions?customerId=' + cliente_id)
     time.sleep(3)
     
+    # clica em CND
     driver.find_element(by=By.XPATH,
                         value='/html/body/app-root/app-content-layout/div/div/div/div[2]/main/div/div/div/app-customer-profile-page/app-profile-customer/app-overlay-loading/div/app-profile-tabset/app-overlay-loading/div/div/div[2]/app-actions-ecac/app-card/div/div/div/div[3]/a')\
                         .click()
     
+    # troca de aba, pois abre o ECAC em outra
     abas = driver.window_handles
     driver.switch_to.window(abas[1])
     time.sleep(22)

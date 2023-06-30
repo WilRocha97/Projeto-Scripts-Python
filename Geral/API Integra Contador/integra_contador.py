@@ -128,8 +128,8 @@ def solicita_token(usuario_b64, certificado, senha):
     except:
         return resposta['message'], resposta['description']
     
-    
-def solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, access_token):
+
+def solicita_dctf(cnpj_contratante, cnpj_empresa, access_token):
     comp = p.prompt(text='Informe a competência das guias que deseja solicitar', default='00/0000')
     mes = comp.split('/')[0]
     ano = comp.split('/')[1]
@@ -140,8 +140,8 @@ def solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, ac
                 "tipo": 2
               },
               "autorPedidoDados": {
-                "numero": cpf_certificado,
-                "tipo": 1
+                "numero": cnpj_contratante,
+                "tipo": 2
               },
               "contribuinte": {
                 "numero": cnpj_empresa,
@@ -156,8 +156,7 @@ def solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, ac
             }
     
     header = {'Content-Type': 'application/json',
-               'Authorization': access_token,
-               'jwt_token': jwt_token,}
+               'Authorization': access_token}
     
     pagina = requests.post('https://gateway.apiserpro.serpro.gov.br/integra-contador/v1/Emitir', json=body, headers=header)
     
@@ -185,7 +184,6 @@ def cria_pdf(pdf_base64, cnpj_empresa, nome_empresa, mes, ano):
 
 def run():
     cnpj_contratante = p.prompt(text='Informe o CNPJ do contratante do serviço SERPRO')
-    cpf_certificado = p.prompt(text='Informe o CPF do certificado digital usado pera contratar o serviço SERPRO')
     consumerKey = p.password(text='Informe a consumerKey:')
     consumerSecret = p.password(text='Informe a consumerSecret:')
     
@@ -198,6 +196,7 @@ def run():
     certificado = ask_for_file()
     
     jwt_token, access_token = solicita_token(usuario_b64, certificado, senha)
+    
     tokens = jwt_token + ' | ' + access_token
     try:
         escreve_doc(tokens, nome='tokens', local=e_dir_2)
@@ -211,7 +210,7 @@ def run():
 
     for count, empresa in enumerate(empresas, start=1):
         cnpj_empresa, nome_empresa = empresa
-        mes, ano, pdf_base64, mensagens = solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, access_token)
+        mes, ano, pdf_base64, mensagens = solicita_dctf(cnpj_contratante, cnpj_empresa, access_token)
         try:
             cria_pdf(pdf_base64, cnpj_empresa, nome_empresa, mes, ano)
             mensagen_2 = ''

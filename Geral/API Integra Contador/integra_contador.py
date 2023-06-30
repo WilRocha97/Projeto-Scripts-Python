@@ -4,7 +4,7 @@ from pathlib import Path
 from functools import wraps
 from tkinter.filedialog import askopenfilename, Tk
 
-e_dir = Path('T:\ROBO\Teste\Execução')
+e_dir = Path('T:\ROBO\DCTF-WEB\Execução')
 e_dir_2 = Path('Execução')
 
 
@@ -103,13 +103,13 @@ def solicita_token(usuario_b64, certificado, senha):
     resposta = pagina.json()
     
     try:
-        escreve_doc(pagina.status_code, nome='status_code')
-        escreve_doc(resposta, nome='resposta_jason')
-        escreve_doc(resposta_string_json, nome='string_json')
-    except:
         escreve_doc(pagina.status_code, nome='status_code', local=e_dir_2)
         escreve_doc(resposta, nome='resposta_jason', local=e_dir_2)
         escreve_doc(resposta_string_json, nome='string_json', local=e_dir_2)
+    except:
+        escreve_doc(pagina.status_code, nome='status_code')
+        escreve_doc(resposta, nome='resposta_jason')
+        escreve_doc(resposta_string_json, nome='string_json')
     
     #
     # Output:
@@ -155,26 +155,31 @@ def solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, ac
               }
             }
     
-    header = {'Accept': 'application/json',
+    header = {'Content-Type': 'application/json',
                'Authorization': access_token,
                'jwt_token': jwt_token,}
     
-    pagina = requests.post('https://gateway.apiserpro.serpro.gov.br/integra-contador/v1/Emitir', data=body, headers=header)
+    pagina = requests.post('https://gateway.apiserpro.serpro.gov.br/integra-contador/v1/Emitir', json=body, headers=header)
     
     resposta = pagina.json()
     resposta_string_json = json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True)
     
-    escreve_doc(resposta, nome='resposta_jason_guia', local=e_dir_2)
-    escreve_doc(resposta_string_json, nome='string_json_guia', local=e_dir_2)
-    escreve_doc(resposta['dados'], nome='pdf_base_64', local=e_dir_2)
+    try:
+        escreve_doc(resposta, nome='resposta_jason_guia', local=e_dir_2)
+        escreve_doc(resposta_string_json, nome='string_json_guia', local=e_dir_2)
+        escreve_doc(resposta['dados'], nome='pdf_base_64', local=e_dir_2)
+    except:
+        escreve_doc(resposta, nome='resposta_jason_guia')
+        escreve_doc(resposta_string_json, nome='string_json_guia')
+        escreve_doc(resposta['dados'], nome='pdf_base_64')
         
-    return resposta['dados']['PDFByteArrayBase64'], resposta['mensagens'][0]['texto']
+    return mes, ano, resposta['dados']['PDFByteArrayBase64'], resposta['mensagens'][0]['texto']
 
     
-def cria_pdf(pdf_base64, cnpj_empresa, nome_empresa):
+def cria_pdf(pdf_base64, cnpj_empresa, nome_empresa, mes, ano):
     pdf_bytes = base64.b64decode(pdf_base64)
     # os.makedirs('Execução/DCTFWEB', exist_ok=True)
-    with open(os.path.join('Execução', 'DCTFWEB', f'DCTFWEB - {cnpj_empresa} - {nome_empresa}.pdf'), "wb") as file:
+    with open(os.path.join('Execução', 'Guias', f'DCTFWEB {mes}-{ano} - {cnpj_empresa} - {nome_empresa}.pdf'), "wb") as file:
         file.write(pdf_bytes)
 
 
@@ -195,9 +200,9 @@ def run():
     jwt_token, access_token = solicita_token(usuario_b64, certificado, senha)
     tokens = jwt_token + ' | ' + access_token
     try:
-        escreve_doc(tokens, nome='tokens')
-    except:
         escreve_doc(tokens, nome='tokens', local=e_dir_2)
+    except:
+        escreve_doc(tokens, nome='tokens')
         
     # abrir a planilha de dados
     empresas = open_lista_dados()
@@ -206,14 +211,17 @@ def run():
 
     for count, empresa in enumerate(empresas, start=1):
         cnpj_empresa, nome_empresa = empresa
-        pdf_base64, mensagens = solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, access_token)
+        mes, ano, pdf_base64, mensagens = solicita_dctf(cnpj_contratante, cpf_certificado, cnpj_empresa, jwt_token, access_token)
         try:
-            cria_pdf(pdf_base64, cnpj_empresa, nome_empresa)
+            cria_pdf(pdf_base64, cnpj_empresa, nome_empresa, mes, ano)
             mensagen_2 = ''
         except Exception as e:
             mensagen_2 = f'Não gerou PDF {e}'
-            
-        escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens};{mensagen_2}', local=e_dir_2)
+        
+        try:
+            escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens};{mensagen_2}', local=e_dir_2)
+        except:
+            escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens};{mensagen_2}')
         
     p.alert(text='Robô finalizado!')
     

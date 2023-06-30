@@ -124,7 +124,7 @@ def verifica_o_numero(cnpj):
         # Definir o nome das colunas
         colunas = ['cnpj', 'numero', 'nome']
         # Localiza a planilha
-        caminho = Path('//vpsrv03/Arq_Robo/Envia WP por e-mail/Dados/Dados.csv')
+        caminho = Path('T:/ROBO/Envia WP por e-mail/Dados/Dados.csv')
         # Abrir a planilha
         lista = pd.read_csv(caminho, header=None, names=colunas, sep=';', encoding='latin-1')
         # Definir o index da planilha

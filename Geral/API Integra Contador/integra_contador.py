@@ -103,6 +103,7 @@ def solicita_token(usuario_b64, certificado, senha):
     resposta = pagina.json()
     
     try:
+        os.makedirs(e_dir, exist_ok=True)
         escreve_doc(pagina.status_code, nome='status_code', local=e_dir_2)
         escreve_doc(resposta, nome='resposta_jason', local=e_dir_2)
         escreve_doc(resposta_string_json, nome='string_json', local=e_dir_2)
@@ -129,7 +130,7 @@ def solicita_token(usuario_b64, certificado, senha):
         return resposta['message'], resposta['description']
     
 
-def solicita_dctf(cnpj_contratante, cnpj_empresa, access_token):
+def solicita_dctf(cnpj_contratante, cnpj_empresa, access_token, jwt_token):
     comp = p.prompt(text='Informe a competência das guias que deseja solicitar', default='00/0000')
     mes = comp.split('/')[0]
     ano = comp.split('/')[1]
@@ -157,7 +158,8 @@ def solicita_dctf(cnpj_contratante, cnpj_empresa, access_token):
     
     headers = {'accept': 'text/plain',
                'Authorization': 'Bearer ' + access_token,
-               'Content-Type': 'application/json',}
+               'Content-Type': 'application/json',
+               'jwt_token': jwt_token}
     
     pagina = requests.post('https://gateway.apiserpro.serpro.gov.br/integra-contador/v1/Emitir', headers=headers, data=json.dumps(data))
     
@@ -165,16 +167,20 @@ def solicita_dctf(cnpj_contratante, cnpj_empresa, access_token):
     resposta_string_json = json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True)
     
     try:
+        os.makedirs(e_dir, exist_ok=True)
         escreve_doc(resposta, nome='resposta_jason_guia', local=e_dir_2)
         escreve_doc(resposta_string_json, nome='string_json_guia', local=e_dir_2)
         escreve_doc(resposta['dados'], nome='pdf_base_64', local=e_dir_2)
     except:
         escreve_doc(resposta, nome='resposta_jason_guia')
-        escreve_doc(resposta_string_json, nome='string_json_guia')
+        escreve_doc(f'{cnpj_empresa}\n{resposta_string_json}', nome='string_json_guia')
         escreve_doc(resposta['dados'], nome='pdf_base_64')
+    
+    try:
+        return mes, ano, resposta['dados']['PDFByteArrayBase64'], resposta['mensagens'][0]['texto']
+    except:
+        return mes, ano, resposta['dados'], resposta['mensagens'][0]['texto']
         
-    return mes, ano, resposta['dados']['PDFByteArrayBase64'], resposta['mensagens'][0]['texto']
-
     
 def cria_pdf(pdf_base64, cnpj_empresa, nome_empresa, mes, ano):
     pdf_bytes = base64.b64decode(pdf_base64)
@@ -199,6 +205,7 @@ def run():
     
     tokens = jwt_token + ' | ' + access_token
     try:
+        os.makedirs(e_dir, exist_ok=True)
         escreve_doc(tokens, nome='tokens', local=e_dir_2)
     except:
         escreve_doc(tokens, nome='tokens')
@@ -210,14 +217,19 @@ def run():
 
     for count, empresa in enumerate(empresas, start=1):
         cnpj_empresa, nome_empresa = empresa
-        mes, ano, pdf_base64, mensagens = solicita_dctf(cnpj_contratante, cnpj_empresa, str(access_token))
-        try:
-            cria_pdf(pdf_base64, cnpj_empresa, nome_empresa, mes, ano)
+        mes, ano, pdf_base64, mensagens = solicita_dctf(cnpj_contratante, cnpj_empresa, str(access_token), str(jwt_token))
+        
+        if not pdf_base64:
             mensagen_2 = ''
-        except Exception as e:
-            mensagen_2 = f'Não gerou PDF {e}'
+        else:
+            try:
+                cria_pdf(pdf_base64, cnpj_empresa, nome_empresa, mes, ano)
+                mensagen_2 = ''
+            except Exception as e:
+                mensagen_2 = f'Não gerou PDF {e}'
         
         try:
+            os.makedirs(e_dir, exist_ok=True)
             escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens};{mensagen_2}', local=e_dir_2)
         except:
             escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens};{mensagen_2}')

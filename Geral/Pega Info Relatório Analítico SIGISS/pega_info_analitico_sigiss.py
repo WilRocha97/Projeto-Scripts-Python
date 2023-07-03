@@ -58,7 +58,7 @@ def analiza():
                         irrf = valor[7]
                         nome_destinatario = nome_destinatario.replace('–', '-')
                         _escreve_relatorio_csv(f"{cnpj};{empresa};{emissao};{numero};{nome_destinatario};{cnpj_destinatario};{iss};{pis};{cofins};{csll};{inss};{irrf}",
-                                               nome='Resumo Reltórios Analíticos')
+                                               nome='Resumo Relatórios Analíticos')
                 except():
                     print(f'\nArquivo: {arq} - ERRO')
 
@@ -67,5 +67,5 @@ if __name__ == '__main__':
     inicio = datetime.now()
     analiza()
     _escreve_header_csv(';'.join(['CNPJ', 'NOME', 'EMISSÃO DA NOTA', 'NÚMERO DA NOTA', 'DESTINATÁRIO', 'CNPJ DESTINATÁRIO', 'ISS', 'PIS', 'COFINS', 'CSLL', 'INSS', 'IRRF']),
-                        nome='Resumo Reltórios Analíticos')
+                        nome='Resumo Relatórios Analíticos')
     print(datetime.now() - inicio)

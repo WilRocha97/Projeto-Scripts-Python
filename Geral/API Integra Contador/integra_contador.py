@@ -134,31 +134,32 @@ def solicita_dctf(cnpj_contratante, cnpj_empresa, access_token):
     mes = comp.split('/')[0]
     ano = comp.split('/')[1]
     
-    body = {
+    data = {
               "contratante": {
-                "numero": cnpj_contratante,
+                "numero": str(cnpj_contratante),
                 "tipo": 2
               },
               "autorPedidoDados": {
-                "numero": cnpj_contratante,
+                "numero": str(cnpj_contratante),
                 "tipo": 2
               },
               "contribuinte": {
-                "numero": cnpj_empresa,
+                "numero": str(cnpj_empresa),
                 "tipo": 2
               },
               "pedidoDados": {
                 "idSistema": "DCTFWEB",
                 "idServico": "GERARGUIA31",
                 "versaoSistema": "1.0",
-                "dados": "{\"categoria\": \"GERAL_MENSAL\",\"anoPA\":\"" + ano + "\",\"mesPA\":\"" + mes + "\"}"
+                "dados": "{\"categoria\": \"GERAL_MENSAL\",\"anoPA\":\"" + str(ano) + "\",\"mesPA\":\"" + str(mes) + "\"}"
               }
             }
     
-    header = {'Content-Type': 'application/json',
-               'Authorization': access_token}
+    headers = {'accept': 'text/plain',
+               'Authorization': 'Bearer ' + access_token,
+               'Content-Type': 'application/json',}
     
-    pagina = requests.post('https://gateway.apiserpro.serpro.gov.br/integra-contador/v1/Emitir', json=body, headers=header)
+    pagina = requests.post('https://gateway.apiserpro.serpro.gov.br/integra-contador/v1/Emitir', headers=headers, data=json.dumps(data))
     
     resposta = pagina.json()
     resposta_string_json = json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True)
@@ -186,7 +187,6 @@ def run():
     cnpj_contratante = p.prompt(text='Informe o CNPJ do contratante do serviço SERPRO')
     consumerKey = p.password(text='Informe a consumerKey:')
     consumerSecret = p.password(text='Informe a consumerSecret:')
-    
     usuario = consumerKey + ":" + consumerSecret
     usuario_b64 = converter_base64(usuario)
     
@@ -210,7 +210,7 @@ def run():
 
     for count, empresa in enumerate(empresas, start=1):
         cnpj_empresa, nome_empresa = empresa
-        mes, ano, pdf_base64, mensagens = solicita_dctf(cnpj_contratante, cnpj_empresa, access_token)
+        mes, ano, pdf_base64, mensagens = solicita_dctf(cnpj_contratante, cnpj_empresa, str(access_token))
         try:
             cria_pdf(pdf_base64, cnpj_empresa, nome_empresa, mes, ano)
             mensagen_2 = ''

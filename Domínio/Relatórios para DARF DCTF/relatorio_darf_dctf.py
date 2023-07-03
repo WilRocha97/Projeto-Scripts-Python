@@ -98,7 +98,7 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
             time.sleep(1)
             return 'ok'
 
-        if _find_img('resumo_calculado.png', conf=0.9):
+        if _find_img('resumo_calculado.png', conf=0.9) or _find_img('resumo_gerado_2.png', conf=0.9):
             break
 
     _salvar_pdf()

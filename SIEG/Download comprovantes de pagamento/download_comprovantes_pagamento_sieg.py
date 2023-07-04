@@ -9,6 +9,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers
 from chrome_comum import _initialize_chrome
+from pyautogui_comum import _click_img
 
 
 def localiza_path(driver, elemento):
@@ -61,12 +62,13 @@ def sieg_iris(driver):
 
 def procura_empresa(tipo, competencia, empresa, driver, options):
     cnpj, nome = empresa
-    
+    _click_img('comprovantes.png', conf=0.9)
     # espera a barra de pesquisa, se não aparecer em 1 minuto, recarrega a página
     timer = 0
     while not localiza_id(driver, 'select2-ddlCompanyIris-container'):
         time.sleep(1)
         timer += 1
+        _click_img('comprovantes.png', conf=0.9)
         if timer >= 60:
             print('>>> Tentando novamente\n')
             driver.close()
@@ -109,6 +111,7 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
     while not localiza_path(driver, '/html/body/form/div[5]/div[3]/div[1]/div/div[3]/div/table/tbody/tr[1]/td/div/span'):
         time.sleep(1)
         timer += 1
+        _click_img('comprovantes.png', conf=0.9)
         if timer >= 60:
             _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento encontrado para essa empresa')
             print('❗ Nenhum comprovante de pagamento encontrado para essa empresa')
@@ -151,7 +154,8 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
         if erro == 'erro':
             sem_recibo = 'Existe um comprovante com o botão de download desabilitado'
             print(f'❌ Existe um comprovante com o botão de download desabilitado')
-    
+        time.sleep(1)
+        
     _escreve_relatorio_csv(f'{cnpj};{nome};Comprovantes {competencia} baixados;{contador} Arquivos;{sem_recibo}')
     
     time.sleep(1)
@@ -269,7 +273,7 @@ def run():
     
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-
+        
         # configurar o indice para localizar em qual empresa está
         _indice(count, total_empresas, empresa)
         erro = 'sim'

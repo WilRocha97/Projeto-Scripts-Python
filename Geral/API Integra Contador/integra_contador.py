@@ -8,6 +8,7 @@ e_dir = Path('T:\ROBO\DCTF-WEB\Execução')
 e_dir_2 = Path('Execução')
 
 
+# abre a lista de dados da empresa em .csv
 def open_lista_dados(encode='latin-1'):
     file = ask_for_file_dados()
     if not file:
@@ -24,6 +25,7 @@ def open_lista_dados(encode='latin-1'):
     return list(map(lambda x: tuple(x.replace('\n', '').split(';')), dados))
 
 
+# escreve os andamentos das requisições em um .csv
 def escreve_relatorio_csv(texto, nome='resumo', local=e_dir, end='\n', encode='latin-1'):
     if local == e_dir:
         local = Path(local)
@@ -38,6 +40,7 @@ def escreve_relatorio_csv(texto, nome='resumo', local=e_dir, end='\n', encode='l
     f.close()
 
 
+# escreve arquivos .txt com as respostas da API
 def escreve_doc(texto, nome='doc', local=e_dir, encode='latin-1'):
     if local == e_dir:
         local = Path(local)
@@ -52,6 +55,7 @@ def escreve_doc(texto, nome='doc', local=e_dir, encode='latin-1'):
     f.close()
 
 
+# abre o arquivo .pfx do certificado digital
 def ask_for_file(title='Selecione o Certificado Digital', initialdir=os.getcwd()):
     root = Tk()
     root.withdraw()
@@ -66,6 +70,7 @@ def ask_for_file(title='Selecione o Certificado Digital', initialdir=os.getcwd()
     return file if file else False
 
 
+# seleciona o arquivo .csv com as dados das empresas
 def ask_for_file_dados(title='Selecione a planilha de dados das empresas', initialdir=os.getcwd()):
     root = Tk()
     root.withdraw()
@@ -80,11 +85,13 @@ def ask_for_file_dados(title='Selecione a planilha de dados das empresas', initi
     return file if file else False
 
 
+# converte as chaves de acesso do site da API em base64 para fazer a requisição das chaves de acesso para o serviço
 def converter_base64(usuario):
     # converte as credenciais para base64
     return base64.b64encode(usuario.encode("utf8")).decode("utf8")
 
 
+# solicita as chaves de acesso para o serviço
 def solicita_token(usuario_b64, certificado, senha):
     headers = {
         "Authorization": "Basic " + usuario_b64,
@@ -102,6 +109,7 @@ def solicita_token(usuario_b64, certificado, senha):
     resposta_string_json = json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True)
     resposta = pagina.json()
     
+    # anota as respostas para tratar possíveis erros
     try:
         os.makedirs(e_dir, exist_ok=True)
         escreve_doc(pagina.status_code, nome='status_code', local=e_dir_2)
@@ -130,6 +138,7 @@ def solicita_token(usuario_b64, certificado, senha):
         return resposta['message'], resposta['description']
     
 
+# solicita a guia de DCTF WEB na API
 def solicita_dctf(comp, cnpj_contratante, cnpj_empresa, access_token, jwt_token):
     mes = comp.split('/')[0]
     ano = comp.split('/')[1]
@@ -163,8 +172,10 @@ def solicita_dctf(comp, cnpj_contratante, cnpj_empresa, access_token, jwt_token)
     pagina = requests.post('https://gateway.apiserpro.serpro.gov.br/integra-contador/v1/Emitir', headers=headers, data=json.dumps(data))
     
     resposta = pagina.json()
+    dados_pdf = json.loads(resposta["dados"])
     resposta_string_json = json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True)
     
+    # anota as respostas da API para tratar possíveis erros
     try:
         os.makedirs(e_dir, exist_ok=True)
         escreve_doc(resposta, nome='resposta_jason_guia', local=e_dir_2)
@@ -175,13 +186,54 @@ def solicita_dctf(comp, cnpj_contratante, cnpj_empresa, access_token, jwt_token)
         escreve_doc(f'{cnpj_empresa}\n{resposta_string_json}', nome='string_json_guia')
         escreve_doc(resposta['dados'], nome='pdf_base_64')
     
+    # output
+    # {
+    #     "contratante":
+    #         {
+    #             "numero": "00000000000000",
+    #             "tipo": 2
+    #         },
+    #     "autorPedidoDados":
+    #         {
+    #             "numero": "00000000000000",
+    #             "tipo": 2
+    #         },
+    #     "contribuinte":
+    #         {
+    #             "numero": "00000000000000",
+    #             "tipo": 2
+    #         },
+    #     "pedidoDados":
+    #         {
+    #             "idSistema": "DCTFWEB",
+    #             "idServico": "GERARGUIA31",
+    #             "versaoSistema": "1.0",
+    #             "dados": "{\"categoria\": \"GERAL_MENSAL\",\"anoPA\":\"2027\",\"mesPA\":\"11\"}"
+    #         },
+    #     "status": 200,
+    #     "dados": "{\"PDFByteArrayBase64\":\"JVBERi0xLjUKJafj8fEKMi..."}",
+    #     "mensagens":
+    #         [
+    #             {
+    #                 "codigo": "Aviso-DCTFWEB-MG11",
+    #                 "texto": "Emissor Guia Pagamento executado com sucesso."
+    #             },
+    #             {
+    #                 "codigo": "Sucesso-DCTFWEB-MG00",
+    #                 "texto": "Requisição efetuada com sucesso"
+    #             }
+    #         ]
+    # }
     try:
-        return mes, ano, resposta['dados']['PDFByteArrayBase64'], resposta['mensagens'][0]['texto']
+        return mes, ano, dados_pdf["PDFByteArrayBase64"], resposta['mensagens'][0]['texto']
     except:
         return mes, ano, resposta['dados'], resposta['mensagens'][0]['texto']
         
-    
+
+# cria o PDF usando os bytes retornados da requisição na API
 def cria_pdf(pdf_base64, cnpj_empresa, nome_empresa, mes, ano):
+    nome_empresa = nome_empresa.replace('/', ' ').replace(',', '')
+    
     pdf_bytes = base64.b64decode(pdf_base64)
     # os.makedirs('Execução/DCTFWEB', exist_ok=True)
     with open(os.path.join('Execução', 'Guias', f'DCTFWEB {mes}-{ano} - {cnpj_empresa} - {nome_empresa}.pdf'), "wb") as file:

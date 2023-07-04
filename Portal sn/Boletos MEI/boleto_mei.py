@@ -32,6 +32,11 @@ def verificacoes(empresa, andamentos):
         print('❕ O PA está em débito automático')
         p.hotkey('ctrl', 'w')
         return False
+    if _find_img('nao_tem_das.png', conf=0.9):
+        _escreve_relatorio_csv(f'{cnpj};Não há DAS a ser emitido;{comp};{ano}', nome=andamentos)
+        print('❕ Não há DAS a ser emitido')
+        p.hotkey('ctrl', 'w')
+        return False
     return True
 
 

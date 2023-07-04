@@ -119,7 +119,6 @@ def solicita_token(usuario_b64, certificado, senha):
         escreve_doc(pagina.status_code, nome='status_code')
         escreve_doc(resposta, nome='resposta_jason')
         escreve_doc(resposta_string_json, nome='string_json')
-    
     #
     # Output:
     #   200
@@ -185,7 +184,7 @@ def solicita_dctf(comp, cnpj_contratante, cnpj_empresa, access_token, jwt_token)
         escreve_doc(resposta, nome='resposta_jason_guia')
         escreve_doc(f'{cnpj_empresa}\n{resposta_string_json}', nome='string_json_guia')
         escreve_doc(resposta['dados'], nome='pdf_base_64')
-    
+    #
     # output
     # {
     #     "contratante":
@@ -224,6 +223,7 @@ def solicita_dctf(comp, cnpj_contratante, cnpj_empresa, access_token, jwt_token)
     #             }
     #         ]
     # }
+    #
     try:
         return mes, ano, dados_pdf["PDFByteArrayBase64"], resposta['mensagens'][0]['texto']
     except:

@@ -53,7 +53,7 @@ def login_email(driver):
     _click_img('menu_classificacao.png', conf=0.9)
     _wait_img('crescente.png', conf=0.9)
     _click_img('crescente.png', conf=0.9)
-    _click_img('menu_classificacao.png', conf=0.9)
+    time.sleep(1)
     
     return driver
 
@@ -64,7 +64,7 @@ def captura_link_email(driver):
     while not localiza_id(driver, 'messageViewFrame'):
         time.sleep(1)
     
-    titulo = re.compile(r'<div id=\"subject\">(.+)</div>').search(driver.page_source).group(1)
+    titulo = re.compile(r'subject\">(.+)</div>').search(driver.page_source).group(1)
     titulo = titulo.replace('-&nbsp;', '- ').replace(' &nbsp;', ' ').replace('&nbsp; ', ' ').replace('&nbsp;', ' ').replace('&amp;', '&')
     
     print(titulo)
@@ -75,7 +75,7 @@ def captura_link_email(driver):
     
     # Alterna o driver para o contexto do frame
     driver.switch_to.frame(frame)
-    
+
     try:
         # pega cnpj da empresa que vai receber a mensagem
         cnpj = re.compile(r'(\d\d\.\d\d\d\.\d\d\d/\d\d\d\d-\d\d)').search(driver.page_source).group(1)
@@ -90,7 +90,14 @@ def captura_link_email(driver):
             print(cnpj)
             print(cnpj_limpo)
         except:
-            return driver, titulo, 'x', 'x', 'x', 'x'
+            try:
+                # pega cnpj da empresa que vai receber a mensagem
+                cnpj = re.compile(r'CNPJ:</strong> (\d\d\.\d\d\d\.\d\d\d/\d\d\d\d-\d\d)&nbsp;').search(driver.page_source).group(1)
+                cnpj_limpo = cnpj.replace('.', '').replace('/', '').replace('-', '')
+                print(cnpj)
+                print(cnpj_limpo)
+            except:
+                return driver, titulo, 'x', 'x', 'x', 'x'
         
     # pega a data de vencimento do documento que está no link da mensagem
     try:
@@ -101,9 +108,9 @@ def captura_link_email(driver):
     print(vencimento)
     
     # pega o link que será enviado na mensagem
-    link_email_padrao = re.compile(r'<a href=\"(https://api\.gestta\.com\.br.+)\" target=\"_blank\"').findall(driver.page_source)
+    link_email_padrao = re.compile(r'<a href=\"(https://api\.gestta\.com\.br.+)\" style=\"margin: 0; padding: 0; font-family:').findall(driver.page_source)
     if not link_email_padrao:
-        link_email_padrao = re.compile(r'<a href=\"(https://app\.gestta\.com\.br.+)\" target=\"_blank\"').findall(driver.page_source)
+        link_email_padrao = re.compile(r'<a href=\"(https://app\.gestta\.com\.br.+)\" style=\"margin: 0; padding: 0; font-family:').findall(driver.page_source)
     
     link_email = list(set(link_email_padrao))
     
@@ -175,8 +182,10 @@ def mover_email(pasta=''):
     _wait_img('mover_email.png', conf=0.9)
     _click_img('mover_email.png', conf=0.9, clicks=2)
     
+    clicou = False
     # aguarda a tela para selecionar e depois clica para abrir a lista de caixas
     _wait_img('tela_mover_email.png', conf=0.9)
+    _click_img('tela_mover_email.png', conf=0.9)
     _click_img('lista_caixas_email.png', conf=0.9)
     
     # enquanto a caixa não aparecer aperta para descer a lista

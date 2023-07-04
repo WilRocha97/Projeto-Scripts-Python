@@ -130,8 +130,7 @@ def solicita_token(usuario_b64, certificado, senha):
         return resposta['message'], resposta['description']
     
 
-def solicita_dctf(cnpj_contratante, cnpj_empresa, access_token, jwt_token):
-    comp = p.prompt(text='Informe a competência das guias que deseja solicitar', default='00/0000')
+def solicita_dctf(comp, cnpj_contratante, cnpj_empresa, access_token, jwt_token):
     mes = comp.split('/')[0]
     ano = comp.split('/')[1]
     
@@ -214,10 +213,11 @@ def run():
     empresas = open_lista_dados()
     if not empresas:
         return False
-
+    
+    comp = p.prompt(text='Informe a competência das guias que deseja solicitar', default='00/0000')
     for count, empresa in enumerate(empresas, start=1):
         cnpj_empresa, nome_empresa = empresa
-        mes, ano, pdf_base64, mensagens = solicita_dctf(cnpj_contratante, cnpj_empresa, str(access_token), str(jwt_token))
+        mes, ano, pdf_base64, mensagens = solicita_dctf(comp, cnpj_contratante, cnpj_empresa, str(access_token), str(jwt_token))
         
         if not pdf_base64:
             mensagen_2 = ''

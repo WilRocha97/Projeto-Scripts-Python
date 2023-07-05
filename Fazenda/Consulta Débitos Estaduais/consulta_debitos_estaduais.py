@@ -13,7 +13,7 @@ _situacoes = {
     'C': '✔ Certidão sem pendencias',
     'S': '❗ Nao apresentou STDA',
     'G': '❗ Nao apresentou GIA',
-    'E': '❌Nao baixou arquivo',
+    'E': '❌ Nao baixou arquivo',
     'T': '❗ Transporte de Saldo Credor Incorreto',
     'P': '❗ Pendencias',
     'I': '❗ Pendencias GIA',

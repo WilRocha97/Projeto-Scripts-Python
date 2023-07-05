@@ -169,9 +169,7 @@ def solicita_dctf(comp, cnpj_contratante, cnpj_empresa, access_token, jwt_token)
                'jwt_token': jwt_token}
     
     pagina = requests.post('https://gateway.apiserpro.serpro.gov.br/integra-contador/v1/Emitir', headers=headers, data=json.dumps(data))
-    
     resposta = pagina.json()
-    dados_pdf = json.loads(resposta["dados"])
     resposta_string_json = json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True)
     
     # anota as respostas da API para tratar possíveis erros
@@ -225,6 +223,7 @@ def solicita_dctf(comp, cnpj_contratante, cnpj_empresa, access_token, jwt_token)
     # }
     #
     try:
+        dados_pdf = json.loads(resposta["dados"])
         return mes, ano, dados_pdf["PDFByteArrayBase64"], resposta['mensagens'][0]['texto']
     except:
         return mes, ano, resposta['dados'], resposta['mensagens'][0]['texto']
@@ -242,9 +241,9 @@ def cria_pdf(pdf_base64, cnpj_empresa, nome_empresa, mes, ano):
 
 def run():
     cnpj_contratante = p.prompt(text='Informe o CNPJ do contratante do serviço SERPRO')
-    consumerKey = p.password(text='Informe a consumerKey:')
-    consumerSecret = p.password(text='Informe a consumerSecret:')
-    usuario = consumerKey + ":" + consumerSecret
+    consumer_key = p.password(text='Informe a consumerKey:')
+    consumer_secret = p.password(text='Informe a consumerSecret:')
+    usuario = consumer_key + ":" + consumer_secret
     usuario_b64 = converter_base64(usuario)
     
     senha = p.password(text='Informe a senha do certificado digital:')
@@ -291,5 +290,3 @@ def run():
     
 if __name__ == '__main__':
     run()
-
-

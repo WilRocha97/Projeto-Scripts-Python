@@ -5,6 +5,7 @@ from functools import wraps
 from tkinter.filedialog import askopenfilename, Tk
 
 e_dir = Path('T:\ROBO\DCTF-WEB\Execução')
+e_dir_api = Path('T:\ROBO\DCTF-WEB\Execução\Response')
 e_dir_2 = Path('Execução')
 
 
@@ -27,9 +28,7 @@ def open_lista_dados(encode='latin-1'):
 
 # escreve os andamentos das requisições em um .csv
 def escreve_relatorio_csv(texto, nome='resumo', local=e_dir, end='\n', encode='latin-1'):
-    if local == e_dir:
-        local = Path(local)
-    # os.makedirs(local, exist_ok=True)
+    os.makedirs(local, exist_ok=True)
 
     try:
         f = open(str(local / f"{nome}.csv"), 'a', encoding=encode)
@@ -41,10 +40,8 @@ def escreve_relatorio_csv(texto, nome='resumo', local=e_dir, end='\n', encode='l
 
 
 # escreve arquivos .txt com as respostas da API
-def escreve_doc(texto, nome='doc', local=e_dir, encode='latin-1'):
-    if local == e_dir:
-        local = Path(local)
-    # os.makedirs(local, exist_ok=True)
+def escreve_doc(texto, nome='doc', local=e_dir_api, encode='latin-1'):
+    os.makedirs(local, exist_ok=True)
     
     try:
         f = open(str(local / f"{nome}.txt"), 'a', encoding=encode)
@@ -111,7 +108,6 @@ def solicita_token(usuario_b64, certificado, senha):
     
     # anota as respostas para tratar possíveis erros
     try:
-        os.makedirs(e_dir, exist_ok=True)
         escreve_doc(pagina.status_code, nome='status_code', local=e_dir_2)
         escreve_doc(resposta, nome='resposta_jason', local=e_dir_2)
         escreve_doc(resposta_string_json, nome='string_json', local=e_dir_2)
@@ -226,7 +222,10 @@ def solicita_dctf(comp, cnpj_contratante, cnpj_empresa, access_token, jwt_token)
         dados_pdf = json.loads(resposta["dados"])
         return mes, ano, dados_pdf["PDFByteArrayBase64"], resposta['mensagens'][0]['texto']
     except:
-        return mes, ano, resposta['dados'], resposta['mensagens'][0]['texto']
+        try:
+            return mes, ano, resposta['dados'], resposta['mensagens'][2]['texto']
+        except:
+            return mes, ano, resposta['dados'], resposta['mensagens'][0]['texto']
         
 
 # cria o PDF usando os bytes retornados da requisição na API
@@ -234,13 +233,14 @@ def cria_pdf(pdf_base64, cnpj_empresa, nome_empresa, mes, ano):
     nome_empresa = nome_empresa.replace('/', ' ').replace(',', '')
     
     pdf_bytes = base64.b64decode(pdf_base64)
-    # os.makedirs('Execução/DCTFWEB', exist_ok=True)
-    with open(os.path.join('Execução', 'Guias', f'DCTFWEB {mes}-{ano} - {cnpj_empresa} - {nome_empresa}.pdf'), "wb") as file:
+    os.makedirs(e_dir, exist_ok=True)
+    with open(os.path.join(e_dir, f'Guias {mes}-{ano}', f'DCTFWEB {mes}-{ano} - {cnpj_empresa} - {nome_empresa}.pdf'), "wb") as file:
         file.write(pdf_bytes)
 
 
 def run():
     cnpj_contratante = p.prompt(text='Informe o CNPJ do contratante do serviço SERPRO')
+    
     consumer_key = p.password(text='Informe a consumerKey:')
     consumer_secret = p.password(text='Informe a consumerSecret:')
     usuario = consumer_key + ":" + consumer_secret
@@ -250,6 +250,13 @@ def run():
     
     # pergunta qual o arquivo do certificado
     certificado = ask_for_file()
+    
+    # limpa a pasta de response da api
+    try:
+        for arquivo in os.listdir(e_dir_api):
+            os.remove(os.path.join(e_dir_api, arquivo))
+    except:
+        pass
     
     jwt_token, access_token = solicita_token(usuario_b64, certificado, senha)
     
@@ -281,9 +288,9 @@ def run():
         
         try:
             os.makedirs(e_dir, exist_ok=True)
-            escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens};{mensagen_2}', local=e_dir_2)
+            escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens};{mensagen_2}', nome=f'Andamentos DCTF-WEB {mes}-{ano}', local=e_dir_2)
         except:
-            escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens};{mensagen_2}')
+            escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens};{mensagen_2}', nome=f'Andamentos DCTF-WEB {mes}-{ano}')
         
     p.alert(text='Robô finalizado!')
     

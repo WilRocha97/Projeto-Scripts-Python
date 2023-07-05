@@ -52,6 +52,7 @@ def login_email(driver):
     _wait_img('menu_classificacao.png', conf=0.9)
     _click_img('menu_classificacao.png', conf=0.9)
     _wait_img('crescente.png', conf=0.9)
+    time.sleep(0.5)
     _click_img('crescente.png', conf=0.9)
     time.sleep(1)
     
@@ -180,14 +181,18 @@ def mover_email(pasta=''):
     
     # espera o menu abrir e clica na opção de mover
     _wait_img('mover_email.png', conf=0.9)
+    time.sleep(0.5)
     _click_img('mover_email.png', conf=0.9, clicks=2)
     
     clicou = False
     # aguarda a tela para selecionar e depois clica para abrir a lista de caixas
     _wait_img('tela_mover_email.png', conf=0.9)
+    time.sleep(0.5)
     _click_img('tela_mover_email.png', conf=0.9)
+    time.sleep(0.5)
     _click_img('lista_caixas_email.png', conf=0.9)
     
+    time.sleep(1)
     # enquanto a caixa não aparecer aperta para descer a lista
     while not _find_img(f'caixa_{pasta}_email.png', conf=0.9):
         p.press('down')
@@ -195,9 +200,10 @@ def mover_email(pasta=''):
     # seleciona a caixa
     p.press('enter')
     
+    time.sleep(1)
     # confirmar a seleção
     _click_img('confirma_mover_email.png', conf=0.9)
-    time.sleep(10)
+    time.sleep(2)
 
 
 @_time_execution

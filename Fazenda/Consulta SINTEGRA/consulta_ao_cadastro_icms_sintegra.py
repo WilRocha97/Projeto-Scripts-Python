@@ -2,27 +2,17 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from PIL import Image
-import os, time, re, shutil
+import os, time, re
 
 from sys import path
 
 path.append(r'..\..\_comum')
-from chrome_comum import _initialize_chrome, _send_input, _find_by_path, _find_by_id
+from chrome_comum import _initialize_chrome, _send_input, _find_by_id
 from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header_csv, _open_lista_dados, _where_to_start, _indice
 from captcha_comum import _solve_recaptcha, _solve_text_captcha
 
 
-def find_by_id(xpath, driver):
-    try:
-        elem = driver.find_element(by=By.ID, value=xpath)
-        return elem
-    except:
-        return None
-
-
-def consultar(options, cnpj, nome):
-    status, driver = _initialize_chrome(options)
-    
+def login(driver, cnpj, nome):
     # entra na página inicial da consulta
     url_inicio = 'https://www.cadesp.fazenda.sp.gov.br/(S(31mwr1eckqxyy2tfvbfuvpfc))/Pages/Cadastro/Consultas/ConsultaPublica/ConsultaPublica.aspx'
     driver.get(url_inicio)
@@ -36,18 +26,7 @@ def consultar(options, cnpj, nome):
     driver.find_element(by=By.XPATH, value='/html/body/form/table[3]/tbody/tr/td[2]/table[2]/tbody/tr/td[2]/table/tbody/tr[2]/td[2]/div/div[2]/div[1]/table/tbody/tr[2]/td/select/option[2]').click()
     time.sleep(1)
     
-    """# pega o sitekey para quebrar o captcha
-    data = {'url': url_inicio, 'sitekey': '6LfWn8wZAAAAABbBsWZvt7wQXWYNTOFN3Prjcx1L'}
-    response = _solve_recaptcha(data)
-    
-    # pega a id do campo do recaptcha
-    id_response = re.compile(r'<textarea id=\"(.+)\" name=\"g-recaptcha-response')
-    id_response = id_response.search(driver.page_source).group(1)
-    
-    # insere a solução do captcha via javascript
-    driver.execute_script('document.getElementById("' + id_response + '").innerText="' + response + '"')"""
-    
-    while not find_by_id('ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_imagemDinamica', driver):
+    while not _find_by_id('ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_imagemDinamica', driver):
         time.sleep(1)
     element = driver.find_element(by=By.ID, value='ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_imagemDinamica')
     location = element.location
@@ -93,18 +72,15 @@ def consultar(options, cnpj, nome):
             driver.quit()
             print(f'Erro no login: {erro}')
             if erro == 'O texto digitado não confere com a imagem de segurança.':
-                return False
+                return driver, False
             _escreve_relatorio_csv(f'{cnpj};Erro no login;{erro};{nome}', nome='Consulta ao cadastro de ICMS')
-            return True
+            return driver, True
     
-    # pega as infos da empresa para preencher a planilha
+    return driver, True
+
+
+def pega_info(cnpj, driver):
     print('>>> Consultando empresa')
-    pega_info(cnpj, nome, driver)
-    driver.quit()
-    return True
-
-
-def pega_info(cnpj, nome, driver):
     # pega as infos da empresa
     regex = [r'IE:.+\n.+\"dadoDetalhe\">(.+)</td>',  # inscrição estadual
              r'Empresarial:.+\n.+\"dadoDetalhe\">(.+)</td>',  # nome da empresa
@@ -151,6 +127,7 @@ def pega_info(cnpj, nome, driver):
     
     _escreve_relatorio_csv(f"{cnpj};Ok;{infos}{enderecos}", nome='Consulta ao cadastro de ICMS')
     print(f'✔ Dados coletados')
+    return driver, True
 
 
 @_time_execution
@@ -183,10 +160,19 @@ def run():
         # printa o indice da empresa que está sendo executada
         _indice(count, total_empresas, empresa)
         
-        erro = False
-        while not erro:
-            erro = consultar(options, cnpj, nome)
-    
+        resultado = False
+        while not resultado:
+            status, driver = _initialize_chrome(options)
+            
+            # faz login na empresa
+            driver, resultado = login(driver, cnpj, nome)
+            if not resultado:
+                driver.quit()
+                
+            # pega as infos da empresa para preencher a planilha
+            driver, resultado = pega_info(cnpj, driver)
+            driver.quit()
+            
     _escreve_header_csv(';'.join(['CNPJ', 'CONSULTA', 'IE', 'NOME', 'SITUAÇÃO CADASTRAL', 'DATA DA SITUAÇÃO', 'OCORRÊNCIA FISCAL', 'DATA DE INATIVIDADE', 'NATUREZA JURÍDICA',
                                   'REGIME DE APURAÇÃO', 'ATIVIDADE ECONÔMICA', 'POSTO FISCAL', 'CREDENCIAMENTO COMO EMISSOR DE NF-E', 'OBRIGATORIEDADE DE NF-E',
                                   'INÍCIO DA OBRIGATORIEDADE', 'ENDEREÇO']), nome='Consulta ao cadastro de ICMS')

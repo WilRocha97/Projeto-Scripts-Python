@@ -9,7 +9,7 @@ from PIL import Image
 
 from sys import path
 path.append(r'..\..\_comum')
-from chrome_comum import _initialize_chrome
+from chrome_comum import _initialize_chrome, _find_by_id
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
 from captcha_comum import _solve_text_captcha
 
@@ -67,26 +67,17 @@ def format_data(content):
     return str(new_soup)
 
 
-def find_by_id(xpath, driver):
-    try:
-        elem = driver.find_element(by=By.ID, value=xpath)
-        return elem
-    except:
-        return None
-
-
-def login(options, cnpj, insc_muni):
-    status, driver = _initialize_chrome(options)
+def login(driver, cnpj, insc_muni):
     base = 'http://179.108.81.10:9081/tbw'
     url_inicio = f'{base}/loginWeb.jsp?execobj=ServicoPesquisaISSQN'
 
     driver.get(url_inicio)
-    while not find_by_id('span7Menu', driver):
+    while not _find_by_id('span7Menu', driver):
         time.sleep(1)
     button = driver.find_element(by=By.ID, value='span7Menu')
     button.click()
 
-    while not find_by_id('captchaimg', driver):
+    while not _find_by_id('captchaimg', driver):
         time.sleep(1)
     element = driver.find_element(by=By.ID, value='captchaimg')
     location = element.location
@@ -109,76 +100,74 @@ def login(options, cnpj, insc_muni):
         print('Erro Login - não encontrou captcha')
         return driver, 'erro captcha'
 
-    if captcha is not None:
-        while not find_by_id('input1', driver):
-            time.sleep(1)
-        element = driver.find_element(by=By.ID, value='input1')
-        element.send_keys(insc_muni)
+    while not _find_by_id('input1', driver):
+        time.sleep(1)
+    element = driver.find_element(by=By.ID, value='input1')
+    element.send_keys(insc_muni)
 
-        while not find_by_id('input4', driver):
-            time.sleep(1)
-        element = driver.find_element(by=By.ID, value='input4')
-        element.send_keys(cnpj)
+    while not _find_by_id('input4', driver):
+        time.sleep(1)
+    element = driver.find_element(by=By.ID, value='input4')
+    element.send_keys(cnpj)
 
-        while not find_by_id('captchafield', driver):
-            time.sleep(1)
-        element = driver.find_element(by=By.ID, value='captchafield')
-        element.send_keys(captcha)
+    while not _find_by_id('captchafield', driver):
+        time.sleep(1)
+    element = driver.find_element(by=By.ID, value='captchafield')
+    element.send_keys(captcha)
 
-        while not find_by_id('imagebutton1', driver):
-            time.sleep(1)
-        button = driver.find_element(by=By.ID, value='imagebutton1')
-        button.click()
+    while not _find_by_id('imagebutton1', driver):
+        time.sleep(1)
+    button = driver.find_element(by=By.ID, value='imagebutton1')
+    button.click()
 
-        time.sleep(3)
-        
+    time.sleep(3)
+
+    timer = 0
+    while not _find_by_id('td30', driver):
         print('>>> Aguardando site')
-        timer = 0
-        while not find_by_id('td30', driver):
-            driver.save_screenshot(r'ignore\debug_screen.png')
-            time.sleep(1)
+        driver.save_screenshot(r'ignore\debug_screen.png')
+        time.sleep(1)
 
-            if find_by_id('tdMsg', driver):
-                try:
-                    erro = re.compile(r'\"erroMessageText\".+tipo=\"td\">(.+)</td></tr></tbody></table>').search(driver.page_source).group(1)
-                    if erro != 'td':
-                        _escreve_relatorio_csv(f'{cnpj};{erro}')
-                        print(f'❌ {erro}')
-                        return driver, False
-                except:
-                    pass
-            timer += 1
-            if timer >= 10:
-                _escreve_relatorio_csv(f'{cnpj};Erro no login')
-                print(f'❌ Erro no login')
-                return driver, False
+        if _find_by_id('tdMsg', driver):
+            try:
+                erro = re.compile(r'id=\"tdMsg\".+tipo=\"td\">(.+)').search(driver.page_source).group(1)
+                print(f'❌ {erro}')
+                return driver, erro
+            except:
+                pass
+        timer += 1
+        if timer >= 10:
+            _escreve_relatorio_csv(f'{cnpj};Erro no login')
+            print(f'❌ Erro no login')
+            return driver, False
+    
+    return driver, 'ok'
+
             
-        html = driver.page_source.encode('utf-8')
-        try:
-            driver.save_screenshot(r'ignore\debug_screen.png')
-            str_html = format_data(html)
+def consulta(driver, cnpj):
+    print('>>> Consultando empresa')
+    html = driver.page_source.encode('utf-8')
+    try:
+        driver.save_screenshot(r'ignore\debug_screen.png')
+        str_html = format_data(html)
 
-            if str_html:
-                _escreve_relatorio_csv(';'.join([cnpj, 'Com débitos']))
-                print('>>> Gerando arquivo')
-                nome_arq = ';'.join([cnpj, 'INF_FISC_REAL', 'Debitos Municipais'])
-                with open('execução/documentos/' + nome_arq + r'.pdf', 'w+b') as pdf:
-                    pisa.showLogging()
-                    pisa.CreatePDF(str_html, pdf)
-                    print('❗ Arquivo gerado')
-            else:
-                _escreve_relatorio_csv(';'.join([cnpj, 'Sem débitos']))
-                print('✔ Não há débitos')
-        except:
-            _escreve_relatorio_csv(';'.join([cnpj, 'Erro na geração do PDF']))
-            driver.save_screenshot(r'ignore\debug_screen.png')
-            print('❌ Erro na geração do PDF')
+        if str_html:
+            _escreve_relatorio_csv(';'.join([cnpj, 'Com débitos']))
+            print('>>> Gerando arquivo')
+            nome_arq = ';'.join([cnpj, 'INF_FISC_REAL', 'Debitos Municipais'])
+            with open('execução/documentos/' + nome_arq + r'.pdf', 'w+b') as pdf:
+                pisa.showLogging()
+                pisa.CreatePDF(str_html, pdf)
+                print('❗ Arquivo gerado')
+        else:
+            _escreve_relatorio_csv(';'.join([cnpj, 'Sem débitos']))
+            print('✔ Não há débitos')
+    except:
+        _escreve_relatorio_csv(';'.join([cnpj, 'Erro na geração do PDF']))
+        driver.save_screenshot(r'ignore\debug_screen.png')
+        print('❌ Erro na geração do PDF')
 
-        return driver, True
-    else:
-        _escreve_relatorio_csv(f'{cnpj};Erro no login')
-        print('❌ Erro no login')
-        return driver, True
+    return driver, True
 
 
 @_time_execution
@@ -198,12 +187,16 @@ def run():
         cnpj, insc_muni = empresa
 
         _indice(count, total_empresas, empresa)
-
-        resultado = 'erro captcha'
-        while resultado == 'erro captcha':
-            driver, resultado = login(options, cnpj, insc_muni)
-
-        driver.close()
+        
+        resultado = 'Texto da imagem incorreto.'
+        while resultado == 'Texto da imagem incorreto.':
+            status, driver = _initialize_chrome(options)
+            driver, resultado = login(driver, cnpj, insc_muni)
+            
+            if resultado == 'ok':
+                driver, resultado = consulta(driver, cnpj)
+                
+            driver.close()
         
 
 if __name__ == '__main__':

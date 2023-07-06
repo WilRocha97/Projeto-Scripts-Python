@@ -7,9 +7,9 @@ import os, time, re, shutil
 from sys import path
 
 path.append(r'..\..\_comum')
-from chrome_comum import _initialize_chrome, _send_input
+from chrome_comum import _initialize_chrome, _send_input, _find_by_path, _find_by_id
 from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header_csv, _open_lista_dados, _where_to_start, _indice
-from captcha_comum import _solve_recaptcha
+from captcha_comum import _solve_recaptcha, _solve_text_captcha
 
 
 def find_by_id(xpath, driver):
@@ -36,7 +36,7 @@ def consultar(options, cnpj, nome):
     driver.find_element(by=By.XPATH, value='/html/body/form/table[3]/tbody/tr/td[2]/table[2]/tbody/tr/td[2]/table/tbody/tr[2]/td[2]/div/div[2]/div[1]/table/tbody/tr[2]/td/select/option[2]').click()
     time.sleep(1)
     
-    # pega o sitekey para quebrar o captcha
+    """# pega o sitekey para quebrar o captcha
     data = {'url': url_inicio, 'sitekey': '6LfWn8wZAAAAABbBsWZvt7wQXWYNTOFN3Prjcx1L'}
     response = _solve_recaptcha(data)
     
@@ -45,7 +45,33 @@ def consultar(options, cnpj, nome):
     id_response = id_response.search(driver.page_source).group(1)
     
     # insere a solução do captcha via javascript
-    driver.execute_script('document.getElementById("' + id_response + '").innerText="' + response + '"')
+    driver.execute_script('document.getElementById("' + id_response + '").innerText="' + response + '"')"""
+    
+    while not find_by_id('ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_imagemDinamica', driver):
+        time.sleep(1)
+    element = driver.find_element(by=By.ID, value='ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_imagemDinamica')
+    location = element.location
+    size = element.size
+    driver.save_screenshot('ignore\captcha\pagina.png')
+    x = location['x']
+    y = location['y']
+    w = size['width']
+    h = size['height']
+    width = x + w
+    height = y + h
+    time.sleep(2)
+    im = Image.open(r'ignore\captcha\pagina.png')
+    im = im.crop((int(x), int(y), int(width), int(height)))
+    im.save(r'ignore\captcha\captcha.png')
+    time.sleep(1)
+    captcha = _solve_text_captcha(os.path.join('ignore', 'captcha', 'captcha.png'))
+    
+    if not captcha:
+        print('Erro Login - não encontrou captcha')
+        return driver, 'erro captcha'
+        
+    # insere a solução do captcha via javascript
+    _send_input('ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_imagemDinamicaTextBox', captcha, driver)
     
     # insere o cnpj da empresa
     _send_input('ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_valorFiltroTextBox', cnpj, driver)
@@ -59,14 +85,14 @@ def consultar(options, cnpj, nome):
     driver.find_element(by=By.ID, value='ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_consultaPublicaButton').click()
     
     # enquanto não abre a tela com as infos da empresa, verifica se aparece alguma mensagem de erro do site
-    while not find_by_id('ctl00_conteudoPaginaPlaceHolder_lblCodigoControleCertidao', driver):
+    while not _find_by_id('ctl00_conteudoPaginaPlaceHolder_lblCodigoControleCertidao', driver):
         time.sleep(1)
-        if find_by_id('ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_MensagemErroFiltroLabel', driver):
+        if _find_by_id('ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_MensagemErroFiltroLabel', driver):
             erro = re.compile(r'ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_MensagemErroFiltroLabel.+\">(.+)</span.')
             erro = erro.search(driver.page_source).group(1)
             driver.quit()
             print(f'Erro no login: {erro}')
-            if erro == 'Captcha inválido. Tente novamente.':
+            if erro == 'O texto digitado não confere com a imagem de segurança.':
                 return False
             _escreve_relatorio_csv(f'{cnpj};Erro no login;{erro};{nome}', nome='Consulta ao cadastro de ICMS')
             return True

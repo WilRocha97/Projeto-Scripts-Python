@@ -195,6 +195,8 @@ def run():
             
             if resultado == 'ok':
                 driver, resultado = consulta(driver, cnpj)
+            elif resultado == 'Texto da imagem incorreto':
+                pass
             else:
                 _escreve_relatorio_csv(f'{cnpj};{resultado}')
             driver.close()

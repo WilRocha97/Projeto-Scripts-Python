@@ -130,7 +130,7 @@ def login(driver, cnpj, insc_muni):
 
         if _find_by_id('tdMsg', driver):
             try:
-                erro = re.compile(r'id=\"tdMsg\".+tipo=\"td\">(.+)').search(driver.page_source).group(1)
+                erro = re.compile(r'id=\"tdMsg\".+tipo=\"td\">(.+).').search(driver.page_source).group(1)
                 print(f'❌ {erro}')
                 return driver, erro
             except:
@@ -152,7 +152,7 @@ def consulta(driver, cnpj):
         str_html = format_data(html)
 
         if str_html:
-            _escreve_relatorio_csv(';'.join([cnpj, 'Com débitos']))
+            _escreve_relatorio_csv(f'{cnpj};Com débitos')
             print('>>> Gerando arquivo')
             nome_arq = ';'.join([cnpj, 'INF_FISC_REAL', 'Debitos Municipais'])
             with open('execução/documentos/' + nome_arq + r'.pdf', 'w+b') as pdf:
@@ -160,10 +160,10 @@ def consulta(driver, cnpj):
                 pisa.CreatePDF(str_html, pdf)
                 print('❗ Arquivo gerado')
         else:
-            _escreve_relatorio_csv(';'.join([cnpj, 'Sem débitos']))
+            _escreve_relatorio_csv(f'{cnpj};Sem débitos')
             print('✔ Não há débitos')
     except:
-        _escreve_relatorio_csv(';'.join([cnpj, 'Erro na geração do PDF']))
+        _escreve_relatorio_csv(f'{cnpj};Erro na geração do PDF')
         driver.save_screenshot(r'ignore\debug_screen.png')
         print('❌ Erro na geração do PDF')
 
@@ -188,14 +188,15 @@ def run():
 
         _indice(count, total_empresas, empresa)
         
-        resultado = 'Texto da imagem incorreto.'
-        while resultado == 'Texto da imagem incorreto.':
+        resultado = 'Texto da imagem incorreto'
+        while resultado == 'Texto da imagem incorreto':
             status, driver = _initialize_chrome(options)
             driver, resultado = login(driver, cnpj, insc_muni)
             
             if resultado == 'ok':
                 driver, resultado = consulta(driver, cnpj)
-                
+            else:
+                _escreve_relatorio_csv(f'{cnpj};{resultado}')
             driver.close()
         
 

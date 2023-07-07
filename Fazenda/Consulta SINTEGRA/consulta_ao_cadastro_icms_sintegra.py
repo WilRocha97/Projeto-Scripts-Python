@@ -26,6 +26,7 @@ def login(driver, cnpj, nome):
     driver.find_element(by=By.XPATH, value='/html/body/form/table[3]/tbody/tr/td[2]/table[2]/tbody/tr/td[2]/table/tbody/tr[2]/td[2]/div/div[2]/div[1]/table/tbody/tr[2]/td/select/option[2]').click()
     time.sleep(1)
     
+    # tira um print da tela com e recorta apenas a imagem do captcha para enviar para a api
     while not _find_by_id('ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_imagemDinamica', driver):
         time.sleep(1)
     element = driver.find_element(by=By.ID, value='ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_imagemDinamica')
@@ -69,7 +70,6 @@ def login(driver, cnpj, nome):
         if _find_by_id('ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_MensagemErroFiltroLabel', driver):
             erro = re.compile(r'ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_MensagemErroFiltroLabel.+\">(.+)</span.')
             erro = erro.search(driver.page_source).group(1)
-            driver.quit()
             print(f'Erro no login: {erro}')
             if erro == 'O texto digitado não confere com a imagem de segurança.':
                 return driver, False

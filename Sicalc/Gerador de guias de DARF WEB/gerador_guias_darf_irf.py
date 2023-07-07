@@ -132,6 +132,7 @@ def gerar(empresa, apuracao):
     time.sleep(1)
     p.press('tab', presses=2, interval=1)
     
+    # copia data de vencimento da guia
     erro = 'sim'
     while erro == 'sim':
         try:
@@ -142,8 +143,10 @@ def gerar(empresa, apuracao):
             erro = 'não'
         except:
             erro = 'sim'
+            
     time.sleep(1)
     p.press('tab')
+    # digita o valor da guia
     time.sleep(1)
     p.write(valor)
 
@@ -266,12 +269,6 @@ def run():
                         print('✔ Guia gerada')
                         _escreve_relatorio_csv('{};{};{};{};Guia gerada'.format(cnpj, nome, valor, cod), nome=f'Resumo gerador {tipo}')
                         erro = 'nao'
-            """except:
-                try:
-                    p.hotkey('alt', 'f4')
-                    erro = 'sim'
-                except:
-                    erro = 'sim'"""
 
         p.hotkey('ctrl', 'w')
 

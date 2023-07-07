@@ -25,53 +25,57 @@ def pega_info():
                 textinho = page.get_text('text', flags=1 + 2 + 8)
                 # print(textinho)
                 try:
-                    infos = re.findall(r'(\d\d.\d\d\d.\d\d\d\/\d\d\d\d-\n\d\d)\n(\d\d\d\.\d\d\d\.\d\d\d\.\d\d\d)\n(.+)\n(.+)', textinho)
+                    infos = re.findall(r'(\d\d.\d\d\d.\d\d\d/\d\d\d\d-\n\d\d)\n(\d\d\d\.\d\d\d\.\d\d\d\.\d\d\d)\n(.+)\n(.+)', textinho)
                     for info in infos:
-                        info = str(info).split(',')
-                        cnpj = info[0]
+                        cnpj = info[0].replace('\n', '')
                         ie = info[1]
                         nome = info[2]
                         situacao = info[3]
+                        if situacao != 'Ativo' and situacao != 'Não Ativo':
+                            situacao = re.search(r'(' + info[0] + ')\n(' + info[1] + ')\n(' + info[2] + ')\n(' + info[3] + ')\n(.+)', textinho).group(5)
                         
                         _escreve_relatorio_csv(f"{cnpj};{ie};{nome};{situacao}")
                 except:
                     print('ERRO')
 
                 try:
-                    infos = re.findall(r'(\d\d.\d\d\d.\d\d\d\/\d\d\d\d-)(\d\d\d\.\d\d\d\.\d\d\d\.\d\d\d)\n(.+)\n(.+)', textinho)
+                    infos = re.findall(r'(\d\d.\d\d\d.\d\d\d/\d\d\d\d-)(\d\d\d\.\d\d\d\.\d\d\d\.\d\d\d)\n(.+)\n(.+)', textinho)
                     for info in infos:
-                        info = str(info).split(',')
-                        cnpj = info[0]
+                        cnpj = info[0].replace('\n', '')
                         ie = info[1]
                         nome = info[2]
                         situacao = info[3]
-    
+                        if situacao != 'Ativo' and situacao != 'Não Ativo':
+                            situacao = re.search(r'(' + info[0] + ')(' + info[1] + ')\n(' + info[2] + ')\n(' + info[3] + ')\n(.+)', textinho).group(5)
+
                         _escreve_relatorio_csv(f"{cnpj};{ie};{nome};{situacao}")
                 except:
                     print('ERRO')
 
                 try:
-                    infos = re.findall(r'(\d\d.\d\d\d.\d\d\d\/\d\d\d\d-\n\d\d)\n(\d\d\d\.\d\d\d\.\d\d\d\.\d\d\d)(.+)\n(.+)', textinho)
+                    infos = re.findall(r'(\d\d.\d\d\d.\d\d\d/\d\d\d\d-\n\d\d)\n(\d\d\d\.\d\d\d\.\d\d\d\.\d\d\d)(.+)\n(.+)', textinho)
                     for info in infos:
-                        info = str(info).split(',')
-                        cnpj = info[0]
+                        cnpj = info[0].replace('\n', '')
                         ie = info[1]
                         nome = info[2]
                         situacao = info[3]
-        
+                        if situacao != 'Ativo' and situacao != 'Não Ativo':
+                            situacao = re.search(r'(' + info[0] + ')\n(' + info[1] + ')(' + info[2] + ')\n(' + info[3] + ')\n(.+)', textinho).group(5)
+
                         _escreve_relatorio_csv(f"{cnpj};{ie};{nome};{situacao}")
                 except:
                     print('ERRO')
 
                 try:
-                    infos = re.findall(r'(\d\d.\d\d\d.\d\d\d\/\d\d\d\d-)(\d\d\d\.\d\d\d\.\d\d\d\.\d\d\d)(.+)\n(.+)', textinho)
+                    infos = re.findall(r'(\d\d.\d\d\d.\d\d\d/\d\d\d\d-)(\d\d\d\.\d\d\d\.\d\d\d\.\d\d\d)(.+)\n(.+)', textinho)
                     for info in infos:
-                        info = str(info).split(',')
-                        cnpj = info[0]
+                        cnpj = info[0].replace('\n', '')
                         ie = info[1]
                         nome = info[2]
                         situacao = info[3]
-        
+                        if situacao != 'Ativo' and situacao != 'Não Ativo':
+                            situacao = re.search(r'(' + info[0] + ')(' + info[1] + ')(' + info[2] + ')\n(' + info[3] + ')\n(.+)', textinho).group(5)
+
                         _escreve_relatorio_csv(f"{cnpj};{ie};{nome};{situacao}")
                 except:
                     print('ERRO')

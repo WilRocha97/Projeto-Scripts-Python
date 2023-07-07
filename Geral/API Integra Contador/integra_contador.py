@@ -232,9 +232,11 @@ def solicita_dctf(comp, cnpj_contratante, cnpj_empresa, access_token, jwt_token)
 def cria_pdf(pdf_base64, cnpj_empresa, nome_empresa, mes, ano):
     nome_empresa = nome_empresa.replace('/', ' ').replace(',', '')
     
+    e_dir_guias = Path('T:\ROBO\DCTF-WEB\Execução\Guias ' + mes + '-' + ano)
+    os.makedirs(e_dir_guias, exist_ok=True)
+    
     pdf_bytes = base64.b64decode(pdf_base64)
-    os.makedirs(e_dir, exist_ok=True)
-    with open(os.path.join(e_dir, f'Guias {mes}-{ano}', f'DCTFWEB {mes}-{ano} - {cnpj_empresa} - {nome_empresa}.pdf'), "wb") as file:
+    with open(os.path.join(e_dir_guias, f'DCTFWEB {mes}-{ano} - {cnpj_empresa} - {nome_empresa}.pdf'), "wb") as file:
         file.write(pdf_bytes)
 
 

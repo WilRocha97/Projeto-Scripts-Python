@@ -74,7 +74,7 @@ def login(driver, cnpj, nome):
             if erro == 'O texto digitado não confere com a imagem de segurança.':
                 return driver, False
             _escreve_relatorio_csv(f'{cnpj};Erro no login;{erro};{nome}', nome='Consulta ao cadastro de ICMS')
-            return driver, True
+            return driver, 'erro'
     
     return driver, True
 
@@ -168,10 +168,11 @@ def run():
             driver, resultado = login(driver, cnpj, nome)
             if not resultado:
                 driver.quit()
-                
-            # pega as infos da empresa para preencher a planilha
-            driver, resultado = pega_info(cnpj, driver)
-            driver.quit()
+            else:
+                if resultado != 'erro':
+                    # pega as infos da empresa para preencher a planilha
+                    driver, resultado = pega_info(cnpj, driver)
+                driver.quit()
             
     _escreve_header_csv(';'.join(['CNPJ', 'CONSULTA', 'IE', 'NOME', 'SITUAÇÃO CADASTRAL', 'DATA DA SITUAÇÃO', 'OCORRÊNCIA FISCAL', 'DATA DE INATIVIDADE', 'NATUREZA JURÍDICA',
                                   'REGIME DE APURAÇÃO', 'ATIVIDADE ECONÔMICA', 'POSTO FISCAL', 'CREDENCIAMENTO COMO EMISSOR DE NF-E', 'OBRIGATORIEDADE DE NF-E',

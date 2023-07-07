@@ -67,7 +67,7 @@ def format_data(content):
     return str(new_soup)
 
 
-def login(driver, cnpj, insc_muni):
+def login(driver, cnpj, insc_muni, nome):
     base = 'http://179.108.81.10:9081/tbw'
     url_inicio = f'{base}/loginWeb.jsp?execobj=ServicoPesquisaISSQN'
 
@@ -130,21 +130,21 @@ def login(driver, cnpj, insc_muni):
 
         if _find_by_id('tdMsg', driver):
             try:
-                erro = re.compile(r'id=\"tdMsg\".+tipo=\"td\">(.+).').search(driver.page_source).group(1)
+                erro = re.compile(r'id=\"tdMsg\".+tipo=\"td\">(.+)\.').search(driver.page_source).group(1)
                 print(f'❌ {erro}')
                 return driver, erro
             except:
                 pass
         timer += 1
         if timer >= 10:
-            _escreve_relatorio_csv(f'{cnpj};Erro no login')
+            _escreve_relatorio_csv(f'{cnpj};{insc_muni};{nome};Erro no login')
             print(f'❌ Erro no login')
             return driver, False
     
     return driver, 'ok'
 
             
-def consulta(driver, cnpj):
+def consulta(driver, cnpj, insc_muni, nome):
     print('>>> Consultando empresa')
     html = driver.page_source.encode('utf-8')
     try:
@@ -152,7 +152,7 @@ def consulta(driver, cnpj):
         str_html = format_data(html)
 
         if str_html:
-            _escreve_relatorio_csv(f'{cnpj};Com débitos')
+            _escreve_relatorio_csv(f'{cnpj};{insc_muni};{nome};Com débitos')
             print('>>> Gerando arquivo')
             nome_arq = ';'.join([cnpj, 'INF_FISC_REAL', 'Debitos Municipais'])
             with open('execução/documentos/' + nome_arq + r'.pdf', 'w+b') as pdf:
@@ -160,10 +160,10 @@ def consulta(driver, cnpj):
                 pisa.CreatePDF(str_html, pdf)
                 print('❗ Arquivo gerado')
         else:
-            _escreve_relatorio_csv(f'{cnpj};Sem débitos')
+            _escreve_relatorio_csv(f'{cnpj};{insc_muni};{nome};Sem débitos')
             print('✔ Não há débitos')
     except:
-        _escreve_relatorio_csv(f'{cnpj};Erro na geração do PDF')
+        _escreve_relatorio_csv(f'{cnpj};{insc_muni};{nome};Erro na geração do PDF')
         driver.save_screenshot(r'ignore\debug_screen.png')
         print('❌ Erro na geração do PDF')
 
@@ -184,21 +184,21 @@ def run():
 
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, insc_muni = empresa
+        cnpj, insc_muni, nome = empresa
 
         _indice(count, total_empresas, empresa)
         
         resultado = 'Texto da imagem incorreto'
         while resultado == 'Texto da imagem incorreto':
             status, driver = _initialize_chrome(options)
-            driver, resultado = login(driver, cnpj, insc_muni)
+            driver, resultado = login(driver, cnpj, insc_muni, nome)
             
             if resultado == 'ok':
-                driver, resultado = consulta(driver, cnpj)
+                driver, resultado = consulta(driver, cnpj, insc_muni, nome)
             elif resultado == 'Texto da imagem incorreto':
                 pass
             else:
-                _escreve_relatorio_csv(f'{cnpj};{resultado}')
+                _escreve_relatorio_csv(f'{cnpj};{insc_muni};{nome};{resultado}')
             driver.close()
         
 

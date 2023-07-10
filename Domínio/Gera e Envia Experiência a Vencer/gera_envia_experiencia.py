@@ -196,7 +196,7 @@ def envia_experiencia(comp):
     # if not _find_img('pasta_pessoal_outros.png', conf=0.9):
     _click_img('drop.png', conf=0.9)
     time.sleep(0.5)
-    p.press('down')
+    _click_img('selecao_pasta_pessoal_outros.png', conf=0.9, timeout=2)
     time.sleep(0.5)
     p.press('enter')
     time.sleep(0.5)

@@ -13,8 +13,13 @@ from captcha_comum import _solve_text_captcha
 
 def login(driver, nome, cpf, pis, data_nasc):
     print('>>> Acessando site')
-    driver.get('http://consultacadastral.inss.gov.br/Esocial/pages/index.xhtml')
+    try:
+        driver.get('http://consultacadastral.inss.gov.br/Esocial/pages/index.xhtml')
+    except:
+        return driver, 'erro'
+    
     while not _find_by_id('indexForm1:botaoConsultar', driver):
+        driver.get('http://consultacadastral.inss.gov.br/Esocial/pages/index.xhtml')
         time.sleep(1)
         
     driver.find_element(by=By.ID, value='indexForm1:botaoConsultar').click()

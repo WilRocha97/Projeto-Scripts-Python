@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import time, re, os
 from pyautogui import press
-
-import PIL.PdfParser
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 

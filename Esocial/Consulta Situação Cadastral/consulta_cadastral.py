@@ -36,11 +36,15 @@ def login(driver, nome, cpf, pis, data_nasc):
         driver.find_element(by=By.ID, value=iten[0]).click()
         driver.find_element(by=By.ID, value=iten[0]).send_keys(iten[1])
     
-    print('>>> Acessando cadastro')
     driver.find_element(by=By.ID, value='formQualificacaoCadastral:btAdicionar').click()
-    
+    print('>>> Acessando cadastro')
+    timer = 1
     while not _find_by_id('gridDadosTrabalhador', driver):
         time.sleep(1)
+        timer += 1
+        if timer > 60:
+            print('❌ O site demorou muito para responder, tentando novamente')
+            return driver, 'erro'
     
     driver.find_element(by=By.ID, value='formValidacao2:botaoValidar2').click()
     

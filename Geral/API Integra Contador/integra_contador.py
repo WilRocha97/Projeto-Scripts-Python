@@ -134,7 +134,7 @@ def solicita_token(usuario_b64, certificado, senha):
     
 
 # solicita a guia de DCTF WEB na API
-def solicita_dctf(comp, cnpj_contratante, cnpj_empresa, access_token, jwt_token):
+def solicita_dctf(comp, cod_consulta, cnpj_contratante, cnpj_empresa, access_token, jwt_token):
     mes = comp.split('/')[0]
     ano = comp.split('/')[1]
     
@@ -149,7 +149,7 @@ def solicita_dctf(comp, cnpj_contratante, cnpj_empresa, access_token, jwt_token)
               },
               "contribuinte": {
                 "numero": str(cnpj_empresa),
-                "tipo": 2
+                "tipo": int(cod_consulta)
               },
               "pedidoDados": {
                 "idSistema": "DCTFWEB",
@@ -276,8 +276,8 @@ def run():
     
     comp = p.prompt(text='Informe a competência das guias que deseja solicitar', default='00/0000')
     for count, empresa in enumerate(empresas, start=1):
-        cnpj_empresa, nome_empresa = empresa
-        mes, ano, pdf_base64, mensagens = solicita_dctf(comp, cnpj_contratante, cnpj_empresa, str(access_token), str(jwt_token))
+        cnpj_empresa, nome_empresa, cod_consulta = empresa
+        mes, ano, pdf_base64, mensagens = solicita_dctf(comp, cod_consulta, cnpj_contratante, cnpj_empresa, str(access_token), str(jwt_token))
         
         if not pdf_base64:
             mensagen_2 = ''

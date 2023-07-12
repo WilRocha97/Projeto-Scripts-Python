@@ -20,11 +20,16 @@ def captura_dados():
     
     hora = f[3][8:].replace(' ', '')
     hora_iniciar = hora.split(':')
-    inicio_horario = datetime.now().replace(hour=int(hora_iniciar[0]), minute=int(hora_iniciar[1]), second=0, microsecond=0)
     
-    hora = f[4][7:].replace(' ', '')
-    hora_finalizar = hora.split(':')
-    fim_horario = datetime.now().replace(hour=int(hora_finalizar[0]), minute=int(hora_finalizar[1]), second=0, microsecond=0)
+    if hora_iniciar[0] == '0':
+        inicio_horario = 0
+        fim_horario = 0
+    else:
+        inicio_horario = datetime.now().replace(hour=int(hora_iniciar[0]), minute=int(hora_iniciar[1]), second=0, microsecond=0)
+        
+        hora = f[4][7:].replace(' ', '')
+        hora_finalizar = hora.split(':')
+        fim_horario = datetime.now().replace(hour=int(hora_finalizar[0]), minute=int(hora_finalizar[1]), second=0, microsecond=0)
     
     dados_erros = False
     if not usuario:
@@ -89,7 +94,6 @@ def configura_parametro(timer):
 def horario():
     if inicio_horario != 0:
         while True:
-            
             timer = 0
             while not p.locateOnScreen(path.join('imgs', 'conexoes.png'), confidence=0.9):
                 sleep(1)
@@ -103,6 +107,8 @@ def horario():
             else:
                 print("Aguardando horário personalizado...")
                 sleep(60)  # Espera por 1 minuto antes de verificar novamente
+    else:
+        return True
 
 
 def run():
@@ -203,7 +209,6 @@ if __name__ == '__main__':
     # se conseguir pegar o usuário e a senha no txt segue o processo
     if not dados_erro:
         tempo = 0
-        horario_limite = False
         # verifica se existem arquivos na pasta de usuários que não iram desconectar, se sim, continua
         documentos = listdir('users')
         

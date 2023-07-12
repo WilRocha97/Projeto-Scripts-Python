@@ -16,7 +16,7 @@ def captura_dados():
     f = f.read().split('\n')
     usuario = f[0][8:].replace(' ', '')
     senha = f[1][6:].replace(' ', '')
-    timer = f[2][17:].replace(' ', '')
+    refresh_timer = f[2][17:].replace(' ', '')
     
     hora = f[3][8:].replace(' ', '')
     hora_iniciar = hora.split(':')
@@ -39,7 +39,7 @@ def captura_dados():
         dados_erros = True
         senha = ''
     
-    return timer, inicio_horario, fim_horario, dados_erros, usuario, senha
+    return refresh_timer, inicio_horario, fim_horario, dados_erros, usuario, senha
 
 
 def localiza_autorizados():
@@ -71,9 +71,9 @@ def aguarda_sub_telas():
 
 
 # configura o tempo de espera para atualizar a lista de usuários
-def configura_parametro(timer):
-    if timer == '':
-        timer = '60'
+def configura_parametro(refresh_timer):
+    if refresh_timer == '':
+        refresh_timer = '60'
     while not p.locateOnScreen(path.join('imgs', 'menu_controle.png')):
         p.hotkey('alt', 'c')
         sleep(1)
@@ -82,7 +82,7 @@ def configura_parametro(timer):
         sleep(1)
     p.press('del', presses=5)
     sleep(1)
-    p.write(timer)
+    p.write(refresh_timer)
     sleep(1)
     p.hotkey('alt', 'g')
     while p.locateOnScreen(path.join('imgs', 'tela_parametros.png')):
@@ -92,8 +92,10 @@ def configura_parametro(timer):
 
 # se for entre segunda ou sexta-feira, verifica o horário limite para ser encerrado
 def horario():
+    refresh_timer, inicio_horario, fim_horario, dados_erro, usuario, senha = captura_dados()
     if inicio_horario != 0:
         while True:
+            refresh_timer, inicio_horario, fim_horario, dados_erro, usuario, senha = captura_dados()
             timer = 0
             while not p.locateOnScreen(path.join('imgs', 'conexoes.png'), confidence=0.9):
                 sleep(1)
@@ -103,7 +105,7 @@ def horario():
             
             now = datetime.now()
             if inicio_horario <= now <= fim_horario:
-                break
+                return True
             else:
                 print("Aguardando horário personalizado...")
                 sleep(60)  # Espera por 1 minuto antes de verificar novamente
@@ -202,8 +204,9 @@ def run():
 if __name__ == '__main__':
     # tenta pegar o usuário e a senha de um arquivo txt, se não conseguir marca um erro na variável e encerra o robô
     try:
-        timer, inicio_horario, fim_horario, dados_erro, usuario, senha = captura_dados()
+        refresh_timer, inicio_horario, fim_horario, dados_erro, usuario, senha = captura_dados()
     except:
+        refresh_timer = ''
         dados_erro = True
     
     # se conseguir pegar o usuário e a senha no txt segue o processo
@@ -230,7 +233,7 @@ if __name__ == '__main__':
                 # configura o tempo de espera para atualizar a lista de usuários
                 sleep(1)
                 p.click(p.locateOnScreen(path.join('imgs', 'conexoes.png'), confidence=0.9))
-                configura_parametro(timer)
+                configura_parametro(refresh_timer)
             
             # enquanto a tela estiver aberta repete o ciclo, se após 30 segundos não encontrar a tela, o robô é encerrado
             while p.locateOnScreen(path.join('imgs', 'conexoes.png'), confidence=0.9):

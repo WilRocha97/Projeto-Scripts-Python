@@ -205,7 +205,7 @@ for file in os.listdir(documentos):
         # regex_termo = re.compile(r'CP-SEGUR.\n11/2021')
         # regex_termo = re.compile(r'GIA ST-1/1')
         # regex_termo = re.compile(r'GIA-1/1')
-        regex_termo = re.compile(r'COLONIAL')
+        regex_termo = re.compile(r'Omissão de DCTFWeb')
         # regex_termo = re.compile(r'SIMPLES NAC.\n05/2021')
         resultado = regex_termo.search(texto)
         

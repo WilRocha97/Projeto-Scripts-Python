@@ -107,7 +107,7 @@ def new_session_fazenda(ni, user, pwd, tipo):
 _new_session_fazenda = new_session_fazenda
 
 
-def new_session_fazenda_driver(cnpj, user, pwd, perfil):
+def new_session_fazenda_driver(cnpj, user, pwd, perfil, retorna_driver=False):
     url_home = "https://www3.fazenda.sp.gov.br/CAWEB/Account/Login.aspx"
     _site_key = '6LesbbcZAAAAADrEtLsDUDO512eIVMtXNU_mVmUr'
 
@@ -115,6 +115,7 @@ def new_session_fazenda_driver(cnpj, user, pwd, perfil):
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     options.add_argument('--window-size=1920,1080')
+    # options.add_argument("--start-maximized")
 
     status, driver = initialize_chrome(options)
     driver.get(url_home)
@@ -134,7 +135,7 @@ def new_session_fazenda_driver(cnpj, user, pwd, perfil):
         driver.quit()
         return False
 
-    print(f'>>> Logando na empresa')
+    print(f'>>> Logando no usuário')
     element = driver.find_element(by=By.ID, value='ConteudoPagina_txtUsuario')
     element.send_keys(user)
 
@@ -190,7 +191,11 @@ def new_session_fazenda_driver(cnpj, user, pwd, perfil):
             driver.save_screenshot(r'ignore\debug_screen.png')
             driver.quit()
             return False
-
+    
+    if retorna_driver:
+        sid = resposta.group(1)
+        return driver, sid
+    
     sid = resposta.group(1)
     cookies = driver.get_cookies()
     driver.quit()

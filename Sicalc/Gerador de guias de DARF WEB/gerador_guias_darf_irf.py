@@ -81,6 +81,11 @@ def login_sicalc(empresa):
     while not _find_img('menu.png', conf=0.9):
         if _find_img('erro.png', conf=0.9):
             return False
+        
+        p.press('pgDn')
+        if _find_img('contribuinte_nao_encontrado.png', conf=0.9):
+            return 'Contribuinte não encontrado. Verifique se o CNPJ está correto.'
+        
         time.sleep(1)
         p.press('enter')
         timer += 1
@@ -237,7 +242,7 @@ def run():
     if not empresas:
         return False
 
-    # configurar um indice para a planilha de dados
+    # configurar um índice para a planilha de dados
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:
         return False
@@ -246,29 +251,35 @@ def run():
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         cnpj, nome, nota, valor, cod = empresa
-        # configurar o indice para localizar em qual empresa está
+        # configurar o índice para localizar em qual empresa está
         _indice(count, total_empresas, empresa)
         
         erro = 'sim'
         while erro == 'sim':
             # try:
             # fazer login do SICALC
-            if not login_sicalc(empresa):
+            resultado = login_sicalc(empresa)
+            if not resultado:
                 p.hotkey('ctrl', 'w')
                 erro = 'sim'
             else:
-                # gerar a guia de DCTF
-                resultado, vencimento = gerar(empresa, str(apuracao))
-                if not resultado:
-                    p.hotkey('ctrl', 'w')
-                    erro = 'sim'
+                if resultado == 'Contribuinte não encontrado. Verifique se o CNPJ está correto.':
+                    print('✔ Guia gerada')
+                    _escreve_relatorio_csv('{};{};{};{};{}'.format(cnpj, nome, valor, cod, resultado), nome=f'Resumo gerador {tipo}')
+                    erro = 'nao'
                 else:
-                    if not salvar_guia(empresa, apuracao, vencimento, tipo):
+                    # gerar a guia de DCTF
+                    resultado, vencimento = gerar(empresa, str(apuracao))
+                    if not resultado:
+                        p.hotkey('ctrl', 'w')
                         erro = 'sim'
                     else:
-                        print('✔ Guia gerada')
-                        _escreve_relatorio_csv('{};{};{};{};Guia gerada'.format(cnpj, nome, valor, cod), nome=f'Resumo gerador {tipo}')
-                        erro = 'nao'
+                        if not salvar_guia(empresa, apuracao, vencimento, tipo):
+                            erro = 'sim'
+                        else:
+                            print('✔ Guia gerada')
+                            _escreve_relatorio_csv('{};{};{};{};Guia gerada'.format(cnpj, nome, valor, cod), nome=f'Resumo gerador {tipo}')
+                            erro = 'nao'
 
         p.hotkey('ctrl', 'w')
 

@@ -48,6 +48,7 @@ def analiza():
                     discriminacao = re.sub('\s+', ' ', discriminacao)
                     break
                 except:
+                    discriminacao = ''
                     pass
                     
             nome_tomador = re.compile(r'IdentificacaoTomador>\n +<.+:RazaoSocial>\n +(.+)\n +</').search(arq).group(1)

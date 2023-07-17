@@ -16,25 +16,47 @@ from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header
 
 
 def captura_dados(driver):
-    infos = re.compile(r'<td class=\"GIA-CABEC-CONSULTA-COMPLETA\">(.+)</td>').findall(driver.page_source)
-    resultado = []
-    for info in infos:
-        resultado.append(info)
-    
-    tipo = re.compile(r'<td class=\"GIA-CABEC-CONSULTA-COMPLETA\">\n +	(.+)').search(driver.page_source).group(1)
-
-    responsavel = re.compile(r'CPF: (.+) /\n.+  		(.+) ').search(driver.page_source)
-    if responsavel:
-        cpf_resp = responsavel.group(1)
-        nome_resp = responsavel.group(2)
+    print('>>> Capturando dados')
+    # coleta todos os dados padronizados nos dados da página
+    if re.compile(r'Responsável pela Entrega:</span>\s+CPF:.+\s+(.+)').search(driver.page_source):
+        regex_responsavel = r'Responsável pela Entrega:</span>\s+CPF:.+\s+(.+)'
     else:
-        cpf_resp = 'Não encontrado'
-        nome_resp = 'Não encontrado'
+        regex_responsavel = r'Responsável pela Entrega:</span>\s+(.+).+/td>'
     
-    return driver, f'{resultado[1]};{resultado[2]};{resultado[3]};{cpf_resp};{nome_resp};{tipo};{resultado[12]};{resultado[13]};{resultado[14]};{resultado[15]};{resultado[16]}'
+    if re.compile(r'Categoria:</span>\s+</td>').search(driver.page_source):
+        regex_categoria = r'Categoria:</span>\s+</td>'
+    else:
+        regex_categoria = r'Categoria:</span>\s+(.+).+/td>'
+        
+    if re.compile(r'(O contribuinte está dispensado da entrega da GIA nessa referência)').search(driver.page_source):
+        regex_chave = r'(O contribuinte está dispensado da entrega da GIA nessa referência)'
+    else:
+        regex_chave = r'Chave de Autenticação:</span>\s+(.+).+/td>'
+        
+    termos = [r'Razão Social:</span>\s+(.+).+/td>',
+              r'Data de Entrega:</span>\s+(.+).+/td>',
+              regex_responsavel,
+              regex_chave,
+              r'CNAE:</span>\s+(.+).+/td>',
+              r'Origem:</span>\s+(.+).+/td>',
+              r'Referência:</span>\s+(.+).+/td>',
+              r'Tipo:</span>\s+(.+)',
+              regex_categoria,
+              r'Protocolo:</span>\s+.+\">(.+).+/a>']
+    
+    resultado = ''
+    try:
+        for termo in termos:
+            resultado += re.compile(termo).search(driver.page_source).group(1) + ';'
+    except:
+        print(driver.page_source)
+        time.sleep(22)
+        
+    return driver, resultado.replace('&amp;', '&')
 
 
 def create_pdf(driver, nome_arquivo):
+    print('>>> Salvando PDF')
     e_dir_print = os.path.join('ignore', 'print consulta')
     e_dir_pdf = os.path.join('execução', 'Arquivos')
     os.makedirs(e_dir_print, exist_ok=True)
@@ -54,24 +76,25 @@ def create_pdf(driver, nome_arquivo):
     return driver, 'Arquivo gerado'
 
 def consulta_gia(ie, comp, driver, sid):
-    print(f'>>> Consultando GIA')
+    print(f'>>> Consultando entrega da GIA')
     comp = comp.split('/')
     mes = comp[0]
     if mes[0] == '0': mes = mes[1]
     
     ano = comp[1]
     
-    driver.get('https://cert01.fazenda.sp.gov.br/novaGiaEFDWEB/consultaCompleta.gia?method=init&SID=' + sid)
+    driver.get('https://cert01.fazenda.sp.gov.br/novaGiaWEB/consultaIe.gia?method=init&SID=' + sid + '&servico=GIA')
     
     while not _find_by_id('ie', driver):
         time.sleep(1)
     
     driver.find_element(by=By.ID, value='ie').send_keys(ie)
     
-    drops = [('/html/body/form/table/tbody/tr[2]/td/table/tbody/tr[2]/td[2]/select[1]', mes),
-             ('/html/body/form/table/tbody/tr[2]/td/table/tbody/tr[3]/td[2]/select[1]', mes),
-             ('/html/body/form/table/tbody/tr[2]/td/table/tbody/tr[2]/td[2]/select[2]', ano),
-             ('/html/body/form/table/tbody/tr[2]/td/table/tbody/tr[3]/td[2]/select[2]', ano),
+    # lista com o xpath do elemento e a informação que ele deve receber
+    drops = [('/html/body/form/table/tbody/tr[4]/td/table/tbody/tr[2]/td[2]/select[1]', mes),
+             ('/html/body/form/table/tbody/tr[4]/td/table/tbody/tr[3]/td[2]/select[1]', mes),
+             ('/html/body/form/table/tbody/tr[4]/td/table/tbody/tr[2]/td[2]/select[2]', ano),
+             ('/html/body/form/table/tbody/tr[4]/td/table/tbody/tr[3]/td[2]/select[2]', ano),
              ]
     
     for drop in drops:
@@ -82,19 +105,35 @@ def consulta_gia(ie, comp, driver, sid):
         # Selecione o item desejado pelo valor
         dropdown.select_by_value(drop[1])
     
+    # clica para confirmar a consulta
     time.sleep(2)
-    driver.find_element(by=By.XPATH, value='/html/body/form/table/tbody/tr[4]/td/input').click()
+    driver.find_element(by=By.XPATH, value='/html/body/form/table/tbody/tr[6]/td/input').click()
     
-    resultado = re.compile(r'MENSAGEM DO SISTEMA: (.+)').search(driver.page_source)
-    if not resultado:
-        resultado = re.compile(r'RESULTADO-ERRO.+\n(.+)').search(driver.page_source)
-        if not resultado:
-            driver.find_element(by=By.XPATH, value='/html/body/form/table[3]/tbody/tr[2]').click()
-            return driver, 'ok'
+    time.sleep(1)
+    # captura mensagens de erro, se encontrar retorna a mensagem se não retorna um ok
+    try:
+        # Aguardar o alerta ser exibido
+        alert = driver.switch_to.alert
         
-    return driver, resultado.group(1)
+        # Obter a mensagem do alerta
+        mensagem = alert.text
+        
+        # Imprimir a mensagem do alerta
+        print(f'❌ {mensagem}')
+        
+        # Aceitar o alerta
+        alert.accept()
+        return driver, mensagem
+    except:
+        resultado = re.compile(r'MENSAGEM DO SISTEMA: (.+)').search(driver.page_source)
+        if not resultado:
+            resultado = re.compile(r'RESULTADO-ERRO.+\n(.+)').search(driver.page_source)
+            if not resultado:
+                return driver, 'ok'
+            
+        return driver, resultado.group(1)
+        
     
-
 @_time_execution
 def run():
     comp = _get_comp(printable='mm/yyyy', strptime='%m/%Y')
@@ -131,7 +170,7 @@ def run():
             while erro == 'S':
                 try:
                     # cookies, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil)
-                    driver, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil, retorna_driver=True)
+                    driver, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil, retorna_driver=True, orientacao='retrato')
                     erro = 'N'
                 except:
                     print('❗ Erro ao logar na empresa, tentando novamente')
@@ -142,6 +181,7 @@ def run():
         
         driver, resultado = consulta_gia(ie, comp, driver, sid)
         
+        # se a consulta retornar um ok, cria o PDF e captura os dados
         if resultado == 'ok':
             nome_arquivo = f'{cnpj} - Entrega de GIA {comp.replace("/", "-")}'
             driver, resultado = create_pdf(driver, nome_arquivo)
@@ -149,14 +189,14 @@ def run():
             
         # escreve na planilha de andamentos o resultado da execução atual
         try:
-            _escreve_relatorio_csv(f"{cnpj};{resultado.replace('❗ ', '').replace('❌ ', '').replace('✔ ', '')}")
+            _escreve_relatorio_csv(f"{cnpj};{ie};{resultado.replace('❗ ', '').replace('❌ ', '').replace('✔ ', '')}")
         except:
             raise Exception(f"Erro ao escrever esse texto: {resultado}")
         print(resultado)
         usuario_anterior = usuario
         
     # escreve o cabeçalho na planilha de andamentos
-    _escreve_header_csv('CNPJ;CNAE;REGIME;SUBSTITUIÇÃO TRIBUTÁRIA;CPF RESPONSÁVEL;NOME RESPONSÁVEL;TIPO DA GIA;ORIGEM;PROTOCOLO;CONTROLE;CONTROLE CONTA FISCAL;DATA ENTREGA')
+    _escreve_header_csv('CNPJ;IE;NOME;DATA ENTREGA;RESPONSÁVEL;CHAVE DE AUTENTICAÇÃO;CNAE;ORIGEM;REFERÊNCIA;TIPO;CATEGORIA;PROTOCOLO')
     return True
 
 

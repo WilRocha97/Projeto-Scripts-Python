@@ -35,6 +35,8 @@ debug_screen.png
 *.DEC
 
 #Pastas
+screenshot.png
+ignore/
 _dev_env/
 Domínio/Confirmar/confirmar.py
 SN/consulta_recibos_e_declaracoes_sn - 2.py

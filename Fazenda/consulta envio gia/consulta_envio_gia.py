@@ -1,9 +1,5 @@
 import time, re, os
-from pyautogui import prompt
-from requests.exceptions import ConnectionError
-from bs4 import BeautifulSoup
 from sys import path
-from requests import Session
 from time import sleep
 from PIL import Image
 from fpdf import FPDF
@@ -15,8 +11,8 @@ from selenium.webdriver.support.ui import Select
 path.append(r'..\..\_comum')
 from pyautogui_comum import _get_comp
 from chrome_comum import _initialize_chrome, _find_by_id, _find_by_path
-from fazenda_comum import _get_info_post, _new_session_fazenda_driver
-from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header_csv, _download_file, _open_lista_dados, _where_to_start, _indice
+from fazenda_comum import _new_session_fazenda_driver
+from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header_csv, _open_lista_dados, _where_to_start, _indice
 
 
 def captura_dados(driver):
@@ -26,9 +22,16 @@ def captura_dados(driver):
         resultado.append(info)
     
     tipo = re.compile(r'<td class=\"GIA-CABEC-CONSULTA-COMPLETA\">\n +	(.+)').search(driver.page_source).group(1)
-    responsavel = re.compile(r'').search(driver.page_source).group(1)
+
+    responsavel = re.compile(r'CPF: (.+) /\n.+  		(.+) ').search(driver.page_source)
+    if responsavel:
+        cpf_resp = responsavel.group(1)
+        nome_resp = responsavel.group(2)
+    else:
+        cpf_resp = 'Não encontrado'
+        nome_resp = 'Não encontrado'
     
-    return driver, f'{resultado[1]};{resultado[2]};{resultado[3]};{tipo};{resultado[12]};{resultado[13]};{resultado[14]};{resultado[15]};{resultado[16]}'
+    return driver, f'{resultado[1]};{resultado[2]};{resultado[3]};{cpf_resp};{nome_resp};{tipo};{resultado[12]};{resultado[13]};{resultado[14]};{resultado[15]};{resultado[16]}'
 
 
 def create_pdf(driver, nome_arquivo):
@@ -79,17 +82,18 @@ def consulta_gia(ie, comp, driver, sid):
         # Selecione o item desejado pelo valor
         dropdown.select_by_value(drop[1])
     
-    time.sleep(5)
+    time.sleep(2)
     driver.find_element(by=By.XPATH, value='/html/body/form/table/tbody/tr[4]/td/input').click()
     
-    resultado = re.compile(r'RESULTADO-ERRO.+\n(.+)').search(driver.page_source)
-    if resultado:
-        return driver, resultado.group(1)
+    resultado = re.compile(r'MENSAGEM DO SISTEMA: (.+)').search(driver.page_source)
+    if not resultado:
+        resultado = re.compile(r'RESULTADO-ERRO.+\n(.+)').search(driver.page_source)
+        if not resultado:
+            driver.find_element(by=By.XPATH, value='/html/body/form/table[3]/tbody/tr[2]').click()
+            return driver, 'ok'
+        
+    return driver, resultado.group(1)
     
-    driver.find_element(by=By.XPATH, value='/html/body/form/table[3]/tbody/tr[2]').click()
-    
-    return driver, 'ok'
-
 
 @_time_execution
 def run():
@@ -125,10 +129,6 @@ def run():
             contador = 0
             # loga no site da secretaria da fazenda com web driver e salva os cookies do site e a id da sessão
             while erro == 'S':
-                """if contador >= 3:
-                    cookies = 'erro'
-                    sid = 'Erro ao logar na empresa'
-                    break"""
                 try:
                     # cookies, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil)
                     driver, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil, retorna_driver=True)
@@ -139,31 +139,6 @@ def run():
                     contador += 1
                 
                 sleep(1)
-                """# se não salvar os cookies fecha a sessão e vai para o próximo dado
-                if cookies == 'erro':
-                    texto = f'{cnpj};{sid}'
-                    usuario_anterior = 'padrão'
-                    s.close()
-                    _escreve_relatorio_csv(texto)
-                    print(f'❗ {sid}\n', end='')
-                    continue
-                
-                # adiciona os cookies do login da sessão por request no web driver
-                for cookie in cookies:
-                    s.cookies.set(cookie['name'], cookie['value'])"""
-        
-        """# se não retornar a id da sessão do web driver fecha a sessão por request
-        if not sid:
-            situacao = '❌ Erro no login'
-            usuario_anterior = 'padrão'
-            s.close()
-        
-        # se retornar a id da sessão do web driver executa a consulta
-        else:
-            # retorna o resultado da consulta
-            situacao = consulta_gia(ie, comp, s, sid)
-            # guarda o usuario da execução atual
-            usuario_anterior = usuario"""
         
         driver, resultado = consulta_gia(ie, comp, driver, sid)
         
@@ -181,7 +156,7 @@ def run():
         usuario_anterior = usuario
         
     # escreve o cabeçalho na planilha de andamentos
-    _escreve_header_csv('CNPJ;CNAE;REGIME;SUBSTITUIÇÃO TRIBUTÁRIA;TIPO DA GIA;ORIGEM;PROTOCOLO;CONTROLE;CONTROLE CONTA FISCAL;DATA ENTREGA')
+    _escreve_header_csv('CNPJ;CNAE;REGIME;SUBSTITUIÇÃO TRIBUTÁRIA;CPF RESPONSÁVEL;NOME RESPONSÁVEL;TIPO DA GIA;ORIGEM;PROTOCOLO;CONTROLE;CONTROLE CONTA FISCAL;DATA ENTREGA')
     return True
 
 

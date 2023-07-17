@@ -26,15 +26,17 @@ def atualiza_info(pagina):
         soup.find('input', attrs={'id': '__VIEWSTATEGENERATOR'}),
         soup.find('input', attrs={'id': '__EVENTVALIDATION'})
     )
-
+    
     lista = []
     for info in infos:
         try:
             lista.append(info.get('value'))
         except:
             lista.append('')
-
+    
     return tuple(lista)
+
+
 _atualiza_info = atualiza_info
 
 
@@ -45,9 +47,11 @@ def get_info_post(soup):
         soup.find('input', attrs={'id': '__VIEWSTATEGENERATOR'}),
         soup.find('input', attrs={'id': '__EVENTVALIDATION'})
     ]
-
+    
     # state, generator, validation
     return tuple(info.get('value', '') for info in infos if info)
+
+
 _get_info_post = get_info_post
 
 
@@ -58,20 +62,20 @@ _get_info_post = get_info_post
 def new_session_fazenda(ni, user, pwd, tipo):
     print('\n>>> logando', ni)
     filterwarnings('ignore')
-
+    
     base = 'ctl00$ConteudoPagina'
     url_login = "https://cert01.fazenda.sp.gov.br/ca/ca"
     url_home = "https://www3.fazenda.sp.gov.br/CAWEB/Account/Login.aspx"
     _site_key = '6LesbbcZAAAAADrEtLsDUDO512eIVMtXNU_mVmUr'
-
+    
     session = Session()
     res = session.get(url_home, verify=False)
     state, generator, validation = get_info_post(content=res.content)
-
+    
     # gera o token para passar pelo captcha
     recaptcha_data = {'sitekey': _site_key, 'url': url_home}
     token = _solve_recaptcha(recaptcha_data)
-
+    
     data = {
         'ctl00$ScriptManager1': f'{base}$upnConsulta|{base}$btnAcessar',
         '__EVENTTARGET': '',
@@ -87,73 +91,74 @@ def new_session_fazenda(ni, user, pwd, tipo):
         '__ASYNCPOST': 'true',
         f'{base}$btnAcessar': 'Acessar'
     }
-
+    
     pagina = session.post(url_home, data, verify=False)
     soup = BeautifulSoup(pagina.content, 'html.parser')
     print(soup)
-
+    
     data = {
         'proxtela': '/deca.docs/contrib/servcontrvalid.htm',
         'SERVICO': _perfil[tipo][1], 'ORIGEM': url_login,
         'funcao': 'login', 'UserId': user, 'PassWd': pwd
     }
-
+    
     res = session.post(url_login, data, verify=False)
     if res.url == url_login:
-        
         return f'Erro login com usuario {user}'
-
+    
     return session, res.url[69:98]
+
+
 _new_session_fazenda = new_session_fazenda
 
 
 def new_session_fazenda_driver(cnpj, user, pwd, perfil, retorna_driver=False):
     url_home = "https://www3.fazenda.sp.gov.br/CAWEB/Account/Login.aspx"
     _site_key = '6LesbbcZAAAAADrEtLsDUDO512eIVMtXNU_mVmUr'
-
+    
     # opções para fazer com que o chome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     options.add_argument('--window-size=1920,1080')
     # options.add_argument("--start-maximized")
-
+    
     status, driver = initialize_chrome(options)
     driver.get(url_home)
-
+    
     # gera o token para passar pelo captcha
     recaptcha_data = {'sitekey': _site_key, 'url': url_home}
     token = _solve_recaptcha(recaptcha_data)
     token = str(token)
-
+    
     if perfil == 'contador':
         button = driver.find_element(by=By.ID, value='ConteudoPagina_rdoListPerfil_1')
         button.click()
         time.sleep(1)
-
+    
     elif perfil != 'contribuinte':
         driver.save_screenshot(r'ignore\debug_screen.png')
         driver.quit()
         return False
-
+    
     print(f'>>> Logando no usuário')
     element = driver.find_element(by=By.ID, value='ConteudoPagina_txtUsuario')
     element.send_keys(user)
-
+    
     element = driver.find_element(by=By.ID, value='ConteudoPagina_txtSenha')
     element.send_keys(pwd)
-
+    
     script = 'document.getElementById("g-recaptcha-response").innerHTML="{}";'.format(token)
     driver.execute_script(script)
-
+    
     script = 'document.getElementById("ConteudoPagina_btnAcessar").disabled = false;'
-
+    
     driver.execute_script(script)
     time.sleep(1)
-
+    
     button = driver.find_element(by=By.ID, value='ConteudoPagina_btnAcessar')
     button.click()
     time.sleep(3)
-
+    
     try:
         html = driver.page_source.encode('utf-8')
         soup = BeautifulSoup(html, 'html.parser')
@@ -170,22 +175,22 @@ def new_session_fazenda_driver(cnpj, user, pwd, perfil, retorna_driver=False):
         padrao = re.compile(r'SID=(.\d+)')
         resposta = padrao.search(str(soup))
         driver.save_screenshot(r'ignore\debug_screen.png')
-
+    
     if not resposta:
         try:
             padrao = re.compile(r'(Senha inserida está incorreta)')
             driver.save_screenshot(r'ignore\debug_screen.png')
             resposta = padrao.search(str(soup))
-
+            
             if not resposta:
                 padrao = re.compile(r'(ERRO INTERNO AO SISTEMA DE CONTROLE DE ACESSO)')
                 driver.save_screenshot(r'ignore\debug_screen.png')
                 resposta = padrao.search(str(soup))
-
+            
             sid = resposta.group(1)
             cokkies = 'erro'
             driver.quit()
-
+            
             return cokkies, sid
         except:
             driver.save_screenshot(r'ignore\debug_screen.png')
@@ -199,8 +204,10 @@ def new_session_fazenda_driver(cnpj, user, pwd, perfil, retorna_driver=False):
     sid = resposta.group(1)
     cookies = driver.get_cookies()
     driver.quit()
-
+    
     return cookies, sid
+
+
 _new_session_fazenda_driver = new_session_fazenda_driver
 
 
@@ -208,21 +215,21 @@ def login_ecnd(certificado, senha):
     certificados = {'ADELINO': r'..\..\_cert\CERT ADELINO 45274040.pfx',
                     'RPEM': r'..\..\_cert\CERT RPEM 35586086.pfx',
                     'RODRIGO': r''}
-
+    
     print('>>> Logando como contabilista')
-
+    
     url_base = 'https://www10.fazenda.sp.gov.br/CertidaoNegativaDeb/Pages'
     # url_login = f'{url_base}/EmissaoCertidaoNegativa.aspx'
     url = f'{url_base}/Restrita/PesquisarContribuinte.aspx'
-
+    
     with _pfx_to_pem(certificados[certificado], senha) as cert:
         path_driver = os.path.join('..', 'phantomjs.exe')
         args = ['--ssl-client-certificate-file=' + cert]
-
+        
         driver = webdriver.PhantomJS(path_driver, service_args=args)
         driver.set_window_size(1000, 900)
         driver.delete_all_cookies()
-
+        
         # Acessa a página inicial
         for i in range(5):
             try:
@@ -239,11 +246,13 @@ def login_ecnd(certificado, senha):
         else:
             driver.quit()
             return False
-
+        
         driver.get(url)
         cookies = driver.get_cookies()
         # driver.save_screenshot('debug_screen.png')
         driver.quit()
-
+    
     return cookies
+
+
 _login_ecnd = login_ecnd

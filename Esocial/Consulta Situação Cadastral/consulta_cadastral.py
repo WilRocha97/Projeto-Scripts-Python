@@ -48,10 +48,16 @@ def login(driver, nome, cpf, pis, data_nasc):
     print('>>> Acessando cadastro')
     timer = 1
     while not _find_by_id('gridDadosTrabalhador', driver):
+        erro = re.compile(r'\"mensagem\".+class=\"erro\">(.+)</li>').search(driver.page_source)
+        if erro:
+            print(f'❌ {erro.group(1)}')
+            return driver, erro.group(1)
+        
         time.sleep(1)
         timer += 1
         if timer > 60:
             print('❌ O site demorou muito para responder, tentando novamente')
+            
             return driver, 'erro'
 
     # clica em validar a consulta
@@ -142,7 +148,7 @@ def verifica_dados(cpf, nome, cod_empresa, cod_empregado, pis, data_nasc):
 
 @_time_execution
 def run():
-    # opções para fazer com que o chome trabalhe em segundo plano (opcional)
+    # opções para fazer com que o chrome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     options.add_argument('--window-size=1366,768')
@@ -167,15 +173,17 @@ def run():
             continue
 
         while 1 > 0:
-            # iniciar o driver do chome
+            # iniciar o driver do chrome
             status, driver = _initialize_chrome(options)
 
             driver, resultado = login(driver, nome, cpf, pis, data_nasc)
             if resultado != 'erro':
                 break
             driver.close()
-
-        driver, resultado = consulta(driver)
+        
+        if resultado == 'ok':
+            driver, resultado = consulta(driver)
+            
         print(f'❕ {resultado}')
         _escreve_relatorio_csv(f'{cpf};{nome};{cod_empresa};{cod_empregado};{pis};{data_nasc};{resultado}')
         driver.close()

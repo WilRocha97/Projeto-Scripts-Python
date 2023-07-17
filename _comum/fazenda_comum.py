@@ -163,21 +163,17 @@ def new_session_fazenda_driver(cnpj, user, pwd, perfil, retorna_driver=False, or
     time.sleep(3)
     
     try:
-        html = driver.page_source.encode('utf-8')
-        soup = BeautifulSoup(html, 'html.parser')
-        # print(soup)
-        padrao = re.compile(r'<h2>(Cadastrar E-mail)')
-        resposta = padrao.search(str(soup))
-        sid = resposta.group(1)
-        driver.save_screenshot(r'ignore\debug_screen.png')
-        driver.quit()
-        return 'erro', sid
+        button = driver.find_element(by=By.XPATH, value='/html/body/div[2]/section/div/div/div/div[2]/div/ul/li/form/div[5]/div/a')
+        button.click()
+        time.sleep(3)
     except:
-        html = driver.page_source.encode('utf-8')
-        soup = BeautifulSoup(html, 'html.parser')
-        padrao = re.compile(r'SID=(.\d+)')
-        resposta = padrao.search(str(soup))
-        driver.save_screenshot(r'ignore\debug_screen.png')
+        pass
+    
+    html = driver.page_source.encode('utf-8')
+    soup = BeautifulSoup(html, 'html.parser')
+    padrao = re.compile(r'SID=(.\d+)')
+    resposta = padrao.search(str(soup))
+    driver.save_screenshot(r'ignore\debug_screen.png')
     
     if not resposta:
         try:

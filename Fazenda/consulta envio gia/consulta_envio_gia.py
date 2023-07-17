@@ -80,7 +80,6 @@ def consulta_gia(ie, comp, driver, sid):
     comp = comp.split('/')
     mes = comp[0]
     if mes[0] == '0': mes = mes[1]
-    
     ano = comp[1]
     
     driver.get('https://cert01.fazenda.sp.gov.br/novaGiaWEB/consultaIe.gia?method=init&SID=' + sid + '&servico=GIA')

@@ -1,16 +1,13 @@
 import time, re, os
-from sys import path
-from time import sleep
-from PIL import Image
 from fpdf import FPDF
-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 
+from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import _get_comp
-from chrome_comum import _initialize_chrome, _find_by_id, _find_by_path
+from chrome_comum import _find_by_id, _find_by_path
 from fazenda_comum import _new_session_fazenda_driver
 from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header_csv, _open_lista_dados, _where_to_start, _indice
 
@@ -57,10 +54,10 @@ def captura_dados(driver):
     return driver, resultado.replace('&amp;', '&')
 
 
-def create_pdf(driver, nome_arquivo):
+def create_pdf(driver, nome_arquivo, comp_formatado):
     print('>>> Salvando PDF')
     e_dir_print = os.path.join('ignore', 'print consulta')
-    e_dir_pdf = os.path.join('execução', 'Arquivos')
+    e_dir_pdf = os.path.join('execução', 'Arquivos ' + comp_formatado)
     os.makedirs(e_dir_print, exist_ok=True)
     os.makedirs(e_dir_pdf, exist_ok=True)
     
@@ -138,6 +135,7 @@ def consulta_gia(ie, comp, driver, sid):
 @_time_execution
 def run():
     comp = _get_comp(printable='mm/yyyy', strptime='%m/%Y')
+    comp_formatado = comp.replace("/", "-")
     # função para abrir a lista de dados
     empresas = _open_lista_dados()
     
@@ -178,26 +176,28 @@ def run():
                     erro = 'S'
                     contador += 1
                 
-                sleep(1)
+                time.sleep(1)
         
         driver, resultado = consulta_gia(ie, comp, driver, sid)
         
         # se a consulta retornar um ok, cria o PDF e captura os dados
         if resultado == 'ok':
-            nome_arquivo = f'{cnpj} - Entrega de GIA {comp.replace("/", "-")}'
-            driver, resultado = create_pdf(driver, nome_arquivo)
+            nome_arquivo = f'{cnpj} - Entrega de GIA {comp_formatado}'
+            driver, resultado = create_pdf(driver, nome_arquivo, comp_formatado)
             driver, resultado = captura_dados(driver)
             
         # escreve na planilha de andamentos o resultado da execução atual
         try:
-            _escreve_relatorio_csv(f"{cnpj};{ie};{resultado.replace('❗ ', '').replace('❌ ', '').replace('✔ ', '')}")
+            _escreve_relatorio_csv(f"{cnpj};{ie};{resultado.replace('❗ ', '').replace('❌ ', '').replace('✔ ', '')}",
+                                   nome=f'Consulta Envio de GIA - {comp_formatado}')
         except:
             raise Exception(f"Erro ao escrever esse texto: {resultado}")
         print(resultado)
         usuario_anterior = usuario
         
     # escreve o cabeçalho na planilha de andamentos
-    _escreve_header_csv('CNPJ;IE;NOME;DATA ENTREGA;RESPONSÁVEL;CHAVE DE AUTENTICAÇÃO;CNAE;ORIGEM;REFERÊNCIA;TIPO;CATEGORIA;PROTOCOLO')
+    _escreve_header_csv('CNPJ;IE;NOME;DATA ENTREGA;RESPONSÁVEL;CHAVE DE AUTENTICAÇÃO;CNAE;ORIGEM;REFERÊNCIA;TIPO;CATEGORIA;PROTOCOLO',
+                        nome=f'Consulta Envio de GIA - {comp_formatado}')
     return True
 
 

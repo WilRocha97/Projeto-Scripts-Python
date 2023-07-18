@@ -20,8 +20,8 @@ def captura_dados(driver):
     else:
         regex_responsavel = r'Responsável pela Entrega:</span>\s+(.+).+/td>'
     
-    if re.compile(r'Categoria:</span>\s+</td>').search(driver.page_source):
-        regex_categoria = r'Categoria:</span>\s+</td>'
+    if re.compile(r"Categoria:</span>\s+()</td>").search(driver.page_source):
+        regex_categoria = r'Categoria:</span>\s+()</td>'
     else:
         regex_categoria = r'Categoria:</span>\s+(.+).+/td>'
         
@@ -46,7 +46,11 @@ def captura_dados(driver):
     # tenta procurar e concatenar os itens, se não conseguir printa o código da página para análise
     try:
         for termo in termos:
-            resultado += re.compile(termo).search(driver.page_source).group(1) + ';'
+            resposta = re.compile(termo).search(driver.page_source).group(1)
+            if resposta == '':
+                resposta = 'Não consta'
+                
+            resultado += resposta + ';'
     except:
         print(driver.page_source)
         time.sleep(22)

@@ -154,7 +154,6 @@ def new_session_fazenda_driver(cnpj, user, pwd, perfil, retorna_driver=False, or
     driver.execute_script(script)
     
     script = 'document.getElementById("ConteudoPagina_btnAcessar").disabled = false;'
-    
     driver.execute_script(script)
     time.sleep(1)
     

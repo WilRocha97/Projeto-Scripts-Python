@@ -17,7 +17,7 @@ from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header
 
 def captura_dados(driver):
     print('>>> Capturando dados')
-    # coleta todos os dados padronizados nos dados da página
+    # define os regex dos campos únicos na consulta
     if re.compile(r'Responsável pela Entrega:</span>\s+CPF:.+\s+(.+)').search(driver.page_source):
         regex_responsavel = r'Responsável pela Entrega:</span>\s+CPF:.+\s+(.+)'
     else:
@@ -32,7 +32,8 @@ def captura_dados(driver):
         regex_chave = r'(O contribuinte está dispensado da entrega da GIA nessa referência)'
     else:
         regex_chave = r'Chave de Autenticação:</span>\s+(.+).+/td>'
-        
+    
+    # lista para concatenar os itens da consulta em uma única variável
     termos = [r'Razão Social:</span>\s+(.+).+/td>',
               r'Data de Entrega:</span>\s+(.+).+/td>',
               regex_responsavel,
@@ -45,6 +46,7 @@ def captura_dados(driver):
               r'Protocolo:</span>\s+.+\">(.+).+/a>']
     
     resultado = ''
+    # tenta procurar e concatenar os itens, se não conseguir printa o código da página para análise
     try:
         for termo in termos:
             resultado += re.compile(termo).search(driver.page_source).group(1) + ';'

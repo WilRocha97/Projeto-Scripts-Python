@@ -1,5 +1,6 @@
 import time, re, os
-from fpdf import FPDF
+from bs4 import BeautifulSoup
+from xhtml2pdf import pisa
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
@@ -59,24 +60,24 @@ def captura_dados(driver):
 
 
 def create_pdf(driver, nome_arquivo, comp_formatado):
-    print('>>> Salvando PDF')
-    e_dir_print = os.path.join('ignore', 'print consulta')
     e_dir_pdf = os.path.join('execução', 'Arquivos ' + comp_formatado)
-    os.makedirs(e_dir_print, exist_ok=True)
     os.makedirs(e_dir_pdf, exist_ok=True)
     
-    # Capturar a captura de tela da página
-    screenshot_file = os.path.join(e_dir_print, 'screenshot.png')
-    driver.save_screenshot(screenshot_file)
-    
-    # Converter a captura de tela em PDF
-    pdf_file = os.path.join(e_dir_pdf, nome_arquivo + '.pdf')
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.image(screenshot_file, 0, 0, pdf.w, pdf.h)
-    pdf.output(pdf_file, 'F')
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    # Remove atributo href das tags, links e urls não serão usados
+    for tag in soup.find_all(href=True):
+        tag['href'] = ''
+
+    # Remove tags img e script, não serão usados
+    _ = list(tag.extract() for tag in soup.find_all('img'))
+    _ = list(tag.extract() for tag in soup.find_all('script'))
+
+    with open(os.path.join(e_dir_pdf, nome_arquivo), 'w+b') as pdf:
+        pisa.showLogging()
+        pisa.CreatePDF(str(soup), pdf)
     
     return driver, 'Arquivo gerado'
+
 
 def consulta_gia(ie, comp, driver, sid):
     print(f'>>> Consultando entrega da GIA')
@@ -108,7 +109,7 @@ def consulta_gia(ie, comp, driver, sid):
         dropdown.select_by_value(drop[1])
     
     # clica para confirmar a consulta
-    time.sleep(2)
+    time.sleep(1)
     driver.find_element(by=By.XPATH, value='/html/body/form/table/tbody/tr[6]/td/input').click()
     
     time.sleep(1)
@@ -127,6 +128,7 @@ def consulta_gia(ie, comp, driver, sid):
         alert.accept()
         return driver, mensagem
     except:
+        # captura erros do site, se achar retorna a mensagem
         resultado = re.compile(r'MENSAGEM DO SISTEMA: (.+)').search(driver.page_source)
         if not resultado:
             resultado = re.compile(r'RESULTADO-ERRO.+\n(.+)').search(driver.page_source)
@@ -148,7 +150,7 @@ def run():
     if index is None:
         return False
     
-    # cria o indice para cada empresa da lista de dados
+    # cria o índice para cada empresa da lista de dados
     total_empresas = empresas[index:]
     # inicia a variável que verifica se o usuário da execução anterior é igual ao atual
     usuario_anterior = 'padrão'
@@ -158,7 +160,7 @@ def run():
     for count, empresa in enumerate(empresas[index:], start=1):
         cnpj, ie, usuario, senha, perfil = empresa
         
-        # printa o indice da empresa que está sendo executada
+        # printa o índice da empresa que está sendo executada
         _indice(count, total_empresas, empresa)
         
         # verifica se o usuario anterior é o mesmo para não fazer login de novo com o mesmo usuário
@@ -173,7 +175,7 @@ def run():
             while erro == 'S':
                 try:
                     # cookies, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil)
-                    driver, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil, retorna_driver=True, orientacao='retrato')
+                    driver, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil, retorna_driver=True)
                     erro = 'N'
                 except:
                     print('❗ Erro ao logar na empresa, tentando novamente')
@@ -186,7 +188,7 @@ def run():
         
         # se a consulta retornar um ok, cria o PDF e captura os dados
         if resultado == 'ok':
-            nome_arquivo = f'{cnpj} - Entrega de GIA {comp_formatado}'
+            nome_arquivo = f'{cnpj} - Entrega de GIA {comp_formatado}.pdf'
             driver, resultado = create_pdf(driver, nome_arquivo, comp_formatado)
             driver, resultado = captura_dados(driver)
             
@@ -198,7 +200,8 @@ def run():
             raise Exception(f"Erro ao escrever esse texto: {resultado}")
         print(resultado)
         usuario_anterior = usuario
-        
+
+    driver.close()
     # escreve o cabeçalho na planilha de andamentos
     _escreve_header_csv('CNPJ;IE;NOME;DATA ENTREGA;RESPONSÁVEL;CHAVE DE AUTENTICAÇÃO;CNAE;ORIGEM;REFERÊNCIA;TIPO;CATEGORIA;PROTOCOLO',
                         nome=f'Consulta Envio de GIA - {comp_formatado}')

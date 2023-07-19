@@ -135,7 +135,7 @@ def boleto_mei(empresa, andamentos):
         p.hotkey('ctrl', 'w')
         return False
 
-    # while not _find_img('AnoDeConsulta.png', conf=0.9):
+    # while not _find_img('ano_de_consulta.png', conf=0.9):
     p.press('up')
     time.sleep(0.5)
     p.press('up')

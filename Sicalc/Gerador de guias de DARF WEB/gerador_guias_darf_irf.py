@@ -12,14 +12,14 @@ def login_sicalc(empresa):
     p.hotkey('win', 'm')
 
     # Abrir o site
-    if _find_img('Chrome.png', conf=0.99):
+    if _find_img('chrome.png', conf=0.99):
         pass
-    elif _find_img('ChromeAberto.png', conf=0.99):
-        _click_img('ChromeAberto.png', conf=0.99, timeout=1)
+    elif _find_img('chrome_aberto.png', conf=0.99):
+        _click_img('chrome_aberto.png', conf=0.99, timeout=1)
     else:
         time.sleep(0.5)
         os.startfile(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
-        while not _find_img('Google.png', conf=0.9):
+        while not _find_img('google.png', conf=0.9):
             time.sleep(1)
             p.moveTo(1163, 377)
             p.click()
@@ -37,7 +37,7 @@ def login_sicalc(empresa):
     
     link = 'https://sicalc.receita.economia.gov.br/sicalc/rapido/contribuinte'
     
-    _click_img('Maxi.png', conf=0.9, timeout=1)
+    _click_img('maxi.png', conf=0.9, timeout=1)
     p.click(1100, 51)
     time.sleep(1)
     p.write(link.lower())
@@ -188,7 +188,7 @@ def salvar_guia(empresa, apuracao, vencimento, tipo):
     nome = nome.replace(' PAU ', ' P ').replace(' CU ', ' C ').replace(' CUS ', ' C ').replace(' CUM ', ' C ')
     
     timer = 0
-    while not _find_img('SalvarComo.png', conf=0.9):
+    while not _find_img('salvar_como.png', conf=0.9):
         _click_img('emitir_darf.png', conf=0.9)
         time.sleep(2)
         if _find_img('site_morreu_salvar.png', conf=0.9):
@@ -223,8 +223,8 @@ def salvar_guia(empresa, apuracao, vencimento, tipo):
     time.sleep(1)
     p.hotkey('alt', 'l')
     time.sleep(1)
-    while _find_img('SalvarComo.png', conf=0.9):
-        if _find_img('Substituir.png', conf=0.9):
+    while _find_img('salvar_como.png', conf=0.9):
+        if _find_img('substituir.png', conf=0.9):
             p.press('s')
     time.sleep(2)
     p.hotkey('ctrl', 'w')

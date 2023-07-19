@@ -127,23 +127,12 @@ def consulta_gia(ie, comp, driver, sid):
     driver.find_element(by=By.XPATH, value='/html/body/form/table/tbody/tr[6]/td/input').click()
     
     time.sleep(1)
-    # captura mensagens de erro, se encontrar retorna a mensagem se não retorna um ok
-    try:
-        # Aguardar o alerta ser exibido
-        alert = driver.switch_to.alert
-        
-        # Obter a mensagem do alerta
-        mensagem = alert.text
-        
-        # Imprimir a mensagem do alerta
-        print(f'❌ {mensagem}')
-        
-        # Aceitar o alerta
-        alert.accept()
-        return driver, mensagem
-    except:
-        # captura erros do site, se achar retorna a mensagem
-        resultado = re.compile(r'MENSAGEM DO SISTEMA: (.+)').search(driver.page_source)
+    
+    print(driver.page_source)
+    # captura erros do site, se achar retorna a mensagem
+    resultado = re.compile(r'MENSAGEM DO SISTEMA: (.+)').search(driver.page_source)
+    if not resultado:
+        resultado = re.compile(r'RESULTADO-ERRO\">(.+)</td>').search(driver.page_source)
         if not resultado:
             resultado = re.compile(r'RESULTADO-ERRO.+\n(.+)').search(driver.page_source)
             if not resultado:

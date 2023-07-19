@@ -73,7 +73,19 @@ def create_pdf(driver, nome_arquivo, comp_formatado):
     # Remove tags img e script, não serão usados
     _ = list(tag.extract() for tag in soup.find_all('img'))
     _ = list(tag.extract() for tag in soup.find_all('script'))
-
+    
+    soup = str(soup)\
+        .replace('target="_blank">Cidadão SP</a></td>', '')\
+        .replace('target="_blank">saopaulo.sp.gov.br</a></td>', '') \
+        .replace('<a class="botao-sistema" href="">Home</a>', '') \
+        .replace('<a class="botao-sistema" href="">Imprimir</a>', '') \
+        .replace('<a class="botao-sistema" href="">Encerrar</a>', '')\
+        .replace('target="_blank">Ouvidoria</a></td>', '')\
+        .replace('target="_blank">Transparência</a></td>', '')\
+        .replace('href="" target="_blank">SIC</a></td>', '')
+    
+    soup = BeautifulSoup(soup, 'html.parser')
+    
     with open(os.path.join(e_dir_pdf, nome_arquivo), 'w+b') as pdf:
         pisa.showLogging()
         pisa.CreatePDF(str(soup), pdf)

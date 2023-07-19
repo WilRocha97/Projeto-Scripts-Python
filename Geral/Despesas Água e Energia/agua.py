@@ -57,7 +57,7 @@ def run():
     # para cada linha da lista executa
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        cod_ae, nome, hidrometro, matricula, senha = empresa
+        cod_ae, cnpj, nome, matricula = empresa
         # printa o indice da lista
         _indice(count, total_empresas, empresa)
         if not consulta(ref, nome_planilha, cod_ae, nome, matricula):

@@ -112,18 +112,16 @@ def new_session_fazenda(ni, user, pwd, tipo):
 _new_session_fazenda = new_session_fazenda
 
 
-def new_session_fazenda_driver(cnpj, user, pwd, perfil, retorna_driver=False, orientacao='paisagem'):
+def new_session_fazenda_driver(cnpj, user, pwd, perfil, retorna_driver=False, options='padrão'):
     url_home = "https://www3.fazenda.sp.gov.br/CAWEB/Account/Login.aspx"
     _site_key = '6LesbbcZAAAAADrEtLsDUDO512eIVMtXNU_mVmUr'
-    
-    # opções para fazer com que o chome trabalhe em segundo plano (opcional)
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    if orientacao == 'retrato':
-        options.add_argument('--window-size=1080,1920')
-    else:
+
+    if options == 'padrão':
+        # opções para fazer com que o chrome trabalhe em segundo plano (opcional)
+        options = webdriver.ChromeOptions()
+        options.add_argument('--headless')
         options.add_argument('--window-size=1920,1080')
-    # options.add_argument("--start-maximized")
+        # options.add_argument("--start-maximized")
     
     status, driver = initialize_chrome(options)
     driver.get(url_home)

@@ -197,8 +197,8 @@ for file in os.listdir(documentos):
     
     for page in doc:
         texto = page.get_text('text', flags=1 + 2 + 8)
-        # print(texto)
-        # time.sleep(55)
+        print(texto)
+        time.sleep(55)
         # regex_termo = re.compile(r'{}'.format(cnpj))
         # regex_termo = re.compile(r'Não foram detectadas pendências/exigibilidades suspensas nos controles da Receita Federal e da Procuradoria-Geral da Fazenda Nacional.')
         # regex_termo = re.compile(r'Não foram detectadas pendências/exigibilidades suspensas para esse contribuinte nos controles da Procuradoria-Geral da Fazenda Nacional.')

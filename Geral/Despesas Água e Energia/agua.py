@@ -25,8 +25,8 @@ def consulta(ref, nome_planilha, cod_ae, cnpj, nome, matricula):
             data_pag = fatura['vwFtDataPagamentoFormatado']
             local_pag = fatura['vwFtLocalPagamento']
         except:
-            _escreve_relatorio_csv(f'{cod_ae};{nome};{cnpj};{matricula};Água-ID inválida', nome=nome_planilha)
-            print(f'❌ Matrícula inválida')
+            _escreve_relatorio_csv(f'{cod_ae};{nome};{cnpj};{matricula};Água-ID/Matrícula inválida', nome=nome_planilha)
+            print(f'❌ Água-ID/Matrícula  inválida')
             return True
     
         # escreve se for consulta mensal e se encontrar alguma conta do mês procurado
@@ -69,7 +69,6 @@ def run():
         if not consulta(ref, nome_planilha, cod_ae, cnpj, nome, matricula):
             _escreve_relatorio_csv(f'{cod_ae};{nome};{cnpj};{matricula};Não encontrou fatura paga referente a {ref}', nome=nome_planilha)
             print(f'❌ Não encontrou fatura paga referente a {ref}')
-        
         
     _escreve_header_csv('CÓDIGO AE;NOME;REFERENCIA;VENCIMENTO;EMISSÃO;VALOR;DATA DE PAGAMENTO;LOCAL DE PAGAMENTO', nome=nome_planilha)
     

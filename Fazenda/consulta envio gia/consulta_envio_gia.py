@@ -127,8 +127,6 @@ def consulta_gia(ie, comp, driver, sid):
     driver.find_element(by=By.XPATH, value='/html/body/form/table/tbody/tr[6]/td/input').click()
     
     time.sleep(1)
-    
-    print(driver.page_source)
     # captura erros do site, se achar retorna a mensagem
     resultado = re.compile(r'MENSAGEM DO SISTEMA: (.+)').search(driver.page_source)
     if not resultado:
@@ -138,7 +136,7 @@ def consulta_gia(ie, comp, driver, sid):
             if not resultado:
                 return driver, 'ok'
             
-        return driver, resultado.group(1)
+    return driver, resultado.group(1)
         
     
 @_time_execution

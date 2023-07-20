@@ -137,7 +137,6 @@ def new_session_fazenda_driver(cnpj, user, pwd, perfil, retorna_driver=False, op
         time.sleep(1)
     
     elif perfil != 'contribuinte':
-        driver.save_screenshot(r'ignore\debug_screen.png')
         driver.quit()
         return False
     
@@ -170,12 +169,10 @@ def new_session_fazenda_driver(cnpj, user, pwd, perfil, retorna_driver=False, op
     soup = BeautifulSoup(html, 'html.parser')
     padrao = re.compile(r'SID=(.\d+)')
     resposta = padrao.search(str(soup))
-    driver.save_screenshot(r'ignore\debug_screen.png')
     
     if not resposta:
         try:
             padrao = re.compile(r'(Senha inserida está incorreta)')
-            driver.save_screenshot(r'ignore\debug_screen.png')
             resposta = padrao.search(str(soup))
             
             if not resposta:

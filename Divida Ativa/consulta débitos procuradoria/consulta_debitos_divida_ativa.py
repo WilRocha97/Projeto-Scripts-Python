@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
+import time
+import re
 import time, re, os
 from bs4 import BeautifulSoup
 from requests import Session
 from xhtml2pdf import pisa
-# from selenium import webdriver
-# from selenium.webdriver.common.by import By
-
+from selenium import webdriver
+from selenium.webdriver.common.by import By
 from sys import path
+
 path.append(r'..\..\_comum')
-# from captcha_comum import _solve_recaptcha
-# from chrome_comum import _initialize_chrome
+from captcha_comum import _solve_recaptcha
+from chrome_comum import _initialize_chrome
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
+import os
 
 
 def verifica_debitos(pagina):
@@ -102,11 +105,10 @@ def salva_pagina(pagina, cnpj, compl=''):
     return True
 
 
-"""def inicia_sessao():
+def inicia_sessao():
     options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')
-    # options.add_argument('--window-size=1920,1080')
-    options.add_argument("--start-maximized")
+    options.add_argument('--headless')
+    options.add_argument('--window-size=1920,1080')
     
     status, driver = _initialize_chrome(options)
     
@@ -115,26 +117,25 @@ def salva_pagina(pagina, cnpj, compl=''):
     
     # gera o token para passar pelo captcha
     recaptcha_data = {'sitekey': '6Le9EjMUAAAAAPKi-JVCzXgY_ePjRV9FFVLmWKB_', 'url': url}
-    # token = _solve_recaptcha(recaptcha_data)
+    token = _solve_recaptcha(recaptcha_data)
     
     driver.find_element(by=By.ID, value='consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa').click()
     driver.find_element(by=By.XPATH, value='/html/body/div[1]/div/div/div/div[2]/div/div[3]/div/div[2]/div[2]/span/form/span/div/div[2]/table/tbody/tr/td[1]/div/div/span/select/option[2]').click()
     time.sleep(1)
     
     driver.find_element(by=By.ID, value='consultaDebitoForm:decTxtTipoConsulta:cnpj').send_keys('00656064000145')
-    # driver.execute_script("document.getElementById('g-recaptcha-response').innerText='" + token + "'")
+    driver.execute_script("document.getElementById('g-recaptcha-response').innerText='" + token + "'")
     time.sleep(1)
     
     driver.execute_script("document.getElementsByName('consultaDebitoForm:j_id102')[0].click()")
     time.sleep(1)
-    return driver"""
+    return driver
 
 
 def consulta_debito(s, empresa):
     cnpj, nome = empresa
     url = 'https://www.dividaativa.pge.sp.gov.br/sc/pages/consultas/consultarDebito.jsf'
     # str_cnpj = f"{cnpj[0:2]}.{cnpj[2:5]}.{cnpj[5:8]}/{cnpj[8:12]}-{cnpj[12:]}"
-
     pagina = s.get(url)
     
     try:
@@ -148,7 +149,7 @@ def consulta_debito(s, empresa):
     
     # gera o token para passar pelo captcha
     recaptcha_data = {'sitekey': '6Le9EjMUAAAAAPKi-JVCzXgY_ePjRV9FFVLmWKB_', 'url': url}
-    # token = _solve_recaptcha(recaptcha_data)
+    token = _solve_recaptcha(recaptcha_data)
     
     # Troca opção de pesquisa para CNPJ
     info = {
@@ -166,12 +167,12 @@ def consulta_debito(s, empresa):
     s.post(url, info)
     
     # Consulta o cnpj
-    # 'g-recaptcha-response': token,
     info = {
         'consultaDebitoForm': 'consultaDebitoForm',
         'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa': 'CNPJ',
         'consultaDebitoForm:decTxtTipoConsulta:cnpj': cnpj,
         'consultaDebitoForm:decTxtTipoConsulta:tiposDebitosCnpj': 0,
+        'g-recaptcha-response': token,
         'consultaDebitoForm:j_id104': 'Consultar',
         'consultaDebitoForm:modalSelecionarDebitoOpenedState': '',
         'consultaDebitoForm:modalDadosCartorioOpenedState': '',
@@ -191,12 +192,12 @@ def consulta_debito(s, empresa):
         viewstate = soup.find('input', attrs={'id': "javax.faces.ViewState"}).get('value')
         for index, linha in enumerate(linhas):
             tipo = linha.get('id')
-            # 'g-recaptcha-response': token,
             info = {
                 'consultaDebitoForm': 'consultaDebitoForm',
                 'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa': 'CNPJ',
                 'consultaDebitoForm:decTxtTipoConsulta:cnpj': cnpj,
                 'consultaDebitoForm:decTxtTipoConsulta:tiposDebitosCnpj': 0,
+                'g-recaptcha-response': token,
                 'consultaDebitoForm:modalSelecionarDebitoOpenedState': '',
                 'consultaDebitoForm:modalDadosCartorioOpenedState': '',
                 'javax.faces.ViewState': viewstate,
@@ -207,12 +208,12 @@ def consulta_debito(s, empresa):
             
             # Retorna para tela de consulta
             viewstate = soup.find('input', attrs={'id': "javax.faces.ViewState"}).get('value')
-            # 'g-recaptcha-response': token,
             info = {
                 'consultaDebitoForm': 'consultaDebitoForm',
                 'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa': 'CNPJ',
                 'consultaDebitoForm:decTxtTipoConsulta:cnpj': cnpj,
                 'consultaDebitoForm:decTxtTipoConsulta:tiposDebitosCnpj': 0,
+                'g-recaptcha-response': token,
                 'consultaDebitoForm:j_id260': 'Voltar',
                 'consultaDebitoForm:modalSelecionarDebitoOpenedState': '',
                 'consultaDebitoForm:modalDadosCartorioOpenedState': '',
@@ -231,15 +232,13 @@ def run():
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:
         return False
-
-    """driver = inicia_sessao()
-
+    driver = inicia_sessao()
     cookies = driver.get_cookies()
-    driver.quit()"""
+    driver.quit()
     with Session() as s:
-        """for cookie in cookies:
-            s.cookies.set(cookie['name'], cookie['value'])"""
-            
+        for cookie in cookies:
+            s.cookies.set(cookie['name'], cookie['value'])
+        
         total_empresas = empresas[index:]
         for count, empresa in enumerate(empresas[index:], start=1):
             _indice(count, total_empresas, empresa)
@@ -252,7 +251,7 @@ def run():
                 except:
                     erro = 'sim'
     s.close()
-    
+
 
 if __name__ == '__main__':
     run()

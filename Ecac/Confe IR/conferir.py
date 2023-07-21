@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
-import time, re, os
-from pyautogui import press
-from selenium import webdriver
-from selenium.webdriver.common.by import By
+import time, pyperclip, os, pyautogui as p
 
 from sys import path
 path.append(r'..\..\_comum')
-from chrome_comum import _initialize_chrome, _find_by_id, _find_by_path
+from pyautogui_comum import _click_img, _wait_img, _find_img, _click_position_img, _click_position_img
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
 
 dados = "V:\\Setor Robô\\Scripts Python\\_comum\\Dados Confere IR.txt"
@@ -15,71 +12,133 @@ user = f.read()
 user = user.split('/')
 
 
-def login(driver):
-    # abre o site e espera carregar
-    driver.get('https://portal.conferironline.com.br/login?returnUrl=%2Fdownloads-center')
-    email = '/html/body/app-root/app-full-layout/div/app-login-page/app-login/div/div/div/div[2]/div/app-form/div/div/form/app-overlay-loading/div/div/app-input[1]/div/input'
-    senha = '/html/body/app-root/app-full-layout/div/app-login-page/app-login/div/div/div/div[2]/div/app-form/div/div/form/app-overlay-loading/div/div/app-input[2]/div/input'
-    while not _find_by_path(email, driver):
-        time.sleep(1)
-    
-    # insere login e senha
-    driver.find_element(by=By.XPATH, value=email).send_keys(user[0])
-    driver.find_element(by=By.XPATH, value=senha).send_keys(user[1])
-    time.sleep(1)
-    
-    # clica em entrar
-    driver.find_element(by=By.XPATH,
-                        value='/html/body/app-root/app-full-layout/div/app-login-page/app-login/div/div/div/div[2]/div/app-form/div/div/form/app-overlay-loading/div/button')\
-                        .click()
-    time.sleep(2)
-    return driver
+def login():
+    p.hotkey('win', 'm')
 
-
-def consulta(driver, cpf):
-    # abre tela de clientes
-    driver.get('https://portal.conferironline.com.br/customers')
-    pesquisa = '/html/body/app-root/app-content-layout/div/div/app-header/div/div/div[2]/ul/li[1]/app-search-bar/form/div/input'
-    while not _find_by_path(pesquisa, driver):
-        time.sleep(1)
-    
-    # insere cpf do cliente e aperta enter para confirmar, se não encontrar o cpf dentro da lista de clientes encontrados, retorna "Cliente não encontrado"
-    # se sim, pega a id do cliente
-    driver.find_element(by=By.XPATH, value=pesquisa).send_keys(cpf)
-    time.sleep(2)
-    press('enter')
-    time.sleep(5)
-    if not re.compile(r'class=\"f-w-600\">Cpf/Cnpj:</span> ' + cpf +' ').search(driver.page_source):
-        return driver, 'Cliente não encontrado'
+    if _find_img('chrome_aberto.png', conf=0.99):
+        _click_img('chrome_aberto.png', conf=0.99, timeout=1)
     else:
-        url_cliente = re.compile(r'iconNewTab\" href=\"/(.+)\"><app-icon _ngcontent-\w\w\w-c115').search(driver.page_source).group(1)
-        cliente_id = url_cliente.split('=')[1]
-    
-    # concatena a url com a id do cliente para entrar direto no perfil dele na aba de acesso ao ecac
-    driver.get('https://portal.conferironline.com.br/customer-profile/actions?customerId=' + cliente_id)
-    time.sleep(3)
-    
-    # clica em CND
-    driver.find_element(by=By.XPATH,
-                        value='/html/body/app-root/app-content-layout/div/div/div/div[2]/main/div/div/div/app-customer-profile-page/app-profile-customer/app-overlay-loading/div/app-profile-tabset/app-overlay-loading/div/div/div[2]/app-actions-ecac/app-card/div/div/div/div[3]/a')\
-                        .click()
-    
-    # troca de aba, pois abre o ECAC em outra
-    abas = driver.window_handles
-    driver.switch_to.window(abas[1])
-    time.sleep(22)
-    return driver, ''
-    
+        time.sleep(0.5)
+        os.startfile(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
+        while not _find_img('google.png', conf=0.9):
+            time.sleep(1)
+            p.moveTo(1163, 377)
+            p.click()
+
+    """while not _find_img('remover_dados.png', conf=0.9):
+        p.hotkey('ctrl', 'shift', 'del')
+        time.sleep(1)
+
+    p.press('tab')
+    p.press('enter')
+    while _find_img('remover_dados.png', conf=0.9):
+        time.sleep(1)
+    p.hotkey('ctrl', 'w')
+    time.sleep(1)"""
+
+    link = 'https://portal.conferironline.com.br/dashboard'
+
+    _click_img('maxi.png', conf=0.9, timeout=1)
+    p.click(1100, 51)
+    time.sleep(1)
+    p.write(link.lower())
+    time.sleep(1)
+    p.press('enter')
+
+    return 'ok'
+
+
+def consulta(cpf):
+    while not _find_img('barra_de_pesquisa.png', conf=0.9):
+        time.sleep(1)
+
+    _click_img('barra_de_pesquisa.png', conf=0.9)
+    time.sleep(1)
+
+    p.write(cpf)
+
+    while not _find_img('empresa.png', conf=0.9):
+        if _find_img('nenhum_resultado_encontrado.png', conf=0.9):
+            print('❗ CPF não encontrado no sistema')
+            return 'CPF não encontrado no sistema'
+        time.sleep(1)
+
+    _click_img('empresa.png', conf=0.9)
+    time.sleep(1)
+
+    while not _find_img('acoes_ecac.png', conf=0.9):
+        time.sleep(1)
+
+    _click_img('acoes_ecac.png', conf=0.9)
+    time.sleep(1)
+
+    while not _find_img('cnd_ecac.png', conf=0.9):
+        if _find_img('login_invalido.png', conf=0.9):
+            print(
+                '❗ Os serviços só estão disponíveis caso o login esteja válido! Verifique na aba ECAC o login e senha por favor.')
+            return 'Os serviços só estão disponíveis caso o login esteja válido! Verifique na aba ECAC o login e senha por favor.'
+        time.sleep(1)
+
+    _click_position_img('cnd_ecac.png', '+', pixels_y=92, conf=0.9)
+
+    while not _find_img('gerar_relatorio.png', conf=0.9):
+        if _find_img('mensagens_importantes_ecac.png', conf=0.9):
+            print(
+                '❗ Este CPF possuí mensagens importantes no ECAC, não é possível emitir o relatório até a mensagem seja aberta.')
+            return 'Este CPF possuí mensagens importantes no ECAC, não é possível emitir o relatório até a mensagem seja aberta.'
+        time.sleep(1)
+
+    _click_img('gerar_relatorio.png', conf=0.9)
+    time.sleep(1)
+
+    while not _find_img('botao_gerar_relatorio.png', conf=0.9):
+        time.sleep(1)
+
+    _click_img('botao_gerar_relatorio.png', conf=0.9)
+
+    time.sleep(2)
+    return 'ok'
+
+
+def salvar_pdf():
+    timer = 0
+    while not _find_img('salvar_como.png', conf=0.9):
+        time.sleep(1)
+
+    pasta_final = r'V:\Setor Robô\Scripts Python\Ecac\Confe IR\execução\Relatórios'
+    os.makedirs(pasta_final, exist_ok=True)
+    # Selecionar local
+    p.press('tab', presses=6)
+    time.sleep(1)
+    p.press('enter')
+    time.sleep(1)
+
+    erro = 'sim'
+    while erro == 'sim':
+        try:
+            pyperclip.copy(pasta_final)
+            p.hotkey('ctrl', 'v')
+            erro = 'não'
+        except:
+            erro = 'sim'
+
+    time.sleep(1)
+    p.press('enter')
+    time.sleep(1)
+    p.hotkey('alt', 'l')
+    time.sleep(1)
+    while _find_img('salvar_como.png', conf=0.9):
+        if _find_img('substituir.png', conf=0.9):
+            p.press('s')
+    time.sleep(2)
+    p.hotkey('ctrl', 'w')
+
+    print('✔ Relatório emitido com sucesso')
+    return 'Relatório emitido com sucesso'
+
 
 @_time_execution
 def run():
-    # opções para fazer com que o chome trabalhe em segundo plano (opcional)
-    options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')
-    # options.add_argument('--window-size=1366,768')
-    options.add_argument("--start-maximized")
-    options.add_extension('V:/Setor Robô/Scripts Python/Ecac/Confe IR/ignore/0.0.9_0.crx')
-    
     # abrir a planilha de dados
     empresas = _open_lista_dados()
     if not empresas:
@@ -88,20 +147,21 @@ def run():
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:
         return False
-    
-    # iniciar o driver do chome
-    status, driver = _initialize_chrome(options)
-    driver = login(driver)
-    
+
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        # configurar o indice para localizar em qual empresa está
+        # configurar o índice para localizar em qual empresa está
         _indice(count, total_empresas, empresa)
         cpf, nome = empresa
         
-        driver, resultado = consulta(driver, cpf)
-        print(resultado)
-        
+        login()
+        resultado = consulta(cpf)
+        if resultado == 'ok':
+            resultado = salvar_pdf()
+
+        p.hotkey('ctrl', 'w')
+        _escreve_relatorio_csv(f'{cpf};{nome};{resultado}')
+
 
 if __name__ == '__main__':
     run()

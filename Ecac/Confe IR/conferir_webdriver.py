@@ -1,0 +1,109 @@
+# -*- coding: utf-8 -*-
+import time, re, os
+from pyautogui import press
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+
+from sys import path
+path.append(r'..\..\_comum')
+from edge_comum import _initialize_edge, _find_by_id, _find_by_path
+from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
+
+dados = "V:\\Setor Robô\\Scripts Python\\_comum\\Dados Confere IR.txt"
+f = open(dados, 'r', encoding='utf-8')
+user = f.read()
+user = user.split('/')
+
+
+def login(driver):
+    # abre o site e espera carregar
+    driver.get('https://portal.conferironline.com.br/login?returnUrl=%2Fdownloads-center')
+    email = '/html/body/app-root/app-full-layout/div/app-login-page/app-login/div/div/div/div[2]/div/app-form/div/div/form/app-overlay-loading/div/div/app-input[1]/div/input'
+    senha = '/html/body/app-root/app-full-layout/div/app-login-page/app-login/div/div/div/div[2]/div/app-form/div/div/form/app-overlay-loading/div/div/app-input[2]/div/input'
+    while not _find_by_path(email, driver):
+        time.sleep(1)
+    
+    # insere login e senha
+    driver.find_element(by=By.XPATH, value=email).send_keys(user[0])
+    driver.find_element(by=By.XPATH, value=senha).send_keys(user[1])
+    time.sleep(1)
+    
+    # clica em entrar
+    driver.find_element(by=By.XPATH,
+                        value='/html/body/app-root/app-full-layout/div/app-login-page/app-login/div/div/div/div[2]/div/app-form/div/div/form/app-overlay-loading/div/button')\
+                        .click()
+    time.sleep(2)
+    return driver
+
+
+def consulta(driver, cpf):
+    # abre tela de clientes
+    driver.get('https://portal.conferironline.com.br/customers')
+    pesquisa = '/html/body/app-root/app-content-layout/div/div/app-header/div/div/div[2]/ul/li[1]/app-search-bar/form/div/input'
+    while not _find_by_path(pesquisa, driver):
+        time.sleep(1)
+    
+    # insere cpf do cliente e aperta enter para confirmar, se não encontrar o cpf dentro da lista de clientes encontrados, retorna "Cliente não encontrado"
+    # se sim, pega a id do cliente
+    driver.find_element(by=By.XPATH, value=pesquisa).send_keys(cpf)
+    time.sleep(2)
+    press('enter')
+    time.sleep(5)
+    if not re.compile(r'class=\"f-w-600\">Cpf/Cnpj:</span> ' + cpf +' ').search(driver.page_source):
+        return driver, 'Cliente não encontrado'
+    else:
+        url_cliente = re.compile(r'iconNewTab\" href=\"/(.+)\"><app-icon _ngcontent-\w\w\w-c115').search(driver.page_source).group(1)
+        cliente_id = url_cliente.split('=')[1]
+    
+    # concatena a url com a id do cliente para entrar direto no perfil dele na aba de acesso ao ecac
+    driver.get('https://portal.conferironline.com.br/customer-profile/actions?customerId=' + cliente_id)
+    time.sleep(3)
+    
+    # clica em CND
+    driver.find_element(by=By.XPATH,
+                        value='/html/body/app-root/app-content-layout/div/div/div/div[2]/main/div/div/div/app-customer-profile-page/app-profile-customer/app-overlay-loading/div/app-profile-tabset/app-overlay-loading/div/div/div[2]/app-actions-ecac/app-card/div/div/div/div[3]/a')\
+                        .click()
+    
+    # troca de aba, pois abre o ECAC em outra
+    abas = driver.window_handles
+    driver.switch_to.window(abas[1])
+    print(driver.page_source)
+    time.sleep(22)
+    return driver, ''
+    
+
+@_time_execution
+def run():
+    # opções para fazer com que o chome trabalhe em segundo plano (opcional)
+    options = webdriver.EdgeOptions()
+    # options.add_argument('--headless')
+    # options.add_argument('--window-size=1366,768')
+    options.add_argument("--start-maximized")
+    options.add_extension('V:/Setor Robô/Scripts Python/Ecac/Confe IR/ignore/0.0.9_0.crx')
+    
+    # abrir a planilha de dados
+    empresas = _open_lista_dados()
+    if not empresas:
+        return False
+    
+    index = _where_to_start(tuple(i[0] for i in empresas))
+    if index is None:
+        return False
+    
+    # iniciar o driver do chome
+    status, driver = _initialize_edge(options)
+    driver.maximize_window()
+    driver = login(driver)
+    
+    total_empresas = empresas[index:]
+    for count, empresa in enumerate(empresas[index:], start=1):
+        # configurar o indice para localizar em qual empresa está
+        _indice(count, total_empresas, empresa)
+        cpf, nome = empresa
+        
+        driver, resultado = consulta(driver, cpf)
+        print(resultado)
+        
+
+if __name__ == '__main__':
+    run()

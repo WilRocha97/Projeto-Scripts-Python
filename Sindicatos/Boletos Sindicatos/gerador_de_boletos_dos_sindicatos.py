@@ -3,8 +3,8 @@ import os, time
 from sys import path
 
 path.append(r'modulos')
-import guias_sinecol, guias_sitac, guias_metalcampinas, guias_sinticom, guias_sindeepres, guias_sincomerciarios, guias_sindpd, guias_sinthojur, \
-    guias_sinthoresp, guias_seaac, guias_secriopreto, guias_sinthoresca
+import guias_sinecol, guias_sitac, guias_metalcampinas, guias_sinticom, guias_sindeepres, guias_sindesporte, guias_sincomerciarios, \
+    guias_sindpd, guias_sinthojur, guias_sinthoresp, guias_secsp, guias_seaac, guias_secriopreto, guias_sinthoresca
 
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
@@ -35,7 +35,7 @@ def run():
             '10': guias_metalcampinas.run,       #ok
             '11': guias_sinticom.run,            #ok
             '16': guias_sindeepres.run,
-            '17': '',
+            '17': guias_sindesporte.run,
             '19': '',
             '21': '',
             '22': guias_sincomerciarios.run,
@@ -45,14 +45,14 @@ def run():
             '39': guias_sinthojur.run,           #ok
             '49': '',
             '58': guias_sinthoresp.run,
-            '65': '',
+            '65': guias_secsp.run,
             '69': '',
             '70': '',
             '100': guias_seaac.run,
-            '131': guias_secriopreto,
+            '131': guias_secriopreto.run,
             '133': '',
             '135': '',
-            '148': guias_sinthoresca,
+            '148': guias_sinthoresca.run,
             '162': '',
             '223': ''
         }

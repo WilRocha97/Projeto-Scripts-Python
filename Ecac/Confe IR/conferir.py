@@ -49,52 +49,96 @@ def login():
 
 
 def consulta(cpf):
+    # aguarda barra de pesquisa
     while not _find_img('barra_de_pesquisa.png', conf=0.9):
         time.sleep(1)
-
+    
+    # clica na barra de pesquisa
     _click_img('barra_de_pesquisa.png', conf=0.9)
     time.sleep(1)
-
+    
+    # escreve o cpf
     p.write(cpf)
-
+    
+    # aguarda o CPF consultado aparecer
     while not _find_img('empresa.png', conf=0.9):
         if _find_img('nenhum_resultado_encontrado.png', conf=0.9):
             print('❗ CPF não encontrado no sistema')
             return 'CPF não encontrado no sistema'
         time.sleep(1)
-
+    
+    # abre o perfil do CPF
     _click_img('empresa.png', conf=0.9)
     time.sleep(1)
-
+    
+    # aguarda o menu do ecac aparecer
     while not _find_img('acoes_ecac.png', conf=0.9):
         time.sleep(1)
-
+    
+    # clica no menu do ecac
     _click_img('acoes_ecac.png', conf=0.9)
     time.sleep(1)
-
+    
+    # aguarda o botão de CND no ecac aparecer, se aparecer uma mensagem sobre login inválido retorna o erro
     while not _find_img('cnd_ecac.png', conf=0.9):
         if _find_img('login_invalido.png', conf=0.9):
-            print(
-                '❗ Os serviços só estão disponíveis caso o login esteja válido! Verifique na aba ECAC o login e senha por favor.')
+            print('❗ Os serviços só estão disponíveis caso o login esteja válido! Verifique na aba ECAC o login e senha por favor.')
             return 'Os serviços só estão disponíveis caso o login esteja válido! Verifique na aba ECAC o login e senha por favor.'
         time.sleep(1)
-
+    
+    # clica no botão de CND do ecac
     _click_position_img('cnd_ecac.png', '+', pixels_y=92, conf=0.9)
-
-    while not _find_img('gerar_relatorio.png', conf=0.9):
+    
+    #aguarda o botão de emissão da certidão aparecer
+    timer = 0
+    while not _find_img('emitir_certidao.png', conf=0.9):
+        # se aparecer a tela de mensagens do ecac, retorna o erro
         if _find_img('mensagens_importantes_ecac.png', conf=0.9):
-            print(
-                '❗ Este CPF possuí mensagens importantes no ECAC, não é possível emitir o relatório até a mensagem seja aberta.')
-            return 'Este CPF possuí mensagens importantes no ECAC, não é possível emitir o relatório até a mensagem seja aberta.'
+            print('❗ Este CPF possuí mensagens importantes no ECAC, não é possível emitir o relatório até que a mensagem seja aberta.')
+            return 'Este CPF possuí mensagens importantes no ECAC, não é possível emitir o relatório até que a mensagem seja aberta.'
+        # se não aparecer o botão para emitir a certidão, tenta gerar uma nova consulta
+        if _find_img('sem_certidao.png', conf=0.9):
+            nova_consulta()
+            # se não puder gerar no momento, retorna o erro
+            if _find_img('ok.png', conf=0.9):
+                _click_img('ok.png', conf=0.9)
+                print('❗ Não é possível gerar a certidão no momento, tente novamente mais tarde.')
+                return 'Não é possível gerar a certidão no momento, tente novamente mais tarde.'
+        # se demorar 5 segundos para o botão de emissão da certidão aparecer, verifica se a tela de login do ecac stá bugada
+        # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
+        if timer > 5:
+            if _find_img('erro_sistema.png', conf=0.9):
+                p.hotkey('ctrl', 'w')
+                time.sleep(1)
+                p.press('f5')
+                time.sleep(2)
+
+                while not _find_img('cnd_ecac.png', conf=0.9):
+                    time.sleep(1)
+
+                _click_position_img('cnd_ecac.png', '+', pixels_y=92, conf=0.9)
+                timer = 0
         time.sleep(1)
-
-    _click_img('gerar_relatorio.png', conf=0.9)
-    time.sleep(1)
-
-    while not _find_img('botao_gerar_relatorio.png', conf=0.9):
+        timer += 1
+    
+    time.sleep(2)
+    # clica para emitir a certidão
+    _click_img('emitir_certidao.png', conf=0.9)
+    
+    # aguarda a tela para salvar o PDF
+    while not _find_img('salvar_como.png', conf=0.9):
         time.sleep(1)
-
-    _click_img('botao_gerar_relatorio.png', conf=0.9)
+        # se pedir para gerar uma nova consulta, fecha a janela e gera uma nova consulta
+        if _find_img('gerar_nova_consulta.png', conf=0.9):
+            _click_img('ok.png', conf=0.9)
+            nova_consulta()
+            
+            # aguarda a nova consulta
+            while not _find_img('emitir_certidao.png', conf=0.9):
+                time.sleep(1)
+            
+            # clica para emitir a certidão
+            _click_img('emitir_certidao.png', conf=0.9)
 
     time.sleep(2)
     return 'ok'
@@ -135,6 +179,21 @@ def salvar_pdf():
 
     print('✔ Relatório emitido com sucesso')
     return 'Relatório emitido com sucesso'
+
+
+def nova_consulta():
+    while not _find_img('atualizar_analise.png', conf=0.9):
+        time.sleep(1)
+
+    _click_img('atualizar_analise.png', conf=0.9)
+    time.sleep(1)
+
+    while not _find_img('em_processamento.png', conf=0.9):
+        if _find_img('ok.png', conf=0.9):
+            return False
+        time.sleep(1)
+    
+    return True
 
 
 @_time_execution

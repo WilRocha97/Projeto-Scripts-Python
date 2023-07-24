@@ -101,10 +101,15 @@ def consulta(cpf):
         if _find_img('mensagens_importantes_ecac.png', conf=0.9):
             print('❗ Este CPF possuí mensagens importantes no ECAC, não é possível emitir o relatório até que a mensagem seja aberta.')
             return 'Este CPF possuí mensagens importantes no ECAC, não é possível emitir o relatório até que a mensagem seja aberta.'
-
+            
         # se demorar 5 segundos para o botão de emissão da certidão aparecer, verifica se a tela de login do ecac stá bugada
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
         if timer > 5:
+            # se aparecer a tela de, em processamento, retorna o erro
+            """if _find_img('consulta_em_processamento.png', conf=0.9):
+                print('❗ Consulta em processamento, retorne mais tarde.')
+                return 'Consulta em processamento, retorne mais tarde.'"""
+            
             if _find_img('erro_sistema.png', conf=0.9) \
                     or _find_img('erro_sistema_2.png', conf=0.9) \
                     or _find_img('erro_sistema_4.png', conf=0.9):

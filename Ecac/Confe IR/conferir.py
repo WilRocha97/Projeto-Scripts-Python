@@ -25,17 +25,6 @@ def login():
             p.moveTo(1163, 377)
             p.click()
 
-    """while not _find_img('remover_dados.png', conf=0.9):
-        p.hotkey('ctrl', 'shift', 'del')
-        time.sleep(1)
-
-    p.press('tab')
-    p.press('enter')
-    while _find_img('remover_dados.png', conf=0.9):
-        time.sleep(1)
-    p.hotkey('ctrl', 'w')
-    time.sleep(1)"""
-
     link = 'https://portal.conferironline.com.br/dashboard'
 
     _click_img('maxi.png', conf=0.9, timeout=1)

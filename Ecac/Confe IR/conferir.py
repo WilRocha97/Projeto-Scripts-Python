@@ -171,21 +171,6 @@ def salvar_pdf():
     return 'Relatório emitido com sucesso'
 
 
-def nova_consulta():
-    while not _find_img('atualizar_analise.png', conf=0.9):
-        time.sleep(1)
-
-    _click_img('atualizar_analise.png', conf=0.9)
-    time.sleep(1)
-
-    while not _find_img('em_processamento.png', conf=0.9):
-        if _find_img('ok.png', conf=0.9):
-            return False
-        time.sleep(1)
-    
-    return True
-
-
 @_time_execution
 def run():
     # abrir a planilha de dados

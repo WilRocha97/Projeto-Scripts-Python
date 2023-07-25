@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-import time, pyperclip, os, pyautogui as p
+import re
+
+import fitz, shutil, time, pyperclip, os, pyautogui as p
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -108,6 +110,7 @@ def consulta(cpf):
 def gera_relatorio():
     # aguarda o botão de emissão da certidão aparecer
     timer = 0
+    print('>>> Aguardando ECAC')
     while not _find_img('gerar_relatorio.png', conf=0.9):
         # se aparecer a tela de mensagens do ecac, retorna o erro
         if _find_img('erro_sistema_3.png', conf=0.9):
@@ -122,16 +125,17 @@ def gera_relatorio():
 
         # se demorar 5 segundos para o botão de emissão da certidão aparecer, verifica se a tela de login do ecac stá bugada
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
-        if timer > 5:
+        if timer > 10:
             # se aparecer a tela de, em processamento, retorna o erro
-            """if _find_img('consulta_em_processamento.png', conf=0.9):
-                print('❗ Consulta em processamento, retorne mais tarde.')
-                return 'Consulta em processamento, retorne mais tarde.'"""
+            if _find_img('sistema_carregando.png', conf=0.9):
+                print('❌ Erro ao acessar o ECAC, o sistema não abre')
+                return 'Erro ao acessar o ECAC, o sistema não abre.'
 
             if _find_img('erro_sistema.png', conf=0.9) \
                     or _find_img('erro_sistema_2.png', conf=0.9) \
                     or _find_img('erro_sistema_4.png', conf=0.9)\
                     or _find_img('erro_sistema_6.png', conf=0.9):
+                print('>>> Erro no ECAC, tentando novamente')
                 p.hotkey('ctrl', 'w')
                 time.sleep(1)
                 p.press('f5')
@@ -142,22 +146,25 @@ def gera_relatorio():
 
                 _click_position_img('cnd_ecac.png', '+', pixels_y=92, conf=0.9)
                 timer = 0
+        
+
         time.sleep(1)
         timer += 1
 
     time.sleep(2)
     # clica para emitir a certidão
+    print('>>> Gerando relatório')
     _click_img('gerar_relatorio.png', conf=0.9)
     _click_img('botao_gerar_relatorio.png', conf=0.9)
 
     return 'ok'
 
 
-def salvar_pdf():
+def salvar_pdf(pasta_final):
+    print('>>> Salvando relatório')
     while not _find_img('salvar_como.png', conf=0.9):
         time.sleep(1)
-
-    pasta_final = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\execução\Relatórios'
+        
     os.makedirs(pasta_final, exist_ok=True)
     # Selecionar local
     p.press('tab', presses=6)
@@ -182,15 +189,58 @@ def salvar_pdf():
     while _find_img('salvar_como.png', conf=0.9):
         if _find_img('substituir.png', conf=0.9):
             p.press('s')
-    time.sleep(2)
+    time.sleep(1)
     p.hotkey('ctrl', 'w')
 
     print('✔ Relatório emitido com sucesso')
     return 'Relatório emitido com sucesso'
 
 
+def verifica_relatorio(pasta_analise, pasta_final):
+    print('>>> Analisando relatório')
+    situacao_1 = ''
+    situacao_2 = ''
+    # Analiza cada pdf que estiver na pasta
+    for arquivo in os.listdir(pasta_analise):
+        print(f'Arquivo: {arquivo}')
+        # Abrir o pdf
+        arq = os.path.join(pasta_analise, arquivo)
+    
+        with fitz.open(arq) as pdf:
+            # Para cada página do pdf, se for a segunda página o script ignora
+            for count, page in enumerate(pdf):
+                # Pega o texto da pagina
+                textinho = page.get_text('text', flags=1 + 2 + 8)
+                
+                if re.compile(r'Diagnóstico Fiscal na Receita Federal e Procuradoria-Geral da Fazenda Nacional.+\nNão foram detectadas pendências/exigibilidades').search(textinho):
+                    situacao = 'Sem pendência na Receita Federal;Sem pendencias na Procuradoria Geral da Fazenda Nacional'
+                    break
+                else:
+                    if re.compile(r'Diagnóstico Fiscal na Receita Federal').search(textinho):
+                        if not re.compile(r'Diagnóstico Fiscal na Receita Federal.+\nNão foram detectadas pendências/exigibilidades').search(textinho):
+                            situacao_1 = 'Pendência na Receita Federal'
+                        else:
+                            situacao_1 = 'Sem pendência na Receita Federal'
+                            
+                    if re.compile(r'Diagnóstico Fiscal na Procuradoria-Geral da Fazenda Nacional').search(textinho):
+                        if not re.compile(r'Diagnóstico Fiscal na Procuradoria-Geral da Fazenda Nacional.+\nNão foram detectadas pendências/exigibilidades').search(textinho):
+                            situacao_2 = 'Pendência na Procuradoria Geral da Fazenda Nacional'
+                        else:
+                            situacao_2 = 'Sem pendencias na Procuradoria Geral da Fazenda Nacional'
+                    
+                    situacao = f'{situacao_1};{situacao_2}'
+            
+        os.makedirs(pasta_final, exist_ok=True)
+        shutil.move(arq, pasta_final)
+    
+    print(situacao.replace(';', ' | '))
+    return situacao
+
+
 @_time_execution
 def run():
+    pasta_analise = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\ignore\Relatórios'
+    pasta_final = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\execução\Relatórios'
     # abrir a planilha de dados
     empresas = _open_lista_dados()
     if not empresas:
@@ -209,10 +259,13 @@ def run():
         login()
         resultado = consulta(cpf)
         if resultado == 'ok':
-            resultado = salvar_pdf()
+            resultado = salvar_pdf(pasta_analise)
+            situacao = verifica_relatorio(pasta_analise, pasta_final)
+        else:
+            situacao = ''
 
         p.hotkey('ctrl', 'w')
-        _escreve_relatorio_csv(f'{cpf};{nome};{resultado}')
+        _escreve_relatorio_csv(f'{cpf};{nome};{resultado};{situacao}')
 
 
 if __name__ == '__main__':

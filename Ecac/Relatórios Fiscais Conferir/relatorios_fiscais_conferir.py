@@ -130,7 +130,8 @@ def gera_relatorio():
 
             if _find_img('erro_sistema.png', conf=0.9) \
                     or _find_img('erro_sistema_2.png', conf=0.9) \
-                    or _find_img('erro_sistema_4.png', conf=0.9):
+                    or _find_img('erro_sistema_4.png', conf=0.9)\
+                    or _find_img('erro_sistema_6.png', conf=0.9):
                 p.hotkey('ctrl', 'w')
                 time.sleep(1)
                 p.press('f5')
@@ -156,7 +157,7 @@ def salvar_pdf():
     while not _find_img('salvar_como.png', conf=0.9):
         time.sleep(1)
 
-    pasta_final = r'V:\Setor Robô\Scripts Python\Ecac\Confe IR\execução\Relatórios'
+    pasta_final = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\execução\Relatórios'
     os.makedirs(pasta_final, exist_ok=True)
     # Selecionar local
     p.press('tab', presses=6)

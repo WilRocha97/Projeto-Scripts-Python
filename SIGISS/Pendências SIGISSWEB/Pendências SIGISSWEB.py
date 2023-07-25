@@ -48,15 +48,24 @@ def consulta(empresas, index):
             # crio um regex para obter o nome original do arquivo
             regex = re.compile(r'filename="(.*)\.pdf"')
             salvar = s.get('https://valinhos.sigissweb.com/CertidaoNegativaCentral?oper=imprimirCert&cnpjCpf=' + cnpj)
-
             # if 'text' not in salvar.headers.get('Content-Type'):
             
             # pego o contexto do link referente ao nome original do arquivo
             filename = salvar.headers.get('content-disposition', '')
             
             # aplico o regex para separar o nome do arquivo (Pendencias/Certidao)
-            documento = regex.search(filename).group(1).replace('ê', 'e').replace('ã', 'a')
-            
+            try:
+                documento = regex.search(filename).group(1).replace('ê', 'e').replace('ã', 'a')
+            except:
+                soup = BeautifulSoup(salvar.content, 'html.parser')
+                soup = soup.prettify()
+                
+                mensagem = re.compile(r"mensagemDlg\((.+)',").search(soup).group(1)
+                mensagem = mensagem.replace("','", ", ").replace("'", "")
+                _escreve_relatorio_csv(f'{cnpj};{senha};{nome};{mensagem}', nome='Pendências SIGISSWEB Valinhos')
+                print(f"❌ {mensagem}")
+                continue
+                
             print(f'>>> Salvando {documento}')
             if documento == 'Certidao':
                 caminho = os.path.join('execução', 'Certidões', cnpj + ' - ' + nome + ' - Certidão Negativa.pdf')

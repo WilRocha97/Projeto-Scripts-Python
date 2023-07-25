@@ -77,7 +77,35 @@ def consulta(cpf):
     
     # clica no botão de CND do ecac
     _click_position_img('cnd_ecac.png', '+', pixels_y=92, conf=0.9)
+
+    resultado = gera_relatorio()
+    if resultado != 'ok':
+        return resultado
     
+    # aguarda a tela para salvar o PDF
+    while not _find_img('salvar_como.png', conf=0.9):
+        if _find_img('erro_sistema_5.png', conf=0.9):
+            p.hotkey('ctrl', 'w')
+            time.sleep(1)
+            p.press('f5')
+            time.sleep(2)
+
+            while not _find_img('cnd_ecac.png', conf=0.9):
+                time.sleep(1)
+
+            _click_position_img('cnd_ecac.png', '+', pixels_y=92, conf=0.9)
+
+            resultado = gera_relatorio()
+            if resultado != 'ok':
+                return resultado
+
+        time.sleep(1)
+
+    time.sleep(2)
+    return 'ok'
+
+
+def gera_relatorio():
     # aguarda o botão de emissão da certidão aparecer
     timer = 0
     while not _find_img('gerar_relatorio.png', conf=0.9):
@@ -88,9 +116,10 @@ def consulta(cpf):
 
         # se aparecer a tela de mensagens do ecac, retorna o erro
         if _find_img('mensagens_importantes_ecac.png', conf=0.9):
-            print('❗ Este CPF possuí mensagens importantes no ECAC, não é possível emitir o relatório até que a mensagem seja aberta.')
+            print(
+                '❗ Este CPF possuí mensagens importantes no ECAC, não é possível emitir o relatório até que a mensagem seja aberta.')
             return 'Este CPF possuí mensagens importantes no ECAC, não é possível emitir o relatório até que a mensagem seja aberta.'
-            
+
         # se demorar 5 segundos para o botão de emissão da certidão aparecer, verifica se a tela de login do ecac stá bugada
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
         if timer > 5:
@@ -98,7 +127,7 @@ def consulta(cpf):
             """if _find_img('consulta_em_processamento.png', conf=0.9):
                 print('❗ Consulta em processamento, retorne mais tarde.')
                 return 'Consulta em processamento, retorne mais tarde.'"""
-            
+
             if _find_img('erro_sistema.png', conf=0.9) \
                     or _find_img('erro_sistema_2.png', conf=0.9) \
                     or _find_img('erro_sistema_4.png', conf=0.9):
@@ -114,22 +143,16 @@ def consulta(cpf):
                 timer = 0
         time.sleep(1)
         timer += 1
-    
+
     time.sleep(2)
     # clica para emitir a certidão
     _click_img('gerar_relatorio.png', conf=0.9)
     _click_img('botao_gerar_relatorio.png', conf=0.9)
-    
-    # aguarda a tela para salvar o PDF
-    while not _find_img('salvar_como.png', conf=0.9):
-        time.sleep(1)
 
-    time.sleep(2)
     return 'ok'
 
 
 def salvar_pdf():
-    timer = 0
     while not _find_img('salvar_como.png', conf=0.9):
         time.sleep(1)
 

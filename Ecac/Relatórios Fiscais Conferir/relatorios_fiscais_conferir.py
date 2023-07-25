@@ -35,7 +35,7 @@ def login():
     p.write(link.lower())
     time.sleep(1)
     p.press('enter')
-
+    print('>>> Abrindo o site do Conferir')
     return 'ok'
 
 
@@ -44,6 +44,7 @@ def consulta(cpf):
     while not _find_img('barra_de_pesquisa.png', conf=0.9):
         time.sleep(1)
     
+    print('>>> Buscando CPF')
     # clica na barra de pesquisa
     _click_img('barra_de_pesquisa.png', conf=0.9)
     time.sleep(1)
@@ -77,6 +78,7 @@ def consulta(cpf):
             return 'Os serviços só estão disponíveis caso o login esteja válido! Verifique na aba ECAC o login e senha por favor.'
         time.sleep(1)
     
+    print('>>> Acessando ECAC')
     # clica no botão de CND do ecac
     _click_position_img('cnd_ecac.png', '+', pixels_y=92, conf=0.9)
 
@@ -126,11 +128,6 @@ def gera_relatorio():
         # se demorar 5 segundos para o botão de emissão da certidão aparecer, verifica se a tela de login do ecac stá bugada
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
         if timer > 10:
-            # se aparecer a tela de, em processamento, retorna o erro
-            if _find_img('sistema_carregando.png', conf=0.9):
-                print('❌ Erro ao acessar o ECAC, o sistema não abre')
-                return 'Erro ao acessar o ECAC, o sistema não abre.'
-
             if _find_img('erro_sistema.png', conf=0.9) \
                     or _find_img('erro_sistema_2.png', conf=0.9) \
                     or _find_img('erro_sistema_4.png', conf=0.9)\
@@ -146,7 +143,12 @@ def gera_relatorio():
 
                 _click_position_img('cnd_ecac.png', '+', pixels_y=92, conf=0.9)
                 timer = 0
-        
+
+        if timer > 60:
+            # se demorar muito pata carregar, retorna o erro
+            if _find_img('sistema_carregando.png', conf=0.9):
+                print('❌ Erro ao acessar o ECAC, sistema demorou muito para responder.')
+                return 'Erro ao acessar o ECAC, sistema demorou muito para responder.'
 
         time.sleep(1)
         timer += 1

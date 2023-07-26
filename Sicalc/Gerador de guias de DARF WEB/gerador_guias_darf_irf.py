@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os, time, shutil, re, pyperclip, pyautogui as p
+import os, time, re, pyperclip, pyautogui as p
 
 from sys import path
 path.append(r'..\..\_comum')

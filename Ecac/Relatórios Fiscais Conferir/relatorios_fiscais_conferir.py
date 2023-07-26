@@ -217,7 +217,8 @@ def salvar_pdf(pasta_final):
     return 'Relatório emitido com sucesso'
 
 
-def verifica_relatorio(pasta_analise, pasta_final):
+def verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias):
+    
     print('>>> Analisando relatório')
     situacao_1 = ''
     situacao_2 = ''
@@ -234,9 +235,12 @@ def verifica_relatorio(pasta_analise, pasta_final):
                 textinho = page.get_text('text', flags=1 + 2 + 8)
                 
                 if re.compile(r'Diagnóstico Fiscal na Receita Federal e Procuradoria-Geral da Fazenda Nacional.+\nNão foram detectadas pendências/exigibilidades').search(textinho):
+                    os.makedirs(pasta_final_sem_pendencias, exist_ok=True)
                     situacao = 'Sem pendências'
+                    pasta_final = os.path.join(pasta_final_sem_pendencias, arquivo.replace('.pdf', '-Sem pendências.pdf'))
                     break
                 else:
+                    os.makedirs(pasta_final, exist_ok=True)
                     if re.compile(r'Diagnóstico Fiscal na Receita Federal').search(textinho):
                         if not re.compile(r'Diagnóstico Fiscal na Receita Federal.+\nNão foram detectadas pendências/exigibilidades').search(textinho):
                             situacao_1 = 'Pendência na Receita Federal'
@@ -250,8 +254,7 @@ def verifica_relatorio(pasta_analise, pasta_final):
                             situacao_2 = 'Sem pendencias na Procuradoria Geral da Fazenda Nacional'
                     
                     situacao = f'Com pendências;{situacao_1};{situacao_2}'
-            
-        os.makedirs(pasta_final, exist_ok=True)
+                    
         shutil.move(arq, pasta_final)
     
     print(situacao.replace(';', ' | '))
@@ -262,6 +265,7 @@ def verifica_relatorio(pasta_analise, pasta_final):
 def run():
     pasta_analise = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\ignore\Relatórios'
     pasta_final = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\execução\Relatórios'
+    pasta_final_sem_pendencias = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\execução\Relatórios Sem Pendências'
     # abrir a planilha de dados
     empresas = _open_lista_dados()
     if not empresas:
@@ -281,7 +285,7 @@ def run():
         resultado = consulta(cpf)
         if resultado == 'ok':
             resultado = salvar_pdf(pasta_analise)
-            situacao = verifica_relatorio(pasta_analise, pasta_final)
+            situacao = verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias)
         else:
             situacao = ''
 

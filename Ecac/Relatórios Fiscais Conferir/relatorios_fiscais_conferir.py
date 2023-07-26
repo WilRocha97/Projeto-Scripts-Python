@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-import re
-
-import fitz, shutil, time, pyperclip, os, pyautogui as p
+import re, fitz, shutil, time, pyperclip, os, pyautogui as p
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -236,7 +234,7 @@ def verifica_relatorio(pasta_analise, pasta_final):
                 textinho = page.get_text('text', flags=1 + 2 + 8)
                 
                 if re.compile(r'Diagnóstico Fiscal na Receita Federal e Procuradoria-Geral da Fazenda Nacional.+\nNão foram detectadas pendências/exigibilidades').search(textinho):
-                    situacao = 'Sem pendência na Receita Federal;Sem pendencias na Procuradoria Geral da Fazenda Nacional'
+                    situacao = 'Sem pendências'
                     break
                 else:
                     if re.compile(r'Diagnóstico Fiscal na Receita Federal').search(textinho):
@@ -251,7 +249,7 @@ def verifica_relatorio(pasta_analise, pasta_final):
                         else:
                             situacao_2 = 'Sem pendencias na Procuradoria Geral da Fazenda Nacional'
                     
-                    situacao = f'{situacao_1};{situacao_2}'
+                    situacao = f'Com pendências;{situacao_1};{situacao_2}'
             
         os.makedirs(pasta_final, exist_ok=True)
         shutil.move(arq, pasta_final)

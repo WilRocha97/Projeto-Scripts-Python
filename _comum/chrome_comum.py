@@ -5,10 +5,10 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.select import Select
 import os
 
-s = Service('V:\Setor Robô\Scripts Python\_comum\Chrome driver\chromedriver.exe')
+service = Service(log_path = 'V:\Setor Robô\Scripts Python\_comum\Chrome driver\chromedriver.exe')
 
 _msgs = {
-    "not_download": "Não foi possivel baixar o chromeDriver correpondente ao chromeBrowser",
+    "not_download": "Não foi possivel baixar o chromeDriver correspondente ao chromeBrowser",
     "not_close": "Verifique se existe algum arquivo chromedriver.exe na pasta" + os.getcwd(),
     "not_found": "Chrome browser não esta na pasta padrão C:\\Program Files\\Google\\Chrome\\Application",
 }
@@ -62,7 +62,7 @@ def initialize_chrome(options=None):
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
     
     if "chromedriver.exe" in r'V:\Setor Robô\Scripts Python\_comum\Chrome driver\chromedriver.exe':
-        return True, webdriver.Chrome(service=s, options=options)
+        return True, webdriver.Chrome(service=service, options=options)
 
     version = get_chrome_version()  # get chromeBrowser version
     if version:
@@ -77,7 +77,7 @@ def initialize_chrome(options=None):
     else:
         return False, _msgs["not_found"]
 
-    return True, webdriver.Chrome(service=s, options=options)
+    return True, webdriver.Chrome(service=service, options=options)
 _initialize_chrome = initialize_chrome
 
 

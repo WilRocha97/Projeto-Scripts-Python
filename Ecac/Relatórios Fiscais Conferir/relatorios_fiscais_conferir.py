@@ -30,7 +30,7 @@ def login():
     link = 'https://portal.conferironline.com.br/dashboard'
 
     _click_img('maxi.png', conf=0.9, timeout=1)
-    p.click(1100, 51)
+    p.click(1000, 51)
     time.sleep(1)
     p.write(link.lower())
     time.sleep(1)
@@ -39,9 +39,30 @@ def login():
     return 'ok'
 
 
+def login_conferir():
+    print('>>> Logando no Conferir')
+    # email
+    _click_img('campo_email.png', conf=0.9)
+    time.sleep(0.5)
+    p.hotkey('ctrl', 'a')
+    p.write(user[0])
+    
+    #senha
+    _click_img('campo_senha.png', conf=0.9)
+    time.sleep(0.5)
+    p.hotkey('ctrl', 'a')
+    p.write(user[1])
+    
+    time.sleep(0.5)
+    p.press('enter')
+    
+
 def consulta(cpf):
+    print('>>> Aguardando o site Conferir')
     # aguarda barra de pesquisa
     while not _find_img('barra_de_pesquisa.png', conf=0.9):
+        if _find_img('tela_login.png', conf=0.9):
+            login_conferir()
         time.sleep(1)
     
     print('>>> Buscando CPF')

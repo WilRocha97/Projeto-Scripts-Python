@@ -179,7 +179,7 @@ def gera_relatorio():
         timer += 1
 
     time.sleep(2)
-    # clica para emitir a certidão
+    # clica para abrir a tela do relatório
     print('>>> Gerando relatório')
     _click_img('gerar_relatorio.png', conf=0.9)
     
@@ -192,7 +192,8 @@ def gera_relatorio():
                 return 'ok'
         time.sleep(1)
         timer += 1
-        
+    
+    # clica no botão para emitir o relatório
     _click_img('botao_gerar_relatorio.png', conf=0.9)
 
     return 'ok'

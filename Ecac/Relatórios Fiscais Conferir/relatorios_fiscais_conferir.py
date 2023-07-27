@@ -45,7 +45,7 @@ def login_conferir():
     p.hotkey('ctrl', 'a')
     p.write(user[0])
     
-    #senha
+    # senha
     _click_img('campo_senha.png', conf=0.9)
     time.sleep(0.5)
     p.hotkey('ctrl', 'a')
@@ -152,10 +152,11 @@ def gera_relatorio():
         # se demorar 5 segundos para o botão de emissão da certidão aparecer, verifica se a tela de login do ecac stá bugada
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
         if timer > 10:
-            if _find_img('erro_sistema.png', conf=0.9) \
-                    or _find_img('erro_sistema_2.png', conf=0.9) \
+            if _find_img('erro_sistema.png', conf=0.9)\
+                    or _find_img('erro_sistema_2.png', conf=0.9)\
                     or _find_img('erro_sistema_4.png', conf=0.9)\
-                    or _find_img('erro_sistema_6.png', conf=0.9):
+                    or _find_img('erro_sistema_6.png', conf=0.9)\
+                    or _find_img('erro_sistema_8.png', conf=0.9):
                 print('>>> Erro no ECAC, tentando novamente')
                 p.hotkey('ctrl', 'w')
                 time.sleep(1)

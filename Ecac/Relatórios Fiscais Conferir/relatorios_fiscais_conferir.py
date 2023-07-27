@@ -137,7 +137,12 @@ def gera_relatorio():
         if _find_img('erro_sistema_3.png', conf=0.9):
             print('❗ Solicitação rejeitada pelo sistema, tente novamente mais tarde.')
             return 'Solicitação rejeitada pelo sistema, tente novamente mais tarde.'
-
+            
+        # se aparecer a tela de consulta em processamento, retorna o erro
+        if _find_img('erro_sistema_7.png', conf=0.9):
+            print('❗ Consulta não liberada pelo sistema, tente mais tarde.')
+            return 'Consulta não liberada pelo sistema, tente mais tarde.'
+            
         # se aparecer a tela de mensagens do ecac, retorna o erro
         if _find_img('mensagens_importantes_ecac.png', conf=0.9):
             print(
@@ -150,8 +155,7 @@ def gera_relatorio():
             if _find_img('erro_sistema.png', conf=0.9) \
                     or _find_img('erro_sistema_2.png', conf=0.9) \
                     or _find_img('erro_sistema_4.png', conf=0.9)\
-                    or _find_img('erro_sistema_6.png', conf=0.9)\
-                    or _find_img('erro_sistema_7.png', conf=0.9):
+                    or _find_img('erro_sistema_6.png', conf=0.9):
                 print('>>> Erro no ECAC, tentando novamente')
                 p.hotkey('ctrl', 'w')
                 time.sleep(1)

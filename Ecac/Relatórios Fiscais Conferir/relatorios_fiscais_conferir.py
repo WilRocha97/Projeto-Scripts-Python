@@ -107,7 +107,7 @@ def consulta(cpf):
     
     # aguarda a tela para salvar o PDF
     while not _find_img('salvar_como.png', conf=0.9):
-        if _find_img('erro_sistema_5.png', conf=0.9):
+        if _find_img('erro_sistema_5.png', conf=0.9) or _find_img('erro_sistema_8.png', conf=0.9):
             p.hotkey('ctrl', 'w')
             time.sleep(1)
             p.press('f5')
@@ -182,6 +182,17 @@ def gera_relatorio():
     # clica para emitir a certidão
     print('>>> Gerando relatório')
     _click_img('gerar_relatorio.png', conf=0.9)
+    
+    timer = 0
+    while not _find_img('botao_gerar_relatorio.png', conf=0.9):
+        if timer > 10:
+            # se aparecer essa mensagem de erro, retorna 'ok' para o erro seja tratado dentro do while anterior
+            if _find_img('erro_sistema_8.png', conf=0.9):
+                print('>>> Erro no ECAC, tentando novamente')
+                return 'ok'
+        time.sleep(1)
+        timer += 1
+        
     _click_img('botao_gerar_relatorio.png', conf=0.9)
 
     return 'ok'

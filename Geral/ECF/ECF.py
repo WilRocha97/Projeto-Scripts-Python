@@ -14,11 +14,15 @@ def inserir():
     while _find_img('em_branco.png', conf=0.9):
         press('enter')
         _wait_img('K915.png', conf=0.9, timeout=-1)
-        press('tab', presses=5, interval=0.5)
+        while not _find_img('campo_obrigatorio.png', conf=0.9):
+            press('tab')
+            time.sleep(0.5)
+        _click_img('campo_obrigatorio.png', conf=0.9)
         time.sleep(0.2)
         copy('BALANÇO MENSAL ESTIMATIVA / SUSPENSÃO')
+        copy('BALANÇO MENSAL ESTIMATIVA / SUSPENSÃO')
         hotkey('ctrl', 'v')
-        time.sleep(0.2)
+        time.sleep(0.5)
         press('enter', presses=2, interval=0.5)
         time.sleep(1)
         press('down')

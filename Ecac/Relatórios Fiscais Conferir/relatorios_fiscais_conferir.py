@@ -150,7 +150,8 @@ def gera_relatorio():
             if _find_img('erro_sistema.png', conf=0.9) \
                     or _find_img('erro_sistema_2.png', conf=0.9) \
                     or _find_img('erro_sistema_4.png', conf=0.9)\
-                    or _find_img('erro_sistema_6.png', conf=0.9):
+                    or _find_img('erro_sistema_6.png', conf=0.9)\
+                    or _find_img('erro_sistema_7.png', conf=0.9):
                 print('>>> Erro no ECAC, tentando novamente')
                 p.hotkey('ctrl', 'w')
                 time.sleep(1)
@@ -222,7 +223,7 @@ def verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias):
     print('>>> Analisando relatório')
     situacao_1 = ''
     situacao_2 = ''
-    # Analiza cada pdf que estiver na pasta
+    # Analisa cada pdf que estiver na pasta
     for arquivo in os.listdir(pasta_analise):
         print(f'Arquivo: {arquivo}')
         # Abrir o pdf

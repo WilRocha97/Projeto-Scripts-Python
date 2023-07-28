@@ -20,16 +20,22 @@ def login(driver, nome, cpf, pis, data_nasc):
         return driver, 'erro'
 
     # aguarda o botão de habilitar a consultar aparecer
+    timer = 0
     while not _find_by_id('indexForm1:botaoConsultar', driver):
         driver.get('http://consultacadastral.inss.gov.br/Esocial/pages/index.xhtml')
         time.sleep(1)
+        if timer > 120:
+            return driver, 'erro'
 
     # clica para habilitar a consulta
     driver.find_element(by=By.ID, value='indexForm1:botaoConsultar').click()
 
     # aguarda o campo de nome aparecer
+    timer = 0
     while not _find_by_id('formQualificacaoCadastral:nome', driver):
         time.sleep(1)
+        if timer > 120:
+            return driver, 'erro'
 
     # lista de campos para preencher
     itens = [('formQualificacaoCadastral:nome', nome),
@@ -87,7 +93,7 @@ def login(driver, nome, cpf, pis, data_nasc):
         print('Erro Login - não encontrou captcha')
         return driver, 'erro captcha'
 
-    # insere a resposta do capta e clica em validar
+    # insere a resposta do captcha e clica em validar
     driver.find_element(by=By.ID, value='captcha_campo_resposta').send_keys(captcha)
     driver.find_element(by=By.ID, value='formValidacao:botaoValidar').click()
 
@@ -150,9 +156,9 @@ def verifica_dados(cpf, nome, cod_empresa, cod_empregado, pis, data_nasc):
 def run():
     # opções para fazer com que o chrome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--window-size=1366,768')
-    # options.add_argument("--start-maximized")
+    # options.add_argument('--headless')
+    # options.add_argument('--window-size=1366,768')
+    options.add_argument("--start-maximized")
 
     # abrir a planilha de dados
     empresas = _open_lista_dados()

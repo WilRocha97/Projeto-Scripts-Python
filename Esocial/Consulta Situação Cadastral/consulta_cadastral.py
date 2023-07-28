@@ -118,7 +118,7 @@ def consulta(driver):
     # captura a situação cadastral do funcionário pesquisado
     try:
         mensagem = re.compile(r'</span><span class=\"tamanho\d+.+>(.+)<br><br></span></td><td').search(driver.page_source).group(1)
-        return driver, str(mensagem)
+        return driver, str(mensagem).replace(" : ", ": ").replace(" |  | ", " | ")
     except:
         pass
 

@@ -22,6 +22,11 @@ def login(driver, nome, cpf, pis, data_nasc):
     # aguarda o botão de habilitar a consultar aparecer
     timer = 0
     while not _find_by_id('indexForm1:botaoConsultar', driver):
+        erro = re.compile(r'(There was no response from the application web server for the page you requested\.)').search(driver.page_source)
+        if erro:
+            print(f'❌ {erro.group(1)}')
+            return driver, 'erro'
+        
         driver.get('http://consultacadastral.inss.gov.br/Esocial/pages/index.xhtml')
         time.sleep(1)
         if timer > 120:
@@ -118,7 +123,7 @@ def consulta(driver):
     # captura a situação cadastral do funcionário pesquisado
     try:
         mensagem = re.compile(r'</span><span class=\"tamanho\d+.+>(.+)<br><br></span></td><td').search(driver.page_source).group(1)
-        return driver, str(mensagem).replace(" : ", ": ").replace(" |  | ", " | ")
+        return driver, str(mensagem).replace(" : ", ": ")
     except:
         pass
 
@@ -128,7 +133,7 @@ def consulta(driver):
     for mensagem_regex in mensagens_regex:
         try:
             mensagens = re.compile(mensagem_regex).search(driver.page_source)
-            mensagem = f'{mensagens.group(1)};{mensagens.group(2).replace(":<br>", " | ").replace("<br>", " | ")}'
+            mensagem = f'{mensagens.group(1)};{mensagens.group(2).replace(":<br>", " | ").replace("<br>", " | ").replace(" |  | ", " | ")}'
             return driver, str(mensagem)
         except:
             pass

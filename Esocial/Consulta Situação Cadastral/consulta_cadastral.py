@@ -57,7 +57,7 @@ def login(driver, nome, cpf, pis, data_nasc):
     # não é possível adicionar mais cadastros a pesquisa, pois o site é um lixo e sai do ar
     driver.find_element(by=By.ID, value='formQualificacaoCadastral:btAdicionar').click()
     print('>>> Acessando cadastro')
-    timer = 1
+    timer = 0
     while not _find_by_id('gridDadosTrabalhador', driver):
         erro = re.compile(r'\"mensagem\".+class=\"erro\">(.+)</li>').search(driver.page_source)
         if erro:
@@ -68,15 +68,20 @@ def login(driver, nome, cpf, pis, data_nasc):
         timer += 1
         if timer > 60:
             print('❌ O site demorou muito para responder, tentando novamente')
-            
             return driver, 'erro'
 
     # clica em validar a consulta
     driver.find_element(by=By.ID, value='formValidacao2:botaoValidar2').click()
-
+    
+    timer = 0
     # tira um print da tela com e recorta apenas a imagem do captcha para enviar para a api
     while not _find_by_id('captcha_challenge', driver):
         time.sleep(1)
+        timer += 1
+        if timer > 60:
+            print('❌ O site demorou muito para responder, tentando novamente')
+            return driver, 'erro'
+        
     element = driver.find_element(by=By.ID, value='captcha_challenge')
     location = element.location
     size = element.size

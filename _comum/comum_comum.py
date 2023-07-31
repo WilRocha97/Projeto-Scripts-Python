@@ -259,12 +259,12 @@ _download_file = download_file
 # Recebe o indice da empresa atual da consulta e a quantidade total de empresas
 # Se não for a primeira empresa printa quantas faltam e pula 2 linhas
 # Printa o indice da empresa atual mais as infos da mesma
-def indice(count, total_empresas, empresa):
+def indice(count, total_empresas, empresa, index=0):
 
     if count > 1:
         print(f'[ {len(total_empresas) - (count - 1)} Restantes ]\n\n')
     # Cria um indice para saber qual linha dos dados está
-    indice_dados = f'[ {str(count)} de {str(len(total_empresas))} ]'
+    indice_dados = f'[ {str(count + index)} de {str(len(total_empresas) + index)} ]'
 
     empresa = str(empresa).replace("('", '[ ').replace("')", ' ]').replace("',)", " ]").replace(',)', ' ]').replace("', '", ' - ')
             

@@ -178,11 +178,11 @@ def run():
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:
         return False
-
+    
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # configurar o indice para localizar em qual empresa está
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
         cpf, nome, cod_empresa, cod_empregado, pis, data_nasc = empresa
 
         if not verifica_dados(cpf, nome, cod_empresa, cod_empregado, pis, data_nasc):

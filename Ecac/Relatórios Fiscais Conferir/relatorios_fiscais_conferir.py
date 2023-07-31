@@ -296,7 +296,7 @@ def run():
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # configurar o índice para localizar em qual empresa está
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
         cpf, nome = empresa
         
         login()

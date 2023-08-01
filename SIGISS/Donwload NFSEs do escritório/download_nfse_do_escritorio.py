@@ -17,6 +17,7 @@ def salvar_arquivo(nome, response):
     for parte in response.iter_content(100000):
         arquivo.write(parte)
     arquivo.close()
+    print('✔ Nota Fiscal salva')
 
 
 def download(empresas, index):
@@ -27,7 +28,7 @@ def download(empresas, index):
     total_empresas = empresas[index:]
 
     for count, empresa in enumerate(empresas[index:], start=1):
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
         num, chave = empresa
 
         try:

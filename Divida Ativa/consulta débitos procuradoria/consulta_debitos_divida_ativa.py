@@ -241,7 +241,7 @@ def run():
         
         total_empresas = empresas[index:]
         for count, empresa in enumerate(empresas[index:], start=1):
-            _indice(count, total_empresas, empresa)
+            _indice(count, total_empresas, empresa, index)
             
             erro = 'sim'
             while erro == 'sim':

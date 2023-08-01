@@ -158,7 +158,7 @@ def envia(numero, titulo, vencimento, link_mensagem):
                                                         f"Obrigado,\n"
                                                         f"R.POSTAL SERVICOS CONTABEIS LTDA\n"
                                                         f"veigaepostal@veigaepostal.com.br\n"
-                                                        f"(19)3829-8959", 40, True, 3)
+                                                        f"(19)3829-8959", 40, True, 5)
         
         time.sleep(2)
         # verifica se o script secundário localizou algum erro no whatsapp

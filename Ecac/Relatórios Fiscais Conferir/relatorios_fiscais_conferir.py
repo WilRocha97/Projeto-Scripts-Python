@@ -236,7 +236,6 @@ def salvar_pdf(pasta_final):
 
 
 def verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias):
-    
     print('>>> Analisando relatório')
     situacao_1 = ''
     situacao_2 = ''
@@ -296,7 +295,7 @@ def run():
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # configurar o índice para localizar em qual empresa está
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
         cpf, nome = empresa
         
         login()

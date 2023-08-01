@@ -166,9 +166,9 @@ def verifica_dados(cpf, nome, cod_empresa, cod_empregado, pis, data_nasc):
 def run():
     # opções para fazer com que o chrome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')
-    # options.add_argument('--window-size=1366,768')
-    options.add_argument("--start-maximized")
+    options.add_argument('--headless')
+    options.add_argument('--window-size=1366,768')
+    # options.add_argument("--start-maximized")
 
     # abrir a planilha de dados
     empresas = _open_lista_dados()
@@ -178,11 +178,11 @@ def run():
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:
         return False
-
+    
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # configurar o indice para localizar em qual empresa está
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
         cpf, nome, cod_empresa, cod_empregado, pis, data_nasc = empresa
 
         if not verifica_dados(cpf, nome, cod_empresa, cod_empregado, pis, data_nasc):

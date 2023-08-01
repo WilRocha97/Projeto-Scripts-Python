@@ -26,7 +26,7 @@ def run():
     for count, empresa in enumerate(empresas[index:], start=1):
         cod_sindicato, cnpj, valor_boleto, valor_recolhido, valor_remuneracao, data_referencia, usuario, senha, funcionarios, responsavel, email = empresa
         # printa o indice da lista
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
         
         # dicionário de funções, onde cada arquivo referente a execução de um sindicato está vinculado a um número que é o código do sindicato
         sindicatos = {

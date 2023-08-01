@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import pyperclip, time, os, pyautogui as p
+import re, shutil, pyperclip, time, os, pyautogui as p
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from sys import path
@@ -102,7 +102,8 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
             break
 
     _salvar_pdf()
-
+    mover_relatorio(cod)
+    
     _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Relatório gerado']), nome=andamento)
     print('✔ Relatório gerado')
 
@@ -110,6 +111,16 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
     time.sleep(2)
     
     return 'ok'
+
+
+def mover_relatorio(cod):
+    folder = 'C:\\'
+    for arq in os.listdir(folder):
+        if arq.endswith('.pdf'):
+            if re.compile(r'(.+) - .+\.pdf').search(arq).group(1) == f'Empresa {cod}':
+                os.makedirs('execução/Relatórios', exist_ok=True)
+                final_folder = 'V:\\Setor Robô\\Scripts Python\\Domínio\\Relatórios para DARF DCTF\\execução\\Relatórios'
+                shutil.move(os.path.join(folder, arq), os.path.join(final_folder, arq))
 
 
 @_time_execution

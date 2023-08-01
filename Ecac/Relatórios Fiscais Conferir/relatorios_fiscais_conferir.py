@@ -236,7 +236,6 @@ def salvar_pdf(pasta_final):
 
 
 def verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias):
-    
     print('>>> Analisando relatório')
     situacao_1 = ''
     situacao_2 = ''

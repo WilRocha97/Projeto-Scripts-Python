@@ -2,7 +2,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
-import os, time, re, csv, shutil, fitz, pyautogui as p
+import pyperclip, os, time, re, csv, shutil, fitz, pyautogui as p
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -56,21 +56,28 @@ def sieg_iris(driver, modulo):
     print('>>> Acessando IriS DCTF WEB')
     if modulo == 'Termo(s) de Exclusão do Simples Nacional':
         driver.get('https://hub.sieg.com/IriS/#/Mensagens?Filtro=Exclusoes')
-    if modulo == 'Termos(s) de Intimação':
+    if modulo == 'Termo(s) de Intimação':
         driver.get('https://hub.sieg.com/IriS/#/Mensagens?Filtro=Intimacoes')
     
     return driver
 
 
 def imprime_mensagem(driver):
-    # aguarda e clica na mensagem
+    print('>>> Acessando mensagem')
+    # aguarda a lista de mensagens
     while not localiza_path(driver, '/html/body/form/div[5]/div[3]/div/div[1]/div[3]/div[2]/div/table/tbody/tr[1]'):
+        if _find_img('sem_mensagens.png', conf=0.9):
+            return False
         time.sleep(1)
         
     # aguarda e clica para filtrar abrir o dropdown de filtro de mensagens não lidas
     while not localiza_id(driver, 'select2-ddlSelectedMessage-container'):
         time.sleep(1)
     
+    while not _find_img('filtros_carregados.png', conf=0.8):
+        time.sleep(1)
+        
+    time.sleep(1)
     _click_img('filtro_lidas.png', conf=0.9)
     _wait_img('opcao_filtro_n_lidas.png', conf=0.9)
     _click_img('opcao_filtro_n_lidas.png', conf=0.9)
@@ -78,27 +85,48 @@ def imprime_mensagem(driver):
     
     # aguarda e clica na mensagem
     while not localiza_path(driver, '/html/body/form/div[5]/div[3]/div/div[1]/div[3]/div[2]/div/table/tbody/tr[1]'):
+        if _find_img('sem_mensagens.png', conf=0.9):
+            return False
         time.sleep(1)
     
     return driver
     
 
 def salvar_pdf(driver, pasta_analise):
-    driver.find_element(by=By.XPATH, value='/html/body/form/div[5]/div[3]/div/div[1]/div[3]/div[2]/div/table/tbody/tr[1]').click()
+    time.sleep(1)
+    # enquanto a pre visualização nao abrir tenta abrir a primeira mensagem da lista
+    while not _find_img('pre_visualizacao.png', conf=0.8):
+        erro = 'sim'
+        while erro == 'sim':
+            try:
+                driver.find_element(by=By.XPATH, value='/html/body/form/div[5]/div[3]/div/div[1]/div[3]/div[2]/div/table/tbody/tr[1]').click()
+                erro = 'não'
+            except:
+                erro = 'sim'
+        time.sleep(2)
     
+    print('>>> Aguardando pré visualização')
     # aguarda a janela de pré-visualização abrir e clica em imprimir
-    _wait_img('imprimir.png', conf=0.9)
-    _click_img('imprimir.png', conf=0.9)
-    
+    while not _find_img('imprimir.png', conf=0.8):
+        time.sleep(1)
+        p.press('pgdn')
+        time.sleep(1)
+        
+    _click_img('imprimir.png', conf=0.8, timeout=1)
+
+    print('>>> Aguardando tela de impressão')
     # aguarda a tela de impressão
     _wait_img('tela_imprimir.png', conf=0.9)
     
+    print('>>> Salvando PDF')
     # se não estiver selecionado para salvar como PDF, seleciona para salvar como PDF
-    if _find_img('print_to_pdf.png', conf=0.9):
-        _click_img('print_to_pdf.png', conf=0.9)
-        # aguarda aparecer a opção de salvar como PDF e clica nela
-        _wait_img('salvar_como_pdf.png', conf=0.9)
-        _click_img('salvar_como_pdf.png', conf=0.9)
+    imagens = ['print_to_pdf.png', 'print_to_pdf_2.png']
+    for img in imagens:
+        if _find_img(img, conf=0.9) or _find_img(img, conf=0.9):
+            _click_img(img, conf=0.9)
+            # aguarda aparecer a opção de salvar como PDF e clica nela
+            _wait_img('salvar_como_pdf.png', conf=0.9)
+            _click_img('salvar_como_pdf.png', conf=0.9)
     
     # aguarda aparecer o botão de salvar e clica nele
     _wait_img('botao_salvar.png', conf=0.9)
@@ -133,13 +161,12 @@ def salvar_pdf(driver, pasta_analise):
         if _find_img('substituir.png', conf=0.9):
             p.press('s')
     time.sleep(1)
-    p.hotkey('ctrl', 'w')
     
     print('✔ Mensagem salva com sucesso')
-    return 'Mensagem salva com sucesso'
+    return driver, 'Mensagem salva com sucesso'
 
 
-def verifica_mesagem(pasta_analise, pasta_final):
+def verifica_mensagem(pasta_analise, pasta_final, modulo):
     print('>>> Analisando mensagem')
     # Analisa cada pdf que estiver na pasta
     for arquivo in os.listdir(pasta_analise):
@@ -151,19 +178,31 @@ def verifica_mesagem(pasta_analise, pasta_final):
             for count, page in enumerate(pdf):
                 # Pega o texto da pagina
                 textinho = page.get_text('text', flags=1 + 2 + 8)
-                print(textinho)
-                time.sleep(22)
+                # print(textinho)
+                # time.sleep(22)
+                
+                cnpj = re.compile(r'Destinatário: (.+)').search(textinho).group(1)
+                
+                regexes = [r'SIMPLES NACIONAL.+nº (.+), de (.+)\n', r'SIMPLES NACIONAL.+Nº (.+), DE (.+)\n']
+                for regex in regexes:
+                    info_termo = re.compile(regex).search(textinho)
+                    
+                    if info_termo:
+                        numero = info_termo.group(1)
+                        data = info_termo.group(2)
+                        novo_arq = f'{cnpj} - {modulo} - {numero} - {data.replace("/", "-").replace(".", "")}.pdf'
+                        return arq, novo_arq
+                
+                info_termo_2 = re.compile(r'Data de envio: (.+) ').search(textinho)
+                if info_termo_2:
+                    data = info_termo_2.group(1)
+                    novo_arq = f'{cnpj} - {modulo} - {data.replace("/", "-")}.pdf'
+                    return arq, novo_arq
         
-        os.makedirs(pasta_final, exist_ok=True)
-        shutil.move(arq, pasta_final)
-        
-    print(situacao.replace(';', ' | '))
-    return situacao
-
 
 @_time_execution
 def run():
-    modulo = p.confirm(title='Script incrível', buttons=('Termo(s) de Exclusão do Simples Nacional', 'Termos(s) de Intimação'))
+    modulo = p.confirm(title='Script incrível', buttons=('Termo(s) de Exclusão do Simples Nacional', 'Termo(s) de Intimação'))
     pasta_analise = r'V:\Setor Robô\Scripts Python\SIEG\Download Menságens Importantes\ignore\Mensagens'
     pasta_final = os.path.join(r'V:\Setor Robô\Scripts Python\SIEG\Download Menságens Importantes\execução', modulo)
     
@@ -177,14 +216,27 @@ def run():
     # iniciar o driver do chrome
     status, driver = _initialize_chrome(options)
     driver = login_sieg(driver)
-    driver = sieg_iris(driver, modulo)
     
-    if imprime_mensagem(driver):
-        salvar_pdf(driver, pasta_analise)
-        verifica_mesagem(pasta_analise, pasta_final)
-        
-    driver.close()
-    
-
+    while 1 > 0:
+        driver = sieg_iris(driver, modulo)
+        if _find_img('sem_mensagens.png', conf=0.9):
+            driver.close()
+            break
+            
+        if imprime_mensagem(driver):
+            driver, resultado = salvar_pdf(driver, pasta_analise)
+            arq, novo_arq = verifica_mensagem(pasta_analise, pasta_final, modulo)
+            
+            os.makedirs(pasta_final, exist_ok=True)
+            shutil.move(arq, os.path.join(pasta_final, novo_arq))
+            
+            print(f"❗ {novo_arq.replace('.pdf', '')}\n")
+            _escreve_relatorio_csv(novo_arq.replace(' - ', ';').replace('.pdf', ''))
+            
+        if _find_img('sem_mensagens.png', conf=0.9):
+            driver.close()
+            break
+            
+            
 if __name__ == '__main__':
     run()

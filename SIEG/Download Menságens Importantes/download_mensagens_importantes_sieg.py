@@ -95,7 +95,7 @@ def imprime_mensagem(driver):
 def salvar_pdf(driver, pasta_analise):
     time.sleep(1)
     # enquanto a pre visualização nao abrir tenta abrir a primeira mensagem da lista
-    while not _find_img('pre_visualizacao.png', conf=0.8):
+    while not _find_img('pre_visualizacao.png', conf=0.9):
         erro = 'sim'
         while erro == 'sim':
             try:
@@ -108,6 +108,8 @@ def salvar_pdf(driver, pasta_analise):
     print('>>> Aguardando pré visualização')
     # aguarda a janela de pré-visualização abrir e clica em imprimir
     while not _find_img('imprimir.png', conf=0.8):
+        time.sleep(1)
+        _click_img('pre_visualizacao.png', conf=0.9)
         time.sleep(1)
         p.press('pgdn')
         time.sleep(1)
@@ -183,16 +185,18 @@ def verifica_mensagem(pasta_analise, pasta_final, modulo):
                 
                 cnpj = re.compile(r'Destinatário: (.+)').search(textinho).group(1)
                 
-                regexes = [r'SIMPLES NACIONAL.+nº (.+), de (.+)\n', r'SIMPLES NACIONAL.+Nº (.+), DE (.+)\n']
+                # verifica código e data do termo de exclusão do simples nacional, com duas variações
+                regexes = [r'SIMPLES NACIONAL.+nº (.+), de (.+)\n', r'SIMPLES NACIONAL.+Nº (.+), DE (.+)\.']
                 for regex in regexes:
                     info_termo = re.compile(regex).search(textinho)
                     
                     if info_termo:
                         numero = info_termo.group(1)
                         data = info_termo.group(2)
-                        novo_arq = f'{cnpj} - {modulo} - {numero} - {data.replace("/", "-").replace(".", "")}.pdf'
+                        novo_arq = f'{cnpj} - {modulo} - {numero.replace("/", "-")} - {data.replace("/", "-").replace(".", "")}.pdf'
                         return arq, novo_arq
                 
+                # se não encontrar nasa referênte ao SN, pega só a data de envio da mensagem
                 info_termo_2 = re.compile(r'Data de envio: (.+) ').search(textinho)
                 if info_termo_2:
                     data = info_termo_2.group(1)
@@ -227,6 +231,7 @@ def run():
             driver, resultado = salvar_pdf(driver, pasta_analise)
             arq, novo_arq = verifica_mensagem(pasta_analise, pasta_final, modulo)
             
+            # verifica se ja existe a pasta final do arquivo e move ele para lá
             os.makedirs(pasta_final, exist_ok=True)
             shutil.move(arq, os.path.join(pasta_final, novo_arq))
             

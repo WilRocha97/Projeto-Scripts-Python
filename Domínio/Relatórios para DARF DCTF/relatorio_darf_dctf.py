@@ -40,6 +40,17 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
     p.write(periodo)
     p.press('tab')
     time.sleep(1)
+    
+    if _find_img('sem_parametro_vigencia.png', conf=0.9):
+        _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Não existe parametro para a vigência: ' + periodo]), nome=andamento)
+        print('❌ Não existe parametro para a vigência: ' + periodo)
+        p.press('enter')
+        time.sleep(1)
+        p.press('esc')
+        p.press('esc')
+        time.sleep(1)
+        return 'ok'
+    
     p.write(periodo)
     time.sleep(0.5)
 

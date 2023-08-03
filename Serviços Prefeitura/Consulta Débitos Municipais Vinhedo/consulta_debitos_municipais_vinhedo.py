@@ -111,25 +111,38 @@ def pesquisar(options, cnpj, insc_muni):
     
 def salvar_guia(cnpj):
     # Salvar o PDF
-    while not _find_img('SalvarPDF.png', conf=0.9):
+    while not _find_img('salvar_pdf.png', conf=0.9):
         time.sleep(1)
-    _click_img('SalvarPDF.png', conf=0.9)
+    _click_img('salvar_pdf.png', conf=0.9)
     
-    while not _find_img('Salvar.png', conf=0.9):
+    while not _find_img('salvar.png', conf=0.9):
         time.sleep(1)
-    _click_img('Salvar.png', conf=0.9)
+    _click_img('salvar.png', conf=0.9)
     
-    while not _find_img('SalvarComo.png', conf=0.9) or not _find_img('SalvarComo2.png', conf=0.9):
+    while not _find_img('salvar_como.png', conf=0.9):
         time.sleep(1)
-        if _find_img('Imprimir2.png', conf=0.9):
-            _click_img('Imprimir2.png', conf=0.9)
-        if _find_img('Imprimir.png', conf=0.9):
-            _click_img('Imprimir.png', conf=0.9)
+        # se não estiver selecionado para salvar como PDF, seleciona para salvar como PDF
+        imagens = ['print_to_pdf.png', 'print_to_pdf_2.png']
+        for img in imagens:
+            if _find_img(img, conf=0.9) or _find_img(img, conf=0.9):
+                _click_img(img, conf=0.9)
+                # aguarda aparecer a opção de salvar como PDF e clica nela
+                _wait_img('salvar_como_pdf.png', conf=0.9)
+                _click_img('salvar_como_pdf.png', conf=0.9)
+        
+        # aguarda aparecer o botão de salvar e clica nele
+        _wait_img('botao_salvar.png', conf=0.9)
+        _click_img('botao_salvar.png', conf=0.9)
         
     # Usa o pyperclip porque o pyautogui não digita letra com acento
-    copy(f'{cnpj} - Certidão Negativa de Débitos Municipais Vinhedo.pdf')
-    hotkey('ctrl', 'v')
-    time.sleep(0.5)
+    erro = 'sim'
+    while erro == 'sim':
+        try:
+            copy(f'{cnpj} - Certidão Negativa de Débitos Municipais Vinhedo.pdf')
+            hotkey('ctrl', 'v')
+            erro = 'não'
+        except:
+            erro = 'sim'
     
     # Selecionar local
     press('tab', presses=6)
@@ -137,16 +150,20 @@ def salvar_guia(cnpj):
     press('enter')
     time.sleep(0.5)
     
-    copy('V:\Setor Robô\Scripts Python\Serviços Prefeitura\Consulta Débitos Municipais Vinhedo\execução\Certidões')
-    
-    hotkey('ctrl', 'v')
-    time.sleep(0.5)
-    press('enter')
+    # Usa o pyperclip porque o pyautogui não digita letra com acento
+    erro = 'sim'
+    while erro == 'sim':
+        try:
+            copy('V:\Setor Robô\Scripts Python\Serviços Prefeitura\Consulta Débitos Municipais Vinhedo\execução\Certidões')
+            hotkey('ctrl', 'v')
+            erro = 'não'
+        except:
+            erro = 'sim'
     
     time.sleep(0.5)
     hotkey('alt', 'l')
     time.sleep(1)
-    if _find_img('SalvarComo.png', conf=0.9):
+    if _find_img('salvar_como.png', conf=0.9):
         press('s')
         time.sleep(1)
     

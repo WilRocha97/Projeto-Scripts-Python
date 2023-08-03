@@ -183,8 +183,11 @@ def verifica_mensagem(pasta_analise, modulo):
                 # print(textinho)
                 # time.sleep(22)
                 
-                cnpj = re.compile(r'Destinatário: (.+)').search(textinho).group(1)
-                
+                try:
+                    cnpj = re.compile(r'Destinatário: (.+)').search(textinho).group(1)
+                except:
+                    cnpj = re.compile(r'CPF (\d\d\d\.\d\d\d\.\d\d\d-\d\d) ').search(textinho).group(1)
+                    
                 # verifica código e data do termo de exclusão do simples nacional, com duas variações
                 regexes = [r'SIMPLES NACIONAL.+nº (.+), de (.+)\n',
                            r'SIMPLES NACIONAL.+Nº (.+), DE (.+)\.',
@@ -201,7 +204,9 @@ def verifica_mensagem(pasta_analise, modulo):
                         except:
                             data = re.compile(r'Data de envio: (\d\d/\d\d/\d\d\d\d) ').search(textinho).group(1)
                             
-                        novo_arq = (f'{cnpj} - {modulo} - {numero.replace("/", "-")} - '
+                        novo_arq = (f'{cnpj.replace("-", "").replace(".", "").replace("/", "")} - '
+                                    f'{modulo} - '
+                                    f'{numero.replace("/", "-")} - '
                                     f'{data.replace("/", "-").replace(".", "")}.pdf')
                         return arq, novo_arq
         

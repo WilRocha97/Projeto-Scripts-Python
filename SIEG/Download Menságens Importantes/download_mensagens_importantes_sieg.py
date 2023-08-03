@@ -95,7 +95,8 @@ def imprime_mensagem(driver):
 def salvar_pdf(driver, pasta_analise):
     time.sleep(1)
     # enquanto a pre visualização nao abrir tenta abrir a primeira mensagem da lista
-    while not _find_img('pre_visualizacao.png', conf=0.9):
+    print('>>> Aguardando pré visualização')
+    while not _find_img('pre_visualizacao.png', conf=0.8):
         erro = 'sim'
         while erro == 'sim':
             try:
@@ -105,11 +106,10 @@ def salvar_pdf(driver, pasta_analise):
                 erro = 'sim'
         time.sleep(2)
     
-    print('>>> Aguardando pré visualização')
     # aguarda a janela de pré-visualização abrir e clica em imprimir
     while not _find_img('imprimir.png', conf=0.8):
         time.sleep(1)
-        _click_img('pre_visualizacao.png', conf=0.9)
+        _click_img('pre_visualizacao.png', conf=0.8)
         time.sleep(1)
         p.press('pgdn')
         time.sleep(1)
@@ -168,7 +168,7 @@ def salvar_pdf(driver, pasta_analise):
     return driver, 'Mensagem salva com sucesso'
 
 
-def verifica_mensagem(pasta_analise, pasta_final, modulo):
+def verifica_mensagem(pasta_analise, modulo):
     print('>>> Analisando mensagem')
     # Analisa cada pdf que estiver na pasta
     for arquivo in os.listdir(pasta_analise):
@@ -186,22 +186,24 @@ def verifica_mensagem(pasta_analise, pasta_final, modulo):
                 cnpj = re.compile(r'Destinatário: (.+)').search(textinho).group(1)
                 
                 # verifica código e data do termo de exclusão do simples nacional, com duas variações
-                regexes = [r'SIMPLES NACIONAL.+nº (.+), de (.+)\n', r'SIMPLES NACIONAL.+Nº (.+), DE (.+)\.']
+                regexes = [r'SIMPLES NACIONAL.+nº (.+), de (.+)\n',
+                           r'SIMPLES NACIONAL.+Nº (.+), DE (.+)\.',
+                           r'Número da Intimação: (\d+).+\n(\d\d/\d\d/\d\d\d\d)',
+                           r'intimação:\n(\d.+\.\d\d-\d\d\d\d)',
+                           r'nº (.+) DE (.+)']
                 for regex in regexes:
                     info_termo = re.compile(regex).search(textinho)
                     
                     if info_termo:
                         numero = info_termo.group(1)
-                        data = info_termo.group(2)
-                        novo_arq = f'{cnpj} - {modulo} - {numero.replace("/", "-")} - {data.replace("/", "-").replace(".", "")}.pdf'
+                        try:
+                            data = info_termo.group(2)
+                        except:
+                            data = re.compile(r'Data de envio: (\d\d/\d\d/\d\d\d\d) ').search(textinho).group(1)
+                            
+                        novo_arq = (f'{cnpj} - {modulo} - {numero.replace("/", "-")} - '
+                                    f'{data.replace("/", "-").replace(".", "")}.pdf')
                         return arq, novo_arq
-                
-                # se não encontrar nasa referênte ao SN, pega só a data de envio da mensagem
-                info_termo_2 = re.compile(r'Data de envio: (.+) ').search(textinho)
-                if info_termo_2:
-                    data = info_termo_2.group(1)
-                    novo_arq = f'{cnpj} - {modulo} - {data.replace("/", "-")}.pdf'
-                    return arq, novo_arq
         
 
 @_time_execution
@@ -229,7 +231,7 @@ def run():
             
         if imprime_mensagem(driver):
             driver, resultado = salvar_pdf(driver, pasta_analise)
-            arq, novo_arq = verifica_mensagem(pasta_analise, pasta_final, modulo)
+            arq, novo_arq = verifica_mensagem(pasta_analise, modulo)
             
             # verifica se ja existe a pasta final do arquivo e move ele para lá
             os.makedirs(pasta_final, exist_ok=True)

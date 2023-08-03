@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-import time
 from bs4 import BeautifulSoup
 from dateutil.relativedelta import *
 from datetime import datetime, date
 from requests import Session
 from pyautogui import prompt
-from time import sleep
-import os, re
+import os, re, time
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -118,7 +116,7 @@ def consulta_xml(empresa, data_inicio, data_final):
                 print(f'❌ Não gerou relatório {arquivo_nome}.')
 
             # necessário para não sobrepor o cachê da pesquisa
-            sleep(1)
+            time.sleep(1)
 
             if data_inicio != data_final:
                 file = f'{nome} - {cnpj} - Analítico - {str(data_inicio[0])}-{str(data_inicio[1])} até {str(data_final[0])}-{str(data_final[1])}'

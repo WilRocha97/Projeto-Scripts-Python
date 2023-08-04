@@ -7,25 +7,9 @@ import pyperclip, os, time, re, csv, shutil, fitz, pyautogui as p
 from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers
-from chrome_comum import _initialize_chrome
+from chrome_comum import _initialize_chrome, _find_by_path, _find_by_id
 from pyautogui_comum import _click_img, _find_img, _wait_img
 
-
-def localiza_path(driver, elemento):
-    try:
-        driver.find_element(by=By.XPATH, value=elemento)
-        return True
-    except:
-        return False
-
-
-def localiza_id(driver, elemento):
-    try:
-        driver.find_element(by=By.ID, value=elemento)
-        return True
-    except:
-        return False
-    
 
 def login_sieg(driver):
     driver.get('https://auth.sieg.com/')
@@ -65,13 +49,13 @@ def sieg_iris(driver, modulo):
 def imprime_mensagem(driver):
     print('>>> Acessando mensagem')
     # aguarda a lista de mensagens
-    while not localiza_path(driver, '/html/body/form/div[5]/div[3]/div/div[1]/div[3]/div[2]/div/table/tbody/tr[1]'):
+    while not _find_by_path('/html/body/form/div[5]/div[3]/div/div[1]/div[3]/div[2]/div/table/tbody/tr[1]', driver):
         if _find_img('sem_mensagens.png', conf=0.9):
             return False
         time.sleep(1)
         
     # aguarda e clica para filtrar abrir o dropdown de filtro de mensagens não lidas
-    while not localiza_id(driver, 'select2-ddlSelectedMessage-container'):
+    while not _find_by_id('select2-ddlSelectedMessage-container', driver):
         time.sleep(1)
     
     while not _find_img('filtros_carregados.png', conf=0.8):
@@ -84,7 +68,7 @@ def imprime_mensagem(driver):
     time.sleep(1)
     
     # aguarda e clica na mensagem
-    while not localiza_path(driver, '/html/body/form/div[5]/div[3]/div/div[1]/div[3]/div[2]/div/table/tbody/tr[1]'):
+    while not _find_by_path('/html/body/form/div[5]/div[3]/div/div[1]/div[3]/div[2]/div/table/tbody/tr[1]', driver):
         if _find_img('sem_mensagens.png', conf=0.9):
             return False
         time.sleep(1)
@@ -192,8 +176,9 @@ def verifica_mensagem(pasta_analise, modulo):
                 regexes = [r'SIMPLES NACIONAL.+nº (.+), de (.+)\n',
                            r'SIMPLES NACIONAL.+Nº (.+), DE (.+)\.',
                            r'Número da Intimação: (\d+).+\n(\d\d/\d\d/\d\d\d\d)',
-                           r'intimação:\n(\d.+\.\d\d-\d\d\d\d)',
-                           r'nº (.+) DE (.+)']
+                           r'PER/DCOMP (.+) - ',
+                           r'nº (.+) DE (.+)',
+                           r'nº (.+) de (.+)']
                 for regex in regexes:
                     info_termo = re.compile(regex).search(textinho)
                     

@@ -17,7 +17,7 @@ def cria_txt(empresa, encode='latin-1'):
     except:
         f = open(os.path.join(local, f"pró-labore - {cnpj} - auxiliar.txt"), 'a', encoding=encode)
     
-    f.write(str(';'.join([info1, info2, info3, info4, info5, info6, info7, codigo])))
+    f.write(str(';'.join([info1, info2, info3, info4, info5, info6, info7, codigo])) + '\n')
     f.close()
 
 

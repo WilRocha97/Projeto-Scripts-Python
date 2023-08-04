@@ -81,13 +81,12 @@ def salvar_pdf(driver, pasta_analise):
     # enquanto a pre visualização nao abrir tenta abrir a primeira mensagem da lista
     print('>>> Aguardando pré visualização')
     while not _find_img('pre_visualizacao.png', conf=0.8):
-        erro = 'sim'
-        while erro == 'sim':
+        while True:
             try:
                 driver.find_element(by=By.XPATH, value='/html/body/form/div[5]/div[3]/div/div[1]/div[3]/div[2]/div/table/tbody/tr[1]').click()
-                erro = 'não'
+                break
             except:
-                erro = 'sim'
+                pass
         time.sleep(2)
     
     # aguarda a janela de pré-visualização abrir e clica em imprimir

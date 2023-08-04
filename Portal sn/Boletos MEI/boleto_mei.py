@@ -5,7 +5,6 @@ import pyperclip
 from sys import path
 
 path.append(r'..\..\_comum')
-from sn_comum import _new_session_sn_driver
 from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
 

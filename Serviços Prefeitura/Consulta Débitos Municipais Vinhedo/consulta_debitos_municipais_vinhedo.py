@@ -11,27 +11,11 @@ from sys import path
 path.append(r'..\..\_comum')
 from chrome_comum import _initialize_chrome, _send_input
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
-from captcha_comum import _solve_text_captcha
+from captcha_comum import _solve_text_captcha, _find_by_path, _find_by_id
 from pyautogui_comum import _find_img, _wait_img, _click_img
 
 os.makedirs('execução/Certidões', exist_ok=True)
 
-
-def find_by_id(elemento, driver):
-    try:
-        elem = driver.find_element(by=By.ID, value=elemento)
-        return elem
-    except:
-        return None
-
-
-def find_by_path(elemento, driver):
-    try:
-        elem = driver.find_element(by=By.XPATH, value=elemento)
-        return elem
-    except:
-        return None
-    
 
 def pesquisar(options, cnpj, insc_muni):
     status, driver = _initialize_chrome(options)
@@ -40,7 +24,7 @@ def pesquisar(options, cnpj, insc_muni):
     driver.get(url_inicio)
     
     contador = 1
-    while not find_by_id(f'homeForm:panelCaptcha:j_idt{str(contador)}', driver):
+    while not _find_by_id(f'homeForm:panelCaptcha:j_idt{str(contador)}', driver):
         contador += 1
         time.sleep(0.2)
         
@@ -64,13 +48,13 @@ def pesquisar(options, cnpj, insc_muni):
     captcha = _solve_text_captcha(os.path.join('ignore', 'captcha', 'captcha.png'))
     
     # espera o campo do tipo da pesquisa
-    while not find_by_id('homeForm:inputTipoInscricao_label', driver):
+    while not _find_by_id('homeForm:inputTipoInscricao_label', driver):
         time.sleep(1)
     # clica no menu
     driver.find_element(by=By.ID, value='homeForm:inputTipoInscricao_label').click()
     
     # espera o menu abrir
-    while not find_by_path('/html/body/div[6]/div/ul/li[2]', driver):
+    while not _find_by_path('/html/body/div[6]/div/ul/li[2]', driver):
         time.sleep(1)
     # clica na opção "Mobiliário"
     driver.find_element(by=By.XPATH, value='/html/body/div[6]/div/ul/li[2]').click()
@@ -91,7 +75,7 @@ def pesquisar(options, cnpj, insc_muni):
 
     print('>>> Consultando')
     while 'dados-contribuinte-inscricao">0000000000' not in driver.page_source:
-        if find_by_path('/html/body/div[1]/div[5]/div[2]/div[1]/div/ul/li/span', driver):
+        if _find_by_path('/html/body/div[1]/div[5]/div[2]/div[1]/div/ul/li/span', driver):
             padraozinho = re.compile(r'confirmationMessage\" class=\"ui-messages ui-widget\" aria-live=\"polite\"><div '
                                      r'class=\"ui-messages-error ui-corner-all\"><span class=\"ui-messages-error-icon\"></span><ul><li><span '
                                      r'class=\"ui-messages-error-summary\">(.+).</span></li></ul></div></div><div class=\"right\"><button id=\"j_idt')
@@ -140,14 +124,13 @@ def salvar_guia(cnpj):
         time.sleep(1)
         
     # Usa o pyperclip porque o pyautogui não digita letra com acento
-    erro = 'sim'
-    while erro == 'sim':
+    while True:
         try:
             copy(f'{cnpj} - Certidão Negativa de Débitos Municipais Vinhedo.pdf')
             hotkey('ctrl', 'v')
-            erro = 'não'
+            break
         except:
-            erro = 'sim'
+            pass
     
     # Selecionar local
     press('tab', presses=6)
@@ -156,14 +139,13 @@ def salvar_guia(cnpj):
     time.sleep(0.5)
     
     # Usa o pyperclip porque o pyautogui não digita letra com acento
-    erro = 'sim'
-    while erro == 'sim':
+    while True:
         try:
             copy('V:\Setor Robô\Scripts Python\Serviços Prefeitura\Consulta Débitos Municipais Vinhedo\execução\Certidões')
             hotkey('ctrl', 'v')
-            erro = 'não'
+            break
         except:
-            erro = 'sim'
+            pass
     
     time.sleep(0.5)
     hotkey('alt', 'l')

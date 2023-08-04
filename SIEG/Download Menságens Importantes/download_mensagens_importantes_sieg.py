@@ -37,7 +37,7 @@ def login_sieg(driver):
     
 
 def sieg_iris(driver, modulo):
-    print('>>> Acessando IriS DCTF WEB')
+    print(f'>>> Acessando IriS {modulo}')
     if modulo == 'Termo(s) de Exclusão do Simples Nacional':
         driver.get('https://hub.sieg.com/IriS/#/Mensagens?Filtro=Exclusoes')
     if modulo == 'Termo(s) de Intimação':

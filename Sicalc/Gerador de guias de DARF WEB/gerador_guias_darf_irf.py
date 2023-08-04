@@ -138,16 +138,15 @@ def gerar(empresa, apuracao):
     p.press('tab', presses=2, interval=1)
     
     # copia data de vencimento da guia
-    erro = 'sim'
-    while erro == 'sim':
+    while True:
         try:
             time.sleep(1)
             p.hotkey('ctrl', 'c')
             p.hotkey('ctrl', 'c')
             vencimento = pyperclip.paste()
-            erro = 'não'
+            break
         except:
-            erro = 'sim'
+            pass
             
     time.sleep(1)
     p.press('tab')
@@ -209,14 +208,13 @@ def salvar_guia(empresa, apuracao, vencimento, tipo):
     p.press('enter')
     time.sleep(1)
     
-    erro = 'sim'
-    while erro == 'sim':
+    while True:
         try:
             pyperclip.copy(pasta_final)
             p.hotkey('ctrl', 'v')
-            erro = 'não'
+            break
         except:
-            erro = 'sim'
+            pass
             
     time.sleep(1)
     p.press('enter')
@@ -252,34 +250,31 @@ def run():
     for count, empresa in enumerate(empresas[index:], start=1):
         cnpj, nome, nota, valor, cod = empresa
         # configurar o índice para localizar em qual empresa está
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
         
-        erro = 'sim'
-        while erro == 'sim':
+        while True:
             # try:
             # fazer login do SICALC
             resultado = login_sicalc(empresa)
             if not resultado:
                 p.hotkey('ctrl', 'w')
-                erro = 'sim'
             else:
                 if resultado == 'Contribuinte não encontrado. Verifique se o CNPJ está correto.':
                     print('✔ Guia gerada')
                     _escreve_relatorio_csv('{};{};{};{};{}'.format(cnpj, nome, valor, cod, resultado), nome=f'Resumo gerador {tipo}')
-                    erro = 'nao'
+                    break
                 else:
                     # gerar a guia de DCTF
                     resultado, vencimento = gerar(empresa, str(apuracao))
                     if not resultado:
                         p.hotkey('ctrl', 'w')
-                        erro = 'sim'
                     else:
                         if not salvar_guia(empresa, apuracao, vencimento, tipo):
-                            erro = 'sim'
+                            pass
                         else:
                             print('✔ Guia gerada')
                             _escreve_relatorio_csv('{};{};{};{};Guia gerada'.format(cnpj, nome, valor, cod), nome=f'Resumo gerador {tipo}')
-                            erro = 'nao'
+                            break
 
         p.hotkey('ctrl', 'w')
 

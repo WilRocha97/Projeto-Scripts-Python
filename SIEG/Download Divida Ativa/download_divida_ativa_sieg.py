@@ -9,15 +9,7 @@ import os, time, re, csv, shutil, fitz, pdfkit, pyautogui as p
 from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers
-from chrome_comum import _initialize_chrome
-
-
-def localiza_path(driver, elemento):
-    try:
-        driver.find_element(by=By.XPATH, value=elemento)
-        return True
-    except:
-        return False
+from chrome_comum import _initialize_chrome, _find_by_path, _find_by_id
 
 
 def localiza_id(driver, elemento):
@@ -63,10 +55,10 @@ def consulta_lista(driver, continuar_pagina):
     print('>>> Consultando lista de arquivos\n')
     
     # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
-    while not localiza_path(driver, '/html/body/form/div[5]/div[3]/div/div/div[3]/div/table/tbody/tr[1]/td/div/span'):
+    while not _find_by_path('/html/body/form/div[5]/div[3]/div/div/div[3]/div/table/tbody/tr[1]/td/div/span', driver):
         time.sleep(1)
     time.sleep(2)
-    if localiza_id(driver, 'modalYouTube'):
+    if _find_by_id('modalYouTube', driver):
         # Encontre um elemento que esteja fora do modal e clique nele
         elemento_fora_modal = driver.find_element(by=By.ID, value='txtDataSearch')
         ActionChains(driver).move_to_element(elemento_fora_modal).click().perform()
@@ -87,7 +79,7 @@ def consulta_lista(driver, continuar_pagina):
             continue
 
         # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
-        while not localiza_path(driver, '/html/body/form/div[5]/div[3]/div/div/div[3]/div/table/tbody/tr[1]/td/div/span'):
+        while not _find_by_path('/html/body/form/div[5]/div[3]/div/div/div[3]/div/table/tbody/tr[1]/td/div/span', driver):
             time.sleep(1)
 
         time.sleep(1)
@@ -213,14 +205,13 @@ def click(driver, divida):
     # função para clicar em elementos via ID
     print('>>> Baixando arquivo')
     contador_2 = 0
-    clicou = 'não'
-    while clicou == 'não':
+    while True:
         try:
             driver.find_element(by=By.ID, value=divida).click()
-            clicou = 'sim'
+            break
         except:
             contador_2 += 1
-            clicou = 'não'
+            
         if contador_2 > 5:
             return False
     

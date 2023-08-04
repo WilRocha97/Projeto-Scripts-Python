@@ -80,7 +80,7 @@ def salvar_pdf(driver, pasta_analise):
     time.sleep(1)
     # enquanto a pre visualização nao abrir tenta abrir a primeira mensagem da lista
     print('>>> Aguardando pré visualização')
-    while not _find_img('pre_visualizacao.png', conf=0.8):
+    while not _find_img('pre_visualizacao.png', conf=0.75):
         while True:
             try:
                 driver.find_element(by=By.XPATH, value='/html/body/form/div[5]/div[3]/div/div[1]/div[3]/div[2]/div/table/tbody/tr[1]').click()
@@ -162,8 +162,11 @@ def verifica_mensagem(pasta_analise, modulo):
             for count, page in enumerate(pdf):
                 # Pega o texto da pagina
                 textinho = page.get_text('text', flags=1 + 2 + 8)
-                # print(textinho)
-                # time.sleep(22)
+                
+                # se a função for chamada com o parametro 'erro', printa o texto do arquivo para ser analisado e retorna para encerrar a execução
+                if modulo == 'erro':
+                    print(textinho)
+                    return
                 
                 try:
                     cnpj = re.compile(r'Destinatário: (.+)').search(textinho).group(1)
@@ -198,10 +201,19 @@ def verifica_mensagem(pasta_analise, modulo):
 
 @_time_execution
 def run():
-    modulo = p.confirm(title='Script incrível', buttons=('Termo(s) de Exclusão do Simples Nacional', 'Termo(s) de Intimação'))
+    modulo = p.confirm(title='Script incrível', buttons=('Termo(s) de Exclusão do Simples Nacional', 'Termo(s) de Intimação', 'Renomear arquivo'))
     pasta_analise = r'V:\Setor Robô\Scripts Python\SIEG\Download Menságens Importantes\ignore\Mensagens'
     pasta_final = os.path.join(r'V:\Setor Robô\Scripts Python\SIEG\Download Menságens Importantes\execução', modulo)
     
+    # exceção para renomear alguma menagem que foi salva ou só aberta, mas o script parou
+    if modulo == 'Renomear arquivo':
+        modulo = p.confirm(title='Script incrível', buttons=('Termo(s) de Exclusão do Simples Nacional', 'Termo(s) de Intimação'))
+        pasta_final = os.path.join(r'V:\Setor Robô\Scripts Python\SIEG\Download Menságens Importantes\execução', modulo)
+        arq, novo_arq = verifica_mensagem(pasta_analise, modulo)
+        os.makedirs(pasta_final, exist_ok=True)
+        shutil.move(arq, os.path.join(pasta_final, novo_arq))
+        return
+        
     # opções para fazer com que o chrome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
     # options.add_argument('--headless')
@@ -221,8 +233,13 @@ def run():
             
         if imprime_mensagem(driver):
             driver, resultado = salvar_pdf(driver, pasta_analise)
-            arq, novo_arq = verifica_mensagem(pasta_analise, modulo)
-            
+            # tenta analisar o PDF, se der erro chama a função novamente, porem com o parametro 'erro' para entrar em uma exceção criada dentro da função
+            try:
+                arq, novo_arq = verifica_mensagem(pasta_analise, modulo)
+            except:
+                verifica_mensagem(pasta_analise, 'erro')
+                return
+                
             # verifica se ja existe a pasta final do arquivo e move ele para lá
             os.makedirs(pasta_final, exist_ok=True)
             shutil.move(arq, os.path.join(pasta_final, novo_arq))

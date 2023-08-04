@@ -256,7 +256,7 @@ def run():
     })
 
     contador = 1
-    while 1 < 2:
+    while True:
         print(f'\n\nIniciando rotina Nº {contador} ----------------------------------------------------------\n')
         # abre a planilha de dados
         file = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download guias DCTF WEB\\ignore\\Dados.csv"
@@ -282,23 +282,20 @@ def run():
         for count, empresa in enumerate(empresas[index:], start=1):
     
             # configurar o indice para localizar em qual empresa está
-            _indice(count, total_empresas, empresa)
-            erro = 'sim'
-            while erro == 'sim':
-                '''try:'''
-                driver = sieg_iris(driver)
-                driver = procura_empresa(competencia, empresa, driver, options)
-                erro = 'não'
-                '''except:
+            _indice(count, total_empresas, empresa, index)
+            while True:
+                try:
+                    driver = sieg_iris(driver)
+                    driver = procura_empresa(competencia, empresa, driver, options)
+                    break
+                except:
                     try:
-                        erro = 'sim'
                         driver.close()
                         status, driver = _initialize_chrome(options)
                         driver = login_sieg(driver)
                     except:
-                        erro = 'sim'
                         status, driver = _initialize_chrome(options)
-                        driver = login_sieg(driver)'''
+                        driver = login_sieg(driver)
 
         contador += 1
         os.remove("V:\\Setor Robô\\Scripts Python\\SIEG\\Download guias DCTF WEB\\execução\\resumo.csv")

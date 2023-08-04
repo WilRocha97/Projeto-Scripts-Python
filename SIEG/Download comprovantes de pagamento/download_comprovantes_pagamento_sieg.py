@@ -8,25 +8,9 @@ import os, time, re, csv, shutil, fitz
 from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers
-from chrome_comum import _initialize_chrome
+from chrome_comum import _initialize_chrome, _find_by_path, _find_by_id
 from pyautogui_comum import _click_img
 
-
-def localiza_path(driver, elemento):
-    try:
-        driver.find_element(by=By.XPATH, value=elemento)
-        return True
-    except:
-        return False
-
-
-def localiza_id(driver, elemento):
-    try:
-        driver.find_element(by=By.ID, value=elemento)
-        return True
-    except:
-        return False
-    
 
 def login_sieg(driver):
     driver.get('https://auth.sieg.com/')
@@ -65,7 +49,7 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
     _click_img('comprovantes.png', conf=0.9)
     # espera a barra de pesquisa, se não aparecer em 1 minuto, recarrega a página
     timer = 0
-    while not localiza_id(driver, 'select2-ddlCompanyIris-container'):
+    while not _find_by_id('select2-ddlCompanyIris-container', driver):
         time.sleep(1)
         timer += 1
         _click_img('comprovantes.png', conf=0.9)
@@ -81,7 +65,7 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
     print('>>> Pesquisando empresa')
     # clica para abrir a barra de pesquisa
     
-    if localiza_id(driver, 'modalYouTube'):
+    if _find_by_id('modalYouTube', driver):
         # Encontre um elemento que esteja fora do modal e clique nele
         elemento_fora_modal = driver.find_element(by=By.XPATH, value='/html/body/form/div[5]/div[3]/div/div/div[2]/div[2]/div[1]/input')
         ActionChains(driver).move_to_element(elemento_fora_modal).click().perform()
@@ -108,7 +92,7 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
     # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
     contador = 1
     timer = 0
-    while not localiza_path(driver, '/html/body/form/div[5]/div[3]/div[1]/div/div[3]/div/table/tbody/tr[1]/td/div/span'):
+    while not _find_by_path('/html/body/form/div[5]/div[3]/div[1]/div/div[3]/div/table/tbody/tr[1]/td/div/span', driver):
         time.sleep(1)
         timer += 1
         _click_img('comprovantes.png', conf=0.9)
@@ -221,14 +205,13 @@ def download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
 
 def click(driver, comprovante):
     contador_2 = 0
-    clicou = 'não'
-    while clicou == 'não':
+    while True:
         try:
             driver.find_element(by=By.ID, value=comprovante).click()
-            clicou = 'sim'
+            break
         except:
             contador_2 += 1
-            clicou = 'não'
+            
         if contador_2 > 5:
             return False
     
@@ -275,15 +258,14 @@ def run():
     for count, empresa in enumerate(empresas[index:], start=1):
         
         # configurar o indice para localizar em qual empresa está
-        _indice(count, total_empresas, empresa)
-        erro = 'sim'
-        while erro == 'sim':
+        _indice(count, total_empresas, empresa, index)
+
+        while True:
             try:
                 driver = sieg_iris(driver)
                 driver = procura_empresa(tipo, competencia, empresa, driver, options)
-                erro = 'não'
+                break
             except:
-                erro = 'sim'
                 driver.close()
                 status, driver = _initialize_chrome(options)
                 driver = login_sieg(driver)

@@ -129,14 +129,13 @@ def salvar_pdf(driver, pasta_analise):
     p.press('enter')
     time.sleep(1)
     
-    erro = 'sim'
-    while erro == 'sim':
+    while True:
         try:
             pyperclip.copy(pasta_analise)
             p.hotkey('ctrl', 'v')
-            erro = 'não'
+            break
         except:
-            erro = 'sim'
+            pass
     
     time.sleep(1)
     p.press('enter')
@@ -213,7 +212,7 @@ def run():
     status, driver = _initialize_chrome(options)
     driver = login_sieg(driver)
     
-    while 1 > 0:
+    while True:
         driver = sieg_iris(driver, modulo)
         if _find_img('sem_mensagens.png', conf=0.9):
             driver.close()

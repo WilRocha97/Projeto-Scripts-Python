@@ -193,7 +193,8 @@ def verifica_mensagem(pasta_analise, modulo):
                            r'SIMPLES NACIONAL.+Nº (.+), DE (.+)\.',
                            r'Número da Intimação: (\d+).+\n(\d\d/\d\d/\d\d\d\d)',
                            r'intimação:\n(\d.+\.\d\d-\d\d\d\d)',
-                           r'nº (.+) DE (.+)']
+                           r'nº (.+) DE (.+)',
+                           r'nº (.+) de (.+)']
                 for regex in regexes:
                     info_termo = re.compile(regex).search(textinho)
                     

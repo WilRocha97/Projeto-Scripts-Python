@@ -169,8 +169,9 @@ def verifica_mensagem(pasta_analise, modulo):
                     cnpj = re.compile(r'Destinatário: (.+)').search(textinho).group(1)
                 except:
                     cnpj = re.compile(r'CPF (\d\d\d\.\d\d\d\.\d\d\d-\d\d) ').search(textinho).group(1)
+                    cnpj = cnpj.replace("-", "").replace(".", "").replace("/", "")
                     
-                # verifica código e data do termo de exclusão do simples nacional, com duas variações
+                # verifica código e data da mensagem para caso tenha a mesma empresa o arquivo anterior não seja substituído
                 regexes = [r'SIMPLES NACIONAL.+nº (.+), de (.+)\n',
                            r'SIMPLES NACIONAL.+Nº (.+), DE (.+)\.',
                            r'Número da Intimação: (\d+).+\n(\d\d/\d\d/\d\d\d\d)',
@@ -182,15 +183,16 @@ def verifica_mensagem(pasta_analise, modulo):
                     
                     if info_termo:
                         numero = info_termo.group(1)
+                        numero = numero.replace("/", "-")
+                        
+                        # caso existe uma variação onde o regex não consiga pegar o código e a data juntos entra no except para pegar somente a data
                         try:
                             data = info_termo.group(2)
                         except:
                             data = re.compile(r'Data de envio: (\d\d/\d\d/\d\d\d\d) ').search(textinho).group(1)
-                            
-                        novo_arq = (f'{cnpj.replace("-", "").replace(".", "").replace("/", "")} - '
-                                    f'{modulo} - '
-                                    f'{numero.replace("/", "-")} - '
-                                    f'{data.replace("/", "-").replace(".", "")}.pdf')
+                        data = data.replace("/", "-").replace(".", "")
+                        
+                        novo_arq = f'{cnpj} - {modulo} - {numero} - {data}.pdf'
                         return arq, novo_arq
         
 

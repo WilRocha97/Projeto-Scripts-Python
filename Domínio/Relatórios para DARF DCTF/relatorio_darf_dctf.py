@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import re, shutil, pyperclip, time, os, pyautogui as p
+import re, shutil, time, os, pyautogui as p
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from sys import path

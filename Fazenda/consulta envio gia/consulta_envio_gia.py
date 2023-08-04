@@ -169,18 +169,16 @@ def run():
             # se o usuario anterior for diferente e existir uma sessão aberta, a sessão é fechada
             if driver:
                 driver.close()
-
-            erro = 'S'
+                
             contador = 0
             # loga no site da secretaria da fazenda com web driver e salva os cookies do site e a id da sessão
-            while erro == 'S':
+            while True:
                 try:
                     # cookies, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil)
                     driver, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil, retorna_driver=True)
-                    erro = 'N'
+                    break
                 except:
                     print('❗ Erro ao logar na empresa, tentando novamente')
-                    erro = 'S'
                     contador += 1
                 
                 time.sleep(1)

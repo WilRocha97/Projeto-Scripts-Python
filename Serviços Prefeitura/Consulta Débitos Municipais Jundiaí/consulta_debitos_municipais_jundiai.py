@@ -7,27 +7,11 @@ import os, time, re, shutil
 
 from sys import path
 path.append(r'..\..\_comum')
-from chrome_comum import _initialize_chrome, _send_input
+from chrome_comum import _initialize_chrome, _send_input, _find_by_path, _find_by_id
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
 from captcha_comum import _solve_recaptcha
 
 os.makedirs('execução/Certidões', exist_ok=True)
-
-
-def find_by_id(xpath, driver):
-    try:
-        elem = driver.find_element(by=By.ID, value=xpath)
-        return elem
-    except:
-        return None
-
-
-def find_by_path(xpath, driver):
-    try:
-        elem = driver.find_element(by=By.XPATH, value=xpath)
-        return elem
-    except:
-        return None
 
 
 def login(options, cnpj, insc_muni):
@@ -68,8 +52,8 @@ def login(options, cnpj, insc_muni):
     driver.find_element(by=By.ID, value='btnEnviar').click()
     time.sleep(1)
     
-    while not find_by_id('lblContribuinte', driver):
-        if find_by_id('AjaxAlertMod1_lblAjaxAlertMensagem', driver):
+    while not _find_by_id('lblContribuinte', driver):
+        if _find_by_id('AjaxAlertMod1_lblAjaxAlertMensagem', driver):
             situacao = re.compile(r'AjaxAlertMod1_lblAjaxAlertMensagem\">(.+)</span>')
             situacao = situacao.search(driver.page_source).group(1)
             if situacao == 'Consta(m) pendência(s) para a emissão de certidão por meio da Internet. Dirija-se à Av. União dos Ferroviários, 1760 - ' \

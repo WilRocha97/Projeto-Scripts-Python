@@ -202,36 +202,31 @@ def verifica_mensagem(pasta_analise, pasta_final, modulo):
                         
                         novo_arq = f'{cnpj} - {modulo} - {numero} - {data}.pdf'
                         
-                        print(f"❗ {novo_arq.replace('.pdf', '')}\n")
+                        print(f"{novo_arq.replace('.pdf', '')}\n")
+                        break
                         
-                        # pega o conteúdo mais relevante do termo de intimação para análise futura
-                        resultado_2 = ''
-                        if modulo == 'Termo(s) de Intimação':
-                            try:
-                                regex_termo = re.compile(r'Data da Emissão: \d\d/\d\d/\d\d\d\d(.+)')
-                                resultado_2 = regex_termo.search(textinho.replace('\n', ' '))
-                                resultado_2 = resultado_2.group(1)
-                            except:
-                                try:
-                                    regex_termo = re.compile(r'Pela presente mensagem, (.+)')
-                                    resultado_2 = regex_termo.search(textinho.replace('\n', ' '))
-                                    resultado_2 = resultado_2.group(1)
-                                except:
-                                    try:
-                                        regex_termo = re.compile(r'(Fica o sujeito passivo.+)')
-                                        resultado_2 = regex_termo.search(textinho.replace('\n', ' '))
-                                        resultado_2 = resultado_2.group(1)
-                                    except:
-                                        print(textinho.replace('\n', ' '))
-                                    
-                            resultado_2 = (resultado_2.replace(' ; ', ' - ')
+                # pega o conteúdo mais relevante do termo de intimação para análise futura
+                
+                if modulo == 'Termo(s) de Intimação':
+                    regexes = [r'Data da Emissão: \d\d/\d\d/\d\d\d\d(.+)',
+                               r'Pela presente mensagem, (.+)',
+                               r'(Fica o sujeito passivo.+)',]
+                    for regex in regexes:
+                        info_termo = re.compile(regex).search(textinho.replace('\n', ' '))
+                        
+                        if info_termo:
+                            mensagem = info_termo.group(1)
+                            mensagem = (mensagem.replace(' ; ', ' - ')
                                            .replace('; ', ' ')
                                            .replace('arresto;bens', 'arresto de bens')
                                            .replace(';', ' ')
                                            .replace(';;', ' '))
-                        
-                        _escreve_relatorio_csv(novo_arq.replace(' - ', ';').replace('.pdf', '') + ';' + resultado_2)
-                        break
+                            break
+                else:
+                    mensagem = ''
+                    
+                _escreve_relatorio_csv(novo_arq.replace(' - ', ';').replace('.pdf', '') + ';' + mensagem)
+                break
                         
         # verifica se já existe a pasta final do arquivo e move ele para lá
         os.makedirs(pasta_final, exist_ok=True)

@@ -87,7 +87,6 @@ def salvar_pdf(driver, pasta_analise):
                     return driver, 'acabou'
                 
                 driver.find_element(by=By.XPATH, value='/html/body/form/div[5]/div[3]/div/div[1]/div[3]/div[2]/div/table/tbody/tr[1]').click()
-                
                 break
             except:
                 pass
@@ -101,17 +100,17 @@ def salvar_pdf(driver, pasta_analise):
         time.sleep(1)
         p.press('pgdn')
         time.sleep(1)
-        
+    
+    # clica no botão de imprimir
     _click_img('imprimir.png', conf=0.8, timeout=1)
 
     print('>>> Aguardando tela de impressão')
-    # aguarda a tela de impressão
     _wait_img('tela_imprimir.png', conf=0.9)
     
     print('>>> Salvando PDF')
-    # se não estiver selecionado para salvar como PDF, seleciona para salvar como PDF
     imagens = ['print_to_pdf.png', 'print_to_pdf_2.png']
     for img in imagens:
+        # se não estiver selecionado para salvar como PDF, seleciona para salvar como PDF
         if _find_img(img, conf=0.9) or _find_img(img, conf=0.9):
             _click_img(img, conf=0.9)
             # aguarda aparecer a opção de salvar como PDF e clica nela
@@ -133,6 +132,7 @@ def salvar_pdf(driver, pasta_analise):
     p.press('enter')
     time.sleep(1)
     
+    # copia para o pyperclip o caminho final do arquivo
     while True:
         try:
             pyperclip.copy(pasta_analise)

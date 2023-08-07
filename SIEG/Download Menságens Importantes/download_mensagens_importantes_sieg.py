@@ -87,7 +87,6 @@ def salvar_pdf(driver, pasta_analise):
                     return driver, 'acabou'
                 
                 driver.find_element(by=By.XPATH, value='/html/body/form/div[5]/div[3]/div/div[1]/div[3]/div[2]/div/table/tbody/tr[1]').click()
-                
                 break
             except:
                 pass
@@ -101,17 +100,17 @@ def salvar_pdf(driver, pasta_analise):
         time.sleep(1)
         p.press('pgdn')
         time.sleep(1)
-        
+    
+    # clica no botão de imprimir
     _click_img('imprimir.png', conf=0.8, timeout=1)
 
     print('>>> Aguardando tela de impressão')
-    # aguarda a tela de impressão
     _wait_img('tela_imprimir.png', conf=0.9)
     
     print('>>> Salvando PDF')
-    # se não estiver selecionado para salvar como PDF, seleciona para salvar como PDF
     imagens = ['print_to_pdf.png', 'print_to_pdf_2.png']
     for img in imagens:
+        # se não estiver selecionado para salvar como PDF, seleciona para salvar como PDF
         if _find_img(img, conf=0.9) or _find_img(img, conf=0.9):
             _click_img(img, conf=0.9)
             # aguarda aparecer a opção de salvar como PDF e clica nela
@@ -133,6 +132,7 @@ def salvar_pdf(driver, pasta_analise):
     p.press('enter')
     time.sleep(1)
     
+    # copia para o pyperclip o caminho final do arquivo
     while True:
         try:
             pyperclip.copy(pasta_analise)
@@ -202,36 +202,31 @@ def verifica_mensagem(pasta_analise, pasta_final, modulo):
                         
                         novo_arq = f'{cnpj} - {modulo} - {numero} - {data}.pdf'
                         
-                        print(f"❗ {novo_arq.replace('.pdf', '')}\n")
+                        print(f"{novo_arq.replace('.pdf', '')}\n")
+                        break
                         
-                        # pega o conteúdo mais relevante do termo de intimação para análise futura
-                        resultado_2 = ''
-                        if modulo == 'Termo(s) de Intimação':
-                            try:
-                                regex_termo = re.compile(r'Data da Emissão: \d\d/\d\d/\d\d\d\d(.+)')
-                                resultado_2 = regex_termo.search(textinho.replace('\n', ' '))
-                                resultado_2 = resultado_2.group(1)
-                            except:
-                                try:
-                                    regex_termo = re.compile(r'Pela presente mensagem, (.+)')
-                                    resultado_2 = regex_termo.search(textinho.replace('\n', ' '))
-                                    resultado_2 = resultado_2.group(1)
-                                except:
-                                    try:
-                                        regex_termo = re.compile(r'(Fica o sujeito passivo.+)')
-                                        resultado_2 = regex_termo.search(textinho.replace('\n', ' '))
-                                        resultado_2 = resultado_2.group(1)
-                                    except:
-                                        print(textinho.replace('\n', ' '))
-                                    
-                            resultado_2 = (resultado_2.replace(' ; ', ' - ')
+                # pega o conteúdo mais relevante do termo de intimação para análise futura
+                
+                if modulo == 'Termo(s) de Intimação':
+                    regexes = [r'Data da Emissão: \d\d/\d\d/\d\d\d\d(.+)',
+                               r'Pela presente mensagem, (.+)',
+                               r'(Fica o sujeito passivo.+)',]
+                    for regex in regexes:
+                        info_termo = re.compile(regex).search(textinho.replace('\n', ' '))
+                        
+                        if info_termo:
+                            mensagem = info_termo.group(1)
+                            mensagem = (mensagem.replace(' ; ', ' - ')
                                            .replace('; ', ' ')
                                            .replace('arresto;bens', 'arresto de bens')
                                            .replace(';', ' ')
                                            .replace(';;', ' '))
-                        
-                        _escreve_relatorio_csv(novo_arq.replace(' - ', ';').replace('.pdf', '') + ';' + resultado_2)
-                        break
+                            break
+                else:
+                    mensagem = ''
+                    
+                _escreve_relatorio_csv(novo_arq.replace(' - ', ';').replace('.pdf', '') + ';' + mensagem)
+                break
                         
         # verifica se já existe a pasta final do arquivo e move ele para lá
         os.makedirs(pasta_final, exist_ok=True)

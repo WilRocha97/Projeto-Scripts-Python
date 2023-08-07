@@ -101,6 +101,8 @@ def imprimir(relatorio, andamentos, empresa, texto, espera=10, diretorio='Relat�
         # exclusivo para rescisão
         if _find_img('Homologonet.png'):
             press('enter')
+        if _find_img('recalculos.png'):
+            press('enter')
         if x > espera:
             if not _find_img('PDF.png', conf=0.9):
                 # Se for 'Provisões' não precisa entrar aqui, essa execução já tem verificações próprias
@@ -346,7 +348,9 @@ def relatoriozinhos(relatorio, andamentos, empresa):
 
     elif relatorio == 'Holerites - Adiantamento':
         # Aba secundária Adiantamento Obrigatório
-        _click_img('AdiantamentoObrigatorio.png')
+        sleep(1)
+        _click_img('AdiantamentoObrigatorio.png', conf=0.9)
+        sleep(2)
         if not holerite(relatorio, andamentos, empresa):
             return False
         if not imprimir(relatorio, andamentos, empresa, texto, espera=30, diretorio=relatorio):

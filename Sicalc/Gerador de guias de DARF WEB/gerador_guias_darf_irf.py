@@ -198,7 +198,7 @@ def salvar_guia(empresa, apuracao, vencimento, tipo):
             
     # exemplo: NOME DA EMPRESA - 00000000000 - DARF IRRF 170806 02-2023 - venc. 20-03-2023.pdf
     p.write(f'{nome.replace("/", " ")} - {cnpj} - {tipo} {cod} {apuracao.replace("/", "-")} - venc. {vencimento.replace("/", "-")}.pdf')
-    time.sleep(0.5)
+    time.sleep(1)
     
     pasta_final = r'\\vpsrv03\Arq_Robo\Gerador de guias de DARF IRRF\Ref. ' + apuracao.replace("/", "-") + '\Guias'
     os.makedirs(pasta_final, exist_ok=True)

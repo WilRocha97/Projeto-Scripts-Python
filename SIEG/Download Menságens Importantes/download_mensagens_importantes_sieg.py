@@ -50,7 +50,7 @@ def imprime_mensagem(driver):
     print('>>> Acessando mensagem')
     # aguarda a lista de mensagens
     while not _find_by_path('/html/body/form/div[5]/div[3]/div/div[1]/div[3]/div[2]/div/table/tbody/tr[1]', driver):
-        if _find_img('sem_mensagens.png', conf=0.9):
+        if _find_img('sem_mensagens.png', conf=0.8):
             return False
         time.sleep(1)
         
@@ -69,7 +69,7 @@ def imprime_mensagem(driver):
     
     # aguarda e clica na mensagem
     while not _find_by_path('/html/body/form/div[5]/div[3]/div/div[1]/div[3]/div[2]/div/table/tbody/tr[1]', driver):
-        if _find_img('sem_mensagens.png', conf=0.9):
+        if _find_img('sem_mensagens.png', conf=0.8):
             return False
         time.sleep(1)
     
@@ -83,10 +83,15 @@ def salvar_pdf(driver, pasta_analise):
     while not _find_img('pre_visualizacao.png', conf=0.75):
         while True:
             try:
+                if _find_img('sem_mensagens.png', conf=0.8):
+                    return driver, 'acabou'
+                
                 driver.find_element(by=By.XPATH, value='/html/body/form/div[5]/div[3]/div/div[1]/div[3]/div[2]/div/table/tbody/tr[1]').click()
+                
                 break
             except:
                 pass
+        
         time.sleep(2)
     
     # aguarda a janela de pré-visualização abrir e clica em imprimir
@@ -150,7 +155,7 @@ def salvar_pdf(driver, pasta_analise):
     return driver, 'Mensagem salva com sucesso'
 
 
-def verifica_mensagem(pasta_analise, modulo):
+def verifica_mensagem(pasta_analise, pasta_final, modulo):
     print('>>> Analisando mensagem')
     # Analisa cada pdf que estiver na pasta
     for arquivo in os.listdir(pasta_analise):
@@ -196,8 +201,42 @@ def verifica_mensagem(pasta_analise, modulo):
                         data = data.replace("/", "-").replace(".", "")
                         
                         novo_arq = f'{cnpj} - {modulo} - {numero} - {data}.pdf'
-                        return arq, novo_arq
-        
+                        
+                        print(f"❗ {novo_arq.replace('.pdf', '')}\n")
+                        
+                        # pega o conteúdo mais relevante do termo de intimação para análise futura
+                        resultado_2 = ''
+                        if modulo == 'Termo(s) de Intimação':
+                            try:
+                                regex_termo = re.compile(r'Data da Emissão: \d\d/\d\d/\d\d\d\d(.+)')
+                                resultado_2 = regex_termo.search(textinho.replace('\n', ' '))
+                                resultado_2 = resultado_2.group(1)
+                            except:
+                                try:
+                                    regex_termo = re.compile(r'Pela presente mensagem, (.+)')
+                                    resultado_2 = regex_termo.search(textinho.replace('\n', ' '))
+                                    resultado_2 = resultado_2.group(1)
+                                except:
+                                    try:
+                                        regex_termo = re.compile(r'(Fica o sujeito passivo.+)')
+                                        resultado_2 = regex_termo.search(textinho.replace('\n', ' '))
+                                        resultado_2 = resultado_2.group(1)
+                                    except:
+                                        print(textinho.replace('\n', ' '))
+                                    
+                            resultado_2 = (resultado_2.replace(' ; ', ' - ')
+                                           .replace('; ', ' ')
+                                           .replace('arresto;bens', 'arresto de bens')
+                                           .replace(';', ' ')
+                                           .replace(';;', ' '))
+                        
+                        _escreve_relatorio_csv(novo_arq.replace(' - ', ';').replace('.pdf', '') + ';' + resultado_2)
+                        break
+                        
+        # verifica se já existe a pasta final do arquivo e move ele para lá
+        os.makedirs(pasta_final, exist_ok=True)
+        shutil.move(arq, os.path.join(pasta_final, novo_arq))
+
 
 @_time_execution
 def run():
@@ -209,9 +248,7 @@ def run():
     if modulo == 'Renomear arquivo':
         modulo = p.confirm(title='Script incrível', buttons=('Termo(s) de Exclusão do Simples Nacional', 'Termo(s) de Intimação'))
         pasta_final = os.path.join(r'V:\Setor Robô\Scripts Python\SIEG\Download Menságens Importantes\execução', modulo)
-        arq, novo_arq = verifica_mensagem(pasta_analise, modulo)
-        os.makedirs(pasta_final, exist_ok=True)
-        shutil.move(arq, os.path.join(pasta_final, novo_arq))
+        verifica_mensagem(pasta_analise, pasta_final, modulo)
         return
         
     # opções para fazer com que o chrome trabalhe em segundo plano (opcional)
@@ -227,29 +264,21 @@ def run():
     
     while True:
         driver = sieg_iris(driver, modulo)
-        if _find_img('sem_mensagens.png', conf=0.9):
-            driver.close()
-            break
-            
+        
         if imprime_mensagem(driver):
             driver, resultado = salvar_pdf(driver, pasta_analise)
+            if resultado == 'acabou':
+                driver.close()
+                return
+                
             # tenta analisar o PDF, se der erro chama a função novamente, porem com o parametro 'erro' para entrar em uma exceção criada dentro da função
             try:
-                arq, novo_arq = verifica_mensagem(pasta_analise, modulo)
+                verifica_mensagem(pasta_analise, pasta_final, modulo)
             except:
                 verifica_mensagem(pasta_analise, 'erro')
                 return
                 
-            # verifica se ja existe a pasta final do arquivo e move ele para lá
-            os.makedirs(pasta_final, exist_ok=True)
-            shutil.move(arq, os.path.join(pasta_final, novo_arq))
             
-            print(f"❗ {novo_arq.replace('.pdf', '')}\n")
-            _escreve_relatorio_csv(novo_arq.replace(' - ', ';').replace('.pdf', ''))
-            
-        if _find_img('sem_mensagens.png', conf=0.9):
-            driver.close()
-            break
             
             
 if __name__ == '__main__':

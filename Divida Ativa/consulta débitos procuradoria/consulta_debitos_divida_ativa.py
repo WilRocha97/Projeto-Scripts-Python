@@ -45,7 +45,7 @@ def limpa_registros(html):
     return html
 
 
-def salva_pagina(pagina, cnpj, compl=''):
+def salva_pagina(pagina, cnpj, empresa, compl=''):
     os.makedirs('execução\documentos', exist_ok=True)
     soup = BeautifulSoup(pagina.content, 'html.parser')
     formulario = soup.find('form', attrs={'id': 'consultaDebitoForm'})
@@ -100,7 +100,7 @@ def salva_pagina(pagina, cnpj, compl=''):
         # pisa.showLogging()
         pisa.CreatePDF(str(html), pdf)
     print('✔ Arquivo salvo')
-    _escreve_relatorio_csv(f'{cnpj};Empresa com debitos;{compl}')
+    _escreve_relatorio_csv(f'{cnpj};{empresa};Empresa com debitos;{compl}')
     
     return True
 
@@ -133,7 +133,7 @@ def inicia_sessao():
 
 
 def consulta_debito(s, empresa):
-    cnpj, nome = empresa
+    cnpj, empresa = empresa
     url = 'https://www.dividaativa.pge.sp.gov.br/sc/pages/consultas/consultarDebito.jsf'
     # str_cnpj = f"{cnpj[0:2]}.{cnpj[2:5]}.{cnpj[5:8]}/{cnpj[8:12]}-{cnpj[12:]}"
     pagina = s.get(url)
@@ -183,7 +183,7 @@ def consulta_debito(s, empresa):
     
     if not debitos:
         print('✔ Sem débitos')
-        _escreve_relatorio_csv(f'{cnpj};Empresa sem debitos')
+        _escreve_relatorio_csv(f'{cnpj};{empresa};Empresa sem debitos')
     else:
         print('❗ Com débitos')
         soup = BeautifulSoup(pagina.content, 'html.parser')
@@ -204,7 +204,7 @@ def consulta_debito(s, empresa):
                 f'consultaDebitoForm:dataTable:{index}:lnkConsultaDebito': tipo
             }
             pagina = s.post(url, info)
-            salva_pagina(pagina, cnpj, linha.text)
+            salva_pagina(pagina, cnpj, empresa, linha.text)
             
             # Retorna para tela de consulta
             viewstate = soup.find('input', attrs={'id': "javax.faces.ViewState"}).get('value')

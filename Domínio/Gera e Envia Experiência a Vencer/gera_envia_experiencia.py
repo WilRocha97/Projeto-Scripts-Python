@@ -202,8 +202,15 @@ def envia_experiencia(comp):
     time.sleep(0.5)
         
     p.press('tab')
-    time.sleep(0.5)
-    clip.copy(f'Relação de Empregados - Contratos_Vencimento_Modelo_Veiga - {comp}')
+    time.sleep(1)
+    
+    while True:
+        try:
+            clip.copy(f'Relação de Empregados - Contratos_Vencimento_Modelo_Veiga - {comp}')
+            break
+        except:
+            pass
+        
     time.sleep(0.5)
     p.hotkey('ctrl', 'v')
         

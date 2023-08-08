@@ -121,16 +121,16 @@ def verifica_empresa(cod):
             time.sleep(1)
             p.hotkey('ctrl', 'c')
             p.hotkey('ctrl', 'c')
-            erro = 'sim'
-            while erro == 'sim':
+
+            while True:
                 try:
                     time.sleep(1)
                     p.hotkey('ctrl', 'c')
                     p.hotkey('ctrl', 'c')
                     cnpj_codigo = pyperclip.paste()
-                    erro = 'não'
+                    break
                 except:
-                    erro = 'sim'
+                    pass
         
             time.sleep(0.5)
             codigo = cnpj_codigo.split('-')

@@ -103,7 +103,8 @@ def boleto_mei(empresa, andamentos):
     # espera o site abrir
     while not _wait_img('informe_cnpj.png', conf=0.9, timeout=-1):
         time.sleep(1)
-        
+    
+    print('>>> inserindo CNPJ')
     # Fazer login com CNPJ
     _click_img('cnpj.png', conf=0.9)
     p.write(cnpj)
@@ -112,7 +113,14 @@ def boleto_mei(empresa, andamentos):
     time.sleep(0.5)
 
     # Emitir guia de pagamento DAS
-    _wait_img('emitir_guia.png', conf=0.9, timeout=-1)
+    while not _find_img('emitir_guia.png', conf=0.9):
+        time.sleep(1)
+        if _find_img('nao_optante_3.png', conf=0.95):
+            _escreve_relatorio_csv(f'{cnpj};Não optante;{comp};{ano}', nome=andamentos)
+            print('❌ Não optante')
+            p.hotkey('ctrl', 'w')
+            return False
+        
     _click_img('emitir_guia.png', conf=0.9)
 
     # Selecionar o ano e clicar em ok

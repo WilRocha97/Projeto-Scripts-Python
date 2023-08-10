@@ -19,6 +19,18 @@ warnings.filterwarnings('ignore')
 _perfil = {'contribuinte': ('1', 'CONTR'), 'contador': ('2', 'CONTA')}
 
 
+def salvar_arquivo(nome, dados):
+    try:
+        arquivo = open(os.path.join('execução/documentos', nome), 'wb')
+    except FileNotFoundError:
+        os.makedirs('documentos', exist_ok=True)
+        arquivo = open(os.path.join('documentos', nome), 'wb')
+
+    for parte in dados.iter_content(100000):
+        arquivo.write(parte)
+    arquivo.close()
+    
+    
 def atualiza_info(pagina):
     soup = BeautifulSoup(pagina.content, 'html.parser')
     infos = (

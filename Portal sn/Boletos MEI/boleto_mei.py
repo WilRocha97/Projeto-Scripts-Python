@@ -2,9 +2,10 @@ import pyautogui as p
 import time
 import os
 import pyperclip
-from sys import path
 
+from sys import path
 path.append(r'..\..\_comum')
+from chrome_comum import _abrir_chrome
 from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
 
@@ -75,30 +76,6 @@ def imprimir(empresa, andamentos):
 
 def boleto_mei(empresa, andamentos):
     cnpj, comp, ano, venc = empresa
-    p.hotkey('win', 'm')
-    
-    # Abrir o site
-    if _find_img('chrome.png', conf=0.99):
-        pass
-    elif _find_img('chrome_aberto.png', conf=0.99):
-        _click_img('chrome_aberto.png', conf=0.99)
-    else:
-        time.sleep(0.5)
-        os.startfile(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
-        while not _find_img('google.png', conf=0.9):
-            time.sleep(1)
-            p.moveTo(1163, 377)
-            p.click()
-
-    link = 'http://www8.receita.fazenda.gov.br/SimplesNacional/Aplicacoes/ATSPO/pgmei.app/Identificacao'
-    
-    _click_img('maxi.png', conf=0.9, timeout=1)
-    p.click(1150, 51)
-    time.sleep(1)
-    p.write(link.lower())
-    time.sleep(1)
-    p.press('enter')
-    time.sleep(3)
     
     # espera o site abrir
     while not _wait_img('informe_cnpj.png', conf=0.9, timeout=-1):
@@ -221,6 +198,7 @@ def run():
         cnpj, comp, ano, venc = empresa
         andamentos = f'Boletos MEI {comp}-{ano}'
         
+        _abrir_chrome('http://www8.receita.fazenda.gov.br/SimplesNacional/Aplicacoes/ATSPO/pgmei.app/Identificacao')
         if not boleto_mei(empresa, andamentos):
             continue
             

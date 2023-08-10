@@ -3,6 +3,7 @@ import re, fitz, shutil, time, pyperclip, os, pyautogui as p
 
 from sys import path
 path.append(r'..\..\_comum')
+from chrome_comum import _abrir_chrome
 from pyautogui_comum import _click_img, _wait_img, _find_img, _click_position_img, _click_position_img
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
 
@@ -10,31 +11,6 @@ dados = "V:\\Setor Robô\\Scripts Python\\_comum\\Dados Confere IR.txt"
 f = open(dados, 'r', encoding='utf-8')
 user = f.read()
 user = user.split('/')
-
-
-def abrir_chrome():
-    p.hotkey('win', 'm')
-
-    if _find_img('chrome_aberto.png', conf=0.99):
-        _click_img('chrome_aberto.png', conf=0.99, timeout=1)
-    else:
-        time.sleep(0.5)
-        os.startfile(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
-        while not _find_img('google.png', conf=0.9):
-            time.sleep(1)
-            p.moveTo(1163, 377)
-            p.click()
-
-    link = 'https://portal.conferironline.com.br/dashboard'
-
-    _click_img('maxi.png', conf=0.9, timeout=1)
-    p.click(1000, 51)
-    time.sleep(1)
-    p.write(link.lower())
-    time.sleep(1)
-    p.press('enter')
-    print('>>> Abrindo o site do Conferir')
-    return 'ok'
 
 
 def login_conferir():
@@ -298,7 +274,8 @@ def run():
         _indice(count, total_empresas, empresa, index)
         cpf, nome = empresa
         
-        abrir_chrome()
+        _abrir_chrome('https://portal.conferironline.com.br/dashboard')
+        print('>>> Abrindo o site do Conferir')
         resultado = consulta(cpf)
         if resultado == 'ok':
             resultado = salvar_pdf(pasta_analise)

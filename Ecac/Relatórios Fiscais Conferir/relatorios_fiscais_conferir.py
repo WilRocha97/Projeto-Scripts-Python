@@ -12,7 +12,7 @@ user = f.read()
 user = user.split('/')
 
 
-def login():
+def abrir_chrome():
     p.hotkey('win', 'm')
 
     if _find_img('chrome_aberto.png', conf=0.99):
@@ -298,7 +298,7 @@ def run():
         _indice(count, total_empresas, empresa, index)
         cpf, nome = empresa
         
-        login()
+        abrir_chrome()
         resultado = consulta(cpf)
         if resultado == 'ok':
             resultado = salvar_pdf(pasta_analise)

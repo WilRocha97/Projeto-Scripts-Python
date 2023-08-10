@@ -3,46 +3,13 @@ import os, time, re, pyperclip, pyautogui as p
 
 from sys import path
 path.append(r'..\..\_comum')
+from chrome_comum import _abrir_chrome
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers, e_dir
 from pyautogui_comum import _click_img, _wait_img, _find_img, _click_position_img
 
 
 def login_sicalc(empresa):
     cnpj, nome, nota, valor, cod = empresa
-    p.hotkey('win', 'm')
-
-    # Abrir o site
-    if _find_img('chrome.png', conf=0.99):
-        pass
-    elif _find_img('chrome_aberto.png', conf=0.99):
-        _click_img('chrome_aberto.png', conf=0.99, timeout=1)
-    else:
-        time.sleep(0.5)
-        os.startfile(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
-        while not _find_img('google.png', conf=0.9):
-            time.sleep(1)
-            p.moveTo(1163, 377)
-            p.click()
-    
-    """while not _find_img('remover_dados.png', conf=0.9):
-        p.hotkey('ctrl', 'shift', 'del')
-        time.sleep(1)
-        
-    p.press('tab')
-    p.press('enter')
-    while _find_img('remover_dados.png', conf=0.9):
-        time.sleep(1)
-    p.hotkey('ctrl', 'w')
-    time.sleep(1)"""
-    
-    link = 'https://sicalc.receita.economia.gov.br/sicalc/rapido/contribuinte'
-    
-    _click_img('maxi.png', conf=0.9, timeout=1)
-    p.click(1100, 51)
-    time.sleep(1)
-    p.write(link.lower())
-    time.sleep(1)
-    p.press('enter')
     time.sleep(3)
     
     # selecionar o checkbox do captcha
@@ -255,6 +222,7 @@ def run():
         while True:
             # try:
             # fazer login do SICALC
+            _abrir_chrome('https://sicalc.receita.economia.gov.br/sicalc/rapido/contribuinte')
             resultado = login_sicalc(empresa)
             if not resultado:
                 p.hotkey('ctrl', 'w')

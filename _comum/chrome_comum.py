@@ -3,7 +3,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.select import Select
-import os
+from pyautogui_comum import _click_img, _find_img
+import os, time, pyautogui as p
 
 service = Service(log_path = 'V:\Setor Robô\Scripts Python\_comum\Chrome driver\chromedriver.exe')
 
@@ -137,3 +138,26 @@ def find_by_class(iten, driver):
     except:
         return None
 _find_by_class = find_by_class
+
+
+# abre o chrome padrão instalado no PC
+def abrir_chrome(url):
+    p.hotkey('win', 'm')
+
+    if _find_img('chrome_aberto.png', conf=0.99):
+        _click_img('chrome_aberto.png', conf=0.99, timeout=1)
+    else:
+        time.sleep(0.5)
+        os.startfile(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
+        while not _find_img('google.png', conf=0.9):
+            time.sleep(1)
+            p.moveTo(1163, 377)
+            p.click()
+
+    _click_img('maxi.png', conf=0.9, timeout=1)
+    p.click(1000, 51)
+    time.sleep(1)
+    p.write(url.lower())
+    time.sleep(1)
+    p.press('enter')
+_abrir_chrome = abrir_chrome

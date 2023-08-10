@@ -143,6 +143,7 @@ def verifica_o_numero(cnpj):
         numero = cliente[0]
         nome = cliente[1]
         
+        print(f'{str(numero)}, {str(nome)}')
         return str(numero), str(nome)
     except:
         return False, False
@@ -208,7 +209,6 @@ def mover_email(pasta=''):
 
 @_time_execution
 def run():
-    
     print('>>> Aguardando documentos...')
     
     # opções para fazer com que o chrome trabalhe em segundo plano (opcional)

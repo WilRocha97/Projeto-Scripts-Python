@@ -238,7 +238,6 @@ def salvar_pdf(pasta_final):
 
 def verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias):
     print('>>> Analisando relatório')
-    
     # Analisa cada pdf que estiver na pasta
     for arquivo in os.listdir(pasta_analise):
         print(f'Arquivo: {arquivo}')
@@ -259,12 +258,14 @@ def verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias):
                 else:
                     os.makedirs(pasta_final, exist_ok=True)
                     if re.compile(r'Diagnóstico Fiscal na Receita Federal').search(textinho):
+                        situacao_2 = ''
                         if not re.compile(r'Diagnóstico Fiscal na Receita Federal.+\nNão foram detectadas pendências/exigibilidades').search(textinho):
                             situacao_1 = 'Pendência na Receita Federal'
                         else:
                             situacao_1 = 'Sem pendência na Receita Federal'
                             
                     if re.compile(r'Diagnóstico Fiscal na Procuradoria-Geral da Fazenda Nacional').search(textinho):
+                        situacao_1 = ''
                         if not re.compile(r'Diagnóstico Fiscal na Procuradoria-Geral da Fazenda Nacional.+\nNão foram detectadas pendências/exigibilidades').search(textinho):
                             situacao_2 = 'Pendência na Procuradoria Geral da Fazenda Nacional'
                         else:

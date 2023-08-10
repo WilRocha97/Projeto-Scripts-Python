@@ -186,6 +186,7 @@ def gera_relatorio():
     timer = 0
     while not _find_img('botao_gerar_relatorio.png', conf=0.9):
         if timer > 10:
+            _click_img('gerar_relatorio_clicado.png', conf=0.9)
             # se aparecer essa mensagem de erro, retorna 'ok' para o erro seja tratado dentro do while anterior
             if _find_img('erro_sistema_8.png', conf=0.9):
                 print('>>> Erro no ECAC, tentando novamente')
@@ -237,8 +238,7 @@ def salvar_pdf(pasta_final):
 
 def verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias):
     print('>>> Analisando relatório')
-    situacao_1 = ''
-    situacao_2 = ''
+    
     # Analisa cada pdf que estiver na pasta
     for arquivo in os.listdir(pasta_analise):
         print(f'Arquivo: {arquivo}')

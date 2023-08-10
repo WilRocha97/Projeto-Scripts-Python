@@ -11,7 +11,7 @@ dados = "V:\\Setor Robô\\Scripts Python\\_comum\\Dados.txt"
 f = open(dados, 'r', encoding='utf-8')
 key = f.read()
 
-# variaveis globais
+# variáveis globais
 api_key = os.getenv('APIKEY_2CAPTCHA', '')
 anticaptcha_api_key = key
 
@@ -41,8 +41,8 @@ anticaptcha_api_key = key
 _break_recaptcha_v2 = break_recaptcha_v2
 
 
-# Envia os dados do recaptcha para a api two capctha
-# Retorna um dicionario com id da requisição e token do capctha
+# Envia os dados do recaptcha para a api two captcha
+# Retorna um dicionario com id da requisição e token do captcha
 # Retorna uma string/mensagem em caso de erro
 def break_recaptcha_v3(data, limit=5):
     tipo = 'recaptcha-v3'
@@ -68,7 +68,7 @@ _break_recaptcha_v3 = break_recaptcha_v3
 
 
 # Envia os dados do hcaptcha para a api two capctcha
-# Retorna um dicionario com id da requisição e token do capctha
+# Retorna um dicionario com id da requisição e token do captcha
 # Retorna uma string/mensagem em caso de erro
 def break_hcaptcha(data, limit=5):
     tipo = 'hcaptcha'
@@ -92,8 +92,8 @@ def break_hcaptcha(data, limit=5):
 _break_hcaptcha = break_hcaptcha
 
 
-# Envia imagem do normal captcha para a api two capctcha
-# Retorna um dicionario com id da requisição e token do capctha
+# Envia imagem do normal captcha para a api two captcha
+# Retorna um dicionario com id da requisição e token do captcha
 # Retorna uma string/mensagem em caso de erro
 def break_normal_captcha(img, limit=5):
     tipo = 'normal-captcha'
@@ -155,7 +155,7 @@ def solve_text_captcha(img):
 _solve_text_captcha = solve_text_captcha
 
 
-# Recebe a url do site com o captcha mais a chave da api resposnável pelo captcha encontrada no código do site
+# Recebe a url do site com o captcha mais a chave da api responsável pelo captcha encontrada no código do site
 # envia para a api e retorna a chave para resolver o captcha
 def solve_hcaptcha(data, visible=False):
     response = 'ERROR_NO_SLOT_AVAILABLE'

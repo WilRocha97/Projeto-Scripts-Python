@@ -138,9 +138,9 @@ def verifica_empresa(cod):
             codigo = codigo.replace(' ', '')
         
             if codigo != cod:
-                return False
                 print(codigo)
                 print(cod)
+                return False
             else:
                 return True
         except:

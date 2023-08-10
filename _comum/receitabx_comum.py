@@ -6,7 +6,7 @@ import os
 
 from pyautogui_comum import wait_img, focus
 
-# variaveis globais
+# variáveis globais
 comum_paths = (
 	r'C:\Program Files (x86)\Programas RFB\Receitanet BX',
 	r'C:\receitanet',

@@ -26,7 +26,7 @@ def focus(title, maximize=True, ignore_erro=False):
 _focus = focus
 
 
-# Procura pela imagem img que atenda ao nivel de correspondencia conf
+# Procura pela imagem img que atenda ao nível de correspondência conf
 # Retorna uma tupla com os valores (x, y, altura, largura) caso ache a img
 # Retorna None caso não ache a img
 def find_img(img, pasta='imgs', conf=1.0):
@@ -35,8 +35,8 @@ def find_img(img, pasta='imgs', conf=1.0):
 _find_img = find_img
 
 
-# Espera pela imagem 'img' que atenda ao nivel de correspondencia 'conf'
-# Até que o 'timeout' seja excedido ou indefinidademente para 'timeout' negativo
+# Espera pela imagem 'img' que atenda ao nível de correspondência 'conf'
+# Até que o 'timeout' seja excedido ou indefinidamente para 'timeout' negativo
 # Retorna uma tupla com os valores (x, y, altura, largura) caso ache a img
 # Retorna None caso não ache a imagem ou exceda o 'timeout'
 def wait_img(img, pasta='imgs', conf=1.0, delay=1, timeout=20, debug=False):
@@ -61,7 +61,7 @@ _wait_img = wait_img
 
 
 # Procura e clica 'clicks' vezes com o botão 'button' na imagem 'img'
-# que atenda ao nivel de correspondencia 'conf'
+# que atenda ao nível de correspondência conf
 # Retorna True caso ache a img
 # Retorna False caso não ache a imagem ou exceda o 'timeout'
 def click_img(img, pasta='imgs', conf=1.0, delay=1, timeout=20, button='left', clicks=1):
@@ -90,7 +90,7 @@ def click_position_img(img, operacao, pixels_x=0, pixels_y=0, pasta='imgs', conf
 _click_position_img = click_position_img
 
 
-# Exibe caixa de texto pedindo pela compentencia informando o modelo 'printable'
+# Exibe caixa de texto pedindo pela competência informando o modelo 'printable'
 # e checa se a entrada satisfaz o modelo definido em 'strptime'
 # Retorna a competencia em string em caso de sucesso
 # Retorna false caso a caixa de texto seja fechada

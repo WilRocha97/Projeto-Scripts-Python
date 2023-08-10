@@ -6,16 +6,16 @@ from time import sleep
 from selenium_comum import exec_phantomjs
 from comum_comum import pfx_to_pem, _headers
 
-# variaveis globais
+# variáveis globais
 _allowed_urls = (
     'https://www.esocial.gov.br/portal/Home/Inicial?tipoEmpregador=EMPREGADOR_GERAL',
     'https://www.esocial.gov.br/portal/Home/Inicial?tipoEmpregador=EMPREGADOR_DOMESTICO_GERAL'
 )
 
 
-# Loga no site esocial com o certificado atraves de um webdriver, cria 
-# uma instancia de Session e passa os cookies do webdriver para a Session
-# Retorna uma instancia de session com os cookies em caso de sucesso
+# Loga no site esocial com o certificado através do webdriver, cria
+# uma instância de Session e passa os cookies do webdriver para a Session
+# Retorna uma instância de session com os cookies em caso de sucesso
 # Retorna uma mensagem de erro em caso de erro
 def new_session_esocial(cert, pwd, timeout=20, delay=1):
     url = 'https://login.esocial.gov.br'
@@ -96,7 +96,7 @@ def new_login_esocial(ni, session):
         return 'Erro Login - cadastrar dados empregador'
 
     if res.url == f'{url_base}/Empregador/PrimeiraAdesao':
-        return 'Erro Login - primeira adesao'
+        return 'Erro Login - primeira adesão'
 
     if res.url not in _allowed_urls:
         soup = BeautifulSoup(res.content, 'html.parser')

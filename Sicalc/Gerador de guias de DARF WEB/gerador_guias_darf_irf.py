@@ -109,7 +109,9 @@ def gerar(empresa, apuracao):
         try:
             time.sleep(1)
             p.hotkey('ctrl', 'c')
+            time.sleep(1)
             p.hotkey('ctrl', 'c')
+            time.sleep(1)
             vencimento = pyperclip.paste()
             break
         except:

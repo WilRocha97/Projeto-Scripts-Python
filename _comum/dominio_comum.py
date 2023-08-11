@@ -117,16 +117,14 @@ def verifica_empresa(cod):
     while erro == 'sim':
         try:
             p.click(1258,82)
-        
-            time.sleep(1)
-            p.hotkey('ctrl', 'c')
-            p.hotkey('ctrl', 'c')
-
+    
             while True:
                 try:
                     time.sleep(1)
                     p.hotkey('ctrl', 'c')
+                    time.sleep(1)
                     p.hotkey('ctrl', 'c')
+                    time.sleep(1)
                     cnpj_codigo = pyperclip.paste()
                     break
                 except:

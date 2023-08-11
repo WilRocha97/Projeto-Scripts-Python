@@ -1,7 +1,6 @@
 # Arquivos
 msedgedriver.exe
 win32-phantomjs.exe
-chromedriver.exe
 phantomjs.exe
 Verifica Site.exe
 
@@ -63,8 +62,4 @@ OLD/
 recalculo sefip individual/
 Caixa/
 Caixa/Extratos FGTS/
-Desconecta Usuários v1.5/
-Desconecta Usuários v1.4/
-Desconecta Usuários v1.3/
-Desconecta Usuários v1.2/
-Desconecta Usuários v1.1/
+_comum/Chrome driver/

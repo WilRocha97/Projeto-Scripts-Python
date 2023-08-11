@@ -57,8 +57,8 @@ def arquivo_destda(empresa, periodo, andamento):
     
     while not _find_img('perfil_contribuinte.png', conf=0.9):
         time.sleep(1)
-        """if _find_img('CadastroVazio.png', conf=0.95):
-            p.press('enter')"""
+        if _find_img('cadastro_vazio.png', conf=0.95):
+            p.press('enter')
     
     if _find_img('selecionar_dados.png', conf=0.95):
         _click_img('selecionar_dados.png', conf=0.95)

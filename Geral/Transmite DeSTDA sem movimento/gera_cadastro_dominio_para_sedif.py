@@ -13,11 +13,10 @@ from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir,
 def arquivo_destda(empresa, periodo, andamento):
     cod, cnpj_limpo, nome = empresa
     _wait_img('relatorios.png', conf=0.9, timeout=-1)
-    # Relatóriosm
+    # Relatórios
     p.hotkey('alt', 'r')
     time.sleep(0.5)
-    # Informativosd
-    
+    # Informativo
     p.press('n')
     # Federais
     time.sleep(0.5)

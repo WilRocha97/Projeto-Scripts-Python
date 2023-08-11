@@ -223,6 +223,8 @@ def verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias):
     
         with fitz.open(arq) as pdf:
             # Para cada página do pdf
+            situacao_1 = ''
+            situacao_2 = ''
             for count, page in enumerate(pdf):
                 # Pega o texto da pagina
                 textinho = page.get_text('text', flags=1 + 2 + 8)

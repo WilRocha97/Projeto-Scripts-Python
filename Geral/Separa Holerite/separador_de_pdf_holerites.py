@@ -59,6 +59,7 @@ def separa():
         with fitz.open(file) as pdf:
             # Definir os padrões de regex
             padraozinho_nome = re.compile(r'(.+)\nBanco:')
+            padraozinho_nome_2 = re.compile(r'(.+)\nPIS:')
             prevpagina = 0
             paginas = 0
             
@@ -68,11 +69,10 @@ def separa():
                 try:
                     # Pega o texto da pagina
                     textinho = page.get_text('text', flags=1 + 2 + 8)
-                    # Procura o nome da empresa no texto do pdf
                     
-                    print(textinho)
-                    
-                    matchzinho_nome = padraozinho_nome.search(textinho)
+                    # Procura o nome do funcionario
+                    matchzinho_nome = padraozinho_nome_2.search(textinho)
+
                     if not matchzinho_nome:
                         prevpagina = page.number
                         continue

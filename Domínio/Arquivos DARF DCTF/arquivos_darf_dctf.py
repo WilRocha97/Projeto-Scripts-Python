@@ -195,7 +195,7 @@ def run():
     _abrir_modulo('escrita_fiscal')
     
     for count, empresa in enumerate(empresas[index:], start=1):
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
         resultado = ''
         while resultado != 'ok':
             if not _login(empresa, andamentos):

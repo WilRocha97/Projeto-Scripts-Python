@@ -166,9 +166,9 @@ def verifica_dados(cpf, nome, cod_empresa, cod_empregado, pis, data_nasc):
 def run():
     # opções para fazer com que o chrome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--window-size=1366,768')
-    # options.add_argument("--start-maximized")
+    # options.add_argument('--headless')
+    # options.add_argument('--window-size=1366,768')
+    options.add_argument("--start-maximized")
 
     # abrir a planilha de dados
     empresas = _open_lista_dados()

@@ -102,7 +102,10 @@ def arquivo_destda(empresa, periodo, andamento):
     while not _find_img('final_da_exportacao.png', conf=0.9):
         time.sleep(1)
         
-        """if _find_img('NaoExisteVigencia.png', conf=0.95):
+        if _find_img('proseguir.png', conf=0.95):
+            p.press('enter')
+            
+        if _find_img('nao_existe_vigencia.png', conf=0.95):
             p.press('enter')
             time.sleep(0.5)
             p.press('enter')
@@ -111,7 +114,7 @@ def arquivo_destda(empresa, periodo, andamento):
             _escreve_relatorio_csv(';'.join([cod, cnpj_limpo, nome, 'Não existe vigência no período do arquivo']),
                                    nome=andamento)
             print('❌ Não existe vigência no período do arquivo')
-            return False"""
+            return False
         
         if _find_img('saldo_nao_calculado.png', conf=0.95):
             p.press('enter')

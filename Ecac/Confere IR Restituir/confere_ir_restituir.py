@@ -81,10 +81,30 @@ def abre_irpf_atual():
     # clica no botão do Meu IRPF do ECAC
     _click_position_img('meu_irpf_ecac.png', '+', pixels_y=92, conf=0.9)
     
+    timer = 0
     # aguarda a tela do Meu IRPF
     print('>>> Aguardando ECAC')
     while not _find_img('irpf_atual.png', conf=0.9):
         time.sleep(1)
+        # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
+        if timer > 10:
+            if _find_img('erro_sistema.png', conf=0.9) \
+                    or _find_img('erro_sistema_2.png', conf=0.9) \
+                    or _find_img('erro_sistema_3.png', conf=0.9) \
+                    or _find_img('erro_sistema_4.png', conf=0.9) \
+                    or _find_img('erro_sistema_6.png', conf=0.9) \
+                    or _find_img('erro_sistema_8.png', conf=0.9):
+                print('>>> Erro no ECAC, tentando novamente')
+                p.hotkey('ctrl', 'w')
+                time.sleep(1)
+                p.press('f5')
+                time.sleep(2)
+                
+                while not _find_img('cnd_ecac.png', conf=0.9):
+                    time.sleep(1)
+                
+                _click_position_img('meu_irpf_ecac.png', '+', pixels_y=92, conf=0.9)
+                timer = 0
 
     time.sleep(2)
     # clica para abrir a tela do relatório
@@ -92,40 +112,44 @@ def abre_irpf_atual():
     _click_img('irpf_atual.png', conf=0.9)
     
     # aguarda a tela referênte ao IRPF atual
-    while not _find_img('processada.png', conf=0.9):
+    while not _find_img('exercicio.png', conf=0.9):
         time.sleep(1)
-
-    return 'ok'
 
 
 def confere_restituir(cpf, nome, pasta_restituir, pasta_pagar):
+    time.sleep(1)
     print('>>> Verificando se existe restituição')
+    pendencias = ''
+    if _find_img('pendencias.png', conf=0.9):
+        pendencias = 'Com Pendências'
+    
+    if _find_img('nao_entregue.png', conf=0.9):
+        print('❌ Não consta entrega de declaração para este ano.')
+        return 'Não consta entrega de declaração para este ano.;' + pendencias
+        
+    # sem saldo de imposto
+    if _find_img('sem_saldo.png', conf=0.9):
+        p.hotkey('ctrl', 'w')
+        print('✔ Sem saldo de imposto')
+        return 'Sem saldo de imposto;' + pendencias
     
     # imposto a restituir
     if _find_img('restituir.png', conf=0.9):
         salvar_pdf(f'{cpf} - {nome} - Imposto a Restituir', pasta_restituir)
-        
         valor = copia_valor()
         
         p.hotkey('ctrl', 'w')
         print('✔ Imposto a restituir')
-        return f'Imposto a restituir;{valor}'
-    
-    # sem saldo de imposto
-    elif _find_img('sem_saldo.png', conf=0.9):
-        p.hotkey('ctrl', 'w')
-        print('✔ Sem saldo de imposto')
-        return 'Sem saldo de imposto'
+        return f'Imposto a restituir;{valor};' + pendencias
     
     # imposto a pagar
-    else:
+    if _find_img('pagar.png', conf=0.9):
         '''salvar_pdf(f'{cpf} - {nome} - Imposto a Pagar', pasta_pagar)'''
-        
         valor = copia_valor()
         
         p.hotkey('ctrl', 'w')
         print('❗ Imposto a pagar')
-        return f'Imposto a pagar;{valor}'
+        return f'Imposto a pagar;{valor};' + pendencias
 
 
 def salvar_pdf(arquivo, pasta_final):

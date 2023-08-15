@@ -187,15 +187,14 @@ def salvar_pdf(pasta_final):
     time.sleep(1)
     p.press('enter')
     time.sleep(1)
-
-    erro = 'sim'
-    while erro == 'sim':
+    
+    while True:
         try:
             pyperclip.copy(pasta_final)
             p.hotkey('ctrl', 'v')
-            erro = 'não'
+            break
         except:
-            erro = 'sim'
+            pass
 
     time.sleep(1)
     p.press('enter')

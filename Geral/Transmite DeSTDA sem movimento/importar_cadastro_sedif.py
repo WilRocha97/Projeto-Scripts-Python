@@ -12,19 +12,16 @@ from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir,
 
 def importar(empresa):
     empresa = empresa[0]
-    _wait_img('SEDIF.png', conf=0.9, timeout=-1)
+    _wait_img('sedif.png', conf=0.9, timeout=-1)
     time.sleep(1)
     p.hotkey('alt', 'i')
     p.hotkey('alt', 'i')
     
-    _wait_img('ImportarArquivo.png', conf=0.9, timeout=-1)
+    _wait_img('abrir.png', conf=0.9, timeout=-1)
     time.sleep(1)
+    _click_img('abrir.png', conf=0.9, clicks=2)
     
-    _click_img('ImportarArquivo.png', conf=0.9)
-    
-    _click_img('Abrir.png', conf=0.9, clicks=2)
-    
-    _wait_img('AbrirArquivo.png', conf=0.9, timeout=-1)
+    _wait_img('abrir_arquivo_sedif.png', conf=0.9, timeout=-1)
     
     p.write(empresa)
     p.press('enter')
@@ -33,24 +30,24 @@ def importar(empresa):
     
     p.hotkey('alt', 'i')
     
-    while not _find_img('Importado.png', conf=0.9):
-        if _find_img('JaExiste.png', conf=0.9):
+    while not _find_img('importado.png', conf=0.9):
+        if _find_img('ja_importado.png', conf=0.9):
             _escreve_relatorio_csv(f'{empresa};Já importado', 'Importação SEDIF')
             print('❗ Arquivo já importado')
             p.hotkey('alt', 'n')
             time.sleep(2)
-            if _find_img('Atencao.png', conf=0.9):
+            if _find_img('atencao.png', conf=0.9):
                 p.press('enter')
-            _wait_img('Importado.png', conf=0.9, timeout=-1)
+            _wait_img('importado.png', conf=0.9, timeout=-1)
             p.press('enter')
             return False
         
-        if _find_img('ErroNoArquivo.png', conf=0.9):
+        if _find_img('erro_no_arquivo.png', conf=0.9):
             _escreve_relatorio_csv(f'{empresa};Arquivo com erros', 'Importação SEDIF')
             print('❌ Arquivo com erros')
             p.press('enter')
             time.sleep(2)
-            if _find_img('ErroValidacao.png', conf=0.9):
+            if _find_img('detalhe_erro.png', conf=0.9):
                 p.hotkey('alt', 'f')
             return False
     

@@ -82,16 +82,20 @@ def abre_irpf_atual():
     _click_position_img('meu_irpf_ecac.png', '+', pixels_y=92, conf=0.9)
     
     timer = 0
+    tentativas = 0
     # aguarda a tela do Meu IRPF
     print('>>> Aguardando ECAC')
     while not _find_img('irpf_atual.png', conf=0.9):
         time.sleep(1)
+        timer += 1
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
         if timer > 10:
-            if _find_img('erro_sistema.png', conf=0.9) \
+            tentativas += 1
+            if _find_img('erro_sistema.png', conf=0.85) \
                     or _find_img('erro_sistema_2.png', conf=0.9) \
                     or _find_img('erro_sistema_3.png', conf=0.9) \
                     or _find_img('erro_sistema_4.png', conf=0.9) \
+                    or _find_img('erro_sistema_5.png', conf=0.9) \
                     or _find_img('erro_sistema_6.png', conf=0.9) \
                     or _find_img('erro_sistema_8.png', conf=0.9):
                 print('>>> Erro no ECAC, tentando novamente')
@@ -100,11 +104,14 @@ def abre_irpf_atual():
                 p.press('f5')
                 time.sleep(2)
                 
-                while not _find_img('cnd_ecac.png', conf=0.9):
+                while not _find_img('meu_irpf_ecac.png', conf=0.9):
                     time.sleep(1)
                 
                 _click_position_img('meu_irpf_ecac.png', '+', pixels_y=92, conf=0.9)
                 timer = 0
+                
+                if tentativas >= 5:
+                    return 'Não é possível acessar o ECAC, sistema demorou muito pra responder'
 
     time.sleep(2)
     # clica para abrir a tela do relatório
@@ -114,14 +121,18 @@ def abre_irpf_atual():
     # aguarda a tela referênte ao IRPF atual
     while not _find_img('exercicio.png', conf=0.9):
         time.sleep(1)
+    
+    return 'ok'
 
 
 def confere_restituir(cpf, nome, pasta_restituir, pasta_pagar):
     time.sleep(1)
     print('>>> Verificando se existe restituição')
     pendencias = ''
+    pendencias_pdf = ''
     if _find_img('pendencias.png', conf=0.9):
         pendencias = 'Com Pendências'
+        pendencias_pdf = ' - Com Pendências'
     
     if _find_img('nao_entregue.png', conf=0.9):
         print('❌ Não consta entrega de declaração para este ano.')
@@ -135,7 +146,7 @@ def confere_restituir(cpf, nome, pasta_restituir, pasta_pagar):
     
     # imposto a restituir
     if _find_img('restituir.png', conf=0.9):
-        salvar_pdf(f'{cpf} - {nome} - Imposto a Restituir', pasta_restituir)
+        salvar_pdf(f'{cpf} - {nome} - Imposto a Restituir{pendencias_pdf}', pasta_restituir)
         valor = copia_valor()
         
         p.hotkey('ctrl', 'w')
@@ -144,7 +155,7 @@ def confere_restituir(cpf, nome, pasta_restituir, pasta_pagar):
     
     # imposto a pagar
     if _find_img('pagar.png', conf=0.9):
-        '''salvar_pdf(f'{cpf} - {nome} - Imposto a Pagar', pasta_pagar)'''
+        '''salvar_pdf(f'{cpf} - {nome} - Imposto a Restituir{pendencias_pdf}', pasta_pagar)'''
         valor = copia_valor()
         
         p.hotkey('ctrl', 'w')
@@ -178,7 +189,15 @@ def salvar_pdf(arquivo, pasta_final):
     
     time.sleep(1)
     os.makedirs(pasta_final, exist_ok=True)
-    p.write(arquivo)
+    
+    while True:
+        try:
+            pyperclip.copy(arquivo)
+            p.hotkey('ctrl', 'v')
+            break
+        except:
+            pass
+    
     time.sleep(1)
     # Selecionar local
     p.press('tab', presses=6)
@@ -244,7 +263,9 @@ def run():
         print('>>> Abrindo o site do Conferir')
         resultado = busca_cpf(cpf)
         if resultado == 'ok':
-            abre_irpf_atual()
+            resultado = abre_irpf_atual()
+        
+        if resultado == 'ok':
             situacao = confere_restituir(cpf, nome, pasta_restituir, pasta_pagar)
         else:
             situacao = ''

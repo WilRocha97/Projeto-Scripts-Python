@@ -137,7 +137,11 @@ def confere_restituir(cpf, nome, pasta_restituir, pasta_pagar):
     if _find_img('nao_entregue.png', conf=0.9):
         print('❌ Não consta entrega de declaração para este ano.')
         return 'Não consta entrega de declaração para este ano.;' + pendencias
-        
+    
+    if _find_img('declaracao_omissa.png', conf=0.9):
+        print('❌❗ Omisso. Contribuinte obrigado à entrega de Declaração IRPF.')
+        return 'Omisso. Contribuinte obrigado à entrega de Declaração IRPF.;' + pendencias
+    
     # sem saldo de imposto
     if _find_img('sem_saldo.png', conf=0.9):
         p.hotkey('ctrl', 'w')

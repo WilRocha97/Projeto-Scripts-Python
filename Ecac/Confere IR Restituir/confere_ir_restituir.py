@@ -97,6 +97,7 @@ def abre_irpf_atual():
                     or _find_img('erro_sistema_4.png', conf=0.9) \
                     or _find_img('erro_sistema_5.png', conf=0.9) \
                     or _find_img('erro_sistema_6.png', conf=0.9) \
+                    or _find_img('erro_sistema_7.png', conf=0.9) \
                     or _find_img('erro_sistema_8.png', conf=0.9):
                 print('>>> Erro no ECAC, tentando novamente')
                 p.hotkey('ctrl', 'w')
@@ -127,44 +128,49 @@ def abre_irpf_atual():
 
 def confere_restituir(cpf, nome, pasta_restituir, pasta_pagar):
     time.sleep(1)
-    print('>>> Verificando se existe restituição')
-    pendencias = ''
-    pendencias_pdf = ''
-    if _find_img('pendencias.png', conf=0.9):
-        pendencias = 'Com Pendências'
-        pendencias_pdf = ' - Com Pendências'
-    
-    if _find_img('nao_entregue.png', conf=0.9):
-        print('❌ Não consta entrega de declaração para este ano.')
-        return 'Não consta entrega de declaração para este ano.;' + pendencias
-    
-    if _find_img('declaracao_omissa.png', conf=0.9):
-        print('❌❗ Omisso. Contribuinte obrigado à entrega de Declaração IRPF.')
-        return 'Omisso. Contribuinte obrigado à entrega de Declaração IRPF.;' + pendencias
-    
-    # sem saldo de imposto
-    if _find_img('sem_saldo.png', conf=0.9):
-        p.hotkey('ctrl', 'w')
-        print('✔ Sem saldo de imposto')
-        return 'Sem saldo de imposto;' + pendencias
-    
-    # imposto a restituir
-    if _find_img('restituir.png', conf=0.9):
-        salvar_pdf(f'{cpf} - {nome} - Imposto a Restituir{pendencias_pdf}', pasta_restituir)
-        valor = copia_valor()
+    while True:
+        print('>>> Verificando se existe restituição')
+        pendencias = ''
+        pendencias_pdf = ''
+        if _find_img('pendencias.png', conf=0.9):
+            pendencias = 'Com Pendências'
+            pendencias_pdf = ' - Com Pendências'
         
-        p.hotkey('ctrl', 'w')
-        print('✔ Imposto a restituir')
-        return f'Imposto a restituir;{valor};' + pendencias
-    
-    # imposto a pagar
-    if _find_img('pagar.png', conf=0.9):
-        '''salvar_pdf(f'{cpf} - {nome} - Imposto a Restituir{pendencias_pdf}', pasta_pagar)'''
-        valor = copia_valor()
+        if _find_img('dependente.png', conf=0.9):
+            print('❗ Contribuinte consta como dependente em outra declaração.')
+            return 'Contribuinte consta como dependente em outra declaração.;' + pendencias
         
-        p.hotkey('ctrl', 'w')
-        print('❗ Imposto a pagar')
-        return f'Imposto a pagar;{valor};' + pendencias
+        if _find_img('nao_entregue.png', conf=0.9):
+            print('❌ Não consta entrega de declaração para este ano.')
+            return 'Não consta entrega de declaração para este ano.;' + pendencias
+        
+        if _find_img('declaracao_omissa.png', conf=0.9):
+            print('❌❗ Omisso. Contribuinte obrigado à entrega de Declaração IRPF.')
+            return 'Omisso. Contribuinte obrigado à entrega de Declaração IRPF.;' + pendencias
+        
+        # sem saldo de imposto
+        if _find_img('sem_saldo.png', conf=0.9):
+            p.hotkey('ctrl', 'w')
+            print('✔ Sem saldo de imposto')
+            return 'Sem saldo de imposto;' + pendencias
+        
+        # imposto a restituir
+        if _find_img('restituir.png', conf=0.9):
+            salvar_pdf(f'{cpf} - {nome} - Imposto a Restituir{pendencias_pdf}', pasta_restituir)
+            valor = copia_valor()
+            
+            p.hotkey('ctrl', 'w')
+            print('✔ Imposto a restituir')
+            return f'Imposto a restituir;{valor};' + pendencias
+        
+        # imposto a pagar
+        if _find_img('pagar.png', conf=0.9):
+            '''salvar_pdf(f'{cpf} - {nome} - Imposto a Restituir{pendencias_pdf}', pasta_pagar)'''
+            valor = copia_valor()
+            
+            p.hotkey('ctrl', 'w')
+            print('❗ Imposto a pagar')
+            return f'Imposto a pagar;{valor};' + pendencias
 
 
 def salvar_pdf(arquivo, pasta_final):

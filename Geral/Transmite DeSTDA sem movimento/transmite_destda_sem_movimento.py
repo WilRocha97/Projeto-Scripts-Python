@@ -74,7 +74,7 @@ def configura(empresa, comp):
     p.write(comp)
     p.hotkey('alt', 'p')
     
-    while not p.locateOnScreen(os.path.join('imgs', 'escrituracao.png')):
+    while not _find_img('escrituracao.png', conf=0.99):
         time.sleep(1)
     p.write('DeSTDA')
     p.press('tab', presses=2)

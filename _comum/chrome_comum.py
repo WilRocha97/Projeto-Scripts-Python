@@ -162,7 +162,9 @@ def abrir_chrome(url):
     p.hotkey('alt', 'space', 'x')
     p.click(1000, 51)
     time.sleep(1)
-    p.write(url.lower())
+    p.write(url)
+    time.sleep(1)
+    p.press('delete')
     time.sleep(1)
     p.press('enter')
 _abrir_chrome = abrir_chrome

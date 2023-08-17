@@ -276,7 +276,7 @@ def run():
         _indice(count, total_empresas, empresa, index)
         cpf, nome = empresa
         
-        _abrir_chrome('https://portal.conferironline.com.br/dashboard')
+        _abrir_chrome('https://portal.conferironline.com.br')
         print('>>> Abrindo o site do Conferir')
         resultado = busca_cpf(cpf)
         if resultado == 'ok':

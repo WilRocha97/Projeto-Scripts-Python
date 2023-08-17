@@ -151,10 +151,15 @@ def abrir_chrome(url):
         os.startfile(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
         while not _find_img('google.png', conf=0.9):
             time.sleep(1)
+            if _find_img('restaurar_pagina.png', conf=0.9):
+                _click_img('restaurar_pagina.png', conf=0.9)
+            time.sleep(1)
+            p.press('esc')
+            time.sleep(1)
             p.moveTo(1163, 377)
             p.click()
 
-    _click_img('maxi.png', conf=0.9, timeout=1)
+    p.hotkey('alt', 'space', 'x')
     p.click(1000, 51)
     time.sleep(1)
     p.write(url.lower())

@@ -39,7 +39,14 @@ def busca_cpf(cpf):
             login_conferir()
         time.sleep(1)
     
+    time.sleep(1)
     print('>>> Buscando CPF')
+    
+    if _find_img('tela_login.png', conf=0.9):
+        login_conferir()
+        while not _find_img('barra_de_pesquisa.png', conf=0.9):
+            time.sleep(1)
+    time.sleep(1)
     # clica na barra de pesquisa
     _click_img('barra_de_pesquisa.png', conf=0.9)
     time.sleep(1)

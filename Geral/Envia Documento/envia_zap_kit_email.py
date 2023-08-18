@@ -151,6 +151,8 @@ def verifica_o_numero(cnpj):
 
 def envia(numero, titulo, vencimento, link_mensagem):
     print('>>> Enviando mensagem')
+    if numero == 'numero':
+        return 'erro'
     try:
         pywhatkit.sendwhatmsg_instantly('+55' + numero, f"Olá!\n"
                                                         f"{titulo}\n"

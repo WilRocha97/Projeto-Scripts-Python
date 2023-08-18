@@ -34,10 +34,17 @@ def login_conferir():
 def busca_cpf(cpf):
     print('>>> Aguardando o site Conferir')
     # aguarda barra de pesquisa
+    timer = 0
     while not _find_img('barra_de_pesquisa.png', conf=0.9):
         if _find_img('tela_login.png', conf=0.9):
             login_conferir()
         time.sleep(1)
+        timer += 1
+        if timer > 10:
+            print('>>> Abrindo o site do Conferir')
+            _abrir_chrome('https://portal.conferironline.com.br')
+            print('>>> Aguardando o site Conferir')
+            timer = 0
     
     time.sleep(1)
     print('>>> Buscando CPF')
@@ -210,6 +217,9 @@ def salvar_pdf(arquivo, pasta_final):
     while True:
         try:
             pyperclip.copy(arquivo)
+            time.sleep(1)
+            pyperclip.copy(arquivo)
+            time.sleep(1)
             p.hotkey('ctrl', 'v')
             break
         except:
@@ -276,8 +286,9 @@ def run():
         _indice(count, total_empresas, empresa, index)
         cpf, nome = empresa
         
-        _abrir_chrome('https://portal.conferironline.com.br')
         print('>>> Abrindo o site do Conferir')
+        _abrir_chrome('https://portal.conferironline.com.br')
+        
         resultado = busca_cpf(cpf)
         if resultado == 'ok':
             resultado = abre_irpf_atual()

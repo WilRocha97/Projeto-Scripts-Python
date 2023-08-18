@@ -166,7 +166,7 @@ def confere_restituir(cpf, nome, pasta_restituir, pasta_pagar):
         if _find_img('sem_saldo.png', conf=0.9):
             p.hotkey('ctrl', 'w')
             print('✔ Sem saldo de imposto')
-            return 'Sem saldo de imposto;' + pendencias
+            return 'Sem saldo de imposto;0,0;' + pendencias
         
         # imposto a restituir
         if _find_img('restituir.png', conf=0.9):

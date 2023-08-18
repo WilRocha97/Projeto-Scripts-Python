@@ -156,9 +156,9 @@ def abrir_chrome(url):
             time.sleep(1)
             p.press('esc')
             time.sleep(1)
-            p.moveTo(1163, 377)
-            p.click()
-
+            p.hotkey('alt', 'space', 'x')
+            time.sleep(1)
+    
     p.hotkey('alt', 'space', 'x')
     p.click(1000, 51)
     time.sleep(1)

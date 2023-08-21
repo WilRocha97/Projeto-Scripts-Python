@@ -1,5 +1,6 @@
 # Arquivos
 msedgedriver.exe
+chromedriver.exe
 win32-phantomjs.exe
 phantomjs.exe
 Verifica Site.exe
@@ -62,4 +63,3 @@ OLD/
 recalculo sefip individual/
 Caixa/
 Caixa/Extratos FGTS/
-_comum/Chrome driver/chromedriver.exe

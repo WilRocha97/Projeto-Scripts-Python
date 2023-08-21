@@ -87,7 +87,7 @@ def busca_cpf(cpf):
             return 'Os serviços só estão disponíveis caso o login esteja válido! Verifique na aba ECAC o login e senha por favor.'
         time.sleep(1)
     
-    return 'ok'
+    return 'OK'
 
 
 def abre_irpf_atual():
@@ -137,7 +137,7 @@ def abre_irpf_atual():
     while not _find_img('exercicio.png', conf=0.9):
         time.sleep(1)
     
-    return 'ok'
+    return 'OK'
 
 
 def confere_restituir(cpf, nome, pasta_restituir, pasta_pagar):
@@ -290,10 +290,10 @@ def run():
         _abrir_chrome('https://portal.conferironline.com.br')
         
         resultado = busca_cpf(cpf)
-        if resultado == 'ok':
+        if resultado == 'OK':
             resultado = abre_irpf_atual()
         
-        if resultado == 'ok':
+        if resultado == 'OK':
             situacao = confere_restituir(cpf, nome, pasta_restituir, pasta_pagar)
         else:
             situacao = ''

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 import pyperclip, time, os, pyautogui as p
-from pyperclip import copy
-import os
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -46,15 +44,16 @@ def configura(empresa, comp):
     p.write(nome)
     time.sleep(5)
     
-    erro = 'sim'
-    while erro == 'sim':
+    while True:
         try:
             p.hotkey('ctrl', 'a')
+            time.sleep(0.5)
             p.hotkey('ctrl', 'c')
+            time.sleep(0.5)
             text = pyperclip.paste()
-            erro = 'não'
+            break
         except:
-            erro = 'sim'
+            pass
     print(text)
     
     if text != nome:
@@ -112,7 +111,7 @@ def excluir_documento():
     time.sleep(1)
     p.hotkey('alt', 's')
     
-    # espera exlcuir o arquivo
+    # espera excluir o arquivo
     _wait_img('arquivo_excluido.png', conf=0.9, timeout=-1)
     time.sleep(1)
     p.press('enter')
@@ -185,7 +184,7 @@ def transmitir(empresa, comp):
     
     p.hotkey('alt', 't')
     
-    # iniciar trasnmissão do arquivo
+    # iniciar transmissão do arquivo
     _wait_img('transmissao.png', conf=0.9, timeout=-1)
     time.sleep(1)
     p.hotkey('alt', 'i')
@@ -200,7 +199,7 @@ def transmitir(empresa, comp):
     p.write('f7j54kymq4')
     _click_img('ok.png', conf=0.9)
     
-    excessoes = [('cpf_do_responsavel_invalido.png', 'CPF do responsável inválido'),
+    excecoes = [('cpf_do_responsavel_invalido.png', 'CPF do responsável inválido'),
                  ('cnpj_informado_nao_confere.png', 'CNPJ informado não confere com o existente'),
                  ('usuario_nao_cadastrado.png', 'Usuário não cadastrado'),
                  ('arquivo_corrompido.png', 'Arquivo de configuração corrompido'),
@@ -208,15 +207,15 @@ def transmitir(empresa, comp):
     
     while not _find_img('processo_finalizado.png', conf=0.9):
         time.sleep(1)
-        for excessao in excessoes:
+        for excecao in excecoes:
             
-            if _find_img(excessao[0], conf=0.9):
-                if not excessao[1] == 'Erro no SEDIF':
-                    _escreve_relatorio_csv(f'{cnpj};{nome};{excessao[1]}', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
+            if _find_img(excecao[0], conf=0.9):
+                if not excecao[1] == 'Erro no SEDIF':
+                    _escreve_relatorio_csv(f'{cnpj};{nome};{excecao[1]}', nome=f'Transmite DeSTDA sem movimento {mes} - {ano}')
                 else:
                     p.press('enter')
                     
-                print(f'❌ {excessao[1]}')
+                print(f'❌ {excecao[1]}')
                 
                 p.hotkey('alt', 'f')
                 time.sleep(1)
@@ -225,7 +224,7 @@ def transmitir(empresa, comp):
                 p.press('f')
                 
                 excluir_documento()
-                return excessao[1]
+                return excecao[1]
 
     p.press('enter')
     
@@ -239,13 +238,17 @@ def transmitir(empresa, comp):
     
     _click_img('insere_nome.png', conf=0.9)
     _click_img('insere_nome_2.png', conf=0.9, timeout=2)
-
-    copy(f'Recibo de entrega SN - {mes}-{ano} - {cnpj}')
-    copy(f'Recibo de entrega SN - {mes}-{ano} - {cnpj}')
-    copy(f'Recibo de entrega SN - {mes}-{ano} - {cnpj}')
-    p.hotkey('ctrl', 'v')
+    
+    while True:
+        try:
+            pyperclip.copy(f'Recibo de entrega SN - {mes}-{ano} - {cnpj}')
+            time.sleep(1)
+            p.hotkey('ctrl', 'v')
+            break
+        except:
+            pass
     time.sleep(2)
-
+    
     # Selecionar local
     p.press('tab', presses=6)
     time.sleep(1)
@@ -253,7 +256,7 @@ def transmitir(empresa, comp):
     time.sleep(1)
     
     os.makedirs(r'V:\Setor Robô\Scripts Python\Geral\Transmite DeSTDA sem movimento\execução\Recibos', exist_ok=True)
-    copy('V:\Setor Robô\Scripts Python\Geral\Transmite DeSTDA sem movimento\execução\Recibos')
+    pyperclip.copy('V:\Setor Robô\Scripts Python\Geral\Transmite DeSTDA sem movimento\execução\Recibos')
     p.hotkey('ctrl', 'v')
     time.sleep(1)
     
@@ -278,7 +281,11 @@ def transmitir(empresa, comp):
     _click_img('transmissao.png', conf=0.9)
     time.sleep(2)
 
-    p.hotkey('alt', 'f', presses=3, interval=1)
+    p.hotkey('alt', 'f')
+    time.sleep(1)
+    p.hotkey('alt', 'f')
+    time.sleep(1)
+    p.hotkey('alt', 'f')
     time.sleep(1)
 
     _wait_img('tela_inicial.png', conf=0.9, timeout=-1)
@@ -308,7 +315,7 @@ def run():
     
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
         erro = 'sim'
         while erro == 'sim':
             reinstala_sedif()

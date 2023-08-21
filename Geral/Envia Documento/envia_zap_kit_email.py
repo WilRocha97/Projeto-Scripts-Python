@@ -65,6 +65,7 @@ def captura_link_email(driver):
     while not localiza_id(driver, 'messageViewFrame'):
         time.sleep(1)
     
+    time.sleep(1)
     titulo = re.compile(r'subject\">(.+)</div>').search(driver.page_source).group(1)
     titulo = titulo.replace('-&nbsp;', '- ').replace(' &nbsp;', ' ').replace('&nbsp; ', ' ').replace('&nbsp;', ' ').replace('&amp;', '&')
     

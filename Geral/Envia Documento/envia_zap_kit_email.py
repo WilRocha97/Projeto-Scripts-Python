@@ -245,91 +245,90 @@ def run():
         
         titulo = 'x'
         nao_envia = 'x'
-        # try:
-        driver, titulo, cnpj, cnpj_limpo, vencimento, link_mensagem = captura_link_email(driver)
-        
-        # determina o tempo de espera entre uma mensagem e outra para tentar evitar span
-        numero = random.randint(1, 10)
-        time.sleep(numero)
-        
-        if cnpj_limpo != 'x':
-            numero, nome = verifica_o_numero(cnpj_limpo)
-        else:
-            numero = False
-            nome = 'x'
-        
-        verifica_titulo = titulo.split('-')
-        
-        emails_diferentes = ['Desconsideração de e', 'Solicitação de documentos ', 'Documentos pendentes de visualização ']
-        for diferente in emails_diferentes:
-            if verifica_titulo[0] == diferente:
-                nao_envia = 'ok'
-                break
+        try:
+            driver, titulo, cnpj, cnpj_limpo, vencimento, link_mensagem = captura_link_email(driver)
+            
+            # determina o tempo de espera entre uma mensagem e outra para tentar evitar span
+            numero = random.randint(1, 10)
+            time.sleep(numero)
+            
+            if cnpj_limpo != 'x':
+                numero, nome = verifica_o_numero(cnpj_limpo)
             else:
-                dias = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15',
-                        '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']
-                for dia in dias:
-                    if verifica_titulo[0] == f'Tarefa Boleto sistema de Gestão vencimento dia {dia} concluída ':
-                        nao_envia = 'ok'
-                        break
-                    else:
-                        nao_envia = False
-                break
-                
-        titulo_sem_emoji = _remove_emojis(titulo)
-        
-        # se não tiver como enviar
-        if nao_envia:
-            time.sleep(1)
-            mover_email('nao_enviados')
-            _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo}', nome=nome_planilha, local=e_dir)
-            print(f'❗ {titulo}\n')
-        
-        # se não encontrar o número da planilha
-        elif not numero:
-            time.sleep(1)
-            mover_email('nao_enviados')
-            _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji};Número não encontrado', nome=nome_planilha + ' erros', local=e_dir)
-            print('❌ Número não encontrado\n')
-        
-        # se tiver como enviar e encontrar o número na planilha
-        else:
-            resultado = envia(numero, titulo, vencimento, link_mensagem)
-            # se der erro ao enviar
-            if resultado == 'erro':
+                numero = False
+                nome = 'x'
+            
+            verifica_titulo = titulo.split('-')
+            
+            emails_diferentes = ['Desconsideração de e', 'Solicitação de documentos ', 'Documentos pendentes de visualização ']
+            for diferente in emails_diferentes:
+                if verifica_titulo[0] == diferente:
+                    nao_envia = 'ok'
+                    break
+                else:
+                    dias = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15',
+                            '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31']
+                    for dia in dias:
+                        if verifica_titulo[0] == f'Tarefa Boleto sistema de Gestão vencimento dia {dia} concluída ':
+                            nao_envia = 'ok'
+                            break
+                        else:
+                            nao_envia = False
+                    break
+                    
+            titulo_sem_emoji = _remove_emojis(titulo)
+            
+            # se não tiver como enviar
+            if nao_envia:
                 time.sleep(1)
                 mover_email('nao_enviados')
-                try:
-                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo};Erro ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
-                except:
-                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};Erro ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
-                print('❌ Erro ao enviar a mensagem\n')
-            # se conseguir enviar
-            elif resultado == 'ok':
-                time.sleep(1)
-                mover_email('enviados')
-                _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};Mensagem enviada', nome=nome_planilha, local=e_dir)
-                print('✔ Mensagem enviada\n')
-            # se der algum erro específico ao enviar
-            else:
+                _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo}', nome=nome_planilha, local=e_dir)
+                print(f'❗ {titulo}\n')
+            
+            # se não encontrar o número da planilha
+            elif not numero:
                 time.sleep(1)
                 mover_email('nao_enviados')
-                try:
-                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo};{resultado}', nome=nome_planilha + ' erros', local=e_dir)
-                except:
-                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};{resultado}', nome=nome_planilha + ' erros', local=e_dir)
-                print(f'❌ {resultado}\n')
+                _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji};Número não encontrado', nome=nome_planilha + ' erros', local=e_dir)
+                print('❌ Número não encontrado\n')
+            
+            # se tiver como enviar e encontrar o número na planilha
+            else:
+                resultado = envia(numero, titulo, vencimento, link_mensagem)
+                # se der erro ao enviar
+                if resultado == 'erro':
+                    time.sleep(1)
+                    mover_email('nao_enviados')
+                    try:
+                        _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo};Erro ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
+                    except:
+                        _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};Erro ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
+                    print('❌ Erro ao enviar a mensagem\n')
+                # se conseguir enviar
+                elif resultado == 'ok':
+                    time.sleep(1)
+                    mover_email('enviados')
+                    _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};Mensagem enviada', nome=nome_planilha, local=e_dir)
+                    print('✔ Mensagem enviada\n')
+                # se der algum erro específico ao enviar
+                else:
+                    time.sleep(1)
+                    mover_email('nao_enviados')
+                    try:
+                        _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo};{resultado}', nome=nome_planilha + ' erros', local=e_dir)
+                    except:
+                        _escreve_relatorio_csv(f'{cnpj_limpo};{nome};{numero};{titulo_sem_emoji};{resultado}', nome=nome_planilha + ' erros', local=e_dir)
+                    print(f'❌ {resultado}\n')
         
         # se der erro em qualquer etapa
-        """except:
+        except:
             time.sleep(1)
             print(driver.page_source)
-            mover_email('nao_enviados')
             try:
                 _escreve_relatorio_csv(f'x;x;x;{titulo};Erro ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
             except:
                 _escreve_relatorio_csv(f'x;x;x;{titulo_sem_emoji};Erro ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
-            print('❌ Erro ao enviar a mensagem\n')"""
+            print('❌ Erro ao enviar a mensagem\n')
 
         driver.close()
         

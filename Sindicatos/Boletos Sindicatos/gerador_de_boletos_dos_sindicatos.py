@@ -36,7 +36,7 @@ def run():
             '11': guias_sinticom.run,            #ok
             '16': guias_sindeepres.run,
             '17': guias_sindesporte.run,
-            '19': '',
+            '19': guias_sinpospetro.run,
             '21': '',
             '22': guias_sincomerciarios.run,
             '23': '',
@@ -54,7 +54,7 @@ def run():
             '135': '',
             '148': guias_sinthoresca.run,
             '162': '',
-            '223': ''
+            '223': guias_sintracargas.run
         }
         
         # armazena o resultado retornado da função chamada através do dicionário

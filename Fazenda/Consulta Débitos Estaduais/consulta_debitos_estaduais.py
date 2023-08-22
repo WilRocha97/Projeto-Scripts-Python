@@ -174,7 +174,7 @@ def run():
         cnpj, usuario, senha, perfil = empresa
         
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
         
         # verifica se o usuario anterior é o mesmo para não fazer login de novo com o mesmo usuário
         if usuario_anterior != usuario:

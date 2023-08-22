@@ -25,9 +25,7 @@ def arquivo_destda(empresa, periodo, andamento):
     time.sleep(0.5)
     if not _find_img('destda_opcao.png', conf=0.95):
         p.press('esc', presses=5)
-        _escreve_relatorio_csv(';'.join([cod, cnpj_limpo, nome,
-                                         'Empresa não possuí opção de DeSTDA']),
-                               nome=andamento)
+        _escreve_relatorio_csv(';'.join([cod, cnpj_limpo, nome,'Empresa não possuí opção de DeSTDA']), nome=andamento)
         print('❗ Empresa não possuí opção de DeSTDA')
         return False
     p.press('d')
@@ -86,8 +84,7 @@ def arquivo_destda(empresa, periodo, andamento):
             p.hotkey('alt', 'n')
             time.sleep(2)
             p.press('esc', presses=5)
-            _escreve_relatorio_csv(';'.join([cod, cnpj_limpo, nome, 'Erro na competência']),
-                                   nome=andamento)
+            _escreve_relatorio_csv(';'.join([cod, cnpj_limpo, nome, 'Erro na competência']), nome=andamento)
             print('❌ Erro na competência')
             return False'''
     
@@ -111,8 +108,7 @@ def arquivo_destda(empresa, periodo, andamento):
             p.press('enter')
             time.sleep(1)
             p.press('esc')
-            _escreve_relatorio_csv(';'.join([cod, cnpj_limpo, nome, 'Não existe vigência no período do arquivo']),
-                                   nome=andamento)
+            _escreve_relatorio_csv(';'.join([cod, cnpj_limpo, nome, 'Não existe vigência no período do arquivo']), nome=andamento)
             print('❌ Não existe vigência no período do arquivo')
             return False
         
@@ -122,21 +118,19 @@ def arquivo_destda(empresa, periodo, andamento):
             p.press('enter')
             time.sleep(1)
             p.press('esc')
-            _escreve_relatorio_csv(';'.join([cod, cnpj_limpo, nome,
-                                             'Saldo de impostos não foi apurado no período selecionado']),
-                                   nome=andamento)
+            _escreve_relatorio_csv(';'.join([cod, cnpj_limpo, nome, 'Saldo de impostos não foi apurado no período selecionado']), nome=andamento)
             print('❌ Saldo de impostos não foi apurado no período selecionado')
             return False
         
-        """if _find_img('NaoExisteParametroVigencia.png', conf=0.95):
+        if _find_img('nao_eh_simples.png', conf=0.95):
             p.press('enter')
             time.sleep(0.5)
-            p.press('esc', presses=5)
-            _escreve_relatorio_csv(';'.join([cod, cnpj_limpo, nome,
-                                             'Não existe parametro cadastrado para a competência']),
-                                   nome=andamento)
-            print('❌ Não existe parametro cadastrado para a competência')
-            return False"""
+            p.press('enter')
+            time.sleep(0.5)
+            p.press('esc', presses=2)
+            _escreve_relatorio_csv(';'.join([cod, cnpj_limpo, nome, 'Empresa não é Simples Nacional no período']), nome=andamento)
+            print('❌ Empresa não é Simples Nacional no período')
+            return False
     
     p.press('enter')
     time.sleep(1)

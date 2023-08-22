@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
-import datetime
-import os
-
+import datetime, os, random, time, re, pywhatkit, pandas as pd, pyautogui as p
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from pathlib import Path
-import random, time, re, pywhatkit, pandas as pd, pyautogui as p
 
 from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers, _remove_emojis
-from chrome_comum import _initialize_chrome
+from chrome_comum import _initialize_chrome, _find_by_id
 from pyautogui_comum import _find_img, _click_img, _wait_img
 
 e_dir = Path('//vpsrv03/Arq_Robo/Envia WP por e-mail/Execução')
@@ -21,22 +18,6 @@ user = user.split('/')
 
 email = user[0]
 senha = user[1]
-
-
-def localiza_path(driver, elemento):
-    try:
-        driver.find_element(by=By.XPATH, value=elemento)
-        return True
-    except:
-        return False
-
-
-def localiza_id(driver, elemento):
-    try:
-        driver.find_element(by=By.ID, value=elemento)
-        return True
-    except:
-        return False
 
 
 def login_email(driver):
@@ -62,7 +43,7 @@ def login_email(driver):
 def captura_link_email(driver):
     print('>>> Capturando dados da mensagem')
     
-    while not localiza_id(driver, 'messageViewFrame'):
+    while not _find_by_id('messageViewFrame', driver):
         time.sleep(1)
     
     time.sleep(1)
@@ -188,7 +169,6 @@ def mover_email(pasta=''):
     time.sleep(0.5)
     _click_img('mover_email.png', conf=0.9, clicks=2)
     
-    clicou = False
     # aguarda a tela para selecionar e depois clica para abrir a lista de caixas
     _wait_img('tela_mover_email.png', conf=0.9)
     time.sleep(0.5)
@@ -226,7 +206,7 @@ def run():
         "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
     })
     
-    while 0 < 1:
+    while True:
         mes = datetime.datetime.now().month
         ano = datetime.datetime.now().year
         nome_planilha = f'Envia link {mes}-{ano}'

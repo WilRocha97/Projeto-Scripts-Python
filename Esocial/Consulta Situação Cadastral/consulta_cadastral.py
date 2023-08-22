@@ -13,26 +13,15 @@ from captcha_comum import _solve_text_captcha
 
 def login(driver, nome, cpf, pis, data_nasc):
     print('>>> Acessando site')
-    # abre o site da consulta e caso de erro é porque o site demorou pra responder, nesse caso retorna um erro para tentar novamente
-    try:
-        driver.get('http://consultacadastral.inss.gov.br/Esocial/pages/index.xhtml')
-    except:
-        return driver, 'erro'
-
     # aguarda o botão de habilitar a consultar aparecer
-    timer = 0
     while not _find_by_id('indexForm1:botaoConsultar', driver):
-        erro = re.compile(r'(There was no response from the application web server for the page you requested\.)').search(driver.page_source)
-        if erro:
-            print(f'❌ {erro.group(1)}')
+        # abre o site da consulta e caso de erro é porque o site demorou pra responder, nesse caso retorna um erro para tentar novamente
+        try:
+            driver.get('http://consultacadastral.inss.gov.br/Esocial/pages/index.xhtml')
+        except:
             return driver, 'erro'
-        
-        driver.get('http://consultacadastral.inss.gov.br/Esocial/pages/index.xhtml')
         time.sleep(1)
-        if timer > 120:
-            print(driver.page_source)
-            return driver, 'erro'
-
+        
     # clica para habilitar a consulta
     driver.find_element(by=By.ID, value='indexForm1:botaoConsultar').click()
 
@@ -192,7 +181,10 @@ def run():
         while 1 > 0:
             # iniciar o driver do chrome
             status, driver = _initialize_chrome(options)
-
+            
+            # coloca um timeout de 60 segundos para que o robô não fique esperando eternamente caso o site não carregue
+            driver.set_page_load_timeout(60)
+            
             driver, resultado = login(driver, nome, cpf, pis, data_nasc)
             if resultado != 'erro':
                 break

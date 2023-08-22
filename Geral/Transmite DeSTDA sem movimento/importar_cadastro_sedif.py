@@ -31,6 +31,10 @@ def importar(empresa):
     p.hotkey('alt', 'i')
     
     while not _find_img('importado.png', conf=0.9):
+        if _find_img('atualizar_dados.png', conf=0.9):
+            p.press('enter')
+            time.sleep(2)
+        
         if _find_img('ja_importado.png', conf=0.9):
             _escreve_relatorio_csv(f'{empresa};Já importado', 'Importação SEDIF')
             print('❗ Arquivo já importado')

@@ -178,7 +178,7 @@ def run():
         if not verifica_dados(cpf, nome, cod_empresa, cod_empregado, pis, data_nasc):
             continue
 
-        while 1 > 0:
+        while True:
             # iniciar o driver do chrome
             status, driver = _initialize_chrome(options)
             

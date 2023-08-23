@@ -48,6 +48,7 @@ def login(driver, nome, cpf, pis, data_nasc):
     driver.find_element(by=By.ID, value='formQualificacaoCadastral:btAdicionar').click()
     print('>>> Acessando cadastro')
     timer = 0
+    # espera a tabela com as infos do funcionário aparecer, se aparecer uma mensagem, pega o conteúdo dela e retorna
     while not _find_by_id('gridDadosTrabalhador', driver):
         erro = re.compile(r'\"mensagem\".+class=\"erro\">(.+)</li>').search(driver.page_source)
         if erro:
@@ -56,6 +57,7 @@ def login(driver, nome, cpf, pis, data_nasc):
         
         time.sleep(1)
         timer += 1
+        # se passar 60 segundos e não aparecer a tabela, retorna um erro
         if timer > 60:
             print('❌ O site demorou muito para responder, tentando novamente')
             return driver, 'erro'
@@ -68,10 +70,12 @@ def login(driver, nome, cpf, pis, data_nasc):
     while not _find_by_id('captcha_challenge', driver):
         time.sleep(1)
         timer += 1
+        # se passar 60 segundos e não carregar o site, retorna um erro
         if timer > 60:
             print('❌ O site demorou muito para responder, tentando novamente')
             return driver, 'erro'
-        
+    
+    # captura a imagem do captcha
     element = driver.find_element(by=By.ID, value='captcha_challenge')
     location = element.location
     size = element.size
@@ -87,6 +91,7 @@ def login(driver, nome, cpf, pis, data_nasc):
     im = im.crop((int(x), int(y), int(width), int(height)))
     im.save(r'ignore\captcha\captcha.png')
     time.sleep(1)
+    # manda a imagem para a api resolver o captcha
     captcha = _solve_text_captcha(os.path.join('ignore', 'captcha', 'captcha.png'))
 
     if not captcha:

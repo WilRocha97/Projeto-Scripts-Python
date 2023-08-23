@@ -4,7 +4,8 @@ from sys import path
 
 path.append(r'modulos')
 import guias_sinecol, guias_sitac, guias_metalcampinas, guias_sinticom, guias_sindeepres, guias_sindesporte, guias_sinpospetro, guias_sinsaude, \
-    guias_sincomerciarios, guias_sindvest_jundiai, guias_sindpd, guias_sidiesp, guias_sinthojur, guias_sinthoresp, guias_secsp, guias_seaac, guias_secriopreto, guias_sinthoresca
+    guias_sincomerciarios, guias_sindvest_jundiai, guias_sindpd, guias_sidiesp, guias_sinthojur, guias_sinthoresp, guias_secsp, guias_seaac, \
+    guias_secriopreto, guias_sinthoresca
 
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
@@ -21,7 +22,7 @@ def run():
     if index is None:
         return False
     
-    # para cada linha da lista executa
+    # para cada linha da lista procura a função correspondente ao sindicato
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         cod_sindicato, cnpj, valor_boleto, valor_recolhido, valor_remuneracao, data_referencia, usuario, senha, funcionarios, responsavel, email = empresa

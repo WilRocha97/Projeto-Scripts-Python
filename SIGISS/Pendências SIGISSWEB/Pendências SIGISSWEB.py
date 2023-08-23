@@ -7,7 +7,7 @@ import pyautogui as p
 import re, os
 
 sys.path.append(r'..\..\_comum')
-from comum_comum import _indice, _escreve_relatorio_csv, _time_execution, _open_lista_dados, _where_to_start, _indice
+from comum_comum import _indice, _escreve_relatorio_csv, _time_execution, _open_lista_dados, _where_to_start
 
 
 def consulta(empresas, index):

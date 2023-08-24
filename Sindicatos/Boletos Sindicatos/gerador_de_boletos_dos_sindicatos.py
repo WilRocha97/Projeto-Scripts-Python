@@ -6,7 +6,7 @@ path.append(r'modulos')
 import guias_sinecol, guias_sitac, guias_metalcampinas, guias_sinticom, guias_sindeepres, guias_sindesporte, guias_sinpospetro, guias_sinsaude, \
     guias_sincomerciarios, guias_sindquimicos, guias_sindvest_jundiai, guias_sindpd, guias_sindiesp, guias_sinthojur, guias_seectthjr, guias_sinthoresp, \
     guias_secsp, guias_sinditerceirizados, guias_sintracargas_70, guias_seaac, guias_secriopreto, guias_sindcomerciarios, guias_sinthoresca, \
-    guias_sintracargas
+    guias_sindcargas, guias_sintracargas
     
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
@@ -50,14 +50,13 @@ def run():
             '58': guias_sinthoresp.run,
             '65': guias_secsp.run,
             '69': guias_sinditerceirizados.run,
-            '70': guias_sintracargas_70.run,
             '100': guias_seaac.run,
             '131': guias_secriopreto.run,
             '133': guias_sindcomerciarios.run,
             '135': '',
             '148': guias_sinthoresca.run,
-            '162': '',
-            '223': guias_sintracargas.run
+            '162': guias_sindcargas.run,
+            '223': guias_sintracargas.run  #223 ou 70
         }
         
         # armazena o resultado retornado da função chamada através do dicionário

@@ -13,7 +13,7 @@ from pyautogui_comum import _find_img, _click_img, _wait_img
 
 def login(driver, cnpj, senha):
     # entra no site
-    driver.get('https://sintracargasjundiai.gersin.com.br/public/login')
+    driver.get('https://portal.afsys.com.br/sindcargascampinas/login?user=02310481000167')
     print('>>> Acessando o site')
     time.sleep(1)
 
@@ -32,7 +32,7 @@ def run(empresa):
     valor = empresa[2]
     senha = empresa[7]
     
-    print('70 - SINTRACARGAS - Sindicato dos Trabalhadores em Transportes de Cargas Secas & Molhadas e Setor Diferenciado de Jundiaí e Região')
+    print('162 - SINDCARGAS - Sindicato dos Trabalhadores em Empresas de Transportes Rodoviários de Cargas e Trabalhadores Motoristas e Ajudantes de Campinas e Região')
     options = webdriver.ChromeOptions()
     #options.add_argument('--headless')
     #options.add_argument('--window-size=1920,1080')

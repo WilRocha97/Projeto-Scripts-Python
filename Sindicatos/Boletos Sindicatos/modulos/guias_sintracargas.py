@@ -32,6 +32,7 @@ def run(empresa):
     valor = empresa[2]
     senha = empresa[7]
     
+    # 223 ou 70
     print('223 - SINTRACARGAS - Sindicato dos Trabalhadores em Transportes de Cargas Secas & Molhadas e Setor Diferenciado de Jundiaí e Região')
     options = webdriver.ChromeOptions()
     #options.add_argument('--headless')

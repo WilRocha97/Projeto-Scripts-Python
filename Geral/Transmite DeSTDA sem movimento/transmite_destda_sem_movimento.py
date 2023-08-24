@@ -191,6 +191,9 @@ def transmitir(empresa, comp):
     
     while not _find_img('identificacao.png', conf=0.9):
         time.sleep(1)
+        if _find_img('access_violation.png', conf=0.9):
+            p.press('enter')
+            
     _click_img('identificacao.png', conf=0.9)
 
     # usuário e senha do contribuinte para transmitir sedif sem movimento

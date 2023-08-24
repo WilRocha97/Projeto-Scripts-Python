@@ -5,7 +5,6 @@ from PIL import Image
 import os, time, re
 
 from sys import path
-
 path.append(r'..\..\_comum')
 from chrome_comum import _initialize_chrome, _send_input, _find_by_id
 from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header_csv, _open_lista_dados, _where_to_start, _indice
@@ -158,10 +157,9 @@ def run():
         cnpj, nome = empresa
         
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
         
-        resultado = False
-        while not resultado:
+        while True:
             status, driver = _initialize_chrome(options)
             
             # faz login na empresa
@@ -173,6 +171,7 @@ def run():
                     # pega as infos da empresa para preencher a planilha
                     driver, resultado = pega_info(cnpj, driver)
                 driver.quit()
+                break
             
     _escreve_header_csv(';'.join(['CNPJ', 'CONSULTA', 'IE', 'NOME', 'SITUAÇÃO CADASTRAL', 'DATA DA SITUAÇÃO', 'OCORRÊNCIA FISCAL', 'DATA DE INATIVIDADE', 'NATUREZA JURÍDICA',
                                   'REGIME DE APURAÇÃO', 'ATIVIDADE ECONÔMICA', 'POSTO FISCAL', 'CREDENCIAMENTO COMO EMISSOR DE NF-E', 'OBRIGATORIEDADE DE NF-E',

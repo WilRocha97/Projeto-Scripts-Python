@@ -52,7 +52,7 @@ def download_chrome(version):
     os.remove(latest_driver_zip)
 
 
-def initialize_chrome(options=None):
+def initialize_chrome(options=webdriver.ChromeOptions()):
     print('>>> Inicializando Chromedriver...')
 
     if not options:

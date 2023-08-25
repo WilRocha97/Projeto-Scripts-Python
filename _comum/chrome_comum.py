@@ -1,3 +1,4 @@
+import pyperclip
 from win32com import client
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -160,7 +161,9 @@ def abrir_chrome(url):
     p.hotkey('alt', 'space', 'x')
     p.click(1000, 51)
     time.sleep(1)
-    p.write(url)
+    pyperclip.copy(url)
+    time.sleep(1)
+    p.hotkey('ctrl', 'v')
     time.sleep(1)
     p.press('delete')
     time.sleep(1)

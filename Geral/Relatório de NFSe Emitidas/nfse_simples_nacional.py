@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from PIL import Image
 import os, time, re
 
 from sys import path

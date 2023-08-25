@@ -93,11 +93,15 @@ def run():
     if index is None:
         return False
     
+    # cria o indice para cada empresa da lista de dados
     total_empresas = empresas[index:]
+    
     for count, empresa in enumerate(empresas[index:], start=1):
-        _indice(count, total_empresas, empresa, index)
         cnpj, senha, nome = empresa
         nome = nome.replace('/', ' ')
+        
+        # printa o indice da empresa que está sendo executada
+        _indice(count, total_empresas, empresa, index)
         
         # faz login no SIGISSWEB
         execucao, documento, s = login(cnpj, senha)

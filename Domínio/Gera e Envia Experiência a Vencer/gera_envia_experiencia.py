@@ -168,12 +168,14 @@ def pega_empresas_com_exp():
     
                 # Guardar o nome da empresa
                 matchtexto_nome = matchzinho_nome.group(2)
-                # Guardar o código da empresa no DPCUCA
+                # Guardar o código da empresa
                 matchtexto_cod = matchzinho_nome.group(1)
-    
+                
+                # se a empresa for igual a anterior, pula para à próxima, pois ela já foi inserida
                 if matchtexto_nome == prevtexto_nome:
                     continue
-                    
+                
+                # coloca a empresa na planilha de dados e guarda a informação na variável para comparar com a próxima
                 escreve_dados(matchtexto_cod, matchtexto_nome)
                 prevtexto_nome = matchtexto_nome
             except:
@@ -200,17 +202,20 @@ def envia_experiencia(comp):
     time.sleep(0.5)
     p.press('enter')
     time.sleep(0.5)
-        
+    
+    # vai para o campo do nome do arquivo
     p.press('tab')
     time.sleep(1)
     
+    # pega o nome do arquivo com o clipboard para garantir que não irá faltar os caracteres com acento
     while True:
         try:
             clip.copy(f'Relação de Empregados - Contratos_Vencimento_Modelo_Veiga - {comp}')
             break
         except:
             pass
-        
+    
+    # cola o nome do arquivo
     time.sleep(0.5)
     p.hotkey('ctrl', 'v')
         
@@ -253,18 +258,21 @@ def run():
         index = _where_to_start(tuple(i[0] for i in empresas))
         if index is None:
             return False
-        
+    
+    # abre o Domínio Web e o módulo, no caso será o módulo Folha
     _login_web()
     _abrir_modulo('folha')
 
     # gera uma nova planilha e a seleciona
     if novo == 'Sim':
         index = 0
+        # a função de gerar o relatório, pode ser usada para gerar individualmente para cada empresa ou geral, por padrão ela gera o relatório geral
         gera_arquivo(comp, andamentos)
         empresas = pega_empresas_com_exp()
     
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
         _indice(count, total_empresas, empresa, index)
         
         resultado = ''

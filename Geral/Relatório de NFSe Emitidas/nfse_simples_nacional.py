@@ -18,27 +18,33 @@ def login(driver, usuario, senha):
         return driver, 'erro'
     time.sleep(1)
     
+    # insere o usuário e a senha no site
     _send_input('Inscricao', usuario, driver)
     _send_input('Senha', senha, driver)
     time.sleep(1)
     
+    # clica no botão para logar
     driver.find_element(by=By.XPATH, value='/html/body/section/div/div/div[2]/div[2]/div[1]/div/form/div[3]/button').click()
     time.sleep(1)
     return driver, 'ok'
+    
     
 def consulta_notas(cnpj, nome, driver):
     print('>>> Consultando notas emitidas')
     driver.get('https://www.nfse.gov.br/EmissorNacional/Notas/Emitidas')
     time.sleep(1)
     
+    # regex para pegar as infos das notas
     notas = re.compile(r'<td class=\"td-data\">\n\s+(\d\d/\d\d/\d\d\d\d)(\n.+){6}'
                       r'<span class=\"cnpj\">(\d\d\.\d\d\d\.\d\d\d/\d\d\d\d-\d\d)'
                       r'.+\n.+\n(.+)( ){20}</div>(\n.+){2}\s+(.+)(\n.+){2}\s+(.+)'
                       r'(\n.+){3}.+img/tb-(.+).svg.+(\n.+){2}data-original-title=\"(.+)\"').findall(driver.page_source)
     
+    # es não encontrar nenhuma nota, printa o código da página para análise
     if not notas:
         print(driver.page_source)
     
+    # para cada nota encontrada coloca as infos nas variáveis
     print('>>> Capturando dados das notas emitidas')
     for nota in notas:
         geracao = nota[0]
@@ -49,6 +55,7 @@ def consulta_notas(cnpj, nome, driver):
         impostos = nota[12]
         
         dados = f'{cnpj};{nome};{geracao};{emitida_para};{municipio};{valor};{situacao};{impostos}'
+        # escreve na planilha
         _escreve_relatorio_csv(dados)
         print(dados.replace(';', ' - '))
         
@@ -79,11 +86,15 @@ def run():
         # printa o indice da empresa que está sendo executada
         _indice(count, total_empresas, empresa, index)
         
+        # loop para tentar fazer login no site, só sai quando conseguir logar e realizar a consulta
         while True:
+            # inicia um chrome driver
             status, driver = _initialize_chrome(options)
             # coloca um timeout de 60 segundos para que o robô não fique esperando eternamente caso o site não carregue
             driver.set_page_load_timeout(15)
+            # faz login no site
             driver, situacao = login(driver, usuario, senha)
+            # se conseguir fazer login, realiza a consulta das notas emitidas, se não, fecha o driver e tenta de novo
             if situacao == 'ok':
                 driver = consulta_notas(cnpj, nome, driver)
                 break

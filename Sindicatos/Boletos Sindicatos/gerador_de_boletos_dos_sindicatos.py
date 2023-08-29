@@ -4,9 +4,9 @@ from sys import path
 
 path.append(r'modulos')
 import guias_sinecol, guias_sitac, guias_metalcampinas, guias_sinticom, guias_sindeepres, guias_sindesporte, guias_sinpospetro, guias_sinsaude, \
-    guias_sincomerciarios, guias_sindquimicos, guias_sindvest_jundiai, guias_sindpd, guias_sindiesp, guias_sinthojur, guias_seectthjr, guias_sinthoresp, \
-    guias_secsp, guias_sinditerceirizados, guias_sintracargas_70, guias_seaac, guias_secriopreto, guias_sindcomerciarios, guias_sinthoresca, \
-    guias_sindcargas, guias_sintracargas
+    guias_sincomerciariosj, guias_sindquimicos, guias_sindvest_jundiai, guias_sindpd, guias_sindiesp, guias_sinthojur, guias_seectthjr, guias_sinthoresp, \
+    guias_secsp, guias_sinditerceirizados, guias_sintracargas_70, guias_seaac, guias_secriopreto, guias_sindcomerciarios, guias_sincomerciariosr, \
+    guias_sinthoresca, guias_sindcargas, guias_sintracargas
     
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
@@ -40,7 +40,7 @@ def run():
             '17': guias_sindesporte.run,
             '19': guias_sinpospetro.run,
             '21': guias_sinsaude.run,
-            '22': guias_sincomerciarios.run,
+            '22': guias_sincomerciariosj.run,
             '23': guias_sindquimicos.run,
             '25': guias_sindvest_jundiai.run,
             '28': guias_sindpd.run,
@@ -53,18 +53,21 @@ def run():
             '100': guias_seaac.run,
             '131': guias_secriopreto.run,
             '133': guias_sindcomerciarios.run,
-            '135': '',
+            '135': guias_sincomerciariosr.run,
             '148': guias_sinthoresca.run,
             '162': guias_sindcargas.run,
             '223': guias_sintracargas.run  #223 ou 70
         }
         
         # armazena o resultado retornado da função chamada através do dicionário
+        # a função chamada recebe os dados da empresa como parametro
         resultado = sindicatos[str(cod_sindicato)](empresa)
-        resultado = resultado.replace(' - ', ';')
-        
-        _escreve_relatorio_csv(f'{cod_sindicato};{cnpj};{valor_boleto};{resultado[2:]}', nome='Boletos Sindicato')
         print(resultado)
+        
+        # formata o resultado para ser inserido na planilha
+        resultado = resultado.replace(' - ', ';')
+        _escreve_relatorio_csv(f'{cod_sindicato};{cnpj};{valor_boleto};{resultado[2:]}', nome='Boletos Sindicato')
+        
 
 
 if __name__ == '__main__':

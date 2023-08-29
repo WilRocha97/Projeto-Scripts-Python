@@ -32,7 +32,7 @@ def run(empresa):
     valor = empresa[2]
     senha = empresa[7]
     
-    print('22 - SINCOMERCIARIOS - Sindicato dos Empregados no Comércio de Jundiaí e Região')
+    print('22 - SINCOMERCIARIOSJ - Sindicato dos Empregados no Comércio de Jundiaí e Região')
     options = webdriver.ChromeOptions()
     #options.add_argument('--headless')
     #options.add_argument('--window-size=1920,1080')

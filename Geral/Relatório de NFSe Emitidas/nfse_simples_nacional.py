@@ -33,43 +33,46 @@ def consulta_notas(download_folder, final_folder, driver, cnpj, nome):
     print('>>> Consultando notas emitidas')
     driver.get('https://www.nfse.gov.br/EmissorNacional/Notas/Emitidas')
     time.sleep(1)
-    
+    # captura os links para entrar em cada nota da lista
     link_notas = re.compile(r'href=\"(/EmissorNacional/Notas/Visualizar/Index/.+)\" class=\"list-group-item\">').findall(driver.page_source)
     
     if not link_notas:
         print(driver.page_source)
     
+    # para cada nota da lista
     for count, link_nota in enumerate(link_notas, start=1):
         print(f'>>> Abrindo {count}° nota')
+        # abre a nota
         driver.get('https://www.nfse.gov.br' + link_nota)
         time.sleep(1)
+        # coleta os dados da nota no site
+        dado_do_site = coleta_dados_da_nota(driver)
         
+        # verifica se a nota foi cancelada
         nf_cancelada = ''
         if re.compile(r'(Evento de Cancelamento de NFS-e)').search(driver.page_source):
             nf_cancelada = ' - CANCELADA'
             
-        dado_do_site = coleta_dados_da_nota(driver)
-        
         # limpa o diretório primário de download das notas
         for arquivo in os.listdir(download_folder):
             os.remove(os.path.join(download_folder, arquivo))
-        
-        """if count == 3:
-            print(driver.page_source)"""
-        
+        # pega o link para baixar o PDF da nota
         link_pdf = re.compile(r'href=\"(/EmissorNacional/Notas/Download/DANFSe/.+)\" class=\"btn btn-lg btn-info\"').search(driver.page_source).group(1)
         # clica no botão para download da NFSE
         driver.get('https://www.nfse.gov.br' + link_pdf)
         time.sleep(1)
+        # captura dados do PDF da nota
         dados_pdf = mover_arquivo(download_folder, final_folder, cnpj, nome, nf_cancelada)
         
+        print(f'{dados_pdf};{dado_do_site}')
         _escreve_relatorio_csv(f'{dados_pdf};{dado_do_site}')
         
     return driver
 
 
 def coleta_dados_da_nota(driver):
-    print('>>> Analisando NFSE')
+    print('>>> Analisando dados no site')
+    # lista com os regex para pegar cada item da nota
     dados = [r'(Data de emissão)</span></label><span class=\"form-control-static texto\">(.+) \n\s+( .+)\n\s+( .+)</span></div>',
              r'(Autor do Evento)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
              r'(Data do Evento)</span></label><span class=\"form-control-static .+\">(.+) \n\s+( .+)\n\s+( .+)</span></div>',
@@ -153,6 +156,8 @@ def coleta_dados_da_nota(driver):
 
 
 def mover_arquivo(download_folder, final_folder, cnpj, nome, nf_cancelada):
+    print('>>> Analisando PDF')
+    # abre o PDF da nota para capturar algumas infos para adicionar na planilha de andamentos e para renomear o arquivo
     for arquivo in os.listdir(download_folder):
         with fitz.open(os.path.join(download_folder, arquivo)) as pdf:
             for page in pdf:
@@ -167,7 +172,8 @@ def mover_arquivo(download_folder, final_folder, cnpj, nome, nf_cancelada):
                 
                 tomador = tomador.replace('.', '').replace('/', '').replace('-', '')
                 novo_arquivo = f'NFSE_{numero_nf} - {competencia.replace("/", "-")} - Prestador_{cnpj} - Tomador_{tomador}{nf_cancelada}.pdf'
-                
+        
+        # move e renomeio o arquivo
         shutil.move(os.path.join(download_folder, arquivo), os.path.join(final_folder, novo_arquivo))
     return dados_pdf
 
@@ -219,6 +225,7 @@ def run():
             driver.close()
         driver.close()
     
+    # escreve o cabeçalho da planilha
     _escreve_header_csv('CNPJ;NOME;NÚMERO DA NF;NÚMERO DA DPS;CHAVE DE ACESSO;COMPETÊNCIA;DATA DE EMISSÃO;'
                         'AUTOR DO EVENTO DE CANCELAMENTO;DATA DO EVENTO;DATA DE REGISTRO DO EVENTO;VERSÃO;SÉRIE;'
                         'CNPJ EMITENTE;RAZÃO SOCIAL EMITENTE;INSCRIÇÃO MUNICIPAL;SITUAÇÃO PERANTE O SIMPLES NACIONAL;'

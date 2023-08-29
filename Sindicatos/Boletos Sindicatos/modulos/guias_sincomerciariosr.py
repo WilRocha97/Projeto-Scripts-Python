@@ -11,28 +11,28 @@ from comum_comum import _escreve_relatorio_csv
 from pyautogui_comum import _find_img, _click_img, _wait_img
 
 
-def login(driver, cnpj):
+def login(driver, cnpj, senha):
     # entra no site
-    driver.get('http://sisnet.sindesporte.com.br/sisnet40/negocial.aspx')
+    driver.get('https://sistemas.comerciariorp.org:8442/Sindical/Web/ComercioRP/')
     print('>>> Acessando o site')
     time.sleep(1)
 
     return driver, ''
 
-def gera_boleto(driver, cnpj, valor, funcionarios):
+def gera_boleto(driver, cnpj, valor):
     print('>>> Verificando boletos')
 
-    
-    return driver, resultados
+    _escreve_relatorio_csv(f'{cnpj};{valor};Não tem nada aqui', nome='Boletos Sindicato')
+    return driver
 
 
 def run(empresa):
     # define as variáveis que serão usadas
     cnpj = empresa[1]
     valor = empresa[2]
-    funcionarios = empresa[8]
+    senha = empresa[7]
     
-    print('17 - SINDESPORTE - Sindicato dos Empregados de Clubes Esportivos e em Federações, Confederações e Academias Esportivas no Estado de São Paulo')
+    print('135 - SINCOMERCIARIOSR - Sindicato dos Empregados do Comércio de Ribeirão Preto')
     options = webdriver.ChromeOptions()
     #options.add_argument('--headless')
     #options.add_argument('--window-size=1920,1080')
@@ -41,12 +41,12 @@ def run(empresa):
     status, driver = _initialize_chrome(options)
     
     # faz login na empresa
-    driver, resultados = login(driver, cnpj)
+    driver, avisos = login(driver, cnpj, senha)
     if not driver:
         driver.close()
-        return f'❌ Erro no login - {resultados}'
+        return f'❌ Erro no login - {avisos}'
     
     # gera os boletos
-    driver, resultados = gera_boleto(driver, cnpj, valor, funcionarios)
+    driver = gera_boleto(driver, cnpj, valor)
     driver.close()
-    return f'✔ Boleto gerado - {resultados}'
+    return f'✔ Boleto gerado - {avisos}'

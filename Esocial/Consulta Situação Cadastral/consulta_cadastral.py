@@ -15,7 +15,8 @@ def login(driver, nome, cpf, pis, data_nasc):
     print('>>> Acessando site')
     # aguarda o botão de habilitar a consultar aparecer
     while not _find_by_id('indexForm1:botaoConsultar', driver):
-        # abre o site da consulta e caso de erro é porque o site demorou pra responder, nesse caso retorna um erro para tentar novamente
+        # abre o site da consulta e caso de erro é porque o site demorou pra responder,
+        # nesse caso retorna um erro para tentar novamente
         try:
             driver.get('http://consultacadastral.inss.gov.br/Esocial/pages/index.xhtml')
         except:

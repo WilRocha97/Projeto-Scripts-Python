@@ -11,12 +11,17 @@ from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header
 
 def login(driver, usuario, senha):
     print('>>> Logando no site')
-    try:
-        driver.get('https://www.nfse.gov.br/EmissorNacional/Login?ReturnUrl=%2fEmissorNacional')
-    except:
-        print('>>> Site demorou pra responder, tentando novamente')
-        return driver, 'erro'
-    time.sleep(1)
+    timer = 0
+    while not _find_by_id('Inscricao', driver):
+        try:
+            driver.get('https://www.nfse.gov.br/EmissorNacional/Login?ReturnUrl=%2fEmissorNacional')
+        except:
+            print('>>> Site demorou pra responder, tentando novamente')
+            return driver, 'erro'
+        time.sleep(1)
+        timer += 1
+        if timer > 60:
+            return driver, 'erro'
     
     # insere o usuário e a senha no site
     _send_input('Inscricao', usuario, driver)
@@ -29,7 +34,7 @@ def login(driver, usuario, senha):
     return driver, 'ok'
 
     
-def consulta_notas(download_folder, final_folder, driver, cnpj, nome):
+def consulta_notas(download_folder, driver, cnpj, nome):
     print('>>> Consultando notas emitidas')
     driver.get('https://www.nfse.gov.br/EmissorNacional/Notas/Emitidas')
     time.sleep(1)
@@ -53,18 +58,14 @@ def consulta_notas(download_folder, final_folder, driver, cnpj, nome):
         if re.compile(r'(Evento de Cancelamento de NFS-e)').search(driver.page_source):
             nf_cancelada = ' - CANCELADA'
             
-        # limpa o diretório primário de download das notas
-        for arquivo in os.listdir(download_folder):
-            os.remove(os.path.join(download_folder, arquivo))
         # pega o link para baixar o PDF da nota
         link_pdf = re.compile(r'href=\"(/EmissorNacional/Notas/Download/DANFSe/.+)\" class=\"btn btn-lg btn-info\"').search(driver.page_source).group(1)
         # clica no botão para download da NFSE
         driver.get('https://www.nfse.gov.br' + link_pdf)
         time.sleep(1)
         # captura dados do PDF da nota
-        dados_pdf = mover_arquivo(download_folder, final_folder, cnpj, nome, nf_cancelada)
+        dados_pdf = mover_arquivo(download_folder, link_pdf, cnpj, nome, nf_cancelada)
         
-        print(f'{dados_pdf};{dado_do_site}')
         _escreve_relatorio_csv(f'{dados_pdf};{dado_do_site}')
         
     return driver
@@ -155,35 +156,35 @@ def coleta_dados_da_nota(driver):
     return dado_do_site
 
 
-def mover_arquivo(download_folder, final_folder, cnpj, nome, nf_cancelada):
+def mover_arquivo(download_folder, link_pdf, cnpj, nome, nf_cancelada):
+    nome_arquivo = link_pdf.split('/')[-1] + '.pdf'
     print('>>> Analisando PDF')
     # abre o PDF da nota para capturar algumas infos para adicionar na planilha de andamentos e para renomear o arquivo
-    for arquivo in os.listdir(download_folder):
-        with fitz.open(os.path.join(download_folder, arquivo)) as pdf:
-            for page in pdf:
-                textinho = page.get_text('text', flags=1 + 2 + 8)
-                
-                numero_nf = re.compile(r'NúmerodaNFS-e\n(.+)').search(textinho).group(1)
-                numero_dps = re.compile(r'NúmerodaDPS\n(.+)').search(textinho).group(1)
-                competencia = re.compile(r'CompetênciadaNFS-e\n(.+)').search(textinho).group(1)
-                chave_acesso = "'" + re.compile(r'ChavedeAcessodaNFS-e\n(.+)').search(textinho).group(1)
-                tomador = re.compile('TOMADORDOSERVIÇO\nCNPJ/CPF/NIF\n(.+)').search(textinho).group(1)
-                dados_pdf = f'{cnpj};{nome};{numero_nf};{numero_dps};{chave_acesso};{competencia}'
-                
-                tomador = tomador.replace('.', '').replace('/', '').replace('-', '')
-                novo_arquivo = f'NFSE_{numero_nf} - {competencia.replace("/", "-")} - Prestador_{cnpj} - Tomador_{tomador}{nf_cancelada}.pdf'
-        
-        # move e renomeio o arquivo
-        shutil.move(os.path.join(download_folder, arquivo), os.path.join(final_folder, novo_arquivo))
+    with fitz.open(os.path.join(download_folder, nome_arquivo)) as pdf:
+        for page in pdf:
+            textinho = page.get_text('text', flags=1 + 2 + 8)
+            
+            numero_nf = re.compile(r'NúmerodaNFS-e\n(.+)').search(textinho).group(1)
+            numero_dps = re.compile(r'NúmerodaDPS\n(.+)').search(textinho).group(1)
+            competencia = re.compile(r'CompetênciadaNFS-e\n(.+)').search(textinho).group(1)
+            chave_acesso = "'" + re.compile(r'ChavedeAcessodaNFS-e\n(.+)').search(textinho).group(1)
+            tomador = re.compile('TOMADORDOSERVIÇO\nCNPJ/CPF/NIF\n(.+)').search(textinho).group(1)
+            dados_pdf = f'{cnpj};{nome};{numero_nf};{numero_dps};{chave_acesso};{competencia}'
+            
+            tomador = tomador.replace('.', '').replace('/', '').replace('-', '')
+            novo_arquivo = f'NFSE_{numero_nf} - {competencia.replace("/", "-")} - Prestador_{cnpj} - Tomador_{tomador}{nf_cancelada}.pdf'
+    
+    # move e renomeio o arquivo
+    shutil.move(os.path.join(download_folder, nome_arquivo), os.path.join(download_folder, novo_arquivo))
+    print(novo_arquivo)
+    
     return dados_pdf
 
 
 @_time_execution
 def run():
-    download_folder = "V:\\Setor Robô\\Scripts Python\\Geral\\Relatório de NFSe Emitidas\\ignore\\NFSE"
-    final_folder = "V:\\Setor Robô\\Scripts Python\\Geral\\Relatório de NFSe Emitidas\\execução\\NFSE"
+    download_folder = "V:\\Setor Robô\\Scripts Python\\Geral\\Relatório de NFSe Emitidas\\execução\\NFSE"
     os.makedirs(download_folder, exist_ok=True)
-    os.makedirs(final_folder, exist_ok=True)
     
     # função para abrir a lista de dados
     empresas = _open_lista_dados()
@@ -194,14 +195,14 @@ def run():
         return False
     
     options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')
-    # options.add_argument('--window-size=1920,1080')
-    options.add_argument("--start-maximized")
+    options.add_argument('--headless')
+    options.add_argument('--window-size=1920,1080')
+    # options.add_argument("--start-maximized")
     options.add_experimental_option('prefs', {
-        "download.default_directory": download_folder,  # Change default directory for downloads
-        "download.prompt_for_download": False,  # To auto download the file
-        "download.directory_upgrade": True,
-        "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
+        "download.default_directory": download_folder,  # muda o diretório padrão de download do navegador
+        "download.prompt_for_download": False,  # faz o download automatico sem perguntar onde salvar
+        "download.directory_upgrade": True,  # atualiza o diretório de download padrão do navegador
+        "plugins.always_open_pdf_externally": True  # não irá abrir o PDF no navegador
     })
     
     # cria o indice para cada empresa da lista de dados
@@ -219,7 +220,7 @@ def run():
             driver.set_page_load_timeout(15)
             driver, situacao = login(driver, usuario, senha)
             if situacao == 'ok':
-                driver = consulta_notas(download_folder, final_folder, driver, cnpj, nome)
+                driver = consulta_notas(download_folder, driver, cnpj, nome)
                 break
                 
             driver.close()

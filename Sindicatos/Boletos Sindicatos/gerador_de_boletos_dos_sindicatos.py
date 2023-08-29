@@ -5,7 +5,7 @@ from sys import path
 path.append(r'modulos')
 import guias_sinecol, guias_sitac, guias_metalcampinas, guias_sinticom, guias_sindeepres, guias_sindesporte, guias_sinpospetro, guias_sinsaude, \
     guias_sincomerciariosj, guias_sindquimicos, guias_sindvest_jundiai, guias_sindpd, guias_sindiesp, guias_sinthojur, guias_seectthjr, guias_sinthoresp, \
-    guias_secsp, guias_sinditerceirizados, guias_sintracargas_70, guias_seaac, guias_secriopreto, guias_sindcomerciarios, guias_sincomerciariosr, \
+    guias_secsp, guias_sinditerceirizados, guias_seaac, guias_secriopreto, guias_sindcomerciarios, guias_sincomerciariosr, \
     guias_sinthoresca, guias_sindcargas, guias_sintracargas
     
 path.append(r'..\..\_comum')

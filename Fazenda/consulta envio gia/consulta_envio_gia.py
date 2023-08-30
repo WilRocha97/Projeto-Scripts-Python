@@ -61,12 +61,11 @@ def captura_dados(driver):
 
 def create_pdf(driver, nome_arquivo, comp_formatado):
     # salva o pdf criando ele a partir do código html da página, para que o PDF criado seja editável
-    # o site em si já salva um print em pdf ao clicar em imprimir então não perdemos nenhuma informação
     e_dir_pdf = os.path.join('execução', 'Arquivos ' + comp_formatado)
     os.makedirs(e_dir_pdf, exist_ok=True)
     
     soup = BeautifulSoup(driver.page_source, 'html.parser')
-    # Remove atributo href das tags, links e urls não serão usados
+    # Remove atributo href das tags, links e urls que não serão usados
     for tag in soup.find_all(href=True):
         tag['href'] = ''
 
@@ -74,6 +73,7 @@ def create_pdf(driver, nome_arquivo, comp_formatado):
     _ = list(tag.extract() for tag in soup.find_all('img'))
     _ = list(tag.extract() for tag in soup.find_all('script'))
     
+    # remove mais algumas coisas específicas
     soup = str(soup)\
         .replace('target="_blank">Cidadão SP</a></td>', '')\
         .replace('target="_blank">saopaulo.sp.gov.br</a></td>', '') \

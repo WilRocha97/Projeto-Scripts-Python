@@ -169,9 +169,9 @@ def mover_arquivo(download_folder, link_pdf, cnpj, nome, nf_cancelada):
             competencia = re.compile(r'CompetênciadaNFS-e\n(.+)').search(textinho).group(1)
             chave_acesso = "'" + re.compile(r'ChavedeAcessodaNFS-e\n(.+)').search(textinho).group(1)
             tomador = re.compile('TOMADORDOSERVIÇO\nCNPJ/CPF/NIF\n(.+)').search(textinho).group(1)
-            dados_pdf = f'{cnpj};{nome};{numero_nf};{numero_dps};{chave_acesso};{competencia}'
-            
             tomador = tomador.replace('.', '').replace('/', '').replace('-', '')
+            
+            dados_pdf = f'{cnpj};{nome};{numero_nf};{numero_dps};{chave_acesso};{competencia}'
             novo_arquivo = f'NFSE_{numero_nf} - {competencia.replace("/", "-")} - Prestador_{cnpj} - Tomador_{tomador}{nf_cancelada}.pdf'
     
     # move e renomeio o arquivo

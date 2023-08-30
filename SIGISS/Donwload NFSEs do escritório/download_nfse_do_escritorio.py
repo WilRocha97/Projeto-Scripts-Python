@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import time
+
 from requests import Session
 from sys import path
 import os
@@ -13,7 +15,7 @@ def salvar_arquivo(nome, response):
     except FileNotFoundError:
         os.makedirs('execução/Documentos', exist_ok=True)
         arquivo = open(os.path.join('execução/Documentos', nome), 'wb')
-        
+    
     for parte in response.iter_content(100000):
         arquivo.write(parte)
     arquivo.close()

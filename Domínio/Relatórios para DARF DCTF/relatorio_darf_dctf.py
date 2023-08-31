@@ -151,10 +151,10 @@ def run():
 
     for count, empresa in enumerate(empresas[index:], start=1):
         _indice(count, total_empresas, empresa)
-        resultado = ''
-        while resultado != 'ok':
+
+        while True:
             if not _login(empresa, andamentos):
-                resultado = 'ok'
+                break
             else:
                 resultado = relatorio_darf_dctf(empresa, periodo, andamentos)
             
@@ -164,6 +164,9 @@ def run():
             
                 if resultado == 'modulo fechou':
                     _abrir_modulo('escrita_fiscal')
+                
+                if resultado == 'ok':
+                    break
 
     _encerra_dominio()
     

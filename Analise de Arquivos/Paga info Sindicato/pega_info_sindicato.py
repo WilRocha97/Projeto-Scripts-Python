@@ -53,7 +53,7 @@ def ask_for_file():
     return file if file else False
 
 
-def guarda_info(codigo, cnpj, nome_empresa, competencia, sindicato, nome, totais_rubricas, valor_calculado_s, valor_calculado_e):
+def guarda_info(codigo, cnpj, nome_empresa, competencia, sindicato, nome, totais_rubricas):
     codigo_anterior = codigo
     cnpj_anterior = cnpj
     nome_empresa_anterior = nome_empresa
@@ -61,11 +61,15 @@ def guarda_info(codigo, cnpj, nome_empresa, competencia, sindicato, nome, totais
     sindicato_anterior = sindicato
     nome_anterior = nome
     totais_rubricas_anterior = totais_rubricas
+    
+    return codigo_anterior, cnpj_anterior, nome_empresa_anterior, competencia_anterior, sindicato_anterior, nome_anterior, totais_rubricas_anterior
+    
+
+def guarda_valores_totais(valor_calculado_s, valor_calculado_e):
     valor_calculado_s_anterior = valor_calculado_s
     valor_calculado_e_anterior = valor_calculado_e
-    
-    return codigo_anterior, cnpj_anterior, nome_empresa_anterior, competencia_anterior, sindicato_anterior, nome_anterior, totais_rubricas_anterior, valor_calculado_s_anterior, valor_calculado_e_anterior
-    
+    return valor_calculado_s_anterior, valor_calculado_e_anterior
+
 
 def analiza():
     # pergunta qual PDF analisar
@@ -89,13 +93,28 @@ def analiza():
         
         # Para cada página do pdf
         for page in pdf:
-            print(page.number)
             try:
+                print(page.number - 1)
                 # Pega o texto da pagina
                 textinho = page.get_text('text', flags=1 + 2 + 8)
                 
                 # procura quantas rubricas existem na página
                 totais_rubrica = re.compile(r'(Total da Rubrica):\n(.+)').findall(textinho)
+                
+                if not totais_rubrica:
+                    # pega o valor total do sindicato
+                    try:
+                        totais_do_sindicato = re.compile(r'(.+)\nTotal do Sindicato:\n(.+)').search(textinho)
+                        valor_calculado_s = totais_do_sindicato.group(2)
+                    except:
+                        valor_calculado_s = ''
+                    # verifica se existe o valor final da empresa na página
+                    try:
+                        totais_da_empresa = re.compile(r'Total da empresa:\n(.+)\n(.+)').search(textinho)
+                        valor_calculado_e = totais_da_empresa.group(1)
+                    except:
+                        valor_calculado_e = ''
+                    valor_calculado_s_anterior, valor_calculado_e_anterior = guarda_valores_totais(valor_calculado_s, valor_calculado_e)
                 
                 # para cada rubrica executa
                 for total in totais_rubrica:
@@ -159,26 +178,26 @@ def analiza():
                         time.sleep(333)'''
                     
                     # pega o valor total do sindicato
-                    totais_do_sindicato = re.compile(r'(.+)\nTotal do Sindicato:\n(.+)').search(textinho)
-                    valor_calculado_s = totais_do_sindicato.group(2)
-                    # valor_informado_s = totais_do_sindicato.group(1)
-                    
+                    try:
+                        totais_do_sindicato = re.compile(r'(.+)\nTotal do Sindicato:\n(.+)').search(textinho)
+                        valor_calculado_s = totais_do_sindicato.group(2)
+                    except:
+                        valor_calculado_s = ''
                     # verifica se existe o valor final da empresa na página
                     try:
                         totais_da_empresa = re.compile(r'Total da empresa:\n(.+)\n(.+)').search(textinho)
                         valor_calculado_e = totais_da_empresa.group(1)
-                        # valor_informado = totais_da_empresa.group(2)
                     except:
                         valor_calculado_e = ''
-                        # valor_informado = 0
                     
                     # se for a primeira página, armazena as infos da empresa
                     if nome_empresa_anterior == '':
                         codigo_anterior, cnpj_anterior, nome_empresa_anterior, competencia_anterior, sindicato_anterior, \
-                            nome_anterior, totais_rubricas_anterior, valor_calculado_s_anterior, valor_calculado_e_anterior\
-                            = guarda_info(codigo, cnpj, nome_empresa, competencia, sindicato, nome, totais_rubricas, valor_calculado_s, valor_calculado_e)
+                            nome_anterior, totais_rubricas_anterior \
+                            = guarda_info(codigo, cnpj, nome_empresa, competencia, sindicato, nome, totais_rubricas)
+                        valor_calculado_s_anterior, valor_calculado_e_anterior = guarda_valores_totais(valor_calculado_s, valor_calculado_e)
                         continue
-    
+                        
                     # se a empresa atual difere da anterior, escreve na planilha as infos coletas da anterior junto dos totais
                     if nome_empresa != nome_empresa_anterior:
                         escreve_relatorio_csv(f"{codigo_anterior};{cnpj_anterior};{nome_empresa_anterior};"
@@ -196,8 +215,10 @@ def analiza():
                     
                     # armazena as infos da empresa atual
                     codigo_anterior, cnpj_anterior, nome_empresa_anterior, competencia_anterior, sindicato_anterior, \
-                        nome_anterior, totais_rubricas_anterior, valor_calculado_s_anterior, valor_calculado_e_anterior \
-                        = guarda_info(codigo, cnpj, nome_empresa, competencia, sindicato, nome, totais_rubricas, valor_calculado_s, valor_calculado_e)
+                        nome_anterior, totais_rubricas_anterior \
+                        = guarda_info(codigo, cnpj, nome_empresa, competencia, sindicato, nome, totais_rubricas)
+                    valor_calculado_s_anterior, valor_calculado_e_anterior = guarda_valores_totais(valor_calculado_s, valor_calculado_e)
+                    
                     
             except():
                 escreve_relatorio_csv(f"{page.number};Erro", local=final)
@@ -210,12 +231,13 @@ def analiza():
 
 
 if __name__ == '__main__':
-    try:
-        final = analiza()
-        # escreve o cabeçalho da planilha
-        escreve_header_csv(';'.join(['CÓDIGO', 'CNPJ', 'NOME', 'COMPETÊNCIA', 'TOTAL EMPRESA', 'SINDICATO', 'TOTAL SINDICATO',
-                                     'RUBRICA', 'TOTAL RUBRICA']), local=final)
-        
-        pyautogui.alert(title='Gera relatório de sindicato', text='Relatório gerado com sucesso.')
-    except:
-        pyautogui.alert(title='Gera relatório de sindicato', text='Cancelado.')
+    #try:
+    final = analiza()
+    # escreve o cabeçalho da planilha
+    escreve_header_csv(';'.join(['CÓDIGO', 'CNPJ', 'NOME', 'COMPETÊNCIA', 'TOTAL EMPRESA', 'SINDICATO', 'TOTAL SINDICATO',
+                                 'RUBRICA', 'TOTAL RUBRICA']), local=final)
+    
+    
+    pyautogui.alert(title='Gera relatório de sindicato', text='Relatório gerado com sucesso.')
+    """except:
+        pyautogui.alert(title='Gera relatório de sindicato', text='Cancelado.')"""

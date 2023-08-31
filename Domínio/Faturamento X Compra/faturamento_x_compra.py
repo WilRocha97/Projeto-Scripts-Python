@@ -222,8 +222,8 @@ def run():
 
         for count, empresa in enumerate(empresas[index:], start=1):
             _indice(count, total_empresas, empresa)
-            resultado = ''
-            while resultado != 'ok':
+            
+            while True:
                 if not _login(empresa, andamentos):
                     break
             
@@ -235,6 +235,9 @@ def run():
                     
                 if resultado == 'modulo fechou':
                     _abrir_modulo('escrita_fiscal')
+                
+                if resultado == 'ok':
+                    break
     
     _escreve_header_csv('CÓDIGO;CNPJ;NOME;SITUAÇÃO;JANEIRO;FEVEREIRO;MARÇO;ABRIL;MAIO;JUNHO;JULHO;AGOSTO;SETEMBRO;OUTUBRO;NOVEMBRO;DEZEMBRO;TOTAIS', nome=andamentos)
     _encerra_dominio()

@@ -275,8 +275,7 @@ def run():
         # printa o indice da empresa que está sendo executada
         _indice(count, total_empresas, empresa, index)
         
-        resultado = ''
-        while resultado != 'ok':
+        while True:
             # abre a empresa no domínio
             if not _login(empresa, andamentos):
                 break
@@ -289,6 +288,9 @@ def run():
 
             if resultado == 'modulo fechou':
                 _abrir_modulo('escrita_fiscal')
+            
+            if resultado == 'ok':
+                break
 
     _encerra_dominio()
     

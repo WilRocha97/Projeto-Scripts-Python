@@ -94,7 +94,7 @@ def login(driver, cnpj, insc_muni, nome):
     im = im.crop((int(x), int(y), int(width), int(height)))
     im.save(r'ignore\captcha\captcha.png')
     time.sleep(1)
-    captcha = _solve_text_captcha(os.path.join('ignore', 'captcha', 'captcha.png'))
+    captcha = _solve_text_captcha(driver, 'captchaimg')
 
     if not captcha:
         print('Erro Login - não encontrou captcha')

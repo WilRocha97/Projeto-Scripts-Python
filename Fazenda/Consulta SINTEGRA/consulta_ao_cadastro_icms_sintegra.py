@@ -25,25 +25,7 @@ def login(driver, cnpj, nome):
     driver.find_element(by=By.XPATH, value='/html/body/form/table[3]/tbody/tr/td[2]/table[2]/tbody/tr/td[2]/table/tbody/tr[2]/td[2]/div/div[2]/div[1]/table/tbody/tr[2]/td/select/option[2]').click()
     time.sleep(1)
     
-    # tira um print da tela com e recorta apenas a imagem do captcha para enviar para a api
-    while not _find_by_id('ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_imagemDinamica', driver):
-        time.sleep(1)
-    element = driver.find_element(by=By.ID, value='ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_imagemDinamica')
-    location = element.location
-    size = element.size
-    driver.save_screenshot('ignore\captcha\pagina.png')
-    x = location['x']
-    y = location['y']
-    w = size['width']
-    h = size['height']
-    width = x + w
-    height = y + h
-    time.sleep(2)
-    im = Image.open(r'ignore\captcha\pagina.png')
-    im = im.crop((int(x), int(y), int(width), int(height)))
-    im.save(r'ignore\captcha\captcha.png')
-    time.sleep(1)
-    captcha = _solve_text_captcha(os.path.join('ignore', 'captcha', 'captcha.png'))
+    captcha = _solve_text_captcha(driver, 'ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_imagemDinamica')
     
     if not captcha:
         print('Erro Login - não encontrou captcha')

@@ -28,24 +28,8 @@ def pesquisar(options, cnpj, insc_muni):
         contador += 1
         time.sleep(0.2)
         
-    # bloco que salva a imagem do captcha
-    element = driver.find_element(by=By.ID, value=f'homeForm:panelCaptcha:j_idt{str(contador)}')
-    location = element.location
-    size = element.size
-    driver.save_screenshot('ignore\captcha\pagina.png')
-    x = location['x']
-    y = location['y']
-    w = size['width']
-    h = size['height']
-    width = x + w
-    height = y + h
-    time.sleep(2)
-    im = Image.open(r'ignore\captcha\pagina.png')
-    im = im.crop((int(x), int(y), int(width), int(height)))
-    im.save(r'ignore\captcha\captcha.png')
-    time.sleep(1)
     # resolve o captcha
-    captcha = _solve_text_captcha(os.path.join('ignore', 'captcha', 'captcha.png'))
+    captcha = _solve_text_captcha(driver, 'homeForm:panelCaptcha:j_idt')
     
     # espera o campo do tipo da pesquisa
     while not _find_by_id('homeForm:inputTipoInscricao_label', driver):

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os, re, time
+from pyautogui import prompt
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -23,7 +24,7 @@ def cria_txt(empresa, tipo, encode='latin-1'):
 
 @_time_execution
 def run():
-    tipo = p.prompt(title='Script incrível', text='Qual será o nome base do arquivo ".txt"?')
+    tipo = prompt(title='Script incrível', text='Qual será o nome base do arquivo ".txt"?')
     # função para abrir a lista de dados
     empresas = _open_lista_dados()
     

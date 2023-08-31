@@ -148,32 +148,31 @@ def verifica_empresa(cod):
 def _login_web():
     if not _find_img('app_controler.png', pasta='imgs_c', conf=0.9):
         options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
-        options.add_argument('--window-size=1920,1080')
+        options.add_argument("--start-maximized")
         
-        status, driver = _initialize_chrome()
+        status, driver = _initialize_chrome(options)
     
         driver.get('https://www.dominioweb.com.br/')
         _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[1]/span[2]/input', user[0], driver)
         _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[2]/span[2]/input', user[3], driver)
         driver.find_element(by=By.ID, value='enterButton').click()
         
-        caminho = os.path.join('imgs_c', 'abrir_app.png')
-        caminho2 = os.path.join('imgs_c', 'abrir_app_2.png')
-        while not p.locateOnScreen(caminho, confidence=0.9):
+        caminho = os.path.join('abrir_app.png')
+        caminho2 = os.path.join('abrir_app_2.png')
+        while not _find_img(caminho, pasta='imgs_c', conf=0.9):
             if _find_by_class('trta1-btn-primary', driver):
                 driver.find_element(by=By.CLASS_NAME, value='trta1-btn-primary').click()
-            if p.locateOnScreen(caminho2, confidence=0.9):
+            if _find_img(caminho2, pasta='imgs_c', conf=0.9):
                 sleep(1)
-                while p.locateOnScreen(caminho2, confidence=0.9):
-                    p.click(p.locateCenterOnScreen(caminho2, confidence=0.9), button='left')
+                while _find_img(caminho2, pasta='imgs_c', conf=0.9):
+                    _click_img(caminho2, pasta='imgs_c', conf=0.9)
                 break
                 
-        if p.locateOnScreen(caminho, confidence=0.9):
-            p.click(p.locateCenterOnScreen(caminho, confidence=0.9), button='left')
+        if _find_img(caminho, pasta='imgs_c', conf=0.9):
+            _click_img(caminho, pasta='imgs_c', conf=0.9)
         
         print('>>> Aguardando modulos')
-        while not p.locateOnScreen(r'imgs_c/modulos.png', confidence=0.9):
+        while not _find_img('modulos.png', pasta='imgs_c', conf=0.9):
             sleep(1)
         driver.quit()
         return True
@@ -199,18 +198,18 @@ def _abrir_modulo(modulo):
         modulo_nome = 'Conexões'
         
     print(f'>>> Abrindo modulo {modulo_nome}\n')
-    while not p.locateOnScreen(r'imgs_c/modulos.png', confidence=0.9):
+    while not _find_img('modulos.png', pasta='imgs_c', conf=0.9):
         sleep(1)
         try:
             p.getWindowsWithTitle('Lista de Programas')[0].activate()
         except:
             pass
     sleep(1)
-    p.click(p.locateCenterOnScreen(r'imgs_c/modulo_' + modulo + '.png', confidence=0.9), button='left', clicks=2)
-    while not p.locateOnScreen(r'imgs_c/login_modulo.png', confidence=0.9):
+    _click_img('modulo_' + modulo + '.png', pasta='imgs_c', conf=0.9, button='left', clicks=2)
+    while not _find_img('login_modulo.png', pasta='imgs_c', conf=0.9):
         sleep(1)
     
-    p.moveTo(p.locateCenterOnScreen(r'imgs_c/insere_usuario.png', confidence=0.9))
+    p.moveTo(_find_img('insere_usuario.png', pasta='imgs_c', conf=0.9))
     local_mouse = p.position()
     p.click(int(local_mouse[0] + 120), local_mouse[1], clicks=2)
     
@@ -224,12 +223,12 @@ def _abrir_modulo(modulo):
     p.write(user[2])
     sleep(0.5)
     p.hotkey('alt', 'o')
-    while not p.locateOnScreen(r'imgs_c/onvio.png', confidence=0.9):
+    while not _find_img('onvio.png', pasta='imgs_c', conf=0.9):
         sleep(1)
 
     time.sleep(5)
     
-    if p.locateOnScreen(r'imgs_c/aviso.png', confidence=0.9):
+    if _find_img('aviso.png', pasta='imgs_c', conf=0.9):
         p.hotkey('alt', 'o')
     return True
 

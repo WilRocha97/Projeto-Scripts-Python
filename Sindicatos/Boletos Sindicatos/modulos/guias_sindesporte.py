@@ -44,10 +44,12 @@ def gera_boleto(driver, valor, funcionarios):
     # aperta botão de nova guia
     driver.find_element(by=By.ID, value='ButtonNovoBoleto').click()
     
+    print('>>> Aguardando tela para gerar o boleto')
     # aguarda o campo de quantidade de funcionários
     while not _find_by_id('GridViewGuias_TextBoxEmpregados_0', driver):
         time.sleep(1)
     
+    print('>>> Gerando o boleto')
     # insere o número de funcionarios
     _send_input('GridViewGuias_TextBoxEmpregados_0', funcionarios, driver)
     time.sleep(1)
@@ -59,6 +61,7 @@ def gera_boleto(driver, valor, funcionarios):
     driver.find_element(by=By.ID, value='ButtonGerarGuia1').click()
     time.sleep(33)
     
+    print('>>> Boleto gerado')
     return driver, resultados
 
 

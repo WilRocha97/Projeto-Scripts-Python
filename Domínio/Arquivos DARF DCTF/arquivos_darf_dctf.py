@@ -10,6 +10,7 @@ from dominio_comum import _login_web, _abrir_modulo, _login, _verifica_dominio, 
 
 
 def arquivos_darf_dctf(empresa, periodo, andamento):
+    
     cod, cnpj,  nome = empresa
     
     nome_arquivo = 'M:\DCTF_{}.RFB'.format(cod)
@@ -196,15 +197,15 @@ def run():
     
     for count, empresa in enumerate(empresas[index:], start=1):
         _indice(count, total_empresas, empresa, index)
-        resultado = ''
-        while resultado != 'ok':
+
+        while True:
             if not _login(empresa, andamentos):
-                resultado = 'ok'
+                break
             else:
                 resultado, nome_arquivo = arquivos_darf_dctf(empresa, periodo, andamentos)
                 if resultado == 'arquivo gerado':
                     mover_arquivo(nome_arquivo)
-                    resultado = 'ok'
+                    break
                 
                 if resultado == 'dominio fechou':
                     _login_web()
@@ -212,7 +213,10 @@ def run():
     
                 if resultado == 'modulo fechou':
                     _abrir_modulo('escrita_fiscal')
-
+                
+                if resultado == 'ok':
+                    break
+                    
     _encerra_dominio()
     
 

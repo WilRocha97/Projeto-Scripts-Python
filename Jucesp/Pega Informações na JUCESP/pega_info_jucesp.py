@@ -60,25 +60,7 @@ def logar(options, data_abertura_inicio, data_abertura_final, municipio):
     # clica para pesquisar
     driver.find_element(by=By.ID, value='ctl00_cphContent_frmBuscaAvancada_btPesquisar').click()
     
-    # espera a imagem do captcha aparecer
-    while not find_by_id('ctl00_cphContent_gdvResultadoBusca_pnlCaptcha', driver):
-        time.sleep(1)
-    element = driver.find_element(by=By.XPATH, value='//*[@id="formBuscaAvancada"]/table/tbody/tr[1]/td/div/div[1]/img')
-    location = element.location
-    size = element.size
-    driver.save_screenshot('ignore\captcha\pagina.png')
-    x = location['x']
-    y = location['y']
-    w = size['width']
-    h = size['height']
-    width = x + w
-    height = y + h
-    time.sleep(2)
-    im = Image.open(r'ignore\captcha\pagina.png')
-    im = im.crop((int(x), int(y), int(width), int(height)))
-    im.save(r'ignore\captcha\captcha.png')
-    time.sleep(1)
-    captcha = _solve_text_captcha(os.path.join('ignore', 'captcha', 'captcha.png'))
+    captcha = _solve_text_captcha(driver, 'ctl00_cphContent_gdvResultadoBusca_pnlCaptcha')
     
     if not captcha:
         print('Erro Login - não encontrou captcha')

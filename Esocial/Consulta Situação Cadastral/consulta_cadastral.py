@@ -76,25 +76,9 @@ def login(driver, nome, cpf, pis, data_nasc):
             print('❌ O site demorou muito para responder, tentando novamente')
             return driver, 'erro'
     
-    # captura a imagem do captcha
-    element = driver.find_element(by=By.ID, value='captcha_challenge')
-    location = element.location
-    size = element.size
-    driver.save_screenshot('ignore\captcha\pagina.png')
-    x = location['x']
-    y = location['y']
-    w = size['width']
-    h = size['height']
-    width = x + w
-    height = y + h
-    time.sleep(2)
-    im = Image.open(r'ignore\captcha\pagina.png')
-    im = im.crop((int(x), int(y), int(width), int(height)))
-    im.save(r'ignore\captcha\captcha.png')
-    time.sleep(1)
-    # manda a imagem para a api resolver o captcha
-    captcha = _solve_text_captcha(os.path.join('ignore', 'captcha', 'captcha.png'))
-
+    # resolver o captcha
+    captcha = _solve_text_captcha(driver, 'captcha_challenge')
+    
     if not captcha:
         print('Erro Login - não encontrou captcha')
         return driver, 'erro captcha'

@@ -4,6 +4,9 @@ from twocaptcha import TwoCaptcha"""
 from anticaptchaofficial.imagecaptcha import *
 from anticaptchaofficial.recaptchav2proxyless import *
 from anticaptchaofficial.hcaptchaproxyless import *
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from PIL import Image
 from time import sleep
 import os
 
@@ -140,13 +143,31 @@ _solve_recaptcha = solve_recaptcha
 
 
 # Recebe a imagem do captcha e envia para a api e retorna o texto da imagem
-def solve_text_captcha(img):
+def solve_text_captcha(driver, id_captcha):
+    os.makedirs('ignore\captcha', exist_ok=True)
+    # captura a imagem do captcha
+    element = driver.find_element(by=By.ID, value=id_captcha)
+    location = element.location
+    size = element.size
+    driver.save_screenshot('ignore\captcha\pagina.png')
+    x = location['x']
+    y = location['y']
+    w = size['width']
+    h = size['height']
+    width = x + w
+    height = y + h
+    time.sleep(2)
+    im = Image.open(r'ignore\captcha\pagina.png')
+    im = im.crop((int(x), int(y), int(width), int(height)))
+    im.save(r'ignore\captcha\captcha.png')
+    time.sleep(1)
+    
     print('>>> Quebrando text captcha')
     solver = imagecaptcha()
     solver.set_verbose(1)
     solver.set_key(anticaptcha_api_key)
 
-    captcha_text = solver.solve_and_return_solution(img)
+    captcha_text = solver.solve_and_return_solution(os.path.join('ignore', 'captcha', 'captcha.png'))
     if captcha_text != 0:
         return captcha_text
     else:

@@ -183,7 +183,7 @@ def mover_arquivo(download_folder, link_pdf, cnpj, nome, nf_cancelada):
 
 @_time_execution
 def run():
-    download_folder = "V:\\Setor Robô\\Scripts Python\\Geral\\Relatório de NFSe Emitidas\\execução\\NFSE"
+    download_folder = "V:\\Setor Robô\\Scripts Python\\Geral\\Relatório de NFSe Emitidas\\Execução\\NFSE"
     os.makedirs(download_folder, exist_ok=True)
     
     # função para abrir a lista de dados

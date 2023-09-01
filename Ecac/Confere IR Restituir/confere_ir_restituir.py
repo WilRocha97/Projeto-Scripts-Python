@@ -74,6 +74,9 @@ def busca_cpf(cpf):
     
     # aguarda o menu do ecac aparecer
     while not _find_img('acoes_ecac.png', conf=0.9):
+        # se o botão do meu irpf já estiver na tela, retorna ok
+        if _find_img('meu_irpf_ecac.png', conf=0.9):
+            return 'OK'
         time.sleep(1)
     
     # clica no menu do ecac
@@ -103,7 +106,7 @@ def abre_irpf_atual():
         time.sleep(1)
         timer += 1
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
-        if timer > 10:
+        if timer > 60:
             tentativas += 1
             if _find_img('erro_sistema.png', conf=0.85) \
                     or _find_img('erro_sistema_2.png', conf=0.9) \
@@ -112,7 +115,9 @@ def abre_irpf_atual():
                     or _find_img('erro_sistema_5.png', conf=0.9) \
                     or _find_img('erro_sistema_6.png', conf=0.9) \
                     or _find_img('erro_sistema_7.png', conf=0.9) \
-                    or _find_img('erro_sistema_8.png', conf=0.9):
+                    or _find_img('erro_sistema_8.png', conf=0.9) \
+                    or _find_img('erro_sistema_9.png', conf=0.9) \
+                    or _find_img('erro_sistema_10.png', conf=0.9):
                 print('>>> Erro no ECAC, tentando novamente')
                 p.hotkey('ctrl', 'w')
                 time.sleep(1)
@@ -185,7 +190,8 @@ def confere_restituir(cpf, nome, pasta_restituir, pasta_pagar):
             p.hotkey('ctrl', 'w')
             print('❗ Imposto a pagar')
             return f'Imposto a pagar;{valor};' + pendencias
-
+        
+        p.press('pgdown')
 
 def salvar_pdf(arquivo, pasta_final):
     p.hotkey('ctrl', 'p')

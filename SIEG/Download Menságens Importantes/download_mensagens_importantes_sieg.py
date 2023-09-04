@@ -270,11 +270,9 @@ def run():
             try:
                 verifica_mensagem(pasta_analise, pasta_final, modulo)
             except:
-                verifica_mensagem(pasta_analise, 'erro')
+                verifica_mensagem(pasta_analise, pasta_final, 'erro')
                 return
                 
-            
-            
             
 if __name__ == '__main__':
     run()

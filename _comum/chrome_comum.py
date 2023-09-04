@@ -158,7 +158,9 @@ def abrir_chrome(url):
             p.press('esc')
             time.sleep(1)
     
+    time.sleep(1)
     p.hotkey('alt', 'space', 'x')
+    time.sleep(1)
     p.click(1000, 51)
     time.sleep(1)
     pyperclip.copy(url)

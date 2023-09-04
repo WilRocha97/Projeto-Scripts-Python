@@ -130,14 +130,12 @@ _which_cert = which_cert
 
 # Recebe um texto 'texto' junta com 'end' e escreve num arquivo 'nome'
 def escreve_relatorio_csv(texto, nome='resumo', local=e_dir, end='\n', encode='latin-1'):
-    if local == e_dir:
-        local = Path(local)
     os.makedirs(local, exist_ok=True)
 
     try:
-        f = open(str(local / f"{nome}.csv"), 'a', encoding=encode)
+        f = open(os.path.join(local, f"{nome}.csv"), 'a', encoding=encode)
     except:
-        f = open(str(local / f"{nome}-auxiliar.csv"), 'a', encoding=encode)
+        f = open(os.path.join(local, f"{nome} - auxiliar.csv"), 'a', encoding=encode)
 
     f.write(texto + end)
     f.close()
@@ -149,10 +147,10 @@ _escreve_relatorio_csv = escreve_relatorio_csv
 def escreve_header_csv(texto, nome='resumo', local=e_dir, encode='latin-1'):
     os.makedirs(local, exist_ok=True)
     
-    with open(str(local / f"{nome}.csv"), 'r', encoding=encode) as f:
+    with open(os.path.join(local, f"{nome}.csv"), 'r', encoding=encode) as f:
         conteudo = f.read()
 
-    with open(str(local / f"{nome}.csv"), 'w', encoding=encode) as f:
+    with open(os.path.join(local, f"{nome}.csv"), 'w', encoding=encode) as f:
         f.write(texto + '\n' + conteudo)
 _escreve_header_csv = escreve_header_csv
 
@@ -252,7 +250,6 @@ def download_file(name, response, pasta=str(e_dir / 'docs')):
     with open(os.path.join(pasta, name), 'wb') as arq:
         for i in response.iter_content(100000):
             arq.write(i)
-    return True
 _download_file = download_file
 
 

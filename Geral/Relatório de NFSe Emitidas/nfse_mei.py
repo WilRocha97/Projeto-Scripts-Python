@@ -290,5 +290,6 @@ def run():
                         'ALOR RETIDO CP;'
                         'OPÇÃO')
     
+    
 if __name__ == '__main__':
     run()

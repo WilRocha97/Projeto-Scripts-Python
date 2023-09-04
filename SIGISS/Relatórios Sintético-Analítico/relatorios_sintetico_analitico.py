@@ -207,5 +207,6 @@ def run():
     _escreve_header_csv(';'.join(['CNPJ', 'NOME', 'EMISSÃO DA NOTA', 'NÚMERO DA NOTA', 'DESTINATÁRIO', 'CNPJ DESTINATÁRIO', 'ISS', 'PIS', 'COFINS', 'CSLL', 'INSS', 'IRRF']),
                         nome='Resumo Relatórios Analíticos', local=final)
 
+
 if __name__ == '__main__':
     run()

@@ -107,31 +107,21 @@ def abre_irpf_atual():
         timer += 1
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
         if timer > 60:
-            tentativas += 1
-            if _find_img('erro_sistema.png', conf=0.85) \
-                    or _find_img('erro_sistema_2.png', conf=0.9) \
-                    or _find_img('erro_sistema_3.png', conf=0.9) \
-                    or _find_img('erro_sistema_4.png', conf=0.9) \
-                    or _find_img('erro_sistema_5.png', conf=0.9) \
-                    or _find_img('erro_sistema_6.png', conf=0.9) \
-                    or _find_img('erro_sistema_7.png', conf=0.9) \
-                    or _find_img('erro_sistema_8.png', conf=0.9) \
-                    or _find_img('erro_sistema_9.png', conf=0.9) \
-                    or _find_img('erro_sistema_10.png', conf=0.9):
-                print('>>> Erro no ECAC, tentando novamente')
-                p.hotkey('ctrl', 'w')
+            print('>>> Erro no ECAC, tentando novamente')
+            p.hotkey('ctrl', 'w')
+            time.sleep(1)
+            p.press('f5')
+            time.sleep(2)
+            
+            while not _find_img('meu_irpf_ecac.png', conf=0.95):
                 time.sleep(1)
-                p.press('f5')
-                time.sleep(2)
-                
-                while not _find_img('meu_irpf_ecac.png', conf=0.9):
-                    time.sleep(1)
-                
-                _click_position_img('meu_irpf_ecac.png', '+', pixels_y=92, conf=0.9)
-                timer = 0
-                
-                if tentativas >= 5:
-                    return 'Não é possível acessar o ECAC, sistema demorou muito pra responder'
+            
+            _click_position_img('meu_irpf_ecac.png', '+', pixels_y=92, conf=0.95)
+            timer = 0
+            
+            tentativas += 1
+            if tentativas >= 5:
+                return 'Não é possível acessar o ECAC, sistema demorou muito pra responder'
 
     time.sleep(2)
     # clica para abrir a tela do relatório

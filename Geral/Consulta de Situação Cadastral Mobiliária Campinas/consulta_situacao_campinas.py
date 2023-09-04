@@ -140,7 +140,8 @@ def run():
             
             driver, situacao, mensagem = login(driver, cnpj)
             if situacao == 'sem cadastro':
-               break
+                resultado_consulta = f'{cnpj};{nome};{mensagem[2:]}'
+                break
             
             # se o login estiver ok, cria o PDF do comprovante, pois logo após o login, ele já é exibido
             # depois coleta os dados necessários para escrever na planilha

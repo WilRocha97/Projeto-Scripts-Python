@@ -154,10 +154,11 @@ def abrir_chrome(url):
             time.sleep(1)
             if _find_img('restaurar_pagina.png', conf=0.9):
                 _click_img('restaurar_pagina.png', conf=0.9)
-            time.sleep(1)
-            p.press('esc')
-            time.sleep(1)
-    
+                time.sleep(1)
+                p.press('esc')
+                time.sleep(1)
+                
+    _click_img('google.png', conf=0.9)
     time.sleep(1)
     p.hotkey('alt', 'space', 'x')
     time.sleep(1)

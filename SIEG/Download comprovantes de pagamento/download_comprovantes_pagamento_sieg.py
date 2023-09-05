@@ -44,7 +44,7 @@ def sieg_iris(driver):
     return driver
 
 
-def procura_empresa(tipo, competencia, empresa, driver, options):
+def procura_empresa(execucao, tipo, competencia, empresa, driver, options):
     cnpj, nome = empresa
     _click_img('comprovantes.png', conf=0.9)
     # espera a barra de pesquisa, se não aparecer em 1 minuto, recarrega a página
@@ -80,7 +80,7 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
     # busca a mensagem de 'Nenhuma empresa encontrada.
     localiza_empresa = re.compile(r'Nenhuma empresa encontrada.').search(driver.page_source)
     if localiza_empresa:
-        _escreve_relatorio_csv(f'{cnpj};{nome};Empresa não encontrada')
+        _escreve_relatorio_csv(f'{cnpj};{nome};Empresa não encontrada', nome=execucao)
         print('❗ Empresa não encontrada')
         return driver
     
@@ -97,7 +97,7 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
         timer += 1
         _click_img('comprovantes.png', conf=0.9)
         if timer >= 60:
-            _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento encontrado para essa empresa')
+            _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento encontrado para essa empresa', nome=execucao)
             print('❗ Nenhum comprovante de pagamento encontrado para essa empresa')
             return driver
         
@@ -108,7 +108,7 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
         time.sleep(2)
     except:
             re.compile(r'class=\"\">(Nenhum item encontrado!)<').search(driver.page_source).group(1)
-            _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento encontrado para essa empresa')
+            _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento encontrado para essa empresa', nome=execucao)
             print('❗ Nenhum comprovante de pagamento encontrado para essa empresa')
             return driver
     
@@ -122,7 +122,7 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
         
     # verifica se existe algum comprovante referente a competência digitada
     if not comprovantes:
-        _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento referente a {competencia} encontrado para essa empresa')
+        _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento referente a {competencia} encontrado para essa empresa', nome=execucao)
         print(f'❗ Nenhum comprovante de pagamento referente a {competencia} encontrado para essa empresa')
         return driver
     
@@ -140,7 +140,7 @@ def procura_empresa(tipo, competencia, empresa, driver, options):
             print(f'❌ Existe um comprovante com o botão de download desabilitado')
         time.sleep(1)
         
-    _escreve_relatorio_csv(f'{cnpj};{nome};Comprovantes {competencia} baixados;{contador} Arquivos;{sem_recibo}')
+    _escreve_relatorio_csv(f'{cnpj};{nome};Comprovantes {competencia} baixados;{contador} Arquivos;{sem_recibo}', nome=execucao)
     
     time.sleep(1)
     return driver

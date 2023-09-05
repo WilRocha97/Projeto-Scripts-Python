@@ -78,12 +78,16 @@ def analiza():
                                     estabelecimento = ''
                                     val_restituido = ''
                                 
-                                _escreve_relatorio_csv(f"{cnpj};{nome};{apuracao};'{num_comprovante};{codigo};{descricao};{valor_principal};{valor_multa};{valor_juros};{valor_total};{banco_nome};{arrecadacao};{agencia};{estabelecimento};{val_restituido}", nome='Info Comprovantes')
+                                _escreve_relatorio_csv(f"{cnpj};{nome};{apuracao};'{num_comprovante};"
+                                                       f"{codigo};{descricao};{valor_principal};{valor_multa};"
+                                                       f"{valor_juros};{valor_total};{banco_nome};{arrecadacao};"
+                                                       f"{agencia};{estabelecimento};{val_restituido}", nome='Info Comprovantes')
     
                     except():
                         print(textinho)
         except:
             print(f'{arq} Não é um arquivo válido')
+            _escreve_relatorio_csv(f'{arq};Arquivo corrompido', nome='Info Comprovantes')
 
 if __name__ == '__main__':
     inicio = datetime.now()

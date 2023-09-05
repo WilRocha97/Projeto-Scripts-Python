@@ -146,9 +146,9 @@ def verifica_dados(cpf, nome, cod_empresa, cod_empregado, pis, data_nasc):
 def run():
     # opções para fazer com que o chrome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')
-    # options.add_argument('--window-size=1366,768')
-    options.add_argument("--start-maximized")
+    options.add_argument('--headless')
+    options.add_argument('--window-size=1366,768')
+    # options.add_argument("--start-maximized")
 
     # abrir a planilha de dados
     empresas = _open_lista_dados()
@@ -164,7 +164,8 @@ def run():
         # configurar o indice para localizar em qual empresa está
         _indice(count, total_empresas, empresa, index)
         cpf, nome, cod_empresa, cod_empregado, pis, data_nasc = empresa
-
+        
+        # verifica se não tem nenhum dado faltando
         if not verifica_dados(cpf, nome, cod_empresa, cod_empregado, pis, data_nasc):
             continue
 
@@ -175,7 +176,9 @@ def run():
             # coloca um timeout de 60 segundos para que o robô não fique esperando eternamente caso o site não carregue
             driver.set_page_load_timeout(60)
             
+            # faz login no site
             driver, resultado = login(driver, nome, cpf, pis, data_nasc)
+            # se não der erro no login, sai do while e realiza a consulta
             if resultado != 'erro':
                 break
             driver.close()

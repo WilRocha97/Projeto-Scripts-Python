@@ -93,15 +93,13 @@ def busca_cpf(cpf):
 
 
 def abre_irpf_atual():
-    print('>>> Acessando ECAC')
-    # clica no botão do Meu IRPF do ECAC
-    _click_position_img('meu_irpf_ecac.png', '+', pixels_y=92, conf=0.9)
-    
     timer = 0
     tentativas = 0
     # aguarda a tela do Meu IRPF
     print('>>> Aguardando ECAC')
     while not _find_img('irpf_atual.png', conf=0.9):
+        # clica no botão do Meu IRPF do ECAC
+        _click_position_img('meu_irpf_ecac.png', '+', pixels_y=92, conf=0.9)
         time.sleep(1)
         timer += 1
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
@@ -175,7 +173,7 @@ def confere_restituir(cpf, nome, pasta_restituir, pasta_pagar):
             p.hotkey('ctrl', 'w')
             return f'❗ Imposto a pagar;{valor};' + pendencias
         
-        p.press('pgdown')
+        p.press('pgdn')
         timer += 1
         if timer > 60:
             return 'erro'

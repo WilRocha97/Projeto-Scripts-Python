@@ -41,41 +41,18 @@ def renomear(empresa, comp):
     return True
 
 
-def login(empresas, total_empresas, index, options, comp):
-    for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, cpf, cod, nome = empresa
+def login(cnpj, cpf, cod, options):
+    while True:
+        # loga no site do simples nacional com web driver e retorna uma sessão de request
+        status, driver = _initialize_chrome(options)
+        driver, session = _new_session_sn(cnpj, cpf, cod, 'caixa postal', driver, usa_driver=True)
         
-        # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa)
-        
-        captcha = 'erro'
-        while captcha == 'erro':
-            # loga no site do simples nacional com web driver e retorna uma sessão de request
-            status, driver = _initialize_chrome(options)
-            driver, session = _new_session_sn(cnpj, cpf, cod, 'caixa postal', driver, usa_driver=True)
+        if session == 'Erro Login - Caracteres anti-robô inválidos. Tente novamente.':
+            print('❌ Erro Login - Caracteres anti-robô inválidos. Tente novamente')
+            driver.quit()
+        else:
+            return driver, session
             
-            if session == 'Erro Login - Caracteres anti-robô inválidos. Tente novamente.':
-                print('❌ Erro Login - Caracteres anti-robô inválidos. Tente novamente')
-                captcha = 'erro'
-                driver.quit()
-            else:
-                captcha = 'ok'
-                # se existe uma sessão realiza a consulta
-                
-                if isinstance(session, Session):
-                    text = consulta(driver, empresa, comp)
-                    driver.quit()
-                    if text == 'erro':
-                        captcha = 'erro'
-                    else:
-                        # escreve na planilha de andamentos o resultado da execução atual
-                        _escreve_relatorio_csv(f'{nome};{cnpj};{cpf};{cod};{text}', nome='Termo de exclusão SN')
-                else:
-                    text = session
-                    driver.quit()
-                    # escreve na planilha de andamentos o resultado da execução atual
-                    _escreve_relatorio_csv(f'{nome};{cnpj};{cpf};{cod};{text}', nome='Termo de exclusão SN')
-
 
 def consulta(driver, empresa, comp):
     time.sleep(2)
@@ -152,10 +129,27 @@ def run():
 
     total_empresas = empresas[index:]
     
-    login(empresas, total_empresas, index, options, comp)
-    
-    return True
-
+    for count, empresa in enumerate(empresas[index:], start=1):
+        cnpj, cpf, cod, nome = empresa
+        
+        # printa o indice da empresa que está sendo executada
+        _indice(count, total_empresas, empresa)
+        
+        while True:
+            driver, session = login(cnpj, cpf, cod, options)
+            # se existe uma sessão realiza a consulta
+            if isinstance(session, Session):
+                text = consulta(driver, empresa, comp)
+                driver.quit()
+                if text != 'erro':
+                    break
+            else:
+                text = session
+                driver.quit()
+                break
+                
+        # escreve na planilha de andamentos o resultado da execução atual
+        _escreve_relatorio_csv(f'{nome};{cnpj};{cpf};{cod};{text}', nome='Termo de exclusão SN')
 
 if __name__ == '__main__':
     run()

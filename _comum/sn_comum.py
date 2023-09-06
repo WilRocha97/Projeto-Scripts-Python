@@ -14,8 +14,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 from captcha_comum import _solve_text_captcha, _solve_hcaptcha
-from selenium_comum import send_input
-from chrome_comum import initialize_chrome
+from chrome_comum import initialize_chrome, _send_input
 
 
 # variaveis globais
@@ -52,29 +51,13 @@ def new_session_sn(cnpj, cpf, cod, serv, driver, usa_driver=False):
         timer += 1
         if timer >= 60:
             new_session_sn(cnpj, cpf, cod, serv, driver, usa_driver=False)
-        
-    element = driver.find_element(by=By.ID, value='captcha-img')
-    location = element.location
-    size = element.size
-    driver.save_screenshot('ignore\captcha\pagina.png')
-    x = location['x']
-    y = location['y']
-    w = size['width']
-    h = size['height']
-    width = x + w
-    height = y + h
-    sleep(2)
-    im = Image.open(r'ignore\captcha\pagina.png')
-    im = im.crop((int(x), int(y), int(width), int(height)))
-    im.save(r'ignore\captcha\captcha.png')
-    sleep(1)
 
-    captcha = _solve_text_captcha(os.path.join('ignore', 'captcha', 'captcha.png'))
+    captcha = _solve_text_captcha(driver, 'captcha-img')
 
-    send_input('txtTexto_captcha_serpro_gov_br', captcha, driver)
+    _send_input('txtTexto_captcha_serpro_gov_br', captcha, driver)
 
     for key, value in aux_acessos:
-        send_input(f'ctl00_ContentPlaceHolder_{key}', value, driver)
+        _send_input(f'ctl00_ContentPlaceHolder_{key}', value, driver)
         sleep(0.5)
     
     print('>>> Logando na empresa')

@@ -14,6 +14,7 @@ from captcha_comum import _solve_text_captcha
 def login(driver, nome, cpf, pis, data_nasc):
     print('>>> Acessando site')
     # aguarda o botão de habilitar a consultar aparecer
+    timer = 0
     while not _find_by_id('indexForm1:botaoConsultar', driver):
         # abre o site da consulta e caso de erro é porque o site demorou pra responder,
         # nesse caso retorna um erro para tentar novamente
@@ -22,6 +23,9 @@ def login(driver, nome, cpf, pis, data_nasc):
         except:
             return driver, 'erro'
         time.sleep(1)
+        timer += 1
+        if timer > 60:
+            return driver, 'erro'
         
     # clica para habilitar a consulta
     driver.find_element(by=By.ID, value='indexForm1:botaoConsultar').click()

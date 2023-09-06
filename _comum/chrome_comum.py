@@ -158,17 +158,22 @@ def abrir_chrome(url):
                 p.press('esc')
                 time.sleep(1)
                 
-    _click_img('google.png', conf=0.9)
-    time.sleep(1)
-    p.hotkey('alt', 'space', 'x')
-    time.sleep(1)
-    p.click(1000, 51)
-    time.sleep(1)
-    pyperclip.copy(url)
-    time.sleep(1)
-    p.hotkey('ctrl', 'v')
-    time.sleep(1)
-    p.press('delete')
+        _click_img('google.png', conf=0.9)
+        time.sleep(1)
+        p.hotkey('alt', 'space', 'x')
+        time.sleep(1)
+    
+    for i in range(4):
+        p.click(1000, 51)
+        time.sleep(1)
+        p.hotkey('ctrl', 'a')
+        time.sleep(1)
+        pyperclip.copy(url)
+        time.sleep(1)
+        p.hotkey('ctrl', 'v')
+        time.sleep(1)
+        p.press('delete')
+
     time.sleep(1)
     p.press('enter')
 _abrir_chrome = abrir_chrome

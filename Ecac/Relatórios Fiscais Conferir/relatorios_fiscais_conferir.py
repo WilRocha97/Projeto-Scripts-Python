@@ -29,15 +29,20 @@ def login_conferir():
     
     time.sleep(0.5)
     p.press('enter')
+    time.sleep(3)
     
 
 def consulta(cpf):
     print('>>> Aguardando o site Conferir')
     # aguarda barra de pesquisa
+    timer = 0
     while not _find_img('barra_de_pesquisa.png', conf=0.9):
         if _find_img('tela_login.png', conf=0.9):
             login_conferir()
         time.sleep(1)
+        timer += 1
+        if timer > 60:
+            p.press('f5')
     
     print('>>> Buscando CPF')
     # clica na barra de pesquisa
@@ -83,7 +88,9 @@ def consulta(cpf):
     
     # aguarda a tela para salvar o PDF
     while not _find_img('salvar_como.png', conf=0.9):
-        if _find_img('erro_sistema_5.png', conf=0.9) or _find_img('erro_sistema_8.png', conf=0.9):
+        if ((_find_img('erro_sistema_5.png', conf=0.9)
+                or _find_img('erro_sistema_8.png', conf=0.9))
+                or _find_img('erro_sistema_9.png', conf=0.9)):
             p.hotkey('ctrl', 'w')
             time.sleep(1)
             p.press('f5')
@@ -167,8 +174,12 @@ def gera_relatorio():
             if _find_img('erro_sistema_8.png', conf=0.9):
                 print('>>> Erro no ECAC, tentando novamente')
                 return 'ok'
+        if timer > 60:
+            print('>>> Erro no ECAC, tentando novamente')
+            return 'ok'
         time.sleep(1)
         timer += 1
+        
     
     # clica no botão para emitir o relatório
     _click_img('botao_gerar_relatorio.png', conf=0.9)

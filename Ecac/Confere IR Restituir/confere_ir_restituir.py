@@ -29,6 +29,7 @@ def login_conferir():
     
     time.sleep(0.5)
     p.press('enter')
+    time.sleep(1)
     
 
 def busca_cpf(cpf):
@@ -178,6 +179,7 @@ def confere_restituir(cpf, nome, pasta_restituir, pasta_pagar):
         timer += 1
         if timer > 60:
             return 'erro'
+      
         
 def salvar_pdf(arquivo, pasta_final):
     p.hotkey('ctrl', 'p')

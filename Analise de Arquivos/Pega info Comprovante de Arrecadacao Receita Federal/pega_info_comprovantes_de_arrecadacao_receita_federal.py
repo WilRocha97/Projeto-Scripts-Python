@@ -27,6 +27,8 @@ def analiza():
                         # Pega o texto da pagina
                         textinho = page.get_text('text', flags=1 + 2 + 8)
                         
+                        print(textinho)
+                        
                         #if arquivo == 'Comprovante_Pagamento_02_2022_DARF_007162228638483950 - 21593211000155.pdf':
                             #print(textinho)
                             #return False

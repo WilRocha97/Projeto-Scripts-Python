@@ -140,9 +140,9 @@ def solicita_dctf(comp, cnpj_contratante, id_empresa, access_token, jwt_token):
     
     # verifica se a guia será para CPF ou CNPJ, se for CPF é código 1 e CNPJ é código 2
     if len(id_empresa) > 12:
-        cod_consulta = '2'
+        cod_consulta = 2
     else:
-        cod_consulta = '1'
+        cod_consulta = 1
     
     data = {
               "contratante": {

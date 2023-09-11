@@ -105,6 +105,8 @@ def abre_irpf_atual():
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
         if timer > 60:
             print('>>> Erro no ECAC, tentando novamente')
+            p.click(1000, 10)
+            time.sleep(1)
             p.hotkey('ctrl', 'w')
             time.sleep(1)
             p.press('f5')

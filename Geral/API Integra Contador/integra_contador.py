@@ -134,9 +134,15 @@ def solicita_token(usuario_b64, certificado, senha):
     
 
 # solicita a guia de DCTF WEB na API
-def solicita_dctf(comp, cod_consulta, cnpj_contratante, cnpj_empresa, access_token, jwt_token):
+def solicita_dctf(comp, cnpj_contratante, id_empresa, access_token, jwt_token):
     mes = comp.split('/')[0]
     ano = comp.split('/')[1]
+    
+    # verifica se a guia será para CPF ou CNPJ, se for CPF é código 1 e CNPJ é código 2
+    if len(id_empresa) > 12:
+        cod_consulta = '2'
+    else:
+        cod_consulta = '1'
     
     data = {
               "contratante": {
@@ -148,7 +154,7 @@ def solicita_dctf(comp, cod_consulta, cnpj_contratante, cnpj_empresa, access_tok
                 "tipo": 2
               },
               "contribuinte": {
-                "numero": str(cnpj_empresa),
+                "numero": str(id_empresa),
                 "tipo": int(cod_consulta)
               },
               "pedidoDados": {
@@ -176,7 +182,7 @@ def solicita_dctf(comp, cod_consulta, cnpj_contratante, cnpj_empresa, access_tok
         escreve_doc(resposta['dados'], nome='pdf_base_64', local=e_dir_2)
     except:
         escreve_doc(resposta, nome='resposta_jason_guia')
-        escreve_doc(f'{cnpj_empresa}\n{resposta_string_json}', nome='string_json_guia')
+        escreve_doc(f'{id_empresa}\n{resposta_string_json}', nome='string_json_guia')
         escreve_doc(resposta['dados'], nome='pdf_base_64')
     #
     # output
@@ -229,25 +235,32 @@ def solicita_dctf(comp, cod_consulta, cnpj_contratante, cnpj_empresa, access_tok
         
 
 # cria o PDF usando os bytes retornados da requisição na API
-def cria_pdf(pdf_base64, cnpj_empresa, nome_empresa, mes, ano):
+def cria_pdf(pdf_base64, id_empresa, nome_empresa, mes, ano):
+    # limpa o nome da empresa para não dar erro no arquivo
     nome_empresa = nome_empresa.replace('/', ' ').replace(',', '')
     
+    # verifica se a pasta para salvar o PDF existe, se não então cria
     e_dir_guias = Path('T:\ROBO\DCTF-WEB\Execução\Guias ' + mes + '-' + ano)
     os.makedirs(e_dir_guias, exist_ok=True)
     
+    # decodifica a base64 em bytes
     pdf_bytes = base64.b64decode(pdf_base64)
-    with open(os.path.join(e_dir_guias, f'DCTFWEB {mes}-{ano} - {cnpj_empresa} - {nome_empresa}.pdf'), "wb") as file:
+    # cria o PDF a partir dos bytes
+    with open(os.path.join(e_dir_guias, f'DCTFWEB {mes}-{ano} - {id_empresa} - {nome_empresa}.pdf'), "wb") as file:
         file.write(pdf_bytes)
 
 
 def run():
+    # pega o CNPJ da empresa contratante da API
     cnpj_contratante = p.prompt(text='Informe o CNPJ do contratante do serviço SERPRO')
-    
+    # pega as chaves de acesso encontradas no site da API
     consumer_key = p.password(text='Informe a consumerKey:')
     consumer_secret = p.password(text='Informe a consumerSecret:')
+    # concatena os tokens para gerar um único em base64
     usuario = consumer_key + ":" + consumer_secret
     usuario_b64 = converter_base64(usuario)
     
+    # pega a senha do certificado digital usado para cadastrar no site da API
     senha = p.password(text='Informe a senha do certificado digital:')
     
     # pergunta qual o arquivo do certificado
@@ -260,6 +273,7 @@ def run():
     except:
         pass
     
+    # solicita os tokens para realizar a emissão das guias
     jwt_token, access_token = solicita_token(usuario_b64, certificado, senha)
     
     tokens = jwt_token + ' | ' + access_token
@@ -274,25 +288,33 @@ def run():
     if not empresas:
         return False
     
+    # pega a competência das guias que serão emitidas
     comp = p.prompt(text='Informe a competência das guias que deseja solicitar', default='00/0000')
     for count, empresa in enumerate(empresas, start=1):
-        cnpj_empresa, nome_empresa, cod_consulta = empresa
-        mes, ano, pdf_base64, mensagens = solicita_dctf(comp, cod_consulta, cnpj_contratante, cnpj_empresa, str(access_token), str(jwt_token))
+        id_empresa, nome_empresa = empresa
         
+        # solicita a guia de DCTF
+        mes, ano, pdf_base64, mensagens = solicita_dctf(comp, cnpj_contratante, id_empresa, str(access_token), str(jwt_token))
+        
+        # se não retornar o PDF não precisa da segunda mensagem
         if not pdf_base64:
             mensagen_2 = ''
+        # se retornar o PDF
         else:
             try:
-                cria_pdf(pdf_base64, cnpj_empresa, nome_empresa, mes, ano)
+                # tenta converter a base64 em PDF e não precisa da segunda mensagem
+                cria_pdf(pdf_base64, id_empresa, nome_empresa, mes, ano)
                 mensagen_2 = ''
+            # se não converter o PDF captura a segunda mensagem
             except Exception as e:
                 mensagen_2 = f'Não gerou PDF {e}'
         
         try:
+            # tenta escrever os andamentos em um local, se não conseguir, escreve no outro
             os.makedirs(e_dir, exist_ok=True)
-            escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens};{mensagen_2}', nome=f'Andamentos DCTF-WEB {mes}-{ano}', local=e_dir_2)
+            escreve_relatorio_csv(f'{id_empresa};{nome_empresa};{mensagens};{mensagen_2}', nome=f'Andamentos DCTF-WEB {mes}-{ano}', local=e_dir_2)
         except:
-            escreve_relatorio_csv(f'{cnpj_empresa};{nome_empresa};{mensagens};{mensagen_2}', nome=f'Andamentos DCTF-WEB {mes}-{ano}')
+            escreve_relatorio_csv(f'{id_empresa};{nome_empresa};{mensagens};{mensagen_2}', nome=f'Andamentos DCTF-WEB {mes}-{ano}')
         
     p.alert(text='Robô finalizado!')
     

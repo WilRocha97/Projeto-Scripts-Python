@@ -141,6 +141,8 @@ def gera_relatorio():
                     or _find_img('erro_sistema_6.png', conf=0.9)\
                     or _find_img('erro_sistema_8.png', conf=0.9):
                 print('>>> Erro no ECAC, tentando novamente')
+                p.click(1000, 10)
+                time.sleep(1)
                 p.hotkey('ctrl', 'w')
                 time.sleep(1)
                 p.press('f5')
@@ -180,7 +182,6 @@ def gera_relatorio():
         time.sleep(1)
         timer += 1
         
-    
     # clica no botão para emitir o relatório
     _click_img('botao_gerar_relatorio.png', conf=0.9)
 

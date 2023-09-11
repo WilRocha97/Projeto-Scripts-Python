@@ -16,6 +16,7 @@ def login(driver, nome, cpf, pis, data_nasc):
     # aguarda o botão de habilitar a consultar aparecer
     timer = 0
     while not _find_by_id('indexForm1:botaoConsultar', driver):
+        print('🕤')
         # abre o site da consulta e caso de erro é porque o site demorou pra responder,
         # nesse caso retorna um erro para tentar novamente
         try:
@@ -33,7 +34,9 @@ def login(driver, nome, cpf, pis, data_nasc):
     # aguarda o campo de nome aparecer
     timer = 0
     while not _find_by_id('formQualificacaoCadastral:nome', driver):
+        print('🕘')
         time.sleep(1)
+        timer += 1
         if timer > 120:
             return driver, 'erro'
 
@@ -84,12 +87,16 @@ def login(driver, nome, cpf, pis, data_nasc):
     captcha = _solve_text_captcha(driver, 'captcha_challenge')
     
     if not captcha:
-        print('Erro Login - não encontrou captcha')
+        print('❌ Erro Login - não encontrou captcha')
         return driver, 'erro captcha'
 
     # insere a resposta do captcha e clica em validar
-    driver.find_element(by=By.ID, value='captcha_campo_resposta').send_keys(captcha)
-    driver.find_element(by=By.ID, value='formValidacao:botaoValidar').click()
+    try:
+        driver.find_element(by=By.ID, value='captcha_campo_resposta').send_keys(captcha)
+        driver.find_element(by=By.ID, value='formValidacao:botaoValidar').click()
+    except:
+        print('❌ Erro ao validar a consulta, tentando novamente')
+        return driver, 'erro'
 
     print('>>> Acessando cadastro')
     # aguarda as informações do cadastro aparecerem, se demorar mais de 1 minuto ou a resposta do captcha estiver errada,

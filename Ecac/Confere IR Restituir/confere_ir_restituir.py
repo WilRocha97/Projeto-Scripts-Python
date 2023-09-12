@@ -37,23 +37,18 @@ def busca_cpf(cpf):
     # aguarda barra de pesquisa
     timer = 0
     while not _find_img('barra_de_pesquisa.png', conf=0.9):
+        time.sleep(1)
         if _find_img('tela_login.png', conf=0.9):
             login_conferir()
-        time.sleep(1)
-        timer += 1
-        if timer > 10:
-            print('>>> Abrindo o site do Conferir')
-            _abrir_chrome('https://portal.conferironline.com.br')
-            print('>>> Aguardando o site Conferir')
+            time.sleep(3)
+        
+        if timer > 60:
+            p.press('f5')
             timer = 0
+        
+        timer += 1
     
-    time.sleep(1)
     print('>>> Buscando CPF')
-    
-    if _find_img('tela_login.png', conf=0.9):
-        login_conferir()
-        while not _find_img('barra_de_pesquisa.png', conf=0.9):
-            time.sleep(1)
     time.sleep(1)
     # clica na barra de pesquisa
     _click_img('barra_de_pesquisa.png', conf=0.9)
@@ -71,12 +66,12 @@ def busca_cpf(cpf):
     # abre o perfil do CPF
     _click_img('empresa.png', conf=0.9)
     time.sleep(1)
-    
+    return '✔ OK'
+
+
+def abre_irpf_atual():
     # aguarda o menu do ecac aparecer
     while not _find_img('acoes_ecac.png', conf=0.9):
-        # se o botão do meu irpf já estiver na tela, retorna ok
-        if _find_img('meu_irpf_ecac.png', conf=0.9):
-            return '✔ OK'
         time.sleep(1)
     
     # clica no menu do ecac
@@ -89,17 +84,15 @@ def busca_cpf(cpf):
             return '❗ Os serviços só estão disponíveis caso o login esteja válido! Verifique na aba ECAC o login e senha por favor.'
         time.sleep(1)
     
-    return '✔ OK'
-
-
-def abre_irpf_atual():
+    print('>>> Acessando ECAC')
+    # clica no botão do Meu IRPF do ECAC
+    _click_position_img('meu_irpf_ecac.png', '+', pixels_y=92, conf=0.9)
+    
     timer = 0
     tentativas = 0
     # aguarda a tela do Meu IRPF
     print('>>> Aguardando ECAC')
     while not _find_img('irpf_atual.png', conf=0.9):
-        # clica no botão do Meu IRPF do ECAC
-        _click_position_img('meu_irpf_ecac.png', '+', pixels_y=92, conf=0.9)
         time.sleep(1)
         timer += 1
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
@@ -298,7 +291,7 @@ def run():
             p.hotkey('ctrl', 'w')
             
         p.hotkey('ctrl', 'w')
-        print(f'{resultado[2:]} - {situacao[2:]}'.replace(';', ' - '))
+        print(f'{resultado} - {situacao}'.replace(';', ' - '))
         _escreve_relatorio_csv(f'{cpf};{nome};{resultado[2:]};{situacao[2:]}', nome='Confere Imposto a Restituir')
 
 

@@ -32,17 +32,21 @@ def login_conferir():
     time.sleep(3)
     
 
-def consulta(cpf):
+def busca_cpf(cpf):
     print('>>> Aguardando o site Conferir')
     # aguarda barra de pesquisa
     timer = 0
     while not _find_img('barra_de_pesquisa.png', conf=0.9):
+        time.sleep(1)
         if _find_img('tela_login.png', conf=0.9):
             login_conferir()
-        time.sleep(1)
-        timer += 1
+            time.sleep(3)
+            
         if timer > 60:
             p.press('f5')
+            timer = 0
+            
+        timer += 1
     
     print('>>> Buscando CPF')
     # clica na barra de pesquisa
@@ -55,14 +59,16 @@ def consulta(cpf):
     # aguarda o CPF consultado aparecer
     while not _find_img('empresa.png', conf=0.9):
         if _find_img('nenhum_resultado_encontrado.png', conf=0.9):
-            print('❗ CPF não encontrado no sistema')
-            return 'CPF não encontrado no sistema'
+            return '❗ CPF não encontrado no sistema'
         time.sleep(1)
     
     # abre o perfil do CPF
     _click_img('empresa.png', conf=0.9)
     time.sleep(1)
-    
+    return '✔ OK'
+
+
+def consulta_relatorio():
     # aguarda o menu do ecac aparecer
     while not _find_img('acoes_ecac.png', conf=0.9):
         time.sleep(1)
@@ -74,8 +80,7 @@ def consulta(cpf):
     # aguarda o botão de CND no ecac aparecer, se aparecer uma mensagem sobre login inválido retorna o erro
     while not _find_img('cnd_ecac.png', conf=0.9):
         if _find_img('login_invalido.png', conf=0.9):
-            print('❗ Os serviços só estão disponíveis caso o login esteja válido! Verifique na aba ECAC o login e senha por favor.')
-            return 'Os serviços só estão disponíveis caso o login esteja válido! Verifique na aba ECAC o login e senha por favor.'
+            return '❗ Os serviços só estão disponíveis caso o login esteja válido! Verifique na aba ECAC o login e senha por favor.'
         time.sleep(1)
     
     print('>>> Acessando ECAC')
@@ -108,7 +113,7 @@ def consulta(cpf):
         time.sleep(1)
 
     time.sleep(2)
-    return 'ok'
+    return '✔ OK'
 
 
 def gera_relatorio():
@@ -120,19 +125,15 @@ def gera_relatorio():
         timer += 1
         # se aparecer a tela de mensagens do ecac, retorna o erro
         if _find_img('erro_sistema_3.png', conf=0.9):
-            print('❗ Solicitação rejeitada pelo sistema, tente novamente mais tarde.')
-            return 'Solicitação rejeitada pelo sistema, tente novamente mais tarde.'
+            return '❗ Solicitação rejeitada pelo sistema, tente novamente mais tarde.'
             
         # se aparecer a tela de consulta em processamento, retorna o erro
         if _find_img('erro_sistema_7.png', conf=0.9):
-            print('❗ Consulta não liberada pelo sistema, tente mais tarde.')
-            return 'Consulta não liberada pelo sistema, tente mais tarde.'
+            return '❗ Consulta não liberada pelo sistema, tente mais tarde.'
             
         # se aparecer a tela de mensagens do ecac, retorna o erro
         if _find_img('mensagens_importantes_ecac.png', conf=0.9):
-            print(
-                '❗ Este CPF possuí mensagens importantes no ECAC, não é possível emitir o relatório até que a mensagem seja aberta.')
-            return 'Este CPF possuí mensagens importantes no ECAC, não é possível emitir o relatório até que a mensagem seja aberta.'
+            return '❗ Este CPF possuí mensagens importantes no ECAC, não é possível emitir o relatório até que a mensagem seja aberta.'
 
         # se demorar 5 segundos para o botão de emissão da certidão aparecer, verifica se a tela de login do ecac stá bugada
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
@@ -141,7 +142,8 @@ def gera_relatorio():
                     or _find_img('erro_sistema_2.png', conf=0.9)\
                     or _find_img('erro_sistema_4.png', conf=0.9)\
                     or _find_img('erro_sistema_6.png', conf=0.9)\
-                    or _find_img('erro_sistema_8.png', conf=0.9):
+                    or _find_img('erro_sistema_8.png', conf=0.9)\
+                    or _find_img('erro_sistema_10.png', conf=0.9):
                 print('>>> Erro no ECAC, tentando novamente')
                 p.click(1000, 10)
                 time.sleep(1)
@@ -159,8 +161,7 @@ def gera_relatorio():
         if timer > 60:
             # se demorar muito pata carregar, retorna o erro
             if _find_img('sistema_carregando.png', conf=0.9):
-                print('❌ Erro ao acessar o ECAC, sistema demorou muito para responder.')
-                return 'Erro ao acessar o ECAC, sistema demorou muito para responder.'
+                return '❌ Erro ao acessar o ECAC, sistema demorou muito para responder.'
 
     time.sleep(2)
     # clica para abrir a tela do relatório
@@ -174,17 +175,17 @@ def gera_relatorio():
             # se aparecer essa mensagem de erro, retorna 'ok' para o erro seja tratado dentro do while anterior
             if _find_img('erro_sistema_8.png', conf=0.9):
                 print('>>> Erro no ECAC, tentando novamente')
-                return 'ok'
+                return '✔ OK'
         if timer > 60:
             print('>>> Erro no ECAC, tentando novamente')
-            return 'ok'
+            return '✔ OK'
         time.sleep(1)
         timer += 1
         
     # clica no botão para emitir o relatório
     _click_img('botao_gerar_relatorio.png', conf=0.9)
 
-    return 'ok'
+    return '✔ OK'
 
 
 def salvar_pdf(pasta_final):
@@ -218,8 +219,7 @@ def salvar_pdf(pasta_final):
     time.sleep(1)
     p.hotkey('ctrl', 'w')
 
-    print('✔ Relatório emitido com sucesso')
-    return 'Relatório emitido com sucesso'
+    return '✔ Relatório emitido com sucesso'
 
 
 def verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias):
@@ -241,7 +241,7 @@ def verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias):
                 
                 if re.compile(r'Diagnóstico Fiscal na Receita Federal e Procuradoria-Geral da Fazenda Nacional.+\nNão foram detectadas pendências/exigibilidades').search(textinho):
                     os.makedirs(pasta_final_sem_pendencias, exist_ok=True)
-                    situacao = 'Sem pendências'
+                    situacao = '✔ Sem pendências'
                     pasta_final = os.path.join(pasta_final_sem_pendencias, arquivo.replace('.pdf', '-Sem pendências.pdf'))
                     break
                 else:
@@ -258,11 +258,10 @@ def verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias):
                         else:
                             situacao_2 = 'Sem pendencias na Procuradoria Geral da Fazenda Nacional'
                     
-                    situacao = f'Com pendências;{situacao_1};{situacao_2}'
+                    situacao = f'❗ Com pendências;{situacao_1};{situacao_2}'
                     
         shutil.move(arq, pasta_final)
     
-    print(situacao.replace(';', ' | '))
     return situacao
 
 
@@ -286,17 +285,21 @@ def run():
         _indice(count, total_empresas, empresa, index)
         cpf, nome = empresa
         
-        _abrir_chrome('https://portal.conferironline.com.br/dashboard')
         print('>>> Abrindo o site do Conferir')
-        resultado = consulta(cpf)
-        if resultado == 'ok':
+        _abrir_chrome('https://portal.conferironline.com.br/dashboard')
+        resultado = busca_cpf(cpf)
+        if resultado == '✔ OK':
+            resultado = consulta_relatorio()
+            
+        if resultado == '✔ OK':
             resultado = salvar_pdf(pasta_analise)
             situacao = verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias)
         else:
             situacao = ''
 
         p.hotkey('ctrl', 'w')
-        _escreve_relatorio_csv(f'{cpf};{nome};{resultado};{situacao}')
+        print(f'{resultado} - {situacao}'.replace(';', ' - '))
+        _escreve_relatorio_csv(f'{cpf};{nome};{resultado[2:]};{situacao[2:]}', nome='Relatórios Fiscais Conferir')
 
 
 if __name__ == '__main__':

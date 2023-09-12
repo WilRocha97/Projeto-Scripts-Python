@@ -116,6 +116,8 @@ def gera_relatorio():
     timer = 0
     print('>>> Aguardando ECAC')
     while not _find_img('gerar_relatorio.png', conf=0.9):
+        time.sleep(1)
+        timer += 1
         # se aparecer a tela de mensagens do ecac, retorna o erro
         if _find_img('erro_sistema_3.png', conf=0.9):
             print('❗ Solicitação rejeitada pelo sistema, tente novamente mais tarde.')
@@ -159,9 +161,6 @@ def gera_relatorio():
             if _find_img('sistema_carregando.png', conf=0.9):
                 print('❌ Erro ao acessar o ECAC, sistema demorou muito para responder.')
                 return 'Erro ao acessar o ECAC, sistema demorou muito para responder.'
-
-        time.sleep(1)
-        timer += 1
 
     time.sleep(2)
     # clica para abrir a tela do relatório

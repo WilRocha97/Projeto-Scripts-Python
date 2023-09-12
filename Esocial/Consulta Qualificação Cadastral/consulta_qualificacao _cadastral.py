@@ -147,7 +147,7 @@ def verifica_dados(cpf, nome, cod_empresa, cod_empregado, pis, data_nasc):
     for info in infos:
         if info[0] == '':
             print(f'❌ {info[1]} não informado')
-            _escreve_relatorio_csv(f'{cpf};{nome};{cod_empresa};{cod_empregado};{pis};{data_nasc};{info[1]} não informado')
+            _escreve_relatorio_csv(f'{cpf};{nome};{cod_empresa};{cod_empregado};{pis};{data_nasc};{info[1]} não informado', nome='Consulta Qualificação Cadastral')
             return False
 
     return True
@@ -198,7 +198,7 @@ def run():
             driver, resultado = consulta(driver)
             
         print(f'❕ {resultado}')
-        _escreve_relatorio_csv(f'{cpf};{nome};{cod_empresa};{cod_empregado};{pis};{data_nasc};{resultado}')
+        _escreve_relatorio_csv(f'{cpf};{nome};{cod_empresa};{cod_empregado};{pis};{data_nasc};{resultado}', nome='Consulta Qualificação Cadastral')
         driver.close()
 
     _escreve_header_csv('CPF;NOME;CÓD EMPRESA;CÓD EMPREGADO;PIS;DATA DE NASCIMENTO;SITUAÇÃO;OBSERVAÇÕES')

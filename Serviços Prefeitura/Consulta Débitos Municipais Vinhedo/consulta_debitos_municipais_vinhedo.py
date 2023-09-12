@@ -29,7 +29,7 @@ def pesquisar(options, cnpj, insc_muni):
         time.sleep(0.2)
         
     # resolve o captcha
-    captcha = _solve_text_captcha(driver, 'homeForm:panelCaptcha:j_idt')
+    captcha = _solve_text_captcha(driver, 'homeForm:panelCaptcha:j_idt47')
     
     # espera o campo do tipo da pesquisa
     while not _find_by_id('homeForm:inputTipoInscricao_label', driver):

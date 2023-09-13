@@ -30,8 +30,9 @@ def download(empresas, index):
 
     for count, empresa in enumerate(empresas[index:], start=1):
         _indice(count, total_empresas, empresa, index)
-        num, chave = empresa
-
+        chave = empresa
+        
+        chave = str(chave)
         '''try:'''
         query = {'codigo': chave,
                  'operacao': 'validar'}
@@ -65,12 +66,13 @@ def analisa_nota(nome_nota):
             try:
                 # Pega o texto da pagina
                 textinho = page.get_text('text', flags=1 + 2 + 8)
-
+                # print(textinho)
+                # time.sleep(12)
                 cnpj_cliente = re.compile(r'(.+)\nTELEFONE / FAX').search(textinho).group(1)
                 nome_cliente = re.compile(r'(.+)\nDOCUMENTO VALIDADO COM SUCESSO').search(textinho).group(1)
                 uf_cliente = re.compile(r'UF\n(.+)').search(textinho).group(1)
                 municipio_cliente = re.compile(r'MUNICÍPIO\n.+\n.+\n(.+)').search(textinho).group(1)
-                endereco_cliente = re.compile(r'ENDEREÇO(\n.+){5}\n(.+)').search(textinho).group(1)
+                endereco_cliente = re.compile(r'(.+)\n.+\nTELEFONE / FAX').search(textinho).group(1)
                 numero_nota = re.compile(r'(.+)\nNÚMERO').search(textinho).group(1)
                 serie_nota = re.compile(r'ELETRÔNICA DE\nSERVIÇO\n.+\n(.+)').search(textinho).group(1)
                 data_nota = re.compile(r'(.+)\n.+\nDATA EMISSÃO').search(textinho).group(1)
@@ -82,6 +84,7 @@ def analisa_nota(nome_nota):
                     cfps = '9102'
                 valor_servico = re.compile(r'VALOR BRUTO DA NOTA FISCAL\n.+\n.+\nR\$ (.+)').search(textinho).group(1)
                 valor_descontos = '0,00'
+                valor_decucoes = re.compile(r'R\$ (.+)\n.+\n.+\n.+\nDEDUÇÕES').search(textinho).group(1)
                 valor_contabil = valor_servico
                 base_de_calculo = valor_servico
                 aliquota_iss = re.compile(r'(\d,\d\d)(.+\n){7}ALIQUOTA ISS\(%\)').search(textinho).group(1)
@@ -128,6 +131,7 @@ def analisa_nota(nome_nota):
                                                  cfps,
                                                  valor_servico,
                                                  valor_descontos,
+                                                 valor_decucoes,
                                                  valor_contabil,
                                                  base_de_calculo,
                                                  aliquota_iss,

@@ -307,7 +307,7 @@ def _verifica_dominio():
 
 
 def _encerra_dominio():
-    processo = 'AppController.exe'
+    processo = 'C:\Program Files (x86)\GraphOn\AppController\AppController.exe'
     with open(os.devnull, 'w') as devnull:
         try:
             subprocess.call(['kill', str(processo)], stdout=devnull, stderr=subprocess.STDOUT)

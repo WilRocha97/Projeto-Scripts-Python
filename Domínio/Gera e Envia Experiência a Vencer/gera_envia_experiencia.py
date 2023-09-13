@@ -52,7 +52,7 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
     # escreve o nome da opção para selecionar
     time.sleep(0.5)
     
-    p.press('pgup', presses=5)
+    p.press('pgup', presses=10)
     while not _find_img('relacao_empregados.png', conf=0.9):
         p.press('pgdn')
         time.sleep(0.5)

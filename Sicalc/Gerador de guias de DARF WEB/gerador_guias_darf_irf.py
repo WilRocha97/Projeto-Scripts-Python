@@ -15,7 +15,7 @@ def login_sicalc(empresa):
     # selecionar o checkbox do captcha
     p.press('pgDn')
     _click_img('checkbox.png', conf=0.95)
-    p.moveTo(5, 5)
+    p.moveTo(5, 500)
     
     timer = 0
     while not _find_img('check.png', conf=0.9):
@@ -107,6 +107,8 @@ def gerar(empresa, apuracao):
     # copia data de vencimento da guia
     while True:
         try:
+            time.sleep(1)
+            p.hotkey('ctrl', 'c')
             time.sleep(1)
             p.hotkey('ctrl', 'c')
             time.sleep(1)

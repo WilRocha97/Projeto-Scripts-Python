@@ -35,7 +35,13 @@ def login(driver, usuario, senha):
 
     
 def consulta_notas(download_folder, driver, cnpj, nome):
-    print('>>> Consultando notas emitidas')
+    alerta = re.compile(r'<div class=\"alert-warning alert\"><span class=\"icone\"></span>(.+)<a class=\"close\"').search(driver.page_source)
+    if alerta:
+        return driver, f'❗ {alerta.group(1)}'
+
+    if re.compile(r'Até o momento nenhuma NFS-e foi emitida').search(driver.page_source):
+        return driver, '❗ Até o momento nenhuma NFS-e foi emitida'
+
     driver.get('https://www.nfse.gov.br/EmissorNacional/Notas/Emitidas')
     time.sleep(1)
     # captura os links para entrar em cada nota da lista
@@ -50,6 +56,7 @@ def consulta_notas(download_folder, driver, cnpj, nome):
         # abre a nota
         driver.get('https://www.nfse.gov.br' + link_nota)
         time.sleep(1)
+        
         # coleta os dados da nota no site
         dado_do_site = coleta_dados_da_nota(driver)
         
@@ -60,15 +67,25 @@ def consulta_notas(download_folder, driver, cnpj, nome):
             
         # pega o link para baixar o PDF da nota
         link_pdf = re.compile(r'href=\"(/EmissorNacional/Notas/Download/DANFSe/.+)\" class=\"btn btn-lg btn-info\"').search(driver.page_source).group(1)
-        # clica no botão para download da NFSE
-        driver.get('https://www.nfse.gov.br' + link_pdf)
-        time.sleep(1)
-        # captura dados do PDF da nota
-        dados_pdf = mover_arquivo(download_folder, link_pdf, cnpj, nome, nf_cancelada)
         
+        while True:
+            # clica no botão para download da NFSE
+            driver.get('https://www.nfse.gov.br' + link_pdf)
+            time.sleep(1)
+            # captura dados do PDF da nota
+            try:
+                dados_pdf = mover_arquivo(download_folder, link_pdf, cnpj, nome, nf_cancelada)
+                break
+            except:
+                # limpa a pasta de download
+                for file in os.listdir(download_folder):
+                    if file.endswith('.crdownload'):
+                        os.remove(os.path.join(download_folder, file))
+                        time.sleep(1)
+                
         _escreve_relatorio_csv(f'{dados_pdf};{dado_do_site}')
         
-    return driver
+    return driver, 'ok'
 
 
 def coleta_dados_da_nota(driver):
@@ -168,7 +185,15 @@ def mover_arquivo(download_folder, link_pdf, cnpj, nome, nf_cancelada):
             numero_dps = re.compile(r'NúmerodaDPS\n(.+)').search(textinho).group(1)
             competencia = re.compile(r'CompetênciadaNFS-e\n(.+)').search(textinho).group(1)
             chave_acesso = "'" + re.compile(r'ChavedeAcessodaNFS-e\n(.+)').search(textinho).group(1)
-            tomador = re.compile('TOMADORDOSERVIÇO\nCNPJ/CPF/NIF\n(.+)').search(textinho).group(1)
+            
+            tomador = re.compile('TOMADORDOSERVIÇO\nCNPJ/CPF/NIF\n(.+)').search(textinho)
+            if not tomador:
+                tomador = re.compile('TOMADORDOSERVIÇONÃOIDENTIFICADONANFS-e').search(textinho)
+                if tomador:
+                    tomador = 'Tomador não identificado na NFS-e'
+            else:
+                tomador = tomador.group(1)
+                
             tomador = tomador.replace('.', '').replace('/', '').replace('-', '')
             
             dados_pdf = f'{cnpj};{nome};{numero_nf};{numero_dps};{chave_acesso};{competencia}'
@@ -220,7 +245,10 @@ def run():
             driver.set_page_load_timeout(15)
             driver, situacao = login(driver, usuario, senha)
             if situacao == 'ok':
-                driver = consulta_notas(download_folder, driver, cnpj, nome)
+                driver, resultado = consulta_notas(download_folder, driver, cnpj, nome)
+                if resultado != 'ok':
+                    print(resultado)
+                    _escreve_relatorio_csv(f'{cnpj};{nome};{resultado[2:]}')
                 break
                 
             driver.close()

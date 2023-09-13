@@ -154,8 +154,10 @@ def gera_relatorio():
 
                 while not _find_img('cnd_ecac.png', conf=0.9):
                     time.sleep(1)
-
-                _click_position_img('cnd_ecac.png', '+', pixels_y=92, conf=0.9)
+                
+                while _find_img('cnd_ecac.png', conf=0.9):
+                    _click_position_img('cnd_ecac.png', '+', pixels_y=92, conf=0.9)
+                    time.sleep(1)
                 timer = 0
 
         if timer > 60:

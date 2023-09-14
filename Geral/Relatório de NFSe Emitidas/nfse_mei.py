@@ -41,7 +41,8 @@ def consulta_notas(download_folder, driver, cnpj, nome):
 
     if re.compile(r'Até o momento nenhuma NFS-e foi emitida').search(driver.page_source):
         return driver, '❗ Até o momento nenhuma NFS-e foi emitida'
-
+    
+    print('>>> Consultando notas emitidas')
     driver.get('https://www.nfse.gov.br/EmissorNacional/Notas/Emitidas')
     time.sleep(1)
     # captura os links para entrar em cada nota da lista
@@ -51,6 +52,7 @@ def consulta_notas(download_folder, driver, cnpj, nome):
         print(driver.page_source)
     
     # para cada nota da lista
+    dados = []
     for count, link_nota in enumerate(link_notas, start=1):
         print(f'>>> Abrindo {count}° nota')
         # abre a nota
@@ -58,134 +60,70 @@ def consulta_notas(download_folder, driver, cnpj, nome):
         time.sleep(1)
         
         # coleta os dados da nota no site
-        dado_do_site = coleta_dados_da_nota(driver)
+        dados_do_site = coleta_dados_da_nota_no_site(driver)
         
         # verifica se a nota foi cancelada
-        nf_cancelada = ''
+        nf_cancelada = ' - '
+        situacao = '0'
         if re.compile(r'(Evento de Cancelamento de NFS-e)').search(driver.page_source):
-            nf_cancelada = ' - CANCELADA'
+            nf_cancelada = ' - CANCELADA - '
+            situacao = '2'
             
         # pega o link para baixar o PDF da nota
         link_pdf = re.compile(r'href=\"(/EmissorNacional/Notas/Download/DANFSe/.+)\" class=\"btn btn-lg btn-info\"').search(driver.page_source).group(1)
         
-        while True:
-            # clica no botão para download da NFSE
-            driver.get('https://www.nfse.gov.br' + link_pdf)
-            time.sleep(1)
-            # captura dados do PDF da nota
-            try:
-                dados_pdf = mover_arquivo(download_folder, link_pdf, cnpj, nome, nf_cancelada)
-                break
-            except:
-                # limpa a pasta de download
-                for file in os.listdir(download_folder):
-                    if file.endswith('.crdownload'):
-                        os.remove(os.path.join(download_folder, file))
-                        time.sleep(1)
-                
-        _escreve_relatorio_csv(f'{dados_pdf};{dado_do_site}')
+        # clica no botão para download da NFSE
+        driver.get('https://www.nfse.gov.br' + link_pdf)
+        time.sleep(1)
+
+        dados_pdf = mover_arquivo(download_folder, link_pdf, cnpj, nome, nf_cancelada)
+        
+        dados.append(f'{dados_do_site};{situacao};{dados_pdf}')
+        
+    for nota in dados:
+        _escreve_relatorio_csv(nota, nome='Notas')
         
     return driver, 'ok'
 
 
-def coleta_dados_da_nota(driver):
+def coleta_dados_da_nota_no_site(driver):
     print('>>> Analisando dados no site')
     # lista com os regex para pegar cada item da nota
-    dados = [r'(Data de emissão)</span></label><span class=\"form-control-static texto\">(.+) \n\s+( .+)\n\s+( .+)</span></div>',
-             r'(Autor do Evento)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Data do Evento)</span></label><span class=\"form-control-static .+\">(.+) \n\s+( .+)\n\s+( .+)</span></div>',
-             r'(Data do registro do Evento)</span></label><span class=\"form-control-static .+\">(.+) \n\s+( .+)\n\s+( .+)</span></div>',
-             r'(Versão)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Série)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'Emitente.+(\n.+){9}CNPJ</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'Emitente.+(\n.+){4}Razão Social</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'Emitente.+(\n.+){12}Inscrição Municipal</span></label><span class=\"form-control-static .+\">\n\s+(.+)',
-             r'(Situação Perante o Simples Nacional)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Regime Especial de Tributação)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'Emitente.+(\n.+){41}Email</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'Tomador.+(\n.+){4}CNPJ</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'Tomador.+(\n.+){14}Razão Social</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'Tomador.+(\n.+){7}Inscrição Municipal</span></label><span class=\"form-control-static .+\">\n\s+(.+)',
-             r'(Tributação do ISSQN)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(País Resultado da Prestação de Serviço)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Município de Incidência)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Tipo de Imunidade)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Suspensão do ISSQN)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Número processo suspensão)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Benefício Municipal - BM)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Valor do Serviço.+R\$)</span><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Desconto incondicionado.+R\$)</span><span class=\"form-control-static .+\">\n\s+(.+)',
-             r'(Total Deduções/Reduções.+R\$)</span><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Total Benefício Municipal.+R\$)</span><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Base de Cálculo.+R\$)</span><span class=\"form-control-static .+\">\n\s+(.+)',
-             r'(Alíquota)</span></label><div class=\"input-group\"><span class=\"form-control-static .+\">\n\s+(.+)',
-             r'(Valor do ISSQN.+R\$)</span><span class=\"form-control-static .+\">\n\s+(.+)',
-             r'(Retenção)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Versão da Aplicação)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Ambiente Gerador)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Situação da NFS-e)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(País)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Município)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Código de Tributação Nacional)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Item da NBS correspondente ao serviço prestado)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Descrição do serviço)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Nome do Evento)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Data de início)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Data de fim)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Código de identificação)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Número de documento de responsabilidade técnica)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Documento de referência)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Informações complementares)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Situação tributária do PIS/COFINS)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Base de cálculo PIS/COFINS.+R\$)</span><span class=\"form-control-static .+\">\n\s+(.+)',
-             r'(PIS - Alíquota)</span></label><div class=\"input-group\"><span class=\"form-control-static .+\">\n\s+(.+)',
-             r'(PIS - Valor do imposto.+R\$)</span><span class=\"form-control-static .+\">\n\s+(.+)',
-             r'(COFINS - Alíquota)</span></label><div class=\"input-group\"><span class=\"form-control-static .+\">\n\s+(.+)',
-             r'(COFINS - Valor do imposto.+R\$)</span><span class=\"form-control-static .+\">\n\s+(.+)',
-             r'(Tipo de Retenção do PIS/Cofins)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',
-             r'(Valor Retido IRRF.+R\$)</span><span class=\"form-control-static .+\">\n\s+(.+)',
-             r'(Valor Retido CSLL.+R\$)</span><span class=\"form-control-static .+\">\n\s+(.+)',
-             r'(Valor Retido CP.+R\$)</span><span class=\"form-control-static .+\">\n\s+(.+)',
-             r'(Opção)</span></label><span class=\"form-control-static .+\"(.+)</span></div>',]
+    print(driver.page_source)
+    time.sleep(33)
     
-    dado_do_site = ''
-    dado_composto = ''
-    # para cada regex, procura a info na nota
-    for count, dado in enumerate(dados):
-        # procura o dado na nota
-        iten = re.compile(dado).search(driver.page_source)
-        # se não encontrar o dado específico, coloca um "-" na variável
-        if not iten:
-            dado_do_site += '-;'
-        else:
-            for i in range(8):
-                if i < 2:
-                    continue
-                try:
-                    dado_composto += iten.group(i).replace('>', '').replace(' - ', '-')
-                except:
-                    pass
-                    
-            dado_do_site += dado_composto + ';'
-            dado_composto = ''
-        # adiciona todos os dados formatados com ";" para escrever na planilha
+    cnpj_tomador = re.compile(r'Tomador.+(\n.+){4}CNPJ</span></label><span class=\"form-control-static .+\"(.+)</span></div>').search(driver.page_source).group(2)
+    nome_tomador = re.compile(r'Tomador.+(\n.+){14}Razão Social</span></label><span class=\"form-control-static .+\"(.+)</span></div>').search(driver.page_source).group(2)
+    endereco_tomador = re.compile(r'texto\">(.+\n.+\n.+)(\n.+){3},\s+(.+)</span></div>(\s+</div>\n){5}\s+<div id=\"servicos\" class=\"tab-pane fade\">').search(driver.page_source)
     
-    return dado_do_site
+    uf = endereco_tomador.group(3).split('/')[1]
+    cidade = endereco_tomador.group(3).split('/')[0]
+    endereco = endereco_tomador.group(1).re.sub(r'\s+', '').replace('\n', ' ')
+    
+    numero_nota = re.compile(r'Número</span></label><span class=\"form-control-static texto\">(.+)</span></div>').search(driver.page_source).group(1)
+    serie_nota = re.compile(r'Série</span></label><span class=\"form-control-static texto\">(.+)</span></div>').search(driver.page_source).group(1)
+    data_emissao = re.compile(r'Data de emissão</span></label><span class=\"form-control-static texto\">(.+) \n\s+ .+\n\s+ .+</span></div>').search(driver.page_source).group(1)
+    
+    return f'{cnpj_tomador};{nome_tomador};{uf};{cidade};{endereco};{numero_nota};{serie_nota};{data_emissao}'
 
 
 def mover_arquivo(download_folder, link_pdf, cnpj, nome, nf_cancelada):
     nome_arquivo = link_pdf.split('/')[-1] + '.pdf'
+    
+    for arquivo in os.listdir(download_folder):
+        while re.compile(r'crdownload').search(arquivo):
+            print('>>> Aguardando download...')
+            time.sleep(3)
+    
     print('>>> Analisando PDF')
     # abre o PDF da nota para capturar algumas infos para adicionar na planilha de andamentos e para renomear o arquivo
     with fitz.open(os.path.join(download_folder, nome_arquivo)) as pdf:
         for page in pdf:
             textinho = page.get_text('text', flags=1 + 2 + 8)
             
+            # captura dados para o nome do arquivo
             numero_nf = re.compile(r'NúmerodaNFS-e\n(.+)').search(textinho).group(1)
-            numero_dps = re.compile(r'NúmerodaDPS\n(.+)').search(textinho).group(1)
             competencia = re.compile(r'CompetênciadaNFS-e\n(.+)').search(textinho).group(1)
-            chave_acesso = "'" + re.compile(r'ChavedeAcessodaNFS-e\n(.+)').search(textinho).group(1)
-            
             tomador = re.compile('TOMADORDOSERVIÇO\nCNPJ/CPF/NIF\n(.+)').search(textinho)
             if not tomador:
                 tomador = re.compile('TOMADORDOSERVIÇONÃOIDENTIFICADONANFS-e').search(textinho)
@@ -193,12 +131,46 @@ def mover_arquivo(download_folder, link_pdf, cnpj, nome, nf_cancelada):
                     tomador = 'Tomador não identificado na NFS-e'
             else:
                 tomador = tomador.group(1)
-                
             tomador = tomador.replace('.', '').replace('/', '').replace('-', '')
+            novo_arquivo = f'{nome} - NFSE-{numero_nf} - {competencia.replace("/", "-")}{nf_cancelada}Tomador_{tomador}.pdf'
             
-            dados_pdf = f'{cnpj};{nome};{numero_nf};{numero_dps};{chave_acesso};{competencia}'
-            novo_arquivo = f'NFSE_{numero_nf} - {competencia.replace("/", "-")} - Prestador_{cnpj} - Tomador_{tomador}{nf_cancelada}.pdf'
-    
+            # captura dados para a planilha
+            acumulador = '6102'
+            local_do_servico = re.compile(r'LocaldaPrestação\n(.+)').search(textinho).group(1)
+            if local_do_servico == 'Valinhos-SP':
+                cfps = '9101'
+            else:
+                cfps = '9102'
+            valor_servico = re.compile(r'ValordoServiço\nR\$(.+)').search(textinho).group(1)
+            valor_descontos = '0,00'
+            valor_deducoes = re.compile(r'TotalDeduções/Reduções\n(.+)').search(textinho).group(1)
+            if valor_deducoes == '-':
+                valor_deducoes = '0,00'
+            valor_contabil = valor_servico
+            base_calculo = valor_servico
+            aliquota_iss = '0,00'
+            valor_iss = '0,00'
+            valor_iss_retido = '0,00'
+            valor_irrf = '0,00'
+            valor_pis = '0,00'
+            valor_cofins = '0,00'
+            valor_csll = '0,00'
+            
+            dados_pdf = (f'{acumulador};'
+                         f'{cfps};'
+                         f'{valor_servico};'
+                         f'{valor_descontos};'
+                         f'{valor_deducoes};'
+                         f'{valor_contabil};'
+                         f'{base_calculo};'
+                         f'{aliquota_iss};'
+                         f'{valor_iss};'
+                         f'{valor_iss_retido};'
+                         f'{valor_irrf};'
+                         f'{valor_pis};'
+                         f'{valor_cofins};'
+                         f'{valor_csll}')
+            
     # move e renomeio o arquivo
     shutil.move(os.path.join(download_folder, nome_arquivo), os.path.join(download_folder, novo_arquivo))
     print(novo_arquivo)
@@ -248,7 +220,7 @@ def run():
                 driver, resultado = consulta_notas(download_folder, driver, cnpj, nome)
                 if resultado != 'ok':
                     print(resultado)
-                    _escreve_relatorio_csv(f'{cnpj};{nome};{resultado[2:]}')
+                    _escreve_relatorio_csv(f'{cnpj};{nome};{resultado[2:]}', nome='Ocorrências')
                 break
                 
             driver.close()

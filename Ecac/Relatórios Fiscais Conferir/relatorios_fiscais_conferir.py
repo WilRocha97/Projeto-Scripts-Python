@@ -221,7 +221,6 @@ def salvar_pdf(pasta_final):
 
 def verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias):
     print('>>> Analisando relatório')
-    
     # Analisa cada pdf que estiver na pasta
     for arquivo in os.listdir(pasta_analise):
         print(f'Arquivo: {arquivo}')
@@ -258,7 +257,6 @@ def verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias):
                     situacao = f'❗ Com pendências;{situacao_1};{situacao_2}'
                     
         shutil.move(arq, pasta_final)
-    
     return situacao
 
 
@@ -267,6 +265,11 @@ def run():
     pasta_analise = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\ignore\Relatórios'
     pasta_final = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\execução\Relatórios'
     pasta_final_sem_pendencias = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\execução\Relatórios Sem Pendências'
+    
+    # limpa a pasta de download
+    for file in os.listdir(pasta_analise):
+        os.remove(os.path.join(pasta_analise, file))
+        
     # abrir a planilha de dados
     empresas = _open_lista_dados()
     if not empresas:

@@ -3,7 +3,7 @@ import time, fitz, re, os, shutil, xlrd, openpyxl
 from bs4 import BeautifulSoup
 from requests import Session
 from tkinter.filedialog import askopenfilename, askdirectory, Tk
-# from pyautogui import alert, confirm
+from pyautogui import alert, confirm
 
 
 def open_lista_dados(i_dir='ignore'):

@@ -11,6 +11,7 @@ from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header
 
 def login(driver, usuario, senha):
     print('>>> Logando no site')
+    # espera até 1 minuto o site carregar, se não carregar retorna e tenta de novo
     timer = 0
     while not _find_by_id('Inscricao', driver):
         try:
@@ -29,91 +30,160 @@ def login(driver, usuario, senha):
     time.sleep(1)
     
     # clica no botão para logar
-    driver.find_element(by=By.XPATH, value='/html/body/section/div/div/div[2]/div[2]/div[1]/div/form/div[3]/button').click()
+    try:
+        driver.find_element(by=By.XPATH, value='/html/body/section/div/div/div[2]/div[2]/div[1]/div/form/div[3]/button').click()
+    except:
+        return driver, 'erro'
+    
     time.sleep(1)
     return driver, 'ok'
 
     
-def consulta_notas(download_folder, driver, cnpj, nome):
+def consulta_notas(download_folder, driver, cod_dominio, cnpj, nome):
+    # verifica se aparece alguma mensagem de alerta no site
     alerta = re.compile(r'<div class=\"alert-warning alert\"><span class=\"icone\"></span>(.+)<a class=\"close\"').search(driver.page_source)
     if alerta:
         return driver, f'❗ {alerta.group(1)}'
-
+    
+    # verifica se a empresa tem notas no site
     if re.compile(r'Até o momento nenhuma NFS-e foi emitida').search(driver.page_source):
         return driver, '❗ Até o momento nenhuma NFS-e foi emitida'
     
     print('>>> Consultando notas emitidas')
-    driver.get('https://www.nfse.gov.br/EmissorNacional/Notas/Emitidas')
-    time.sleep(1)
-    # captura os links para entrar em cada nota da lista
-    link_notas = re.compile(r'href=\"(/EmissorNacional/Notas/Visualizar/Index/.+)\" class=\"list-group-item\">').findall(driver.page_source)
-    
-    if not link_notas:
-        print(driver.page_source)
-    
-    # para cada nota da lista
-    dados = []
-    for count, link_nota in enumerate(link_notas, start=1):
-        print(f'>>> Abrindo {count}° nota')
-        # abre a nota
-        driver.get('https://www.nfse.gov.br' + link_nota)
+    # entra na página com a lista de notas emitidas
+    paginas = 1
+    while True:
+        # percorre infinitas páginas
+        driver.get('https://www.nfse.gov.br/EmissorNacional/Notas/Emitidas?pg=' + str(paginas) + '&=2')
         time.sleep(1)
+        # se chegar em uma página onde não existir registros, sai do loop
+        if re.compile(r'Nenhum registro encontrado').search(driver.page_source):
+            break
+        # captura os links para entrar em cada nota da lista
+        link_notas = re.compile(r'href=\"(/EmissorNacional/Notas/Visualizar/Index/.+)\" class=\"list-group-item\">').findall(driver.page_source)
         
-        # coleta os dados da nota no site
-        dados_do_site = coleta_dados_da_nota_no_site(driver)
+        # se não encontrar a lista de notas printa o código do site para análise
+        if not link_notas:
+            print(driver.page_source)
         
-        # verifica se a nota foi cancelada
-        nf_cancelada = ' - '
-        situacao = '0'
-        if re.compile(r'(Evento de Cancelamento de NFS-e)').search(driver.page_source):
-            nf_cancelada = ' - CANCELADA - '
-            situacao = '2'
+        # para cada nota da lista
+        dados = []
+        quantidade_de_notas = 0
+        for count, link_nota in enumerate(link_notas, start=1):
+            print(f'>>> Abrindo {count}° nota')
+            # abre a nota
+            driver.get('https://www.nfse.gov.br' + link_nota)
+            time.sleep(1)
             
-        # pega o link para baixar o PDF da nota
-        link_pdf = re.compile(r'href=\"(/EmissorNacional/Notas/Download/DANFSe/.+)\" class=\"btn btn-lg btn-info\"').search(driver.page_source).group(1)
+            # coleta os dados da nota no site
+            dados_do_site = coleta_dados_da_nota_no_site(driver)
+            
+            # verifica se a nota foi cancelada
+            nf_cancelada = ' - '
+            situacao = '0'
+            if re.compile(r'(Evento de Cancelamento de NFS-e)').search(driver.page_source):
+                nf_cancelada = ' - CANCELADA - '
+                situacao = '2'
+                
+            # pega o link para baixar o PDF da nota
+            link_pdf = re.compile(r'href=\"(/EmissorNacional/Notas/Download/DANFSe/.+)\" class=\"btn btn-lg btn-info\"').search(driver.page_source).group(1)
+            
+            # clica no botão para download da NFSE
+            driver.get('https://www.nfse.gov.br' + link_pdf)
+            time.sleep(1)
+            
+            # move para pasta final e captura informações para anotar na planilha e renomear o arquivo
+            dados_pdf = mover_arquivo(download_folder, link_pdf, nome, nf_cancelada)
+            
+            # se ao coletar os dados no site for encontrado que o tomador não foi informado na nota, não irá anotar os dados na planilha referente a essa nota,
+            # só insere na planilha notas com tomador informado
+            if dados_do_site != 'O tomador e o intermediário não foram identificados pelo emitente':
+                dados.append(f'{dados_do_site};{situacao};{dados_pdf}')
+            
+            # guarda a quantidade de notas abertas
+            quantidade_de_notas = count
+        paginas += 1
         
-        # clica no botão para download da NFSE
-        driver.get('https://www.nfse.gov.br' + link_pdf)
-        time.sleep(1)
-
-        dados_pdf = mover_arquivo(download_folder, link_pdf, cnpj, nome, nf_cancelada)
-        
-        dados.append(f'{dados_do_site};{situacao};{dados_pdf}')
-        
+    # para cada nota armazenada na variável, insere na planilha de notas
     for nota in dados:
-        _escreve_relatorio_csv(nota, nome='Notas')
+        _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{nota}', nome='Notas')
+        # cria um txt com os dados das notas em uma pasta nomeada com o código no domínio e o cnpj do prestador
+        cria_txt(cod_dominio, cnpj, nota)
+    
+    # anota na planilha de resumo o andamento da consulta e quantas notas foram baixadas
+    _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{quantidade_de_notas} notas encontradas', nome='Resumo')
         
     return driver, 'ok'
 
 
 def coleta_dados_da_nota_no_site(driver):
     print('>>> Analisando dados no site')
-    # lista com os regex para pegar cada item da nota
-    print(driver.page_source)
-    time.sleep(33)
+    # print(driver.page_source)
+    # time.sleep(3)
     
-    cnpj_tomador = re.compile(r'Tomador.+(\n.+){4}CNPJ</span></label><span class=\"form-control-static .+\"(.+)</span></div>').search(driver.page_source).group(2)
-    nome_tomador = re.compile(r'Tomador.+(\n.+){14}Razão Social</span></label><span class=\"form-control-static .+\"(.+)</span></div>').search(driver.page_source).group(2)
-    endereco_tomador = re.compile(r'texto\">(.+\n.+\n.+)(\n.+){3},\s+(.+)</span></div>(\s+</div>\n){5}\s+<div id=\"servicos\" class=\"tab-pane fade\">').search(driver.page_source)
+    # verifica se o tomador foi informado na nota
+    # se não foi informado retorna e não coleta mais nada, pois só irá anotar na planilha se o tomador for informado
+    nao_tem_tomador = re.compile(r'O tomador e o indermediário não foram identificados pelo emitente').search(driver.page_source)
+    if nao_tem_tomador:
+        return 'O tomador e o intermediário não foram identificados pelo emitente'
     
-    uf = endereco_tomador.group(3).split('/')[1]
-    cidade = endereco_tomador.group(3).split('/')[0]
-    endereco = endereco_tomador.group(1).re.sub(r'\s+', '').replace('\n', ' ')
+    # captura o CNPJ ou CPF do tomador
+    # a variável é iniciada fora do 'for', pois caso não encontre pode ser se o tomador seja fora do Brasil
+    cpf_cnpj_tomador = ''
+    for id_tomador in ['CNPJ', 'CPF']:
+        try:
+            cpf_cnpj_tomador = re.compile(r'Tomador.+(\n.+){4}' + id_tomador + '</span></label><span class=\"form-control-static .+\">(.+)</span></div>').search(driver.page_source).group(2)
+            break
+        except:
+            pass
     
+    # captura o nome do tomador, o campo pode variar de posição no código do site, por isso o 'for' para editar o regex até encontrar
+    for i in range(20):
+        try:
+            nome_tomador = re.compile(r'Tomador.+(\n.+){' + str(i) + '}Razão Social</span></label><span class=\"form-control-static .+\">(.+)</span></div>').search(driver.page_source).group(2)
+            nome_tomador = nome_tomador.replace('&amp;', '&')
+            break
+        except:
+            pass
+    
+    # captura o endereço do tomador, duas variações
+    enderecos_tomador = re.compile(r'Endereço do Estabelecimento/Domicílio.+texto\">(.+\n\s+.+\n\s+.+)(\n.+){3}\n\s+(.+)</span></div>').findall(driver.page_source)
+    if not enderecos_tomador:
+        enderecos_tomador = re.compile(r'Endereço do Estabelecimento/Domicílio.+texto\">(.+\n\s+.+)(\n.+){3}\n\s+(.+)</span></div>').findall(driver.page_source)
+    
+    # inicia as variáveis de 'uf', 'cidade' e 'endereco' fora do 'for', pois de for fora do Brasil, não precisa colocar na planilha de notas
+    uf = ''
+    cidade = ''
+    endereco = ''
+    for count, endereco_tomador in enumerate(enderecos_tomador):
+        # pega apenas a última correspondência do regex, pois o endereço do tomador é o último que aparece na nota
+        if count == len(enderecos_tomador) - 1:
+            # tenta pegar as infos de endereço, se não conseguir provavelmente é endereço fora do Brasil, nesse caso pode deixar em branco
+            try:
+                uf = endereco_tomador[2].split('/')[1]
+                cidade = endereco_tomador[2].split('/')[0]
+                endereco = endereco_tomador[0]
+                endereco = re.sub(r'  +', '', endereco).replace('\n', ' ').replace(' , ', ', ')
+            except:
+                pass
+    
+    # pega mais informações da nota
     numero_nota = re.compile(r'Número</span></label><span class=\"form-control-static texto\">(.+)</span></div>').search(driver.page_source).group(1)
     serie_nota = re.compile(r'Série</span></label><span class=\"form-control-static texto\">(.+)</span></div>').search(driver.page_source).group(1)
     data_emissao = re.compile(r'Data de emissão</span></label><span class=\"form-control-static texto\">(.+) \n\s+ .+\n\s+ .+</span></div>').search(driver.page_source).group(1)
     
-    return f'{cnpj_tomador};{nome_tomador};{uf};{cidade};{endereco};{numero_nota};{serie_nota};{data_emissao}'
+    return f'{cpf_cnpj_tomador};{nome_tomador};{uf};{cidade};{endereco};{numero_nota};{serie_nota};{data_emissao}'
 
 
-def mover_arquivo(download_folder, link_pdf, cnpj, nome, nf_cancelada):
+def mover_arquivo(download_folder, link_pdf, nome, nf_cancelada):
     nome_arquivo = link_pdf.split('/')[-1] + '.pdf'
     
     for arquivo in os.listdir(download_folder):
         while re.compile(r'crdownload').search(arquivo):
             print('>>> Aguardando download...')
             time.sleep(3)
+            for arq in os.listdir(download_folder):
+                arquivo = arq
     
     print('>>> Analisando PDF')
     # abre o PDF da nota para capturar algumas infos para adicionar na planilha de andamentos e para renomear o arquivo
@@ -141,11 +211,14 @@ def mover_arquivo(download_folder, link_pdf, cnpj, nome, nf_cancelada):
                 cfps = '9101'
             else:
                 cfps = '9102'
+                
             valor_servico = re.compile(r'ValordoServiço\nR\$(.+)').search(textinho).group(1)
             valor_descontos = '0,00'
+            
             valor_deducoes = re.compile(r'TotalDeduções/Reduções\n(.+)').search(textinho).group(1)
             if valor_deducoes == '-':
                 valor_deducoes = '0,00'
+                
             valor_contabil = valor_servico
             base_calculo = valor_servico
             aliquota_iss = '0,00'
@@ -155,6 +228,17 @@ def mover_arquivo(download_folder, link_pdf, cnpj, nome, nf_cancelada):
             valor_pis = '0,00'
             valor_cofins = '0,00'
             valor_csll = '0,00'
+            
+            irrf_cp_csll_retido = re.compile(r'IRRF,CP,CSLL-Retidos\nR\$(.+)').search(textinho).group(1)
+            pis_cofins_retido = re.compile(r'PIS/COFINSRetidos\n(.+)').search(textinho).group(1)
+            if pis_cofins_retido == '-':
+                pis_cofins_retido = '0,00'
+            valor_crf = float(irrf_cp_csll_retido.replace(',', '.')) + float(pis_cofins_retido.replace(',', '.'))
+            
+            valor_inss = '0,00'
+            codigo_item = re.compile(r'CódigodeTributaçãoNacional\n(.+)-').search(textinho).group(1)
+            quantidade = '1,00'
+            valor_unitario = valor_servico
             
             dados_pdf = (f'{acumulador};'
                          f'{cfps};'
@@ -169,17 +253,37 @@ def mover_arquivo(download_folder, link_pdf, cnpj, nome, nf_cancelada):
                          f'{valor_irrf};'
                          f'{valor_pis};'
                          f'{valor_cofins};'
-                         f'{valor_csll}')
+                         f'{valor_csll};'
+                         f'{valor_crf};'
+                         f'{valor_inss};'
+                         f'{codigo_item};'
+                         f'{quantidade};'
+                         f'{valor_unitario}')
             
     # move e renomeio o arquivo
     shutil.move(os.path.join(download_folder, nome_arquivo), os.path.join(download_folder, novo_arquivo))
     print(novo_arquivo)
     
-    return dados_pdf
+    return dados_pdf.replace('.', '')
 
+
+def cria_txt(codigo, cnpj, dados_nota, tipo='NFSe-MEI', encode='latin-1'):
+    # cria um txt com os dados das notas em uma pasta nomeada com o código no domínio e o cnpj do prestador
+    local = os.path.join('Execução', 'Arquivos para Importação', str(codigo) + '-' + str(cnpj))
+    os.makedirs(local, exist_ok=True)
+    
+    try:
+        f = open(os.path.join(local, f"{tipo} - {cnpj}.txt"), 'a', encoding=encode)
+    except:
+        f = open(os.path.join(local, f"{tipo}  - {cnpj} - auxiliar.txt"), 'a', encoding=encode)
+    
+    f.write(str(dados_nota) + '\n')
+    f.close()
+    
 
 @_time_execution
 def run():
+    # define e cria a pasta final das notas
     download_folder = "V:\\Setor Robô\\Scripts Python\\Geral\\Relatório de NFSe Emitidas\\Execução\\NFSE"
     os.makedirs(download_folder, exist_ok=True)
     
@@ -206,7 +310,7 @@ def run():
     total_empresas = empresas[index:]
     
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, nome, usuario, senha = empresa
+        cod_dominio, cnpj, nome, usuario, senha = empresa
         
         # printa o indice da empresa que está sendo executada
         _indice(count, total_empresas, empresa, index)
@@ -216,80 +320,18 @@ def run():
             # coloca um timeout de 60 segundos para que o robô não fique esperando eternamente caso o site não carregue
             driver.set_page_load_timeout(15)
             driver, situacao = login(driver, usuario, senha)
+            # se fizer o login realiza a consulta
             if situacao == 'ok':
-                driver, resultado = consulta_notas(download_folder, driver, cnpj, nome)
+                driver, resultado = consulta_notas(download_folder, driver, cod_dominio, cnpj, nome)
+                # se realizar a consulta anota na planilha
                 if resultado != 'ok':
                     print(resultado)
-                    _escreve_relatorio_csv(f'{cnpj};{nome};{resultado[2:]}', nome='Ocorrências')
+                    _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{resultado[2:]}', nome='Resumo')
                 break
                 
             driver.close()
         driver.close()
-    
-    # escreve o cabeçalho da planilha
-    _escreve_header_csv('CNPJ;'
-                        'NOME;'
-                        'NÚMERO DA NF;'
-                        'NÚMERO DA DPS;'
-                        'CHAVE DE ACESSO;'
-                        'COMPETÊNCIA;'
-                        'DATA DE EMISSÃO;'
-                        'AUTOR DO EVENTO DE CANCELAMENTO;'
-                        'DATA DO EVENTO;'
-                        'DATA DE REGISTRO DO EVENTO;'
-                        'VERSÃO;'
-                        'SÉRIE;'
-                        'CNPJ EMITENTE;'
-                        'RAZÃO SOCIAL EMITENTE;'
-                        'INSCRIÇÃO MUNICIPAL;'
-                        'SITUAÇÃO PERANTE O SIMPLES NACIONAL;'
-                        'REGIME ESPECIAL DE TRIBUTAÇÃO;'
-                        'EMITENTE EMAIL;'
-                        'CNPJ TOMADOR;'
-                        'RAZÃO SOCIAL TOMADOR;'
-                        'INSCRIÇÃO MUNICIPAL TOMADOR;'
-                        'TRIBUTAÇÃO ISSQN;'
-                        'PAÍS DA PRESTAÇÃO DO SERVIÇO;'
-                        'MUNICÍPIO DE INCIDÊNCIA;'
-                        'TIPO DE IMUNIDADE;'
-                        'SUSPENSÃO DO ISSQN;'
-                        'NÚMERO DO PROCESSO DE SUSPENSÃO;'
-                        'BENEFÍCIO MUNICIPAL;'
-                        'VALOR DO SERVIÇO;'
-                        'DESCONTO INCONDICIONADO;'
-                        'TOTAL DE DEDUÇÕES/REDUÇÕES;'
-                        'TOTAL DO BENEFÍCIO MUNICIPAL;'
-                        'BASE DE CÁLCULO;'
-                        'ALÍQUOTA;'
-                        'VALOR DO ISSQN;'
-                        'RETENÇÃO;'
-                        'VERSÃO DA APLICAÇÃO;'
-                        'AMBIENTE GERADOR;'
-                        'SITUAÇÃO DA NFS-E;'
-                        'PAÍS;'
-                        'MUNICÍPIO;'
-                        'CÓD. DE TRIBUTAÇÃO NACIONAL;'
-                        'ITEM DA NBS CORRESP. AO SERVIÇO PRESTADO;'
-                        'DESCRIÇÃO DO SERVIÇO;'
-                        'NOME DO EVENTO;'
-                        'DATA DE INÍCIO;'
-                        'DATA DO FIM;'
-                        'CÓDIGO DE IDENTIFICAÇÃO;'
-                        'Nº DOC. RESPONSABILIDADE TÉCNICA;'
-                        'DOC. REFERÊNCIA;'
-                        'INFOS COMPLEMENTARES;'
-                        'SITUAÇÃO TRIB. PIS/COFINS;'
-                        'BASE DE CÁLCULO PIS/COFINS;'
-                        'PIS-ALÍQUOTA;'
-                        'PIS-VALOR IMPOSTO;'
-                        'COFINS-ALÍQUOTA;'
-                        'COFINS-VALOR IMPOSTO;'
-                        'TIPO RETENÇÃO PIS/COFINS;'
-                        'VALOR RETIDO IRRF;'
-                        'VALOR RETIDO CSLL;V'
-                        'ALOR RETIDO CP;'
-                        'OPÇÃO')
-    
+
     
 if __name__ == '__main__':
     run()

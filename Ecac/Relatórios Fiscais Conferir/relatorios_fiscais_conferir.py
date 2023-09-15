@@ -119,6 +119,7 @@ def consulta_relatorio():
 def gera_relatorio():
     # aguarda o botão de emissão da certidão aparecer
     timer = 0
+    tentativas = 0
     print('>>> Aguardando ECAC')
     while not _find_img('gerar_relatorio.png', conf=0.9):
         time.sleep(1)
@@ -137,33 +138,27 @@ def gera_relatorio():
 
         # se demorar 5 segundos para o botão de emissão da certidão aparecer, verifica se a tela de login do ecac stá bugada
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
-        if timer > 10:
-            if _find_img('erro_sistema.png', conf=0.9)\
-                    or _find_img('erro_sistema_2.png', conf=0.9)\
-                    or _find_img('erro_sistema_4.png', conf=0.9)\
-                    or _find_img('erro_sistema_6.png', conf=0.9)\
-                    or _find_img('erro_sistema_8.png', conf=0.9)\
-                    or _find_img('erro_sistema_10.png', conf=0.9):
-                print('>>> Erro no ECAC, tentando novamente')
-                p.click(1000, 10)
-                time.sleep(1)
-                p.hotkey('ctrl', 'w')
-                time.sleep(1)
-                p.press('f5')
-                time.sleep(2)
-
-                while not _find_img('cnd_ecac.png', conf=0.9):
-                    time.sleep(1)
-                
-                while _find_img('cnd_ecac.png', conf=0.9):
-                    _click_position_img('cnd_ecac.png', '+', pixels_y=92, conf=0.9)
-                    time.sleep(1)
-                timer = 0
-
         if timer > 60:
+            print('>>> Erro no ECAC, tentando novamente')
+            p.click(1000, 10)
+            time.sleep(1)
+            p.hotkey('ctrl', 'w')
+            time.sleep(1)
+            p.press('f5')
+            time.sleep(2)
+
+            while not _find_img('cnd_ecac.png', conf=0.9):
+                time.sleep(1)
+            
+            while _find_img('cnd_ecac.png', conf=0.9):
+                _click_position_img('cnd_ecac.png', '+', pixels_y=92, conf=0.9)
+                time.sleep(1)
+            timer = 0
+            tentativas += 1
+
+        if tentativas > 5:
             # se demorar muito pata carregar, retorna o erro
-            if _find_img('sistema_carregando.png', conf=0.9):
-                return '❌ Erro ao acessar o ECAC, sistema demorou muito para responder.'
+            return '❌ Erro ao acessar o ECAC, sistema demorou muito para responder.'
 
     time.sleep(2)
     # clica para abrir a tela do relatório
@@ -226,7 +221,6 @@ def salvar_pdf(pasta_final):
 
 def verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias):
     print('>>> Analisando relatório')
-    
     # Analisa cada pdf que estiver na pasta
     for arquivo in os.listdir(pasta_analise):
         print(f'Arquivo: {arquivo}')
@@ -263,7 +257,6 @@ def verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias):
                     situacao = f'❗ Com pendências;{situacao_1};{situacao_2}'
                     
         shutil.move(arq, pasta_final)
-    
     return situacao
 
 
@@ -272,6 +265,11 @@ def run():
     pasta_analise = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\ignore\Relatórios'
     pasta_final = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\execução\Relatórios'
     pasta_final_sem_pendencias = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\execução\Relatórios Sem Pendências'
+    
+    # limpa a pasta de download
+    for file in os.listdir(pasta_analise):
+        os.remove(os.path.join(pasta_analise, file))
+        
     # abrir a planilha de dados
     empresas = _open_lista_dados()
     if not empresas:

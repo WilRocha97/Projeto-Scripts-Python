@@ -52,6 +52,8 @@ def consulta_notas(download_folder, driver, cod_dominio, cnpj, nome):
     print('>>> Consultando notas emitidas')
     # entra na página com a lista de notas emitidas
     paginas = 1
+    quantidade_de_notas = 0
+    dados = []
     while True:
         # percorre infinitas páginas
         driver.get('https://www.nfse.gov.br/EmissorNacional/Notas/Emitidas?pg=' + str(paginas) + '&=2')
@@ -67,17 +69,18 @@ def consulta_notas(download_folder, driver, cod_dominio, cnpj, nome):
             print(driver.page_source)
         
         # para cada nota da lista
-        dados = []
-        quantidade_de_notas = 0
-        for count, link_nota in enumerate(link_notas, start=1):
-            print(f'>>> Abrindo {count}° nota')
+        for link_nota in link_notas:
+            # cria a pasta para salvar as notas
+            os.makedirs(download_folder, exist_ok=True)
+            # guarda a quantidade de notas abertas
+            quantidade_de_notas += 1
+            print(f'\n>>> Abrindo {quantidade_de_notas}° nota')
             # abre a nota
             driver.get('https://www.nfse.gov.br' + link_nota)
             time.sleep(1)
             
             # coleta os dados da nota no site
             dados_do_site = coleta_dados_da_nota_no_site(driver)
-            
             # verifica se a nota foi cancelada
             nf_cancelada = ' - '
             situacao = '0'
@@ -89,19 +92,18 @@ def consulta_notas(download_folder, driver, cod_dominio, cnpj, nome):
             link_pdf = re.compile(r'href=\"(/EmissorNacional/Notas/Download/DANFSe/.+)\" class=\"btn btn-lg btn-info\"').search(driver.page_source).group(1)
             
             # clica no botão para download da NFSE
+            print('>>> Fazendo download da nota...')
             driver.get('https://www.nfse.gov.br' + link_pdf)
             time.sleep(1)
             
             # move para pasta final e captura informações para anotar na planilha e renomear o arquivo
-            dados_pdf = mover_arquivo(download_folder, link_pdf, nome, nf_cancelada)
+            dados_pdf = coleta_dados_e_renomeia_arquivo(download_folder, link_pdf, nome, nf_cancelada)
             
             # se ao coletar os dados no site for encontrado que o tomador não foi informado na nota, não irá anotar os dados na planilha referente a essa nota,
             # só insere na planilha notas com tomador informado
-            if dados_do_site != 'O tomador e o intermediário não foram identificados pelo emitente':
+            if dados_do_site != 'O tomador e o intermediário não foram identificados pelo emitente' and dados_do_site != 'Nota fiscal sem tomador, apenas intermediário':
                 dados.append(f'{dados_do_site};{situacao};{dados_pdf}')
             
-            # guarda a quantidade de notas abertas
-            quantidade_de_notas = count
         paginas += 1
         
     # para cada nota armazenada na variável, insere na planilha de notas
@@ -124,8 +126,12 @@ def coleta_dados_da_nota_no_site(driver):
     # verifica se o tomador foi informado na nota
     # se não foi informado retorna e não coleta mais nada, pois só irá anotar na planilha se o tomador for informado
     nao_tem_tomador = re.compile(r'O tomador e o indermediário não foram identificados pelo emitente').search(driver.page_source)
+    tem_intermediario = re.compile(r'Intermediário').search(driver.page_source)
     if nao_tem_tomador:
         return 'O tomador e o intermediário não foram identificados pelo emitente'
+    
+    if tem_intermediario:
+        return 'Nota fiscal sem tomador, apenas intermediário'
     
     # captura o CNPJ ou CPF do tomador
     # a variável é iniciada fora do 'for', pois caso não encontre pode ser se o tomador seja fora do Brasil
@@ -175,9 +181,10 @@ def coleta_dados_da_nota_no_site(driver):
     return f'{cpf_cnpj_tomador};{nome_tomador};{uf};{cidade};{endereco};{numero_nota};{serie_nota};{data_emissao}'
 
 
-def mover_arquivo(download_folder, link_pdf, nome, nf_cancelada):
+def coleta_dados_e_renomeia_arquivo(download_folder, link_pdf, nome, nf_cancelada):
     nome_arquivo = link_pdf.split('/')[-1] + '.pdf'
     
+    # verifica se terminou o download do arquivo
     for arquivo in os.listdir(download_folder):
         while re.compile(r'crdownload').search(arquivo):
             print('>>> Aguardando download...')
@@ -199,6 +206,9 @@ def mover_arquivo(download_folder, link_pdf, nome, nf_cancelada):
                 tomador = re.compile('TOMADORDOSERVIÇONÃOIDENTIFICADONANFS-e').search(textinho)
                 if tomador:
                     tomador = 'Tomador não identificado na NFS-e'
+                else:
+                    print(textinho)
+                    time.sleep(33)
             else:
                 tomador = tomador.group(1)
             tomador = tomador.replace('.', '').replace('/', '').replace('-', '')
@@ -260,7 +270,7 @@ def mover_arquivo(download_folder, link_pdf, nome, nf_cancelada):
                          f'{quantidade};'
                          f'{valor_unitario}')
             
-    # move e renomeio o arquivo
+    # renomeio o arquivo
     shutil.move(os.path.join(download_folder, nome_arquivo), os.path.join(download_folder, novo_arquivo))
     print(novo_arquivo)
     
@@ -285,7 +295,6 @@ def cria_txt(codigo, cnpj, dados_nota, tipo='NFSe-MEI', encode='latin-1'):
 def run():
     # define e cria a pasta final das notas
     download_folder = "V:\\Setor Robô\\Scripts Python\\Geral\\Relatório de NFSe Emitidas\\Execução\\NFSE"
-    os.makedirs(download_folder, exist_ok=True)
     
     # função para abrir a lista de dados
     empresas = _open_lista_dados()

@@ -266,6 +266,8 @@ def run():
     pasta_final = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\execução\Relatórios'
     pasta_final_sem_pendencias = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\execução\Relatórios Sem Pendências'
     
+    os.makedirs(pasta_analise, exist_ok=True)
+    
     # limpa a pasta de download
     for file in os.listdir(pasta_analise):
         os.remove(os.path.join(pasta_analise, file))

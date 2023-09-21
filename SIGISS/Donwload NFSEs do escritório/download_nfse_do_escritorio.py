@@ -29,12 +29,6 @@ def open_lista_dados(input_excel):
             workbook = openpyxl.load_workbook(file)
             workbook = workbook['Plan1']
             tipo_dados = 'xlsx'
-        
-        # abre se for .csv
-        elif file.endswith('.csv') or file.endswith('.CSV'):
-            with open(file, 'r', encoding='latin-1') as f:
-                workbook = f.readlines()
-            tipo_dados = 'csv'
     
     # abre um alerta se não conseguir abrir o arquivo
     except Exception as e:
@@ -82,19 +76,19 @@ def salvar_arquivo(nome, response, pasta_final):
 
 
 def indice(count, total_empresas, empresa, index=0):
-    """if count > 1:
-        print(f'[ {len(total_empresas) - (count - 1)} Restantes ]\n\n')"""
+    if count > 1:
+        print(f'[ {len(total_empresas) - (count - 1)} Restantes ]\n\n')
     # Cria um indice para saber qual linha dos dados está
     indice_dados = f'[ {str(count + index)} de {str(len(total_empresas) + index)} ]'
     
     empresa = str(empresa).replace("('", '[ ').replace("')", ' ]').replace("',)", " ]").replace(',)', ' ]').replace("', '", ' - ')
     
-    # print(f'{indice_dados} - {empresa}')
+    print(f'{indice_dados} - {empresa}')
     
             
 def download_nota(count, total_empresas, nota, s, pasta_final):
     # printa o indice da nota que está sendo baixada
-    indice(count, total_empresas, nota)
+    # indice(count, total_empresas, nota)
     chave = str(nota)
     
     # verifica se a chave de acesso não contem letras, se contem anota e retorna para executar a próxima
@@ -338,22 +332,8 @@ def run(window, input_excel, output_dir):
         
         pasta_final = os.path.join(pasta_final, 'Notas Fiscais de Serviço')
         quantidade_notas = 0
-        if tipo_dados == 'csv':
-            # cria o indice para cada empresa da lista de dados
-            total_empresas = notas
-            for count, nota in enumerate(notas, start=1):
-                nota = nota.replace('\n', '')
-                if download_nota(count, total_empresas, nota, s, pasta_final):
-                    quantidade_notas += 1
-                window['progressbar'].update_bar(count, max=int(len(notas)))
-                window['Progresso_texto'].update(str( int( int(count) / int(len(notas)) *100 ) ) + '%')
-                window.refresh()
-
-                # Verifica se o usuário solicitou o encerramento do script
-                if event == 'Encerrar':
-                    return
         
-        elif tipo_dados == 'xls':
+        if tipo_dados == 'xls':
             # cria o indice para cada empresa da lista de dados
             total_empresas = range(notas.nrows)
             for count, nota in enumerate(range(notas.nrows), start=1):
@@ -361,8 +341,8 @@ def run(window, input_excel, output_dir):
                 nota = notas.cell_value(nota, -1)
                 if download_nota(count, total_empresas, nota, s, pasta_final):
                     quantidade_notas += 1
-                window['progressbar'].update_bar(count, max=int(total_empresas))
-                window['Progresso_texto'].update(str( int( int(count) / int(total_empresas) *100 ) ) + '%')
+                window['progressbar'].update_bar(count, max=int(len(total_empresas)))
+                window['Progresso_texto'].update(str( round( float(count) / int(len(total_empresas)) *100, 1) ) + '%')
                 window.refresh()
                 
                 # Verifica se o usuário solicitou o encerramento do script
@@ -381,7 +361,7 @@ def run(window, input_excel, output_dir):
                     if download_nota(count, total_empresas, chave.value, s, pasta_final):
                         quantidade_notas += 1
                     window['progressbar'].update_bar(count, max=int(len(total_empresas)))
-                    window['Progresso_texto'].update(str( int( int(count) / int(len(total_empresas)) *100 ) ) + '%')
+                    window['Progresso_texto'].update(str( round( float(count) / int(len(total_empresas)) *100, 1) ) + '%')
                     window.refresh()
 
                     # Verifica se o usuário solicitou o encerramento do script
@@ -400,13 +380,14 @@ if __name__ == '__main__':
     # Layout da janela
     layout = [
         [sg.Button('Ajuda'), sg.Button('Lista de códigos do Domínio')],
+        [sg.Text('')],
         [sg.Text('Selecione um arquivo Excel com as chaves de acesso das notas:')],
-        [sg.InputText(key='input_excel'), sg.FileBrowse(key='Abrir', file_types=(("Planilhas Excel", "*.xlsx"),))],
+        [sg.FileBrowse(button_text='Pesquisar', key='Abrir', file_types=(('Planilhas Excel', '*.xlsx *.xls'),)), sg.InputText(key='input_excel', size=80)],
         [sg.Text('Selecione um diretório para salvar os resultados:')],
-        [sg.InputText(key='output_dir'), sg.FolderBrowse(key='Abrir2')],
+        [sg.FolderBrowse(button_text='Pesquisar', key='Abrir2'), sg.InputText(key='output_dir', size=80)],
+        [sg.Text('')],
         [sg.Button('Iniciar'), sg.Button('Encerrar', disabled=True), sg.Button('Abrir resultados', disabled=True)],
-        [sg.Text('', key='Progresso_texto')],
-        [sg.ProgressBar(max_value=0, orientation='h', size=(50, 15), key='progressbar', bar_color=('#fca400', '#d4d4d4'))],
+        [sg.Text(size=6, text='', key='Progresso_texto'), sg.ProgressBar(max_value=0, orientation='h', size=(54, 15), key='progressbar', bar_color=('#fca400', '#f0f0f0'))],
     ]
     
     window = sg.Window('Download NFSE_VP SIGISSWEB', layout)

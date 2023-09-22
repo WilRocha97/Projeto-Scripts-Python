@@ -21,23 +21,23 @@ def open_lista_dados(input_excel):
     if not file:
         return False
     
-    try:
-        # abre se for .xls
-        if file.endswith('.xls') or file.endswith('.XLS'):
-            workbook = xlrd.open_workbook(file)
-            workbook = workbook.sheet_by_index(0)
-            tipo_dados = 'xls'
-        
-        # abre se for .xlsx
-        elif file.endswith('.xlsx') or file.endswith('.XLSX'):
-            workbook = load_workbook(file)
-            workbook = workbook['Plan1']
-            tipo_dados = 'xlsx'
+    # try:
+    # abre se for .xls
+    if file.endswith('.xls') or file.endswith('.XLS'):
+        workbook = open_workbook(file)
+        workbook = workbook.sheet_by_index(0)
+        tipo_dados = 'xls'
     
-    # abre um alerta se não conseguir abrir o arquivo
+    # abre se for .xlsx
+    elif file.endswith('.xlsx') or file.endswith('.XLSX'):
+        workbook = load_workbook(file)
+        workbook = workbook['Plan1']
+        tipo_dados = 'xlsx'
+    
+    """# abre um alerta se não conseguir abrir o arquivo
     except Exception as e:
         alert(title='Mensagem erro', text=f'Não pode abrir arquivo\n{str(e)}')
-        return False
+        return False"""
 
     return file, workbook, tipo_dados
 

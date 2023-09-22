@@ -3,6 +3,7 @@ from twocaptcha.api import ApiException, NetworkException
 from twocaptcha import TwoCaptcha"""
 from anticaptchaofficial.imagecaptcha import *
 from anticaptchaofficial.recaptchav2proxyless import *
+from anticaptchaofficial.recaptchav3proxyless import *
 from anticaptchaofficial.hcaptchaproxyless import *
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -140,6 +141,29 @@ def solve_recaptcha(data):
         print(solver.error_code)
         return solver.error_code
 _solve_recaptcha = solve_recaptcha
+
+
+def solve_recaptcha_v3(data):
+    print('>>> Quebrando recaptcha v3')
+    solver = recaptchaV3Proxyless()
+    solver.set_verbose(1)
+    solver.set_key(anticaptcha_api_key)
+    solver.set_website_url(data['url'])
+    solver.set_website_key(data['sitekey'])
+    solver.set_page_action("home_page")
+    solver.set_min_score(0.9)
+    
+    # Specify softId to earn 10% commission with your app.
+    # Get your softId here: https://anti-captcha.com/clients/tools/devcenter
+    solver.set_soft_id(0)
+    
+    g_response = solver.solve_and_return_solution()
+    if g_response != 0:
+        return g_response
+    else:
+        print(solver.error_code)
+        return solver.error_code
+_solve_recaptcha_v3 = solve_recaptcha_v3
 
 
 # Recebe a imagem do captcha e envia para a api e retorna o texto da imagem

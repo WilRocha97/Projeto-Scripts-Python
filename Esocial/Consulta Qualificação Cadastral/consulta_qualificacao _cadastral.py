@@ -182,17 +182,20 @@ def run():
 
         while True:
             # iniciar o driver do chrome
-            status, driver = _initialize_chrome(options)
+            try:
+                status, driver = _initialize_chrome(options)
             
-            # coloca um timeout de 60 segundos para que o robô não fique esperando eternamente caso o site não carregue
-            driver.set_page_load_timeout(60)
-            
-            # faz login no site
-            driver, resultado = login(driver, nome, cpf, pis, data_nasc)
-            # se não der erro no login, sai do while e realiza a consulta
-            if resultado != 'erro':
-                break
-            driver.close()
+                # coloca um timeout de 60 segundos para que o robô não fique esperando eternamente caso o site não carregue
+                driver.set_page_load_timeout(60)
+                
+                # faz login no site
+                driver, resultado = login(driver, nome, cpf, pis, data_nasc)
+                # se não der erro no login, sai do while e realiza a consulta
+                if resultado != 'erro':
+                    break
+                driver.close()
+            except:
+                pass
         
         if resultado == 'ok':
             driver, resultado = consulta(driver)
@@ -201,7 +204,7 @@ def run():
         _escreve_relatorio_csv(f'{cpf};{nome};{cod_empresa};{cod_empregado};{pis};{data_nasc};{resultado}', nome='Consulta Qualificação Cadastral')
         driver.close()
 
-    _escreve_header_csv('CPF;NOME;CÓD EMPRESA;CÓD EMPREGADO;PIS;DATA DE NASCIMENTO;SITUAÇÃO;OBSERVAÇÕES')
+    _escreve_header_csv('CPF;NOME;CÓD EMPRESA;CÓD EMPREGADO;PIS;DATA DE NASCIMENTO;SITUAÇÃO;OBSERVAÇÕES', nome='Consulta Qualificação Cadastral')
 
 
 if __name__ == '__main__':

@@ -204,7 +204,7 @@ def run():
         _escreve_relatorio_csv(f'{cpf};{nome};{cod_empresa};{cod_empregado};{pis};{data_nasc};{resultado}', nome='Consulta Qualificação Cadastral')
         driver.close()
 
-    _escreve_header_csv('CPF;NOME;CÓD EMPRESA;CÓD EMPREGADO;PIS;DATA DE NASCIMENTO;SITUAÇÃO;OBSERVAÇÕES')
+    _escreve_header_csv('CPF;NOME;CÓD EMPRESA;CÓD EMPREGADO;PIS;DATA DE NASCIMENTO;SITUAÇÃO;OBSERVAÇÕES', nome='Consulta Qualificação Cadastral')
 
 
 if __name__ == '__main__':

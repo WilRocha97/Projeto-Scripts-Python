@@ -35,7 +35,7 @@ def analiza():
             for page in pdf:
                 try:
                     # Pega o texto da pagina
-                    textinho = page.getText('text', flags=1 + 2 + 8)
+                    textinho = page.get_text('text', flags=1 + 2 + 8)
                     # print('---------------------------------------------------------------------------------------\n\n\n' + textinho)
                     # Procura o valor a recolher da empresa
                     localiza_nome_socio = re.findall(r'(.+)\nLocal', textinho)

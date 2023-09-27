@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import fitz, re, pandas as pd
+import fitz, re, os, pandas as pd
 from datetime import datetime
 from time import sleep
 from sys import path

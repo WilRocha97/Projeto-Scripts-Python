@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-import PySimpleGUI as sg
+import atexit, PySimpleGUI as sg
 from pandas import read_excel
 from threading import Thread
 from openpyxl import load_workbook
 from xlrd import open_workbook
 from shutil import move
-from os import makedirs, path, startfile
+from os import makedirs, path, startfile, remove, getpid
 from re import compile, search
 from fitz import open as abrir_pdf
 from time import sleep
@@ -13,6 +13,24 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 from requests import Session
 from pyautogui import alert, confirm
+
+
+def create_lock_file(lock_file_path):
+    try:
+        # Tente criar o arquivo de trava
+        with open(lock_file_path, 'x') as lock_file:
+            lock_file.write(str(getpid()))
+        return True
+    except FileExistsError:
+        # O arquivo de trava já existe, indicando que outra instância está em execução
+        return False
+
+
+def remove_lock_file(lock_file_path):
+    try:
+        remove(lock_file_path)
+    except FileNotFoundError:
+        pass
 
 
 def open_lista_dados(input_excel):
@@ -397,12 +415,22 @@ def run(window, input_excel, output_dir):
         window['-progressbar-'].update(bar_color='#f0f0f0')
         window['-Progresso_texto-'].update('')
         window['-Mensagens-'].update('')
-        
     
 
 # Define o ícone global da aplicação
 sg.set_global_icon('Assets/auto-flash.ico')
 if __name__ == '__main__':
+    # Especifique o caminho para o arquivo de trava
+    lock_file_path = 'download_nfse_do_escritorio.lock'
+    
+    # Verifique se outra instância está em execução
+    if not create_lock_file(lock_file_path):
+        alert(text="Outra instância já está em execução.")
+        sys.exit(1)
+    
+    # Defina uma função para remover o arquivo de trava ao final da execução
+    atexit.register(remove_lock_file, lock_file_path)
+    
     sg.theme('GrayGrayGray')  # Define o tema do PySimpleGUI
     # sg.theme_previewer()
     # Layout da janela

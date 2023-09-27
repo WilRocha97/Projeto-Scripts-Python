@@ -349,8 +349,8 @@ def run(window, input_excel, output_dir):
                 window['-Mensagens-'].update('')
                 alert(text='SIGISSWEB demorou muito para responder, download encerrado.\n\n'
                            'O site pode estar fora do ar ou foi movido para outro endereço.\n\n'
-                           'Verifique se o site "https://valinhos.sigissweb.com/validarnfe" ainda existe.\n\n')
-                
+                           'Verifique se o site "https://valinhos.sigissweb.com/validarnfe" ainda existe.\n\n'
+                           'Verifique sua conexão com a internet.\n\n')
                 s.close()
                 return
             
@@ -360,14 +360,10 @@ def run(window, input_excel, output_dir):
                 return
         
         # quando o site abrir
-        # apaga qualquer mensagem na interface
-        window['-Mensagens-'].update('')
         # configura a pasta final dos arquivos
         pasta_final = path.join(pasta_final, 'Notas Fiscais de Serviço')
         # inicia a variável do contador de notas baixadas
         quantidade_notas = 0
-        # atualiza a barra de progresso para ela ficar mais visível
-        window['-progressbar-'].update(bar_color=('#fca400', '#ffe0a6'))
         
         if tipo_dados == 'xls':
             # cria o indice para cada empresa da lista de dados
@@ -402,7 +398,7 @@ def run(window, input_excel, output_dir):
                     window['-progressbar-'].update_bar(count, max=int(len(total_empresas)))
                     window['-Progresso_texto-'].update(str( round( float(count) / int(len(total_empresas)) *100, 1) ) + '%')
                     window.refresh()
-
+                    
                     # Verifica se o usuário solicitou o encerramento do script
                     if event == '-Encerrar-':
                         s.close()
@@ -410,11 +406,6 @@ def run(window, input_excel, output_dir):
     
         s.close()
         alert(text=f'Download concluído, {quantidade_notas} notas salvas')
-        # ao terminar a execução, apaga a porcentagem e a barra de progresso para a interface ficar mais limpa
-        window['-progressbar-'].update_bar(0)
-        window['-progressbar-'].update(bar_color='#f0f0f0')
-        window['-Progresso_texto-'].update('')
-        window['-Mensagens-'].update('')
     
 
 # Define o ícone global da aplicação
@@ -450,6 +441,7 @@ if __name__ == '__main__':
     # guarda a janela na variável para manipula-la
     window = sg.Window('Download NFSE_VP SIGISSWEB', layout)
     
+    
     def run_script_thread():
         try:
             if not input_excel or not output_dir:
@@ -462,6 +454,10 @@ if __name__ == '__main__':
             window['-Iniciar-'].update(disabled=True)
             window['-Encerrar-'].update(disabled=False)
             window['-Abrir resultados-'].update(disabled=False)
+            # apaga qualquer mensagem na interface
+            window['-Mensagens-'].update('')
+            # atualiza a barra de progresso para ela ficar mais visível
+            window['-progressbar-'].update(bar_color=('#fca400', '#ffe0a6'))
             
             try:
                 # Chama a função que executa o script
@@ -515,9 +511,6 @@ if __name__ == '__main__':
             script_thread.start()
             
         elif event == '-Encerrar-':
-            window['-Encerrar-'].update(disabled=True)
-            window['-Iniciar-'].update(disabled=False)
-            window['-Abrir resultados-'].update(disabled=False)
             alert(text='Download encerrado.\n\n'
                      'Caso queira reiniciar o download, apague os arquivos gerados anteriormente ou selecione um novo local.\n\n'
                      'O Script não continua uma execução já iniciada.\n\n')

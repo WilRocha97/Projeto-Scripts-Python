@@ -46,15 +46,20 @@ def new_session_sn(cnpj, cpf, cod, serv, driver, usa_driver=False):
         
     print('>>> Aguardando site')
     timer = 0
-    while not find_by_id('captcha-img', driver):
+    while not find_by_id('ctl00_ContentPlaceHolder_hcaptchaResponse', driver):
         sleep(1)
         timer += 1
         if timer >= 60:
             new_session_sn(cnpj, cpf, cod, serv, driver, usa_driver=False)
-
-    captcha = _solve_text_captcha(driver, 'captcha-img')
-
-    _send_input('txtTexto_captcha_serpro_gov_br', captcha, driver)
+            
+    data = {'sitekey': '1786acf8-1e34-4c2f-8ab6-e594a535a093',
+            'url': 'https://www8.receita.fazenda.gov.br/SimplesNacional/controleAcesso/Autentica.aspx?id=41'}
+    id_captcha = re.compile(r'<textarea id=\"(h-captcha-response-.+)\" name=\"h-captcha-response\"').search(driver.page_source).group(1)
+    
+    captcha = _solve_hcaptcha(data, visible=True)
+    
+    driver.execute_script('document.getElementById("{}").innerHTML="{}"'.format(id_captcha, captcha))
+    driver.execute_script('document.getElementById("ctl00_ContentPlaceHolder_hcaptchaResponse").value="{}"'.format(captcha))
 
     for key, value in aux_acessos:
         _send_input(f'ctl00_ContentPlaceHolder_{key}', value, driver)

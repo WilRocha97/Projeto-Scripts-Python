@@ -149,9 +149,12 @@ def run():
                 if text != 'erro':
                     break
             else:
-                text = session
+                text = '❌ ' + session
+                if session != 'Erro Login - Por favor, solucione o captcha para efetuar o acesso.':
+                    driver.quit()
+                    break
+                print(text)
                 driver.quit()
-                break
                 
         # escreve na planilha de andamentos o resultado da execução atual
         print(text)

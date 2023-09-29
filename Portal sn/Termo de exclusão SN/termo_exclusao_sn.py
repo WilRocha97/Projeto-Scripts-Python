@@ -141,20 +141,23 @@ def run():
             os.remove(os.path.join(download_folder, file))
             
         while True:
-            driver, session = login(cnpj, cpf, cod, options)
-            # se existe uma sessão realiza a consulta
-            if isinstance(session, Session):
-                text = consulta(driver, empresa, comp, download_folder, final_foder)
-                driver.quit()
-                if text != 'erro':
-                    break
-            else:
-                text = '❌ ' + session
-                if session != 'Erro Login - Por favor, solucione o captcha para efetuar o acesso.':
+            try:
+                driver, session = login(cnpj, cpf, cod, options)
+                # se existe uma sessão realiza a consulta
+                if isinstance(session, Session):
+                    text = consulta(driver, empresa, comp, download_folder, final_foder)
                     driver.quit()
-                    break
-                print(text)
-                driver.quit()
+                    if text != 'erro':
+                        break
+                else:
+                    text = '❌ ' + session
+                    if session != 'Erro Login - Por favor, solucione o captcha para efetuar o acesso.':
+                        driver.quit()
+                        break
+                    print(text)
+                    driver.quit()
+            except:
+                pass
                 
         # escreve na planilha de andamentos o resultado da execução atual
         print(text)

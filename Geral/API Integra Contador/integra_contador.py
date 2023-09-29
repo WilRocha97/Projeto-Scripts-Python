@@ -1,85 +1,66 @@
 # -*- coding: utf-8 -*-
 import requests_pkcs12, os, requests, time, base64, json, io, chardet, OpenSSL.crypto, contextlib, tempfile, pyautogui as p
+import atexit, PySimpleGUI as sg
+from threading import Thread
 from pathlib import Path
 from functools import wraps
-from tkinter.filedialog import askopenfilename, Tk
-
-e_dir = Path('T:\ROBO\DCTF-WEB\Execução')
-e_dir_api = Path('T:\ROBO\DCTF-WEB\Execução\Response')
-e_dir_2 = Path('Execução')
 
 
-# abre a lista de dados da empresa em .csv
-def open_lista_dados(encode='latin-1'):
-    file = ask_for_file_dados()
-    if not file:
+def create_lock_file(lock_file_path):
+    try:
+        # Tente criar o arquivo de trava
+        with open(lock_file_path, 'x') as lock_file:
+            lock_file.write(str(os.getpid()))
+        return True
+    except FileExistsError:
+        # O arquivo de trava já existe, indicando que outra instância está em execução
         return False
 
+
+def remove_lock_file(lock_file_path):
     try:
-        with open(file, 'r', encoding=encode) as f:
+        os.remove(lock_file_path)
+    except FileNotFoundError:
+        pass
+    
+    
+# abre a lista de dados da empresa em .csv
+def open_lista_dados(input_excel, encode='latin-1'):
+    try:
+        with open(input_excel, 'r', encoding=encode) as f:
             dados = f.readlines()
     except Exception as e:
-        alert(title='Mensagem erro', text=f'Não pode abrir arquivo\n{str(e)}')
+        p.alert(title='Mensagem erro', text=f'Não pode abrir arquivo\n{str(e)}')
         return False
 
-    print('>>> usando dados de ' + file.split('/')[-1])
     return list(map(lambda x: tuple(x.replace('\n', '').split(';')), dados))
 
 
 # escreve os andamentos das requisições em um .csv
-def escreve_relatorio_csv(texto, nome='resumo', local=e_dir, end='\n', encode='latin-1'):
+def escreve_relatorio_csv(texto, nome='resumo', local='Desktop', end='\n', encode='latin-1'):
     os.makedirs(local, exist_ok=True)
 
     try:
-        f = open(str(local / f"{nome}.csv"), 'a', encoding=encode)
+        f = open(os.path.join(local, f"{nome}.csv"), 'a', encoding=encode)
     except:
-        f = open(str(local / f"{nome}-auxiliar.csv"), 'a', encoding=encode)
+        f = open(os.path.join(local, f"{nome}-auxiliar.csv"), 'a', encoding=encode)
 
     f.write(texto + end)
     f.close()
 
 
 # escreve arquivos .txt com as respostas da API
-def escreve_doc(texto, nome='doc', local=e_dir_api, encode='latin-1'):
+def escreve_doc(texto, nome='Log', encode='latin-1'):
+    local = 'API_response'
     os.makedirs(local, exist_ok=True)
     
     try:
-        f = open(str(local / f"{nome}.txt"), 'a', encoding=encode)
+        f = open(os.path.join(local, f"{nome}.txt"), 'a', encoding=encode)
     except:
-        f = open(str(local / f"{nome} - auxiliar.txt"), 'a', encoding=encode)
+        f = open(os.path.join(local, f"{nome} - auxiliar.txt"), 'a', encoding=encode)
 
     f.write(str(texto))
     f.close()
-
-
-# abre o arquivo .pfx do certificado digital
-def ask_for_file(title='Selecione o Certificado Digital', initialdir=os.getcwd()):
-    root = Tk()
-    root.withdraw()
-    root.wm_attributes('-topmost', 1)
-    
-    file = askopenfilename(
-        title=title,
-        filetypes=[('PFX files', '*.pfx *')],
-        initialdir=initialdir
-    )
-    
-    return file if file else False
-
-
-# seleciona o arquivo .csv com as dados das empresas
-def ask_for_file_dados(title='Selecione a planilha de dados das empresas', initialdir=os.getcwd()):
-    root = Tk()
-    root.withdraw()
-    root.wm_attributes('-topmost', 1)
-    
-    file = askopenfilename(
-        title=title,
-        filetypes=[('Plain text files', '*.txt *.csv')],
-        initialdir=initialdir
-    )
-    
-    return file if file else False
 
 
 # converte as chaves de acesso do site da API em base64 para fazer a requisição das chaves de acesso para o serviço
@@ -89,7 +70,7 @@ def converter_base64(usuario):
 
 
 # solicita as chaves de acesso para o serviço
-def solicita_token(usuario_b64, certificado, senha):
+def solicita_token(usuario_b64, input_certificado, senha):
     headers = {
         "Authorization": "Basic " + usuario_b64,
         "role-type": "TERCEIROS",
@@ -100,21 +81,17 @@ def solicita_token(usuario_b64, certificado, senha):
                                   data=body,
                                   headers=headers,
                                   verify=True,
-                                  pkcs12_filename=certificado,
+                                  pkcs12_filename=input_certificado,
                                   pkcs12_password=senha)
     
     resposta_string_json = json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True)
     resposta = pagina.json()
     
     # anota as respostas para tratar possíveis erros
-    try:
-        escreve_doc(pagina.status_code, nome='status_code', local=e_dir_2)
-        escreve_doc(resposta, nome='resposta_jason', local=e_dir_2)
-        escreve_doc(resposta_string_json, nome='string_json', local=e_dir_2)
-    except:
-        escreve_doc(pagina.status_code, nome='status_code')
-        escreve_doc(resposta, nome='resposta_jason')
-        escreve_doc(resposta_string_json, nome='string_json')
+    escreve_doc(pagina.status_code, nome='status_code')
+    escreve_doc(resposta, nome='resposta_jason')
+    escreve_doc(resposta_string_json, nome='string_json')
+    
     #
     # Output:
     #   200
@@ -175,15 +152,11 @@ def solicita_dctf(comp, cnpj_contratante, id_empresa, access_token, jwt_token):
     resposta_string_json = json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True)
     
     # anota as respostas da API para tratar possíveis erros
-    try:
-        os.makedirs(e_dir, exist_ok=True)
-        escreve_doc(resposta, nome='resposta_jason_guia', local=e_dir_2)
-        escreve_doc(resposta_string_json, nome='string_json_guia', local=e_dir_2)
-        escreve_doc(resposta['dados'], nome='pdf_base_64', local=e_dir_2)
-    except:
-        escreve_doc(resposta, nome='resposta_jason_guia')
-        escreve_doc(f'{id_empresa}\n{resposta_string_json}', nome='string_json_guia')
-        escreve_doc(resposta['dados'], nome='pdf_base_64')
+    os.makedirs(output_dir, exist_ok=True)
+    escreve_doc(resposta, nome='resposta_jason_guia')
+    escreve_doc(f'{id_empresa}\n{resposta_string_json}', nome='string_json_guia')
+    escreve_doc(resposta['dados'], nome='pdf_base_64')
+    
     #
     # output
     # {
@@ -235,12 +208,12 @@ def solicita_dctf(comp, cnpj_contratante, id_empresa, access_token, jwt_token):
         
 
 # cria o PDF usando os bytes retornados da requisição na API
-def cria_pdf(pdf_base64, id_empresa, nome_empresa, mes, ano):
+def cria_pdf(pdf_base64, output_dir, id_empresa, nome_empresa, mes, ano):
     # limpa o nome da empresa para não dar erro no arquivo
     nome_empresa = nome_empresa.replace('/', ' ').replace(',', '')
     
     # verifica se a pasta para salvar o PDF existe, se não então cria
-    e_dir_guias = Path('T:\ROBO\DCTF-WEB\Execução\Guias ' + mes + '-' + ano)
+    e_dir_guias = os.path.joi(output_dir, 'Guias ' + mes + '-' + ano)
     os.makedirs(e_dir_guias, exist_ok=True)
     
     # decodifica a base64 em bytes
@@ -250,41 +223,19 @@ def cria_pdf(pdf_base64, id_empresa, nome_empresa, mes, ano):
         file.write(pdf_bytes)
 
 
-def run():
-    # pega o CNPJ da empresa contratante da API
-    cnpj_contratante = p.prompt(text='Informe o CNPJ do contratante do serviço SERPRO')
-    # pega as chaves de acesso encontradas no site da API
-    consumer_key = p.password(text='Informe a consumerKey:')
-    consumer_secret = p.password(text='Informe a consumerSecret:')
-    # concatena os tokens para gerar um único em base64
-    usuario = consumer_key + ":" + consumer_secret
-    usuario_b64 = converter_base64(usuario)
-    
-    # pega a senha do certificado digital usado para cadastrar no site da API
-    senha = p.password(text='Informe a senha do certificado digital:')
-    
-    # pergunta qual o arquivo do certificado
-    certificado = ask_for_file()
-    
+def run(window, cnpj_contratante, usuario_b64, senha, input_certificado, input_excel, output_dir):
     # limpa a pasta de response da api
     try:
-        for arquivo in os.listdir(e_dir_api):
-            os.remove(os.path.join(e_dir_api, arquivo))
+        for arquivo in os.listdir(os.path.join(output_dir, 'API_response')):
+            os.remove(os.path.join(os.path.join(output_dir, 'API_response'), arquivo))
     except:
         pass
     
     # solicita os tokens para realizar a emissão das guias
-    jwt_token, access_token = solicita_token(usuario_b64, certificado, senha)
-    
-    tokens = jwt_token + ' | ' + access_token
-    try:
-        os.makedirs(e_dir, exist_ok=True)
-        escreve_doc(tokens, nome='tokens', local=e_dir_2)
-    except:
-        escreve_doc(tokens, nome='tokens')
+    jwt_token, access_token = solicita_token(usuario_b64, input_certificado, senha)
         
     # abrir a planilha de dados
-    empresas = open_lista_dados()
+    empresas = open_lista_dados(input_excel)
     if not empresas:
         return False
     
@@ -303,21 +254,179 @@ def run():
         else:
             try:
                 # tenta converter a base64 em PDF e não precisa da segunda mensagem
-                cria_pdf(pdf_base64, id_empresa, nome_empresa, mes, ano)
+                cria_pdf(pdf_base64, output_dir, id_empresa, nome_empresa, mes, ano)
                 mensagen_2 = ''
             # se não converter o PDF captura a segunda mensagem
             except Exception as e:
                 mensagen_2 = f'Não gerou PDF {e}'
         
-        try:
-            # tenta escrever os andamentos em um local, se não conseguir, escreve no outro
-            os.makedirs(e_dir, exist_ok=True)
-            escreve_relatorio_csv(f'{id_empresa};{nome_empresa};{mensagens};{mensagen_2}', nome=f'Andamentos DCTF-WEB {mes}-{ano}', local=e_dir_2)
-        except:
-            escreve_relatorio_csv(f'{id_empresa};{nome_empresa};{mensagens};{mensagen_2}', nome=f'Andamentos DCTF-WEB {mes}-{ano}')
+        # escreve os andamentos
+        os.makedirs(output_dir, exist_ok=True)
+        escreve_relatorio_csv(f'{id_empresa};{nome_empresa};{mensagens};{mensagen_2}', local=output_dir, nome=f'Andamentos DCTF-WEB {mes}-{ano}')
+        
+        # atualiza a barra de progresso
+        window['-progressbar-'].update_bar(count, max=int(len(empresas)))
+        window['-Progresso_texto-'].update(str(round(float(count) / int(len(empresas)) * 100, 1)) + '%')
+        window.refresh()
         
     p.alert(text='Robô finalizado!')
     
     
 if __name__ == '__main__':
-    run()
+    # Especifique o caminho para o arquivo de trava
+    lock_file_path = 'download_nfse_do_escritorio.lock'
+    
+    # Verifique se outra instância está em execução
+    if not create_lock_file(lock_file_path):
+        p.alert(text="Outra instância já está em execução.")
+        sys.exit(1)
+    
+    # Defina uma função para remover o arquivo de trava ao final da execução
+    atexit.register(remove_lock_file, lock_file_path)
+    
+    sg.theme('GrayGrayGray')  # Define o tema do PySimpleGUI
+    # sg.theme_previewer()
+    # Layout da janela
+    layout = [
+        [sg.Button('Ajuda', border_width=0), sg.Button('Log do sistema', border_width=0, disabled=True)],
+        [sg.Text('')],
+        [sg.Text('Informe o CNPJ do contratante do serviço SERPRO "00000000000000":')],
+        [sg.InputText(key='-input_cnpj_contratante-', size=90)],
+        [sg.Text('Informe a consumerKey:')],
+        [sg.InputText(key='-input_consumer_key-', size=90, password_char='*')],
+        [sg.Text('Informe a consumerSecret:')],
+        [sg.InputText(key='-input_consumer_secret-', size=90, password_char='*')],
+        [sg.Text('Informe a senha do certificado digital:')],
+        [sg.InputText(key='-input_senha_certificado-', size=90, password_char='*')],
+        [sg.Text('Informe a competência das guias "00/0000":')],
+        [sg.InputText(key='-input_competencia-', size=90)],
+        [sg.Text('')],
+        [sg.Text('Selecione o certificado digital:')],
+        [sg.FileBrowse('Pesquisar', key='-abrir-', file_types=(('PFX files', '*.pfx'),)), sg.InputText(key='-input_certificado-', size=80, disabled=True)],
+        [sg.Text('Selecione um arquivo Excel com os dados dos clientes:')],
+        [sg.FileBrowse('Pesquisar', key='-abrir1-', file_types=(('Planilhas Excel', '*.csv'),)), sg.InputText(key='-input_excel-', size=80, disabled=True)],
+        [sg.Text('Selecione um diretório para salvar os resultados:')],
+        [sg.FolderBrowse('Pesquisar', key='-abrir2-'), sg.InputText(key='-output_dir-', size=80, disabled=True)],
+        [sg.Text('')],
+        [sg.Text('', key='-Mensagens-')],
+        [sg.Text(size=6, text='', key='-Progresso_texto-'), sg.ProgressBar(max_value=0, orientation='h', size=(54, 5), key='-progressbar-', bar_color='#f0f0f0')],
+        [sg.Button('Iniciar', key='-iniciar-', border_width=0), sg.Button('Encerrar', key='-encerrar-', disabled=True, border_width=0), sg.Button('Abrir resultados', key='-abrir_resultados-', disabled=True, border_width=0)],
+    ]
+    
+    # guarda a janela na variável para manipula-la
+    window = sg.Window('Download NFSE_VP SIGISSWEB', layout)
+    
+    
+    def run_script_thread():
+        try:
+            if not cnpj_contratante:
+                p.alert(text=f'Por favor informe o CNPJ do contratante da API SERPRO.')
+                return
+            if not consumer_key:
+                p.alert(text=f'Por favor informe o consumerKey.')
+                return
+            if not consumer_secret:
+                p.alert(text=f'Por favor informe o consumerSecret.')
+                return
+            if not senha:
+                p.alert(text=f'Por favor informe a senha do certificado digital.')
+                return
+            
+            if not input_certificado:
+                p.alert(text=f'Por favor selecione um certificado digital.')
+                return
+            if not input_excel:
+                p.alert(text=f'Por favor selecione uma planilha de dados.')
+                return
+            if not output_dir:
+                p.alert(text=f'Por favor selecione um diretório para salvar os resultados.')
+                return
+                
+            # habilita e desabilita os botões conforme necessário
+            window['-input_cnpj_contratante-'].update(disabled=True)
+            window['-input_consumer_key-'].update(disabled=True)
+            window['-input_consumer_secret-'].update(disabled=True)
+            window['-input_senha_certificado-'].update(disabled=True)
+            window['-input_competencia-'].update(disabled=True)
+            window['-abrir-'].update(disabled=True)
+            window['-abrir1-'].update(disabled=True)
+            window['-abrir2-'].update(disabled=True)
+            window['-iniciar-'].update(disabled=True)
+            window['-encerrar-'].update(disabled=False)
+            window['-abrir_resultados-'].update(disabled=False)
+            
+            # apaga qualquer mensagem na interface
+            window['-Mensagens-'].update('')
+            # atualiza a barra de progresso para ela ficar mais visível
+            window['-progressbar-'].update(bar_color=('#fca400', '#ffe0a6'))
+            
+            try:
+                # Chama a função que executa o script
+                run(window, cnpj_contratante, usuario_b64, senha, input_certificado, input_excel, output_dir)
+            # Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
+            except Exception as erro:
+                time.sleep(1)
+                if str(erro) == 'Invalid password or PKCS12 data':
+                    p.alert(text=f'Senha do certificado digital inválida.')
+                    return
+                
+                window['Log do sistema'].update(disabled=False)
+                p.alert(text=f"Erro :'(\n\n"
+                           f'Abra o pasta de "Log do sistema" e envie o arquivo "Log.txt" para o desenvolvedor.\n')
+                escreve_doc(erro)
+            
+        except:
+            pass
+    
+    
+    while True:
+        # captura o evento e os valores armazenados na interface
+        event, values = window.read()
+        try:
+            cnpj_contratante = values['-input_cnpj_contratante-']
+            consumer_key = values['-input_consumer_key-']
+            consumer_secret = values['-input_consumer_secret-']
+            
+            # concatena os tokens para gerar um único em base64
+            usuario = consumer_key + ":" + consumer_secret
+            usuario_b64 = converter_base64(usuario)
+            
+            senha = values['-input_senha_certificado-']
+            input_certificado = values['-input_certificado-']
+            input_excel = values['-input_excel-']
+            output_dir = values['-output_dir-']
+            contador = 1
+            while True:
+                try:
+                    os.makedirs(os.path.join(output_dir, 'Download de guias DCTFWEB SERPRO'))
+                except:
+                    output_dir = os.path.join(output_dir, f'Download de guias DCTFWEB SERPRO ({str(contador)})')
+                    contador += 1
+            
+        except:
+            input_excel = 'Desktop'
+            output_dir = 'Desktop'
+        
+        if event == sg.WIN_CLOSED:
+            break
+        
+        elif event == 'Log do sistema':
+            os.startfile('API_response')
+        
+        elif event == 'Ajuda':
+            os.startfile('Manual do usuário - Download NFSe_VP SIGISSWEB.pdf')
+        
+        elif event == '-iniciar-':
+            # Cria uma nova thread para executar o script
+            script_thread = Thread(target=run_script_thread)
+            script_thread.start()
+        
+        elif event == '-encerrar-':
+            p.alert(text='Download encerrado.\n\n'
+                       'Caso queira reiniciar o download, apague os arquivos gerados anteriormente ou selecione um novo local.\n\n'
+                       'O Script não continua uma execução já iniciada.\n\n')
+        
+        elif event == '-abrir_resultados-':
+            os.startfile(output_dir)
+    
+    window.close()

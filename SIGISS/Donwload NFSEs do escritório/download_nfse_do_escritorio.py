@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import atexit, PySimpleGUI as sg
+import sys
 from pandas import read_excel
 from threading import Thread
 from openpyxl import load_workbook
 from xlrd import open_workbook
 from shutil import move
-from os import makedirs, path, startfile, remove, getpid
+from os import makedirs, path, startfile, remove, getpid, listdir
 from re import compile, search
 from fitz import open as abrir_pdf
 from time import sleep
@@ -81,8 +82,7 @@ def escreve_doc(texto, nome='log', local='Log', encode='latin-1'):
     except:
         f = open(path.join(local, f"{nome} - auxiliar.txt"), 'a', encoding=encode)
     
-    f.write(f'--------------------------------------------------------------------------------------------------¬\n{datetime.now()}\n\n'
-            f'{texto}\n\n\n')
+    f.write(f'{texto}\n\n')
     f.close()
 
     
@@ -324,6 +324,7 @@ def run(window, input_excel, output_dir):
     arquivo, notas, tipo_dados = open_lista_dados(input_excel)
     pasta_final = output_dir
     # Abre o site do SIGISS pronto para validar as notas
+    print(abc)
     with Session() as s:
         soup = ''
         timer = 0
@@ -375,7 +376,7 @@ def run(window, input_excel, output_dir):
                     quantidade_notas += 1
                 # atualiza a barra de progresso
                 window['-progressbar-'].update_bar(count, max=int(len(total_empresas)))
-                window['-Progresso_texto-'].update(str( round( float(count) / int(len(total_empresas)) *100, 1) ) + '%')
+                window['-Progresso_texto-'].update(str( round( float(count) / int(len(total_empresas)) *100, 1 ) ) + '%')
                 window.refresh()
                 
                 # Verifica se o usuário solicitou o encerramento do script
@@ -396,7 +397,7 @@ def run(window, input_excel, output_dir):
                         quantidade_notas += 1
                     # atualiza a barra de progresso
                     window['-progressbar-'].update_bar(count, max=int(len(total_empresas)))
-                    window['-Progresso_texto-'].update(str( round( float(count) / int(len(total_empresas)) *100, 1) ) + '%')
+                    window['-Progresso_texto-'].update(str( round( float(count) / int(len(total_empresas)) *100, 1 ) ) + '%')
                     window.refresh()
                     
                     # Verifica se o usuário solicitou o encerramento do script
@@ -416,7 +417,7 @@ if __name__ == '__main__':
     
     # Verifique se outra instância está em execução
     if not create_lock_file(lock_file_path):
-        alert(text="Outra instância já está em execução.")
+        alert(text="O programa já está em execução.")
         sys.exit(1)
     
     # Defina uma função para remover o arquivo de trava ao final da execução
@@ -467,8 +468,14 @@ if __name__ == '__main__':
                 window['Log do sistema'].update(disabled=False)
                 alert(text=f"Erro :'(\n\n"
                            f'Abra o pasta de "Log do sistema" e envie o arquivo "Log.txt" para o desenvolvedor.\n')
+                
+                for arq in listdir('Log'):
+                    remove(path.join('Log', arq))
+                    
+                escreve_doc(datetime.now())
                 escreve_doc(erro)
-            
+
+                
             # habilita e desabilita os botões conforme necessário
             window['-Abrir-'].update(disabled=False)
             window['-Abrir2-'].update(disabled=False)

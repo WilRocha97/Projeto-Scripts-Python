@@ -55,14 +55,14 @@ def imprime_mensagem(driver):
         time.sleep(1)
         
     # aguarda e clica para filtrar abrir o dropdown de filtro de mensagens não lidas
-    while not _find_by_id('select2-ddlSelectedMessage-container', driver):
+    while not _find_by_path('/html/body/form/div[5]/div[3]/div/div[1]/div[3]/div[1]/div[2]/div[2]/span', driver):
         time.sleep(1)
     
     while not _find_img('filtros_carregados.png', conf=0.8):
         time.sleep(1)
         
     time.sleep(1)
-    _click_img('filtro_lidas.png', conf=0.9)
+    _click_img('filtros_carregados.png', conf=0.9)
     _wait_img('opcao_filtro_n_lidas.png', conf=0.9)
     _click_img('opcao_filtro_n_lidas.png', conf=0.9)
     time.sleep(1)

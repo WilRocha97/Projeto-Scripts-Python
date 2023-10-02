@@ -107,7 +107,7 @@ def coleta_dados_comprovante(download_folder, nome_arquivo):
 
 @_time_execution
 def run():
-    download_folder = "V:\\Setor Robô\\Scripts Python\\Geral\\Consulta de Situação Cadastral Mobiliária Campinas\\Execução\\Comprovantes"
+    download_folder = "V:\\Setor Robô\\Scripts Python\\Serviços Prefeitura\\Consulta de Situação Cadastral Mobiliária Campinas\\execução\\Comprovantes"
     os.makedirs(download_folder, exist_ok=True)
     
     # função para abrir a lista de dados

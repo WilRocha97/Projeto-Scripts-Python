@@ -95,7 +95,7 @@ def salvar_arquivo(nome, response, pasta_final):
         arquivo.write(parte)
     arquivo.close()
 
-            
+    
 def download_nota(nota, s, pasta_final):
     chave = str(nota)
     
@@ -127,7 +127,7 @@ def download_nota(nota, s, pasta_final):
     analisa_nota(nome_nota, pasta_final)
     
     return True
-        
+    
 
 def analisa_nota(nome_nota, pasta_final):
     # Abrir o pdf
@@ -167,38 +167,21 @@ def analisa_nota(nome_nota, pasta_final):
                 endereco_cliente = compile(r'(.+)\nTELEFONE / FAX').search(textinho).group(1)
                 
             numero_nota = compile(r'(.+)\nNÚMERO').search(textinho).group(1)
-            serie_nota = compile(r'ELETRÔNICA DE\nSERVIÇO\n.+\n(.+)').search(textinho).group(1)
             data_nota = compile(r'(.+)\n.+\nDATA EMISSÃO').search(textinho).group(1)
-            
-            # se a nota for válida a situação é 0 se for cancelada é 2
-            situacao = compile(r'DOCUMENTO VALIDADO COM SUCESSO').search(textinho)
-            if situacao:
-                situacao = '0'
-            else:
-                situacao = '2'
-                
-            acumulador = '6102'
-            
-            # se o município do tomador for valinhos, o CFPS é 9101, se não é 9102
-            if municipio_cliente == 'Valinhos':
-                cfps = '9101'
-            else:
-                cfps = '9102'
+
+            acumulador = '2102'
                 
             valor_servico = compile(r'VALOR BRUTO DA NOTA FISCAL\n.+\n.+\nR\$ (.+)').search(textinho).group(1)
-            valor_descontos = '0,00'
-            valor_deducoes = compile(r'R\$ (.+)\n.+\n.+\n.+\nDEDUÇÕES').search(textinho).group(1)
-            valor_contabil = valor_servico
-            base_de_calculo = valor_servico
-            aliquota_iss = compile(r'(\d,\d\d)(.+\n){7}ALIQUOTA ISS\(%\)').search(textinho).group(1)
             
             # se o ISS não for retido o valor fica no campo do ISS, se for retido, ele fica no campo do ISS retido
             if compile(r'O ISS NÃO DEVE SER RETIDO'):
-                valor_iss = compile(r'R\$ (.+)\n(.+\n){5}VALOR I.S.S.').search(textinho).group(1)
-                iss_retido = '0,00'
-            else:
                 valor_iss = '0,00'
-                iss_retido = compile(r'R\$ (.+)\n(.+\n){5}VALOR I.S.S.').search(textinho).group(1)
+                aliquota_iss = '0,00'
+                base_de_calculo = '0,00'
+            else:
+                valor_iss = compile(r'R\$ (.+)\n(.+\n){5}VALOR I.S.S.').search(textinho).group(1)
+                aliquota_iss = compile(r'(\d,\d\d)(.+\n){7}ALIQUOTA ISS\(%\)').search(textinho).group(1)
+                base_de_calculo = valor_servico
             
             # tenta pegar o valor dos impostos a seguir, se não conseguir, coloca '0,00' ná variável
             try:
@@ -218,41 +201,30 @@ def analisa_nota(nome_nota, pasta_final):
             except:
                 valor_csll = '0,00'
             
-            valor_crf = '0,00'
+            base_de_calculo_inss = '0,00'
             valor_inss = '0,00'
-            codigo_do_iten = '17.18'
-            quantidade = '1,00'
-            valor_unitario = valor_servico
             
             dados_notas_cliente = ';'.join([cnpj_cliente, nome_cliente, uf_cliente, municipio_cliente, endereco_cliente])
-            dados_notas_escritorio = ';'.join(['26.973.312/0001-75',
+
+            dados_notas = ';'.join([data_nota,
+                                    numero_nota,
+                                    '26.973.312/0001-75',
                                     'R. POSTAL SERVICOS CONTABEIS LTDA',
-                                    'SP',
-                                    'Valinhos',
-                                    'Rua Fioravante Basílio Maglio, nº 258',])
-            dados_notas = ';'.join([numero_nota,
-                                    serie_nota,
-                                    data_nota,
-                                    situacao,
+                                    'NFS-E;NFD',
+                                    '',
+                                    valor_servico.replace('.', ''),
+                                    base_de_calculo.replace('.', ''),
+                                    aliquota_iss.replace('.', ''),
+                                    valor_iss.replace('.', ''),
+                                    valor_irrf.replace('.', ''),
+                                    valor_pis.replace('.', ''),
+                                    valor_cofins.replace('.', ''),
+                                    valor_csll.replace('.', ''),
+                                    base_de_calculo_inss.replace('.', ''),
+                                    valor_inss.replace('.', ''),
                                     acumulador,
-                                    cfps,
-                                    valor_servico,
-                                    valor_descontos,
-                                    valor_deducoes,
-                                    valor_contabil,
-                                    base_de_calculo,
-                                    aliquota_iss,
-                                    valor_iss,
-                                    iss_retido,
-                                    valor_irrf,
-                                    valor_pis,
-                                    valor_cofins,
-                                    valor_csll,
-                                    valor_crf,
-                                    valor_inss,
-                                    codigo_do_iten,
-                                    quantidade,
-                                    valor_unitario])
+                                    '1933',
+                                    'SP'])
             
             pasta_final_nota = path.join(pasta_final, 'Notas')
             nome_nota_final = f'nfe_{numero_nota}.pdf'
@@ -278,17 +250,17 @@ def analisa_nota(nome_nota, pasta_final):
                     escreve_relatorio_csv(f"NFSe_{numero_nota}.pdf;CNPJ do cliente repetido na planilha de códigos, verificar qual consta com o código correto e deletar os demais;'{cnpj_cliente}", nome='Andamentos', local=pasta_final)
                 # se o CNPJ do cliente for encontrado na planilha de códigos, cria arquivo .txt para importar no dóminio web
                 else:
-                    cria_txt(codigo_cliente, cnpj_cliente, f'{dados_notas_escritorio};{dados_notas}', pasta_final)
+                    cria_txt(codigo_cliente, cnpj_cliente, dados_notas, pasta_final)
                     escreve_relatorio_csv(f"NFSe_{numero_nota}.pdf;Arquivo para importação criado com sucesso;{codigo_cliente} - {cnpj_cliente}", nome='Andamentos', local=pasta_final)
                     
-            escreve_relatorio_csv(f'{dados_notas_escritorio};{dados_notas_cliente};{dados_notas}', nome='Dados das notas', local=pasta_final)
+            escreve_relatorio_csv(f'{dados_notas_cliente};{dados_notas}', nome='Dados das notas', local=pasta_final)
 
     # renomeia a nota colocando o número dela
     move(arq, path.join(pasta_final_nota, nome_nota_final))
     return
 
 
-def cria_txt(codigo_cliente, cnpj_cliente, dados_nota, pasta_final, tipo='NFSe', encode='latin-1'):
+def cria_txt(codigo_cliente, cnpj_cliente, dados_notas, pasta_final, tipo='NFSe', encode='latin-1'):
     # cria um txt com os dados das notas em uma pasta nomeada com o código no domínio e o cnpj do prestador
     local = path.join(pasta_final, 'Arquivos para Importação', str(codigo_cliente) + '-' + str(cnpj_cliente))
     makedirs(local, exist_ok=True)
@@ -298,7 +270,7 @@ def cria_txt(codigo_cliente, cnpj_cliente, dados_nota, pasta_final, tipo='NFSe',
     except:
         f = open(path.join(local, f"{tipo}  - {cnpj_cliente} - auxiliar.txt"), 'a', encoding=encode)
     
-    f.write(str(dados_nota) + '\n')
+    f.write(str(dados_notas) + '\n')
     f.close()
     
 
@@ -324,7 +296,6 @@ def run(window, input_excel, output_dir):
     arquivo, notas, tipo_dados = open_lista_dados(input_excel)
     pasta_final = output_dir
     # Abre o site do SIGISS pronto para validar as notas
-    print(abc)
     with Session() as s:
         soup = ''
         timer = 0

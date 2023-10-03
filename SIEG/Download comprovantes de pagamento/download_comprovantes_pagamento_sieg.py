@@ -219,6 +219,7 @@ def click(driver, comprovante):
 
 @_time_execution
 def run():
+    execucao = 'Download Comprovantes de pagamento IRIS SIEG'
     tipo = confirm(title='Script incrível', buttons=('Consulta mensal', 'Consulta anual'))
     
     if tipo == 'Consulta mensal':
@@ -263,7 +264,7 @@ def run():
         while True:
             try:
                 driver = sieg_iris(driver)
-                driver = procura_empresa(tipo, competencia, empresa, driver, options)
+                driver = procura_empresa(execucao, tipo, competencia, empresa, driver, options)
                 break
             except:
                 driver.close()

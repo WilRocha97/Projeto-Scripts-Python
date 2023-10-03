@@ -446,7 +446,6 @@ if __name__ == '__main__':
                 escreve_doc(datetime.now())
                 escreve_doc(erro)
 
-                
             # habilita e desabilita os botões conforme necessário
             window['-Abrir-'].update(disabled=False)
             window['-Abrir2-'].update(disabled=False)

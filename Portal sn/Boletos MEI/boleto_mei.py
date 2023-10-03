@@ -183,7 +183,7 @@ def boleto_mei(empresa, andamentos):
 
     _wait_img('voltar.png', conf=0.9, timeout=-1)
     return True
-    
+
 
 @_time_execution
 def run():
@@ -194,6 +194,7 @@ def run():
 
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
+        
         _indice(count, total_empresas, empresa, index)
         cnpj, comp, ano, venc = empresa
         andamentos = f'Boletos MEI {comp}-{ano}'
@@ -201,16 +202,17 @@ def run():
         _abrir_chrome('http://www8.receita.fazenda.gov.br/SimplesNacional/Aplicacoes/ATSPO/pgmei.app/Identificacao')
         if not boleto_mei(empresa, andamentos):
             continue
-            
+        
         if not verificacoes(empresa, andamentos):
             continue
-            
+          
         # Salvar a guia
         imprimir(empresa, andamentos)
-    
+        
     time.sleep(2)
     p.hotkey('ctrl', 'w')
 
 
 if __name__ == '__main__':
     run()
+    

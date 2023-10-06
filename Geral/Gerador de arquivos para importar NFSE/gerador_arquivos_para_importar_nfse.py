@@ -473,7 +473,10 @@ def run_xml(cidade, window_xml, input_xml, output_dir):
             window_xml.refresh()
             
             # Verifica se o usuário solicitou o encerramento do script
-            if event == '-Encerrar-':
+            if event == '-Encerrar-' or event == sg.WIN_CLOSED:
+                alert(text='Download encerrado.\n\n'
+                           'Caso queira reiniciar o download, apague os arquivos gerados anteriormente ou selecione um novo local.\n\n'
+                           'O Script não continua uma execução já iniciada.\n\n')
                 return
     
     alert(text=f'Analise concluída, {quantidade_arquivos} arquivos analisados\n'
@@ -512,9 +515,9 @@ def run_valinhos(window_valinhos, input_excel, output_dir):
                            'Verifique sua conexão com a internet.\n\n')
                 s.close()
                 return
-            
+                
             # Verifica se o usuário solicitou o encerramento do script
-            if event == '-Encerrar-':
+            if event == '-Encerrar-' or event == sg.WIN_CLOSED:
                 s.close()
                 return
         
@@ -538,7 +541,10 @@ def run_valinhos(window_valinhos, input_excel, output_dir):
                 window_valinhos.refresh()
                 
                 # Verifica se o usuário solicitou o encerramento do script
-                if event == '-Encerrar-':
+                if event == '-Encerrar-' or event == sg.WIN_CLOSED:
+                    alert(text='Download encerrado.\n\n'
+                               'Caso queira reiniciar o download, apague os arquivos gerados anteriormente ou selecione um novo local.\n\n'
+                               'O Script não continua uma execução já iniciada.\n\n')
                     s.close()
                     return
                 
@@ -559,7 +565,10 @@ def run_valinhos(window_valinhos, input_excel, output_dir):
                     window_valinhos.refresh()
                     
                     # Verifica se o usuário solicitou o encerramento do script
-                    if event == '-Encerrar-':
+                    if event == '-Encerrar-' or event == sg.WIN_CLOSED:
+                        alert(text='Download encerrado.\n\n'
+                                   'Caso queira reiniciar o download, apague os arquivos gerados anteriormente ou selecione um novo local.\n\n'
+                                   'O Script não continua uma execução já iniciada.\n\n')
                         s.close()
                         return
     
@@ -614,7 +623,7 @@ if __name__ == '__main__':
         ]
         
         # guarda a janela na variável para manipula-la
-        return sg.Window(cidade, layout_valinhos, finalize=True)
+        return sg.Window(cidade, layout_valinhos, finalize=True, modal=True)
     
     
     def janela_valinhos():
@@ -632,7 +641,7 @@ if __name__ == '__main__':
         ]
         
         # guarda a janela na variável para manipula-la
-        return sg.Window('Valinhos', layout_valinhos, finalize=True)
+        return sg.Window('Valinhos', layout_valinhos, finalize=True, modal=True)
     
     window_menu, window_xml, window_valinhos = janela_menu(), None, None
     
@@ -643,6 +652,8 @@ if __name__ == '__main__':
         if event == sg.WIN_CLOSED:
             if window == window_valinhos:  # if closing win 2, mark as closed
                 window_valinhos = None
+            if window == window_xml:  # if closing win 2, mark as closed
+                window_xml = None
             elif window == window_menu:  # if closing win 1, exit program
                 break
         
@@ -655,7 +666,7 @@ if __name__ == '__main__':
         elif event == 'Log do sistema':
             startfile('Log')
             
-        if event == '-campinas-' or event == '-jundiai-':
+        elif event == '-campinas-' or event == '-jundiai-':
             if event == '-campinas-':
                 cidade = 'Campinas'
             if event == '-jundiai-':
@@ -663,50 +674,49 @@ if __name__ == '__main__':
                 
             window_xml = janela_xml(cidade)
             def run_script_thread():
-                # try:
-                if not input_xml or not output_dir:
-                    alert(text=f'Por favor selecione os dois diretórios.')
-                    return
-                
-                # habilita e desabilita os botões conforme necessário
-                window_xml['-Abrir-'].update(disabled=True)
-                window_xml['-Abrir2-'].update(disabled=True)
-                window_xml['-Iniciar-'].update(disabled=True)
-                window_xml['-Encerrar-'].update(disabled=False)
-                window_xml['-Abrir resultados-'].update(disabled=False)
-                # apaga qualquer mensagem na interface
-                window_xml['-Mensagens-'].update('')
-                # atualiza a barra de progresso para ela ficar mais visível
-                window_xml['-progressbar-'].update(bar_color=('#fca400', '#ffe0a6'))
-                
                 try:
-                    # Chama a função que executa o script
-                    run_xml(cidade, window_xml, input_xml, output_dir)
-                    # Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
-                except Exception as erro:
-                    window_xml['Log do sistema'].update(disabled=False)
-                    alert(text=f"Erro :'(\n\n"
-                               f'Abra o pasta de "Log do sistema" e envie o arquivo "Log.txt" para o desenvolvedor.\n')
+                    if not input_xml or not output_dir:
+                        alert(text=f'Por favor selecione os dois diretórios.')
+                        return
                     
-                    for arq in listdir('Log'):
-                        remove(path.join('Log', arq))
+                    # habilita e desabilita os botões conforme necessário
+                    window_xml['-Abrir-'].update(disabled=True)
+                    window_xml['-Abrir2-'].update(disabled=True)
+                    window_xml['-Iniciar-'].update(disabled=True)
+                    window_xml['-Encerrar-'].update(disabled=False)
+                    window_xml['-Abrir resultados-'].update(disabled=False)
+                    # apaga qualquer mensagem na interface
+                    window_xml['-Mensagens-'].update('')
+                    # atualiza a barra de progresso para ela ficar mais visível
+                    window_xml['-progressbar-'].update(bar_color=('#fca400', '#ffe0a6'))
+                    
+                    try:
+                        # Chama a função que executa o script
+                        run_xml(cidade, window_xml, input_xml, output_dir)
+                        # Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
+                    except Exception as erro:
+                        window_xml['Log do sistema'].update(disabled=False)
+                        alert(text=f"Erro :'(\n\n"
+                                   f'Abra o pasta de "Log do sistema" e envie o arquivo "Log.txt" para o desenvolvedor.\n')
                         
-                    escreve_doc(datetime.now())
-                    escreve_doc(erro)
-    
-                # habilita e desabilita os botões conforme necessário
-                window_xml['-Abrir-'].update(disabled=False)
-                window_xml['-Abrir2-'].update(disabled=False)
-                window_xml['-Iniciar-'].update(disabled=False)
-                window_xml['-Encerrar-'].update(disabled=True)
-                # apaga a porcentagem e a barra de progresso para a interface ficar mais limpa
-                window_xml['-progressbar-'].update_bar(0)
-                window_xml['-progressbar-'].update(bar_color='#f0f0f0')
-                window_xml['-Progresso_texto-'].update('')
-                window_xml['-Mensagens-'].update('')
-                # except:
-                    # pass
-            
+                        for arq in listdir('Log'):
+                            remove(path.join('Log', arq))
+                            
+                        escreve_doc(datetime.now())
+                        escreve_doc(erro)
+        
+                    # habilita e desabilita os botões conforme necessário
+                    window_xml['-Abrir-'].update(disabled=False)
+                    window_xml['-Abrir2-'].update(disabled=False)
+                    window_xml['-Iniciar-'].update(disabled=False)
+                    window_xml['-Encerrar-'].update(disabled=True)
+                    # apaga a porcentagem e a barra de progresso para a interface ficar mais limpa
+                    window_xml['-progressbar-'].update_bar(0)
+                    window_xml['-progressbar-'].update(bar_color='#f0f0f0')
+                    window_xml['-Progresso_texto-'].update('')
+                    window_xml['-Mensagens-'].update('')
+                except:
+                    pass
             
             while True:
                 # captura o evento e os valores armazenados na interface
@@ -735,17 +745,12 @@ if __name__ == '__main__':
                     script_thread = Thread(target=run_script_thread)
                     script_thread.start()
                     
-                elif event == '-Encerrar-':
-                    alert(text='Download encerrado.\n\n'
-                             'Caso queira reiniciar o download, apague os arquivos gerados anteriormente ou selecione um novo local.\n\n'
-                             'O Script não continua uma execução já iniciada.\n\n')
-                    
                 elif event == '-Abrir resultados-':
                     startfile(path.join(output_dir, 'Notas Fiscais de Serviço Campinas'))
                 
             window_xml.close()
             
-        if event == '-valinhos-':
+        elif event == '-valinhos-':
             window_valinhos = janela_valinhos()
             def run_script_thread():
                 try:
@@ -792,7 +797,6 @@ if __name__ == '__main__':
                 except:
                     pass
             
-            
             while True:
                 # captura o evento e os valores armazenados na interface
                 event, values = window_valinhos.read()
@@ -819,11 +823,6 @@ if __name__ == '__main__':
                     # Cria uma nova thread para executar o script
                     script_thread = Thread(target=run_script_thread)
                     script_thread.start()
-                    
-                elif event == '-Encerrar-':
-                    alert(text='Download encerrado.\n\n'
-                             'Caso queira reiniciar o download, apague os arquivos gerados anteriormente ou selecione um novo local.\n\n'
-                             'O Script não continua uma execução já iniciada.\n\n')
                     
                 elif event == '-Abrir resultados-':
                     startfile(path.join(output_dir, 'Notas Fiscais de Serviço Valinhos'))

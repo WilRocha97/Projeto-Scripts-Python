@@ -337,7 +337,7 @@ def captura_dados_xml(window_xml, count, numeros_notas, quantidade_notas, arq_na
                     pass
                 if i >= 500:
                     escreve_relatorio_csv(f"{arq_name};Existe nota com layout diferente dentro do XML;{numero_da_nota}", nome='Andamentos', local=pasta_final)
-        
+            
         while str(numero_da_nota[0]) =='0':
             numero_da_nota = numero_da_nota[1:]
         dados_notas.insert(1, numero_da_nota) #1
@@ -365,10 +365,6 @@ def captura_dados_xml(window_xml, count, numeros_notas, quantidade_notas, arq_na
         
         classifica_xml(dados_notas_cliente, dados_notas, cnpj_cliente, arq_name, pasta_final)
         quantidade_notas += 1
-        
-        # Verifica se o usuário solicitou o encerramento do script
-        if event == '-Encerrar-' or event == sg.WIN_CLOSED:
-            return
             
     except:
         alert(text=f'Erro ao analizar XML, nota número: {numero_da_nota}. Download encerrado.\n\n'
@@ -377,6 +373,7 @@ def captura_dados_xml(window_xml, count, numeros_notas, quantidade_notas, arq_na
         escreve_doc(datetime.now())
         escreve_doc(f'Erro ao analizar XML, nota número: {numero_da_nota}')
         return 'Erro'
+    
     window_xml['-progressbar-'].update_bar(count, max=int(len(numeros_notas)))
     window_xml['-Progresso_texto-'].update(str(round(float(count) / int(len(numeros_notas)) * 100, 1)) + '%')
     window_xml.refresh()
@@ -449,6 +446,13 @@ def run_xml(cidade, window_xml, input_xml, output_dir):
                     quantidade_notas = captura_dados_xml(window_xml, count, numeros_notas, quantidade_notas, arq_name, arq, pasta_final, cidade,
                                                          numero_da_nota, cnpj_cliente, regex_tomador_cnpj, busca_dados_clientes, busca_dados_notas)
                     
+                    if quantidade_notas == 'erro':
+                        return
+                    
+                    # Verifica se o usuário solicitou o encerramento do script
+                    if event == '-Encerrar-' or event == sg.WIN_CLOSED:
+                        break
+                    
             if cidade == 'Jundiaí':
                 pasta_final = path.join(output_dir, 'Notas Fiscais de Serviço Jundiaí')
                 regex_numeros_notas = r'InfNfse Id=\"\d+\">\n\s+<ns2:Numero>\n\s+(.+)'
@@ -473,17 +477,21 @@ def run_xml(cidade, window_xml, input_xml, output_dir):
                     quantidade_notas = captura_dados_xml(window_xml, count, numeros_notas, quantidade_notas, arq_name, arq, pasta_final, cidade,
                                                          numero_da_nota, cnpj_cliente, regex_tomador_cnpj, busca_dados_clientes, busca_dados_notas)
                     
+                    if quantidade_notas == 'erro':
+                        return
+                        
                     # Verifica se o usuário solicitou o encerramento do script
                     if event == '-Encerrar-' or event == sg.WIN_CLOSED:
-                        alert(text='Download encerrado.\n\n'
-                                   'Caso queira reiniciar o download, apague os arquivos gerados anteriormente ou selecione um novo local.\n\n'
-                                   'O Script não continua uma execução já iniciada.\n\n')
-                        return
+                        break
                     
-            if quantidade_notas == 'erro':
-                return
-             
             quantidade_arquivos += 1
+            
+        # Verifica se o usuário solicitou o encerramento do script
+        if event == '-Encerrar-' or event == sg.WIN_CLOSED:
+            alert(text='Download encerrado.\n\n'
+                       'Caso queira reiniciar o download, apague os arquivos gerados anteriormente ou selecione um novo local.\n\n'
+                       'O Script não continua uma execução já iniciada.\n\n')
+            return
             
         window_xml['-progressbar-'].update_bar(count_arquivos, max=int(len(listdir(input_xml))))
         window_xml['-Progresso_texto-'].update(str(round(float(count_arquivos) / int(len(listdir(input_xml))) * 100, 1)) + '%')
@@ -671,7 +679,7 @@ if __name__ == '__main__':
         elif event == 'Ajuda':
             startfile('Manual do usuário - Gerador de arquivos para importar NFSE.pdf')
         
-        elif event == 'Lista de códigos do Domínio':
+        elif event == '-lista_dominio-':
             startfile(path.join('Dados_clientes', 'códigos clientes.xlsx'))
             
         elif event == 'Log do sistema':
@@ -752,7 +760,7 @@ if __name__ == '__main__':
                 elif event == 'Ajuda':
                     startfile('Manual do usuário - Gerador de arquivos para importar NFSE.pdf')
                   
-                elif event == 'Lista de códigos do Domínio':
+                elif event == '-lista_dominio-':
                     startfile(path.join('Dados_clientes', 'códigos clientes.xlsx'))
                     
                 elif event == '-Iniciar-':
@@ -838,7 +846,7 @@ if __name__ == '__main__':
                 elif event == 'Ajuda':
                     startfile('Manual do usuário - Gerador de arquivos para importar NFSE.pdf')
                   
-                elif event == 'Lista de códigos do Domínio':
+                elif event == '-lista_dominio-':
                     startfile(path.join('Dados_clientes', 'códigos clientes.xlsx'))
                     
                 elif event == '-Iniciar-':

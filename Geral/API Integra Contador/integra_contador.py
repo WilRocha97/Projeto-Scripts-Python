@@ -223,7 +223,24 @@ def cria_pdf(pdf_base64, output_dir, id_empresa, nome_empresa, mes, ano):
         file.write(pdf_bytes)
 
 
-def run(window, cnpj_contratante, usuario_b64, senha, input_certificado, input_excel, output_dir):
+def run(window, cnpj_contratante, usuario_b64, senha, competencia, input_certificado, input_excel, output_dir):
+    cnpj_contratante = cnpj_contratante.replace('.', '').replace('/', '').replace('-', '')
+    contador = 0
+    
+    while True:
+        time.sleep(1)
+        try:
+            os.makedirs(os.path.join(output_dir, 'Download de guias DCTFWEB SERPRO'))
+            break
+        except:
+            try:
+                contador += 1
+                os.makedirs(os.path.join(output_dir, f'Download de guias DCTFWEB SERPRO ({str(contador)})'))
+                output_dir = os.path.join(output_dir, f'Download de guias DCTFWEB SERPRO ({str(contador)})')
+                break
+            except:
+                pass
+            
     # limpa a pasta de response da api
     try:
         for arquivo in os.listdir(os.path.join(output_dir, 'API_response')):
@@ -240,12 +257,11 @@ def run(window, cnpj_contratante, usuario_b64, senha, input_certificado, input_e
         return False
     
     # pega a competência das guias que serão emitidas
-    comp = p.prompt(text='Informe a competência das guias que deseja solicitar', default='00/0000')
     for count, empresa in enumerate(empresas, start=1):
         id_empresa, nome_empresa = empresa
         
         # solicita a guia de DCTF
-        mes, ano, pdf_base64, mensagens = solicita_dctf(comp, cnpj_contratante, id_empresa, str(access_token), str(jwt_token))
+        mes, ano, pdf_base64, mensagens = solicita_dctf(competencia, cnpj_contratante, id_empresa, str(access_token), str(jwt_token))
         
         # se não retornar o PDF não precisa da segunda mensagem
         if not pdf_base64:
@@ -318,65 +334,85 @@ if __name__ == '__main__':
     
     
     def run_script_thread():
+        # try:
+        if not cnpj_contratante:
+            p.alert(text=f'Por favor informe o CNPJ do contratante da API SERPRO.')
+            return
+        if not consumer_key:
+            p.alert(text=f'Por favor informe o consumerKey.')
+            return
+        if not consumer_secret:
+            p.alert(text=f'Por favor informe o consumerSecret.')
+            return
+        if not senha:
+            p.alert(text=f'Por favor informe a senha do certificado digital.')
+            return
+        if not competencia:
+            p.alert(text=f'Por favor informe a competência das guias.')
+            return
+        if not input_certificado:
+            p.alert(text=f'Por favor selecione um certificado digital.')
+            return
+        if not input_excel:
+            p.alert(text=f'Por favor selecione uma planilha de dados.')
+            return
+        if not output_dir:
+            p.alert(text=f'Por favor selecione um diretório para salvar os resultados.')
+            return
+            
+        # habilita e desabilita os botões conforme necessário
+        window['-input_cnpj_contratante-'].update(disabled=True)
+        window['-input_consumer_key-'].update(disabled=True)
+        window['-input_consumer_secret-'].update(disabled=True)
+        window['-input_senha_certificado-'].update(disabled=True)
+        window['-input_competencia-'].update(disabled=True)
+        window['-abrir-'].update(disabled=True)
+        window['-abrir1-'].update(disabled=True)
+        window['-abrir2-'].update(disabled=True)
+        window['-iniciar-'].update(disabled=True)
+        window['-encerrar-'].update(disabled=False)
+        window['-abrir_resultados-'].update(disabled=False)
+        
+        # apaga qualquer mensagem na interface
+        window['-Mensagens-'].update('')
+        # atualiza a barra de progresso para ela ficar mais visível
+        window['-progressbar-'].update(bar_color=('#fca400', '#ffe0a6'))
+        
         try:
-            if not cnpj_contratante:
-                p.alert(text=f'Por favor informe o CNPJ do contratante da API SERPRO.')
-                return
-            if not consumer_key:
-                p.alert(text=f'Por favor informe o consumerKey.')
-                return
-            if not consumer_secret:
-                p.alert(text=f'Por favor informe o consumerSecret.')
-                return
-            if not senha:
-                p.alert(text=f'Por favor informe a senha do certificado digital.')
-                return
-            
-            if not input_certificado:
-                p.alert(text=f'Por favor selecione um certificado digital.')
-                return
-            if not input_excel:
-                p.alert(text=f'Por favor selecione uma planilha de dados.')
-                return
-            if not output_dir:
-                p.alert(text=f'Por favor selecione um diretório para salvar os resultados.')
-                return
+            # Chama a função que executa o script
+            run(window, cnpj_contratante, usuario_b64, senha, competencia, input_certificado, input_excel, output_dir)
+        # Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
+        except Exception as erro:
+            time.sleep(1)
+            print(erro)
+            if str(erro) == 'Invalid password or PKCS12 data':
+                p.alert(text=f'Senha do certificado digital inválida.')
+            if str(erro) == "'description'":
+                p.alert(text=f'Consumer Key ou Consumer Secret inválidos')
                 
-            # habilita e desabilita os botões conforme necessário
-            window['-input_cnpj_contratante-'].update(disabled=True)
-            window['-input_consumer_key-'].update(disabled=True)
-            window['-input_consumer_secret-'].update(disabled=True)
-            window['-input_senha_certificado-'].update(disabled=True)
-            window['-input_competencia-'].update(disabled=True)
-            window['-abrir-'].update(disabled=True)
-            window['-abrir1-'].update(disabled=True)
-            window['-abrir2-'].update(disabled=True)
-            window['-iniciar-'].update(disabled=True)
-            window['-encerrar-'].update(disabled=False)
-            window['-abrir_resultados-'].update(disabled=False)
+            window['Log do sistema'].update(disabled=False)
+            p.alert(text=f"Erro :'(\n\n"
+                       f'Abra o pasta de "Log do sistema" e envie o arquivo "Log.txt" para o desenvolvedor.\n')
+            escreve_doc(erro)
             
-            # apaga qualquer mensagem na interface
-            window['-Mensagens-'].update('')
-            # atualiza a barra de progresso para ela ficar mais visível
-            window['-progressbar-'].update(bar_color=('#fca400', '#ffe0a6'))
-            
-            try:
-                # Chama a função que executa o script
-                run(window, cnpj_contratante, usuario_b64, senha, input_certificado, input_excel, output_dir)
-            # Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
-            except Exception as erro:
-                time.sleep(1)
-                if str(erro) == 'Invalid password or PKCS12 data':
-                    p.alert(text=f'Senha do certificado digital inválida.')
-                    return
-                
-                window['Log do sistema'].update(disabled=False)
-                p.alert(text=f"Erro :'(\n\n"
-                           f'Abra o pasta de "Log do sistema" e envie o arquivo "Log.txt" para o desenvolvedor.\n')
-                escreve_doc(erro)
-            
-        except:
-            pass
+        # habilita e desabilita os botões conforme necessário
+        window['-input_cnpj_contratante-'].update(disabled=False)
+        window['-input_consumer_key-'].update(disabled=False)
+        window['-input_consumer_secret-'].update(disabled=False)
+        window['-input_senha_certificado-'].update(disabled=False)
+        window['-input_competencia-'].update(disabled=False)
+        window['-abrir-'].update(disabled=False)
+        window['-abrir1-'].update(disabled=False)
+        window['-abrir2-'].update(disabled=False)
+        window['-iniciar-'].update(disabled=False)
+        window['-encerrar-'].update(disabled=True)
+        
+        # apaga qualquer mensagem na interface
+        window['-Mensagens-'].update('')
+        # atualiza a barra de progresso para ela ficar mais visível
+        window['-progressbar-'].update(bar_color='#f0f0f0')
+        """except:
+            pass"""
     
     
     while True:
@@ -392,16 +428,11 @@ if __name__ == '__main__':
             usuario_b64 = converter_base64(usuario)
             
             senha = values['-input_senha_certificado-']
+            competencia = values['-input_competencia-']
             input_certificado = values['-input_certificado-']
             input_excel = values['-input_excel-']
             output_dir = values['-output_dir-']
             contador = 1
-            while True:
-                try:
-                    os.makedirs(os.path.join(output_dir, 'Download de guias DCTFWEB SERPRO'))
-                except:
-                    output_dir = os.path.join(output_dir, f'Download de guias DCTFWEB SERPRO ({str(contador)})')
-                    contador += 1
             
         except:
             input_excel = 'Desktop'
@@ -413,8 +444,8 @@ if __name__ == '__main__':
         elif event == 'Log do sistema':
             os.startfile('API_response')
         
-        elif event == 'Ajuda':
-            os.startfile('Manual do usuário - Download NFSe_VP SIGISSWEB.pdf')
+        #elif event == 'Ajuda':
+            #os.startfile('Manual do usuário - Download NFSe_VP SIGISSWEB.pdf')
         
         elif event == '-iniciar-':
             # Cria uma nova thread para executar o script

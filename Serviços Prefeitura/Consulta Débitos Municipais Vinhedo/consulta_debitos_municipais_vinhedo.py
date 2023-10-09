@@ -29,7 +29,7 @@ def pesquisar(options, cnpj, insc_muni):
         time.sleep(0.2)
         
     # resolve o captcha
-    captcha = _solve_text_captcha(driver, 'homeForm:panelCaptcha:j_idt47')
+    captcha = _solve_text_captcha(driver, f'homeForm:panelCaptcha:j_idt{str(contador)}')
     
     # espera o campo do tipo da pesquisa
     while not _find_by_id('homeForm:inputTipoInscricao_label', driver):
@@ -92,7 +92,7 @@ def salvar_guia(cnpj):
         time.sleep(1)
         
     # se não estiver selecionado para salvar como PDF, seleciona para salvar como PDF
-    imagens = ['print_to_pdf.png', 'print_to_pdf_2.png']
+    imagens = ['print_to_pdf.png', 'print_to_pdf_2.png', 'print_to_pdf_3.png']
     for img in imagens:
         if _find_img(img, conf=0.9) or _find_img(img, conf=0.9):
             _click_img(img, conf=0.9)

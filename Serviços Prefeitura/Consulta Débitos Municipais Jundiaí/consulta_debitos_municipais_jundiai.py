@@ -6,6 +6,7 @@ from PIL import Image
 import os, time, re, shutil
 
 from sys import path
+
 path.append(r'..\..\_comum')
 from chrome_comum import _initialize_chrome, _send_input, _find_by_path, _find_by_id
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
@@ -59,7 +60,7 @@ def login(options, cnpj, insc_muni):
             if situacao == 'Consta(m) pendência(s) para a emissão de certidão por meio da Internet. Dirija-se à Av. União dos Ferroviários, 1760 - ' \
                            'Centro - Jundiaí de segunda a sexta-feiras das 9h:00 às 18h:00 e aos sábados das 9h:00 às 13h:00.' \
                     or situacao == 'Consta(m) pendência(s) para emissão de certidão por meio da internet. Dirija-se à Av. União dos Ferroviários, 1760 - ' \
-                                   'Centro - Jundiaí de segunda a sexta-feiras das 9h:00 às 18h:00 e aos sábados das 9h:00 às 13h:00.':
+                                   'Centro - Jundiaí de segunda a sexta-feiras das 9h:00 às 17h:00 e aos sábados das 9h:00 às 13h:00.':
                 situacao_print = f'❗ {situacao}'
                 driver.quit()
                 return situacao, situacao_print
@@ -67,6 +68,10 @@ def login(options, cnpj, insc_muni):
                 situacao_print = '❌ Erro ao logar na empresa'
                 driver.quit()
                 return 'Erro ao logar na empresa', situacao_print
+            if situacao == 'EIX000: (-107) ISAM error:  record is locked.':
+                situacao_print = '❌ Erro no site'
+                driver.quit()
+                return 'Erro no site', situacao_print
         time.sleep(1)
     
     print('>>> Consultando empresa')
@@ -93,7 +98,7 @@ def login(options, cnpj, insc_muni):
     if situacao == 'Consta(m) pendência(s) para a emissão de certidão por meio da Internet. Dirija-se à Av. União dos Ferroviários, 1760 - ' \
                    'Centro - Jundiaí de segunda a sexta-feiras das 9h:00 às 18h:00 e aos sábados das 9h:00 às 13h:00.' \
             or situacao == 'Consta(m) pendência(s) para emissão de certidão por meio da internet. Dirija-se à Av. União dos Ferroviários, 1760 - ' \
-                           'Centro - Jundiaí de segunda a sexta-feiras das 9h:00 às 18h:00 e aos sábados das 9h:00 às 13h:00.':
+                           'Centro - Jundiaí de segunda a sexta-feiras das 9h:00 às 17h:00 e aos sábados das 9h:00 às 13h:00.':
         situacao_print = f'❗ {situacao}'
         driver.quit()
         return situacao, situacao_print
@@ -123,17 +128,20 @@ def run():
         "download.directory_upgrade": True,
         "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
     })
-
+    
     # cria o indice para cada empresa da lista de dados
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         cnpj, insc_muni, nome = empresa
-
+        
         # printa o indice da empresa que está sendo executada
         _indice(count, total_empresas, empresa)
         
-        situacao, situacao_print = login(options, cnpj, insc_muni)
-        
+        while True:
+            situacao, situacao_print = login(options, cnpj, insc_muni)
+            if situacao != 'Erro no site':
+                break
+                
         _escreve_relatorio_csv(f'{cnpj};{insc_muni};{nome};{situacao}', nome='Consulta de débitos municipais de Jundiaí')
         print(situacao_print)
 

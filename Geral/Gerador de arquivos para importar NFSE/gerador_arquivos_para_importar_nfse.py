@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import atexit, PySimpleGUI as sg
-import re
 import sys
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -293,133 +292,95 @@ def busca_codigo_cliente(cnpj_cliente):
         return 'Cliente não encontrado na planilha de códigos'
     
     
-def captura_dados_campinas(quantidade_notas, arq_name, arq, pasta_final):
+def captura_dados_xml(window_xml, count, numeros_notas, quantidade_notas, arq_name, arq, pasta_final, cidade, numero_da_nota, cnpj_cliente, regex_tomador_cnpj, busca_dados_clientes, busca_dados_notas):
     # print(arq)
     # sleep(55)
-    
-    numeros_notas = compile(r'<NUM_NOTA>\n\s+(.+)\n').findall(arq)
-    
-    for numero_da_nota in numeros_notas:
-        cnpj_cliente = compile(r'' + numero_da_nota + '(\n.+){96}<TOMADOR_CPF_CNPJ>\n\s+(.+)\n').search(arq).group(2)
-        nome_cliente = compile(r'' + numero_da_nota + '(\n.+){102}<TOMADOR_RAZAO_SOCIAL>\n\s+(.+)\n').search(arq).group(2)
-        uf_cliente = compile(r'' + numero_da_nota + '(\n.+){126}<TOMADOR_UF>\n\s+(.+)\n').search(arq).group(2)
-        municipio_cliente = compile(r'' + numero_da_nota + '(\n.+){123}<TOMADOR_CIDADE>\n\s+(.+)\n').search(arq).group(2)
-        endereco_cliente = compile(r'' + numero_da_nota + '(\n.+){108}<TOMADOR_LOGRADOURO>\n\s+(.+)\n').search(arq).group(2)
+    try:
+        for i in range(200):
+            try:
+                cnpj_cliente = compile(numero_da_nota + '(\n.+){' + str(i) + '}' + regex_tomador_cnpj).search(arq).group(2)
+                break
+            except:
+                pass
+            
+        dados_notas_cliente = []
+        for busca_dados in busca_dados_clientes:
+            for i in range(500):
+                try:
+                    dados_notas_cliente.append(compile(r'{}'.format( str(busca_dados[0]) + str(i) + str(busca_dados[1]) )).search(arq).group(2))
+                    break
+                except:
+                    pass
+                if i >= 500:
+                    escreve_relatorio_csv(f"{arq_name};Existe nota com layout diferente dentro do XML;{numero_da_nota}", nome='Andamentos', local=pasta_final)
+                    
+        dados_notas_cliente = ';'.join(dados_notas_cliente)
         
-        dados_notas_cliente = ';'.join([cnpj_cliente, nome_cliente, uf_cliente, municipio_cliente, endereco_cliente])
+        dados_notas = []
+        for busca_dados in busca_dados_notas:
+            for i in range(500):
+                try:
+                    dado = compile(r'{}'.format(str(busca_dados[0]) + str(i) + str(busca_dados[1]))).search(arq).group(2)
+                    if compile(r'\d\d\d\d-\d\d-\d\dT').search(dado):
+                        data_nota_formatada = ''
+                        while str(dado[0]) != 'T':
+                            data_nota_formatada += dado[0]
+                            dado = dado[1:]
+                        data_nota = data_nota_formatada.split('-')
+                        data_nota = f'{data_nota[2]}/{data_nota[1]}/{data_nota[0]}'
+                        dados_notas.append(data_nota)
+                    else:
+                        dados_notas.append(compile(r'{}'.format(str(busca_dados[0]) + str(i) + str(busca_dados[1]))).search(arq).group(2))
+                        
+                    break
+                except:
+                    pass
+                if i >= 500:
+                    escreve_relatorio_csv(f"{arq_name};Existe nota com layout diferente dentro do XML;{numero_da_nota}", nome='Andamentos', local=pasta_final)
         
-        data_nota = compile(r'' + numero_da_nota + '\n.+\n.+<DATA_HORA_EMISSAO>\n\s+(\d\d/\d\d/\d\d\d\d)').search(arq).group(1)
-
         while str(numero_da_nota[0]) =='0':
             numero_da_nota = numero_da_nota[1:]
-        numero_nota = numero_da_nota
+        dados_notas.insert(1, numero_da_nota) #1
         
-        valor_servico = compile(r'' + numero_da_nota + '(\n.+){150}<VALOR_SERVICO>\n\s+(.+)\n').search(arq).group(2)
-        
-        valor_iss = '0,00'
-        aliquota_iss = '0,00'
-        base_de_calculo = '0,00'
-        
-        valor_irrf = compile(r'' + numero_da_nota + '(\n.+){165}<VALOR_IR>\n\s+(.+)\n').search(arq).group(2)
-        valor_pis = compile(r'' + numero_da_nota + '(\n.+){156}<VALOR_PIS>\n\s+(.+)\n').search(arq).group(2)
-        valor_cofins = compile(r'' + numero_da_nota + '(\n.+){159}<VALOR_COFINS>\n\s+(.+)\n').search(arq).group(2)
-        valor_csll = compile(r'' + numero_da_nota + '(\n.+){168}<VALOR_CSLL>\n\s+(.+)\n').search(arq).group(2)
-        
-        base_de_calculo_inss = '0,00'
-        valor_inss = '0,00'
-        acumulador = '2102'
-        
-        dados_notas = ';'.join([data_nota,
-                                numero_nota,
-                                '26.973.312/0001-75',
-                                'R. POSTAL SERVICOS CONTABEIS LTDA',
-                                'NFS-E;NFD',
-                                '',
-                                valor_servico.replace('.', ''),
-                                valor_iss.replace('.', ''),
-                                aliquota_iss.replace('.', ''),
-                                base_de_calculo.replace('.', ''),
-                                valor_irrf.replace('.', ''),
-                                valor_pis.replace('.', ''),
-                                valor_cofins.replace('.', ''),
-                                valor_csll.replace('.', ''),
-                                base_de_calculo_inss.replace('.', ''),
-                                valor_inss.replace('.', ''),
-                                acumulador,
-                                '1933',
-                                'SP'])
-        
-        classifica_xml(dados_notas_cliente, dados_notas, cnpj_cliente, arq_name, pasta_final)
-        quantidade_notas += 1
+        if cidade == 'Jundiaí':
+            dados_notas.insert(2, '26.973.312/0002-56') #2
+        if cidade == 'Campinas':
+            dados_notas.insert(2, '26.973.312/0003-37')  # 2
+            
+        dados_notas.insert(3, 'R. POSTAL SERVICOS CONTABEIS LTDA') #3
+        dados_notas.insert(4, 'NFS-E;NFD') #4
+        dados_notas.insert(5, '') #5
     
-    return quantidade_notas
-
-
-def captura_dados_jundiai(quantidade_notas, arq_name, arq, pasta_final):
-    # print(arq)
-    # sleep(55)
-    
-    numeros_notas = compile(r'InfNfse Id=\"\d+\">\n\s+<ns2:Numero>\n\s+(.+)').findall(arq)
-    
-    for numero_da_nota in numeros_notas:
-        cnpj_cliente = compile(r'<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){160}<ns2:IdentificacaoTomador>\n.+\n.+\n\s+(.+)').search(arq).group(2)
-        nome_cliente = compile(r'<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){170}<ns2:RazaoSocial>\n\s+(.+)').search(arq).group(2)
-        uf_cliente = compile(r'<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){186}<ns2:Uf>\n\s+(.+)').search(arq).group(2)
-        municipio_cliente = compile(r'<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){183}<ns2:CodigoMunicipio>\n\s+(.+)').search(arq).group(2)
-        endereco_cliente = compile(r'<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){173}<ns2:Endereco>\n\s+<ns2:Endereco>\n\s+(.+)').search(arq).group(2)
+        dados_notas.insert(7, '0,00') #7
+        dados_notas.insert(8, '0,00') #8
+        dados_notas.insert(9, '0,00') #9
         
-        dados_notas_cliente = ';'.join([cnpj_cliente, nome_cliente, uf_cliente, municipio_cliente, endereco_cliente])
+        dados_notas.insert(14, '0,00') #14
+        dados_notas.insert(15, '0,00') #15
+        dados_notas.insert(16, '2102') #16
+        dados_notas.insert(17, '1933') #17
+        dados_notas.insert(18, 'SP') #18
         
-        data_nota_formatada = ''
-        data_nota_crua = compile(r'<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){5}<ns2:DataEmissao>\n\s+(.+)').search(arq).group(2)
-        while str(data_nota_crua[0]) != 'T':
-            data_nota_formatada += data_nota_crua[0]
-            data_nota_crua = data_nota_crua[1:]
-        data_nota = data_nota_formatada.split('-')
-        data_nota = F'{data_nota[2]}/{data_nota[1]}/{data_nota[0]}'
-
-        while str(numero_da_nota[0]) == '0':
-            numero_da_nota = numero_da_nota[1:]
-        numero_nota = numero_da_nota
-        
-        valor_servico = compile(r'<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){90}<ns2:ValorServicos>\n\s+(.+)\n').search(arq).group(2)
-        
-        valor_iss = '0,00'
-        aliquota_iss = '0,00'
-        base_de_calculo = '0,00'
-        
-        valor_irrf = compile(r'<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){105}<ns2:ValorIr>\n\s+(.+)\n').search(arq).group(2)
-        valor_pis = compile(r'<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){96}<ns2:ValorPis>\n\s+(.+)\n').search(arq).group(2)
-        valor_cofins = compile(r'<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){99}<ns2:ValorCofins>\n\s+(.+)\n').search(arq).group(2)
-        valor_csll = compile(r'<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){108}<ns2:ValorCsll>\n\s+(.+)\n').search(arq).group(2)
-        
-        base_de_calculo_inss = '0,00'
-        valor_inss = '0,00'
-        acumulador = '2102'
-        
-        dados_notas = ';'.join([data_nota,
-                                numero_nota,
-                                '26.973.312/0001-75',
-                                'R. POSTAL SERVICOS CONTABEIS LTDA',
-                                'NFS-E;NFD',
-                                '',
-                                valor_servico.replace('.', ','),
-                                valor_iss.replace('.', ','),
-                                aliquota_iss.replace('.', ','),
-                                base_de_calculo.replace('.', ','),
-                                valor_irrf.replace('.', ','),
-                                valor_pis.replace('.', ','),
-                                valor_cofins.replace('.', ','),
-                                valor_csll.replace('.', ','),
-                                base_de_calculo_inss.replace('.', ','),
-                                valor_inss.replace('.', ','),
-                                acumulador,
-                                '1933',
-                                'SP'])
+        dados_notas = ';'.join(dados_notas)
         
         classifica_xml(dados_notas_cliente, dados_notas, cnpj_cliente, arq_name, pasta_final)
         quantidade_notas += 1
         
+        # Verifica se o usuário solicitou o encerramento do script
+        if event == '-Encerrar-' or event == sg.WIN_CLOSED:
+            return
+            
+    except:
+        alert(text=f'Erro ao analizar XML, nota número: {numero_da_nota}. Download encerrado.\n\n'
+                   'Caso queira reiniciar o download, apague os arquivos gerados anteriormente ou selecione um novo local.\n\n'
+                   'O Script não continua uma execução já iniciada.\n\n')
+        escreve_doc(datetime.now())
+        escreve_doc(f'Erro ao analizar XML, nota número: {numero_da_nota}')
+        return 'Erro'
+    window_xml['-progressbar-'].update_bar(count, max=int(len(numeros_notas)))
+    window_xml['-Progresso_texto-'].update(str(round(float(count) / int(len(numeros_notas)) * 100, 1)) + '%')
+    window_xml.refresh()
+    
     return quantidade_notas
 
 
@@ -452,9 +413,12 @@ def run_xml(cidade, window_xml, input_xml, output_dir):
     # configura a pasta final dos arquivos
     quantidade_arquivos = 0
     quantidade_notas = 0
-    for count, arq_name in enumerate(listdir(input_xml), start=1):
-        # Abrir o pdf
+    for count_arquivos, arq_name in enumerate(listdir(input_xml), start=1):
+        # Abrir o xml
         arquivo = path.join(input_xml, arq_name)
+        window_xml['-Mensagens-'].update(f'Arquivo XML {str(count_arquivos)} / {str(len(listdir(input_xml)))}')
+        window_xml.refresh()
+        
         with open(arquivo, 'r', encoding='ISO-8859-1') as f:
             data = f.read()
             
@@ -463,22 +427,68 @@ def run_xml(cidade, window_xml, input_xml, output_dir):
             
             if cidade == 'Campinas':
                 pasta_final = path.join(output_dir, 'Notas Fiscais de Serviço Campinas')
-                quantidade_notas = captura_dados_campinas(quantidade_notas, arq_name, arq, pasta_final)
+                regex_numeros_notas = r'<NUM_NOTA>\n\s+(.+)\n'
+                regex_tomador_cnpj = '<TOMADOR_CPF_CNPJ>\n\s+(.+)\n'
+                numeros_notas = compile(regex_numeros_notas).findall(arq)
+                cnpj_cliente = ''
+            
+                for count, numero_da_nota in enumerate(numeros_notas, start=1):
+                    busca_dados_clientes = [[numero_da_nota + '(\n.+){', '}<TOMADOR_CPF_CNPJ>\n\s+(.+)\n'],
+                                            [numero_da_nota + '(\n.+){', '}<TOMADOR_RAZAO_SOCIAL>\n\s+(.+)\n'],
+                                            [numero_da_nota + '(\n.+){', '}<TOMADOR_UF>\n\s+(.+)\n'],
+                                            [numero_da_nota + '(\n.+){', '}<TOMADOR_CIDADE>\n\s+(.+)\n'],
+                                            [numero_da_nota + '(\n.+){', '}<TOMADOR_LOGRADOURO>\n\s+(.+)\n']]
+                    
+                    busca_dados_notas = [[numero_da_nota + '(\n.+){', '}<DATA_HORA_EMISSAO>\n\s+(\d\d/\d\d/\d\d\d\d)'],  # 0
+                                         [numero_da_nota + '(\n.+){', '}<VALOR_SERVICO>\n\s+(.+)\n'],  # 6
+                                         [numero_da_nota + '(\n.+){', '}<VALOR_IR>\n\s+(.+)\n'],  # 10
+                                         [numero_da_nota + '(\n.+){', '}<VALOR_PIS>\n\s+(.+)\n'],  # 11
+                                         [numero_da_nota + '(\n.+){', '}<VALOR_COFINS>\n\s+(.+)\n'],  # 12
+                                         [numero_da_nota + '(\n.+){', '}<VALOR_CSLL>\n\s+(.+)\n']]  # 13
+                    
+                    quantidade_notas = captura_dados_xml(window_xml, count, numeros_notas, quantidade_notas, arq_name, arq, pasta_final, cidade,
+                                                         numero_da_nota, cnpj_cliente, regex_tomador_cnpj, busca_dados_clientes, busca_dados_notas)
+                    
             if cidade == 'Jundiaí':
                 pasta_final = path.join(output_dir, 'Notas Fiscais de Serviço Jundiaí')
-                quantidade_notas = captura_dados_jundiai(quantidade_notas, arq_name, arq, pasta_final)
-            quantidade_arquivos += 1
-            window_xml['-progressbar-'].update_bar(count, max=int(len(listdir(input_xml))))
-            window_xml['-Progresso_texto-'].update(str(round(float(count) / int(len(listdir(input_xml))) * 100, 1)) + '%')
-            window_xml.refresh()
-            
-            # Verifica se o usuário solicitou o encerramento do script
-            if event == '-Encerrar-' or event == sg.WIN_CLOSED:
-                alert(text='Download encerrado.\n\n'
-                           'Caso queira reiniciar o download, apague os arquivos gerados anteriormente ou selecione um novo local.\n\n'
-                           'O Script não continua uma execução já iniciada.\n\n')
+                regex_numeros_notas = r'InfNfse Id=\"\d+\">\n\s+<ns2:Numero>\n\s+(.+)'
+                regex_tomador_cnpj = '<ns2:IdentificacaoTomador>\n.+\n.+\n\s+(.+)'
+                numeros_notas = compile(regex_numeros_notas).findall(arq)
+                cnpj_cliente = ''
+                
+                for count, numero_da_nota in enumerate(numeros_notas, start=1):
+                    busca_dados_clientes = [['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}<ns2:IdentificacaoTomador>\n.+\n.+\n\s+(.+)'],
+                                            ['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}</ns2:IdentificacaoTomador>\n\s+<ns2:RazaoSocial>\n\s+(.+)'],
+                                            ['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}</ns2:IdentificacaoTomador>\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+<ns2:Uf>\n\s+(.+)'],
+                                            ['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}</ns2:IdentificacaoTomador>\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+<ns2:CodigoMunicipio>\n\s+(.+)'],
+                                            ['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}</ns2:IdentificacaoTomador>\n.+\n.+\n.+\n.+<ns2:Endereco>\n\s+<ns2:Endereco>\n\s+(.+)']]
+                    
+                    busca_dados_notas = [['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}<ns2:DataEmissao>\n\s+(.+)'],  # 0
+                                         ['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}<ns2:ValorServicos>\n\s+(.+)\n'],  # 6
+                                         ['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}<ns2:ValorIr>\n\s+(.+)\n'],  # 10
+                                         ['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}<ns2:ValorPis>\n\s+(.+)\n'],  # 11
+                                         ['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}<ns2:ValorCofins>\n\s+(.+)\n'],  # 12
+                                         ['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}<ns2:ValorCsll>\n\s+(.+)\n']]  # 13
+                    
+                    quantidade_notas = captura_dados_xml(window_xml, count, numeros_notas, quantidade_notas, arq_name, arq, pasta_final, cidade,
+                                                         numero_da_nota, cnpj_cliente, regex_tomador_cnpj, busca_dados_clientes, busca_dados_notas)
+                    
+                    # Verifica se o usuário solicitou o encerramento do script
+                    if event == '-Encerrar-' or event == sg.WIN_CLOSED:
+                        alert(text='Download encerrado.\n\n'
+                                   'Caso queira reiniciar o download, apague os arquivos gerados anteriormente ou selecione um novo local.\n\n'
+                                   'O Script não continua uma execução já iniciada.\n\n')
+                        return
+                    
+            if quantidade_notas == 'erro':
                 return
-    
+             
+            quantidade_arquivos += 1
+            
+        window_xml['-progressbar-'].update_bar(count_arquivos, max=int(len(listdir(input_xml))))
+        window_xml['-Progresso_texto-'].update(str(round(float(count_arquivos) / int(len(listdir(input_xml))) * 100, 1)) + '%')
+        window_xml.refresh()
+        
     alert(text=f'Analise concluída, {quantidade_arquivos} arquivos analisados\n'
                f'{quantidade_notas} notas capturadas')
     
@@ -594,9 +604,9 @@ if __name__ == '__main__':
     # sg.theme_previewer()
     # Layout da janela
     
-    def janela_menu():
+    def janela_menu(): # layout da janela do menu principal
         layout_menu = [
-            [sg.Button('Ajuda', border_width=0), sg.Button('Lista de códigos do Domínio', border_width=0), sg.Button('Log do sistema', border_width=0, disabled=True)],
+            [sg.Button('Ajuda', border_width=0), sg.Button('Lista de códigos do Domínio', key='-lista_dominio-', border_width=0), sg.Button('Log do sistema', border_width=0, disabled=True)],
             [sg.Text('')],
             [sg.Text('Selecione o local do prestador de serviço das notas', justification='center')],
             [sg.Button('Campinas', key='-campinas-', size=20, border_width=1),
@@ -608,9 +618,9 @@ if __name__ == '__main__':
         return sg.Window('Gerador de arquivos para importar NFSE', layout_menu, finalize=True)
     
     
-    def janela_xml(cidade):
+    def janela_xml(cidade): # layout da janela dos scripts que analisam os xml
         layout_valinhos = [
-            [sg.Button('Ajuda', border_width=0), sg.Button('Lista de códigos do Domínio', border_width=0), sg.Button('Log do sistema', border_width=0, disabled=True)],
+            [sg.Button('Ajuda', border_width=0), sg.Button('Lista de códigos do Domínio', key='-lista_dominio-', border_width=0), sg.Button('Log do sistema', border_width=0, disabled=True)],
             [sg.Text('')],
             [sg.Text('Selecione um diretório com os arquivos XML:')],
             [sg.FolderBrowse('Pesquisar', key='-Abrir-'), sg.InputText(key='-input_xml-', size=80, disabled=True)],
@@ -626,9 +636,9 @@ if __name__ == '__main__':
         return sg.Window(cidade, layout_valinhos, finalize=True, modal=True)
     
     
-    def janela_valinhos():
+    def janela_valinhos(): # layout da janela do script das notas de Valinhos
         layout_valinhos = [
-            [sg.Button('Ajuda', border_width=0), sg.Button('Lista de códigos do Domínio', border_width=0), sg.Button('Log do sistema', border_width=0, disabled=True)],
+            [sg.Button('Ajuda', border_width=0), sg.Button('Lista de códigos do Domínio', key='-lista_dominio-', border_width=0), sg.Button('Log do sistema', border_width=0, disabled=True)],
             [sg.Text('')],
             [sg.Text('Selecione um arquivo Excel com as chaves de acesso das notas:')],
             [sg.FileBrowse('Pesquisar', key='-Abrir-', file_types=(('Planilhas Excel', '*.xlsx *.xls'),)), sg.InputText(key='-input_excel-', size=80, disabled=True)],
@@ -643,6 +653,7 @@ if __name__ == '__main__':
         # guarda a janela na variável para manipula-la
         return sg.Window('Valinhos', layout_valinhos, finalize=True, modal=True)
     
+    # inicia as variáveis das janelas
     window_menu, window_xml, window_valinhos = janela_menu(), None, None
     
     while True:
@@ -665,7 +676,8 @@ if __name__ == '__main__':
             
         elif event == 'Log do sistema':
             startfile('Log')
-            
+        
+        # se o botão clicado for de campinas ou jundiaí, usa o mesmo layout, porém com o nome específico da cidade
         elif event == '-campinas-' or event == '-jundiai-':
             if event == '-campinas-':
                 cidade = 'Campinas'
@@ -680,6 +692,7 @@ if __name__ == '__main__':
                         return
                     
                     # habilita e desabilita os botões conforme necessário
+                    window_xml['-lista_dominio-'].update(disabled=True)
                     window_xml['-Abrir-'].update(disabled=True)
                     window_xml['-Abrir2-'].update(disabled=True)
                     window_xml['-Iniciar-'].update(disabled=True)
@@ -692,6 +705,7 @@ if __name__ == '__main__':
                     
                     try:
                         # Chama a função que executa o script
+                        # nesse caso o script de analisa xml pode ser usado por campinas e jundiaí
                         run_xml(cidade, window_xml, input_xml, output_dir)
                         # Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
                     except Exception as erro:
@@ -706,6 +720,7 @@ if __name__ == '__main__':
                         escreve_doc(erro)
         
                     # habilita e desabilita os botões conforme necessário
+                    window_xml['-lista_dominio-'].update(disabled=False)
                     window_xml['-Abrir-'].update(disabled=False)
                     window_xml['-Abrir2-'].update(disabled=False)
                     window_xml['-Iniciar-'].update(disabled=False)
@@ -746,7 +761,12 @@ if __name__ == '__main__':
                     script_thread.start()
                     
                 elif event == '-Abrir resultados-':
-                    startfile(path.join(output_dir, 'Notas Fiscais de Serviço Campinas'))
+                    if cidade == 'Campinas':
+                        pasta_final = path.join(output_dir, 'Notas Fiscais de Serviço Campinas')
+                    if cidade == 'Jundiaí':
+                        pasta_final = path.join(output_dir, 'Notas Fiscais de Serviço Jundiaí')
+                        
+                    startfile(pasta_final)
                 
             window_xml.close()
             
@@ -759,6 +779,7 @@ if __name__ == '__main__':
                         return
                     
                     # habilita e desabilita os botões conforme necessário
+                    window_valinhos['-lista_dominio-'].update(disabled=True)
                     window_valinhos['-Abrir-'].update(disabled=True)
                     window_valinhos['-Abrir2-'].update(disabled=True)
                     window_valinhos['-Iniciar-'].update(disabled=True)
@@ -785,6 +806,7 @@ if __name__ == '__main__':
                         escreve_doc(erro)
         
                     # habilita e desabilita os botões conforme necessário
+                    window_valinhos['-lista_dominio-'].update(disabled=False)
                     window_valinhos['-Abrir-'].update(disabled=False)
                     window_valinhos['-Abrir2-'].update(disabled=False)
                     window_valinhos['-Iniciar-'].update(disabled=False)

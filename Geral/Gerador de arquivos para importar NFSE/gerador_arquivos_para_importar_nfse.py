@@ -35,6 +35,8 @@ def remove_lock_file(lock_file_path):
 
 
 def open_lista_dados(input_excel):
+    workbook = ''
+    tipo_dados = ''
     file = input_excel
     
     if not file:
@@ -424,25 +426,28 @@ def run_xml(cidade, window_xml, input_xml, output_dir):
             
             if cidade == 'Campinas':
                 pasta_final = path.join(output_dir, 'Notas Fiscais de Serviço Campinas')
+                # regex para pegar todas as notas do arquivo
                 regex_numeros_notas = r'<NUM_NOTA>\n\s+(.+)\n'
+                # regex para pegar o cnpj do tomador
                 regex_tomador_cnpj = '<TOMADOR_CPF_CNPJ>\n\s+(.+)\n'
+                # procura todas as notas no arquivo
                 numeros_notas = compile(regex_numeros_notas).findall(arq)
                 cnpj_cliente = ''
-            
                 for count, numero_da_nota in enumerate(numeros_notas, start=1):
+                    # lista de regex para os dados do tomador
                     busca_dados_clientes = [[numero_da_nota + '(\n.+){', '}<TOMADOR_CPF_CNPJ>\n\s+(.+)\n'],
                                             [numero_da_nota + '(\n.+){', '}<TOMADOR_RAZAO_SOCIAL>\n\s+(.+)\n'],
                                             [numero_da_nota + '(\n.+){', '}<TOMADOR_UF>\n\s+(.+)\n'],
                                             [numero_da_nota + '(\n.+){', '}<TOMADOR_CIDADE>\n\s+(.+)\n'],
                                             [numero_da_nota + '(\n.+){', '}<TOMADOR_LOGRADOURO>\n\s+(.+)\n']]
-                    
+                    # lista de regex dos dados da nota
                     busca_dados_notas = [[numero_da_nota + '(\n.+){', '}<DATA_HORA_EMISSAO>\n\s+(\d\d/\d\d/\d\d\d\d)'],  # 0
                                          [numero_da_nota + '(\n.+){', '}<VALOR_SERVICO>\n\s+(.+)\n'],  # 6
                                          [numero_da_nota + '(\n.+){', '}<VALOR_IR>\n\s+(.+)\n'],  # 10
                                          [numero_da_nota + '(\n.+){', '}<VALOR_PIS>\n\s+(.+)\n'],  # 11
                                          [numero_da_nota + '(\n.+){', '}<VALOR_COFINS>\n\s+(.+)\n'],  # 12
                                          [numero_da_nota + '(\n.+){', '}<VALOR_CSLL>\n\s+(.+)\n']]  # 13
-                    
+                    # captura os dados na nota e cria os arquivos para importar no domínio
                     quantidade_notas = captura_dados_xml(window_xml, count, numeros_notas, quantidade_notas, arq_name, arq, pasta_final, cidade,
                                                          numero_da_nota, cnpj_cliente, regex_tomador_cnpj, busca_dados_clientes, busca_dados_notas)
                     
@@ -455,25 +460,28 @@ def run_xml(cidade, window_xml, input_xml, output_dir):
                     
             if cidade == 'Jundiaí':
                 pasta_final = path.join(output_dir, 'Notas Fiscais de Serviço Jundiaí')
+                # regex para pegar todas as notas do arquivo
                 regex_numeros_notas = r'InfNfse Id=\"\d+\">\n\s+<ns2:Numero>\n\s+(.+)'
+                # regex para pegar o cnpj do tomador
                 regex_tomador_cnpj = '<ns2:IdentificacaoTomador>\n.+\n.+\n\s+(.+)'
+                # procura todas as notas no arquivo
                 numeros_notas = compile(regex_numeros_notas).findall(arq)
                 cnpj_cliente = ''
-                
                 for count, numero_da_nota in enumerate(numeros_notas, start=1):
+                    # lista de regex para os dados do tomador
                     busca_dados_clientes = [['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}<ns2:IdentificacaoTomador>\n.+\n.+\n\s+(.+)'],
                                             ['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}</ns2:IdentificacaoTomador>\n\s+<ns2:RazaoSocial>\n\s+(.+)'],
                                             ['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}</ns2:IdentificacaoTomador>\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+<ns2:Uf>\n\s+(.+)'],
                                             ['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}</ns2:IdentificacaoTomador>\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+\n.+<ns2:CodigoMunicipio>\n\s+(.+)'],
                                             ['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}</ns2:IdentificacaoTomador>\n.+\n.+\n.+\n.+<ns2:Endereco>\n\s+<ns2:Endereco>\n\s+(.+)']]
-                    
+                    # lista de regex dos dados da nota
                     busca_dados_notas = [['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}<ns2:DataEmissao>\n\s+(.+)'],  # 0
                                          ['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}<ns2:ValorServicos>\n\s+(.+)\n'],  # 6
                                          ['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}<ns2:ValorIr>\n\s+(.+)\n'],  # 10
                                          ['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}<ns2:ValorPis>\n\s+(.+)\n'],  # 11
                                          ['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}<ns2:ValorCofins>\n\s+(.+)\n'],  # 12
                                          ['<ns2:Numero>\n\s+' + numero_da_nota + '(\n.+){', '}<ns2:ValorCsll>\n\s+(.+)\n']]  # 13
-                    
+                    # captura os dados na nota e cria os arquivos para importar no domínio
                     quantidade_notas = captura_dados_xml(window_xml, count, numeros_notas, quantidade_notas, arq_name, arq, pasta_final, cidade,
                                                          numero_da_nota, cnpj_cliente, regex_tomador_cnpj, busca_dados_clientes, busca_dados_notas)
                     
@@ -687,6 +695,7 @@ if __name__ == '__main__':
         
         # se o botão clicado for de campinas ou jundiaí, usa o mesmo layout, porém com o nome específico da cidade
         elif event == '-campinas-' or event == '-jundiai-':
+            cidade = ''
             if event == '-campinas-':
                 cidade = 'Campinas'
             if event == '-jundiai-':
@@ -769,6 +778,7 @@ if __name__ == '__main__':
                     script_thread.start()
                     
                 elif event == '-Abrir resultados-':
+                    pasta_final = ''
                     if cidade == 'Campinas':
                         pasta_final = path.join(output_dir, 'Notas Fiscais de Serviço Campinas')
                     if cidade == 'Jundiaí':

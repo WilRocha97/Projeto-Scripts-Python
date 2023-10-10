@@ -8,7 +8,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers, _remove_emojis
 from chrome_comum import _initialize_chrome, _find_by_id
-from pyautogui_comum import _find_img, _click_img, _wait_img
+from pyautogui_comum import _find_img, _click_img, _wait_img, _click_position_img
 
 e_dir = Path('//vpsrv03/Arq_Robo/Envia WP por e-mail/Execução')
 dados = "V:\\Setor Robô\\Scripts Python\\_comum\\Dados e-mail.txt"
@@ -51,7 +51,25 @@ def captura_link_email(driver):
     titulo = titulo.replace('-&nbsp;', '- ').replace(' &nbsp;', ' ').replace('&nbsp; ', ' ').replace('&nbsp;', ' ').replace('&amp;', '&')
     
     print(titulo)
+    pasta_anexos = os.path.join('V:', 'Setor Robô', 'Scripts Python', 'Geral', 'Envia Documento', 'ignore', 'Anexos')
     
+    if _find_img('anexos.png', conf=0.9):
+        for arq in os.listdir(pasta_anexos):
+            os.remove(os.path.join(pasta_anexos, arq))
+            
+        driver.find_element(by=By.XPATH, value='/html/body/div[2]/div/div/div[2]/div/div/div/div/div[2]/div/div/div[2]/div/div[3]/div[3]/message-header/div[3]/div/div/a').click()
+        _wait_img('baixar_anexo.png', conf=0.9)
+        _click_position_img('baixar_anexo.png', '+', pixels_y=50, conf=0.9)
+        
+        while len(os.listdir(pasta_anexos)) < 1:
+            time.sleep(1)
+        time.sleep(2)
+        
+        for arq in os.listdir(pasta_anexos):
+            anexo = os.path.join(pasta_anexos, arq)
+        
+        return driver, titulo, cnpj, cnpj_limpo, '', anexo
+        
     # Encontra o elemento do frame pelo nome ou índice
     frame = driver.find_element(by=By.ID, value='messageViewFrame')
     # frame = driver.find_element_by_index(0)
@@ -229,7 +247,7 @@ def run():
     # options.add_argument('--window-size=1920,1080')
     options.add_argument("--start-maximized")
     options.add_experimental_option('prefs', {
-        "download.default_directory": "V:\\Setor Robô\\Scripts Python\\Sicalc\\Gerador de guias de DARF WEB\\execução\\Guias",  # Change default directory for downloads
+        "download.default_directory": "V:\\Setor Robô\\Scripts Python\\Geral\\Envia Documento\\ignore\\Anexos",  # Change default directory for downloads
         "download.prompt_for_download": False,  # To auto download the file
         "download.directory_upgrade": True,
         "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome

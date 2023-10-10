@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-import requests_pkcs12, os, requests, time, base64, json, io, chardet, OpenSSL.crypto, contextlib, tempfile, pyautogui as p
-import atexit, PySimpleGUI as sg
+import requests_pkcs12, atexit, re, os, requests, time, base64, json, io, chardet, OpenSSL.crypto, contextlib, tempfile, pyautogui as p, PySimpleGUI as sg
 from threading import Thread
 from pathlib import Path
 from functools import wraps
@@ -107,7 +106,10 @@ def solicita_token(usuario_b64, input_certificado, senha):
     try:
         return resposta['jwt_token'], resposta['access_token']
     except:
-        return resposta['message'], resposta['description']
+        try:
+            return resposta['error'], resposta['message']
+        except:
+            return resposta['message'], resposta['description']
     
 
 # solicita a guia de DCTF WEB na API
@@ -224,7 +226,9 @@ def cria_pdf(pdf_base64, output_dir, id_empresa, nome_empresa, mes, ano):
 
 
 def run(window, cnpj_contratante, usuario_b64, senha, competencia, input_certificado, input_excel, output_dir):
-    cnpj_contratante = cnpj_contratante.replace('.', '').replace('/', '').replace('-', '')
+    for arq in os.listdir('API_response'):
+        os.remove(os.path.join('API_response', arq))
+    
     contador = 0
     
     while True:
@@ -240,32 +244,43 @@ def run(window, cnpj_contratante, usuario_b64, senha, competencia, input_certifi
                 break
             except:
                 pass
-            
-    # limpa a pasta de response da api
-    try:
-        for arquivo in os.listdir(os.path.join(output_dir, 'API_response')):
-            os.remove(os.path.join(os.path.join(output_dir, 'API_response'), arquivo))
-    except:
-        pass
     
+    if event == '-encerrar-':
+        return
+        
     # solicita os tokens para realizar a emissão das guias
     jwt_token, access_token = solicita_token(usuario_b64, input_certificado, senha)
-        
+    
+    if jwt_token == 'Unauthorized':
+        p.alert(text='Consumer Secret ou Consumer Key inválido')
+        return
+    
     # abrir a planilha de dados
     empresas = open_lista_dados(input_excel)
     if not empresas:
         return False
     
-    # pega a competência das guias que serão emitidas
+    window['-Mensagens-'].update('')
+    window.refresh()
+    
+    if event == '-encerrar-':
+        return
+        
+        # pega a competência das guias que serão emitidas
     for count, empresa in enumerate(empresas, start=1):
         id_empresa, nome_empresa = empresa
         
         # solicita a guia de DCTF
         mes, ano, pdf_base64, mensagens = solicita_dctf(competencia, cnpj_contratante, id_empresa, str(access_token), str(jwt_token))
+
+        if re.compile(r'Acesso negado').search(mensagens):
+            p.alert(text=mensagens)
+            return
         
         # se não retornar o PDF não precisa da segunda mensagem
         if not pdf_base64:
             mensagen_2 = ''
+        
         # se retornar o PDF
         else:
             try:
@@ -285,12 +300,17 @@ def run(window, cnpj_contratante, usuario_b64, senha, competencia, input_certifi
         window['-Progresso_texto-'].update(str(round(float(count) / int(len(empresas)) * 100, 1)) + '%')
         window.refresh()
         
+        if event == '-encerrar-':
+            return
+        
     p.alert(text='Robô finalizado!')
     
-    
+
+# Define o ícone global da aplicação
+sg.set_global_icon('Assets/auto-flash.ico')
 if __name__ == '__main__':
     # Especifique o caminho para o arquivo de trava
-    lock_file_path = 'download_nfse_do_escritorio.lock'
+    lock_file_path = 'integra_contador.lock'
     
     # Verifique se outra instância está em execução
     if not create_lock_file(lock_file_path):
@@ -306,11 +326,11 @@ if __name__ == '__main__':
     layout = [
         [sg.Button('Ajuda', border_width=0), sg.Button('Log do sistema', border_width=0, disabled=True)],
         [sg.Text('')],
-        [sg.Text('Informe o CNPJ do contratante do serviço SERPRO "00000000000000":')],
+        [sg.Text('Informe o CNPJ do contratante do serviço SERPRO:')],
         [sg.InputText(key='-input_cnpj_contratante-', size=90)],
-        [sg.Text('Informe a consumerKey:')],
+        [sg.Text('Informe a Consumer Key:')],
         [sg.InputText(key='-input_consumer_key-', size=90, password_char='*')],
-        [sg.Text('Informe a consumerSecret:')],
+        [sg.Text('Informe a Consumer Secret:')],
         [sg.InputText(key='-input_consumer_secret-', size=90, password_char='*')],
         [sg.Text('Informe a senha do certificado digital:')],
         [sg.InputText(key='-input_senha_certificado-', size=90, password_char='*')],
@@ -322,7 +342,7 @@ if __name__ == '__main__':
         [sg.Text('Selecione um arquivo Excel com os dados dos clientes:')],
         [sg.FileBrowse('Pesquisar', key='-abrir1-', file_types=(('Planilhas Excel', '*.csv'),)), sg.InputText(key='-input_excel-', size=80, disabled=True)],
         [sg.Text('Selecione um diretório para salvar os resultados:')],
-        [sg.FolderBrowse('Pesquisar', key='-abrir2-'), sg.InputText(key='-output_dir-', size=80, disabled=True)],
+        [sg.FolderBrowse('Pesquisar', key='-abrir2-', target='teste'), sg.InputText(key='-output_dir-', size=80, disabled=True)],
         [sg.Text('')],
         [sg.Text('', key='-Mensagens-')],
         [sg.Text(size=6, text='', key='-Progresso_texto-'), sg.ProgressBar(max_value=0, orientation='h', size=(54, 5), key='-progressbar-', bar_color='#f0f0f0')],
@@ -330,89 +350,91 @@ if __name__ == '__main__':
     ]
     
     # guarda a janela na variável para manipula-la
-    window = sg.Window('Download NFSE_VP SIGISSWEB', layout)
+    window = sg.Window('Download de guias de DCTFWEB API SERPRO', layout)
     
     
     def run_script_thread():
-        # try:
-        if not cnpj_contratante:
-            p.alert(text=f'Por favor informe o CNPJ do contratante da API SERPRO.')
-            return
-        if not consumer_key:
-            p.alert(text=f'Por favor informe o consumerKey.')
-            return
-        if not consumer_secret:
-            p.alert(text=f'Por favor informe o consumerSecret.')
-            return
-        if not senha:
-            p.alert(text=f'Por favor informe a senha do certificado digital.')
-            return
-        if not competencia:
-            p.alert(text=f'Por favor informe a competência das guias.')
-            return
-        if not input_certificado:
-            p.alert(text=f'Por favor selecione um certificado digital.')
-            return
-        if not input_excel:
-            p.alert(text=f'Por favor selecione uma planilha de dados.')
-            return
-        if not output_dir:
-            p.alert(text=f'Por favor selecione um diretório para salvar os resultados.')
-            return
-            
-        # habilita e desabilita os botões conforme necessário
-        window['-input_cnpj_contratante-'].update(disabled=True)
-        window['-input_consumer_key-'].update(disabled=True)
-        window['-input_consumer_secret-'].update(disabled=True)
-        window['-input_senha_certificado-'].update(disabled=True)
-        window['-input_competencia-'].update(disabled=True)
-        window['-abrir-'].update(disabled=True)
-        window['-abrir1-'].update(disabled=True)
-        window['-abrir2-'].update(disabled=True)
-        window['-iniciar-'].update(disabled=True)
-        window['-encerrar-'].update(disabled=False)
-        window['-abrir_resultados-'].update(disabled=False)
-        
-        # apaga qualquer mensagem na interface
-        window['-Mensagens-'].update('')
-        # atualiza a barra de progresso para ela ficar mais visível
-        window['-progressbar-'].update(bar_color=('#fca400', '#ffe0a6'))
-        
         try:
-            # Chama a função que executa o script
-            run(window, cnpj_contratante, usuario_b64, senha, competencia, input_certificado, input_excel, output_dir)
-        # Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
-        except Exception as erro:
-            time.sleep(1)
-            print(erro)
-            if str(erro) == 'Invalid password or PKCS12 data':
-                p.alert(text=f'Senha do certificado digital inválida.')
-            if str(erro) == "'description'":
-                p.alert(text=f'Consumer Key ou Consumer Secret inválidos')
+            if not cnpj_contratante:
+                p.alert(text=f'Por favor informe o CNPJ do contratante da API SERPRO.')
+                return
+            if not len(cnpj_contratante) == 14:
+                p.alert(text=f'Por favor informe um CNPJ válido.')
+                return
+            if not consumer_key:
+                p.alert(text=f'Por favor informe o consumerKey.')
+                return
+            if not consumer_secret:
+                p.alert(text=f'Por favor informe o consumerSecret.')
+                return
+            if not senha:
+                p.alert(text=f'Por favor informe a senha do certificado digital.')
+                return
+            if not competencia:
+                p.alert(text=f'Por favor informe a competência das guias.')
+                return
+            if not input_certificado:
+                p.alert(text=f'Por favor selecione um certificado digital.')
+                return
+            if not input_excel:
+                p.alert(text=f'Por favor selecione uma planilha de dados.')
+                return
+            if not output_dir:
+                p.alert(text=f'Por favor selecione um diretório para salvar os resultados.')
+                return
                 
-            window['Log do sistema'].update(disabled=False)
-            p.alert(text=f"Erro :'(\n\n"
-                       f'Abra o pasta de "Log do sistema" e envie o arquivo "Log.txt" para o desenvolvedor.\n')
-            escreve_doc(erro)
+            # habilita e desabilita os botões conforme necessário
+            window['-input_cnpj_contratante-'].update(disabled=True)
+            window['-input_consumer_key-'].update(disabled=True)
+            window['-input_consumer_secret-'].update(disabled=True)
+            window['-input_senha_certificado-'].update(disabled=True)
+            window['-input_competencia-'].update(disabled=True)
+            window['-abrir-'].update(disabled=True)
+            window['-abrir1-'].update(disabled=True)
+            window['-abrir2-'].update(disabled=True)
+            window['-iniciar-'].update(disabled=True)
+            window['-encerrar-'].update(disabled=False)
+            window['-abrir_resultados-'].update(disabled=False)
             
-        # habilita e desabilita os botões conforme necessário
-        window['-input_cnpj_contratante-'].update(disabled=False)
-        window['-input_consumer_key-'].update(disabled=False)
-        window['-input_consumer_secret-'].update(disabled=False)
-        window['-input_senha_certificado-'].update(disabled=False)
-        window['-input_competencia-'].update(disabled=False)
-        window['-abrir-'].update(disabled=False)
-        window['-abrir1-'].update(disabled=False)
-        window['-abrir2-'].update(disabled=False)
-        window['-iniciar-'].update(disabled=False)
-        window['-encerrar-'].update(disabled=True)
-        
-        # apaga qualquer mensagem na interface
-        window['-Mensagens-'].update('')
-        # atualiza a barra de progresso para ela ficar mais visível
-        window['-progressbar-'].update(bar_color='#f0f0f0')
-        """except:
-            pass"""
+            window['-Mensagens-'].update('Validando credenciais...')
+            # atualiza a barra de progresso para ela ficar mais visível
+            window['-progressbar-'].update(bar_color=('#fca400', '#ffe0a6'))
+            
+            try:
+                # Chama a função que executa o script
+                run(window, cnpj_contratante, usuario_b64, senha, competencia, input_certificado, input_excel, output_dir)
+            # Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
+            except Exception as erro:
+                time.sleep(1)
+                print(erro)
+                if str(erro) == 'Invalid password or PKCS12 data':
+                    p.alert(text=f'Senha do certificado digital inválida.')
+                else:
+                    window['Log do sistema'].update(disabled=False)
+                    p.alert(text=f"Erro :'(\n\n"
+                               f'Abra o pasta de "Log do sistema" e envie o arquivo "Log.txt" para o desenvolvedor.\n')
+                    escreve_doc(erro)
+                
+            # habilita e desabilita os botões conforme necessário
+            window['-input_cnpj_contratante-'].update(disabled=False)
+            window['-input_consumer_key-'].update(disabled=False)
+            window['-input_consumer_secret-'].update(disabled=False)
+            window['-input_senha_certificado-'].update(disabled=False)
+            window['-input_competencia-'].update(disabled=False)
+            window['-abrir-'].update(disabled=False)
+            window['-abrir1-'].update(disabled=False)
+            window['-abrir2-'].update(disabled=False)
+            window['-iniciar-'].update(disabled=False)
+            window['-encerrar-'].update(disabled=True)
+            
+            # apaga qualquer mensagem na interface
+            window['-Mensagens-'].update('')
+            # atualiza a barra de progresso para ela ficar mais visível
+            window['-progressbar-'].update_bar(0)
+            window['-Progresso_texto-'].update('')
+            window['-progressbar-'].update(bar_color='#f0f0f0')
+        except:
+            pass
     
     
     while True:
@@ -420,6 +442,8 @@ if __name__ == '__main__':
         event, values = window.read()
         try:
             cnpj_contratante = values['-input_cnpj_contratante-']
+            cnpj_contratante = cnpj_contratante.replace('.', '').replace('/', '').replace('-', '')
+            
             consumer_key = values['-input_consumer_key-']
             consumer_secret = values['-input_consumer_secret-']
             
@@ -453,9 +477,7 @@ if __name__ == '__main__':
             script_thread.start()
         
         elif event == '-encerrar-':
-            p.alert(text='Download encerrado.\n\n'
-                       'Caso queira reiniciar o download, apague os arquivos gerados anteriormente ou selecione um novo local.\n\n'
-                       'O Script não continua uma execução já iniciada.\n\n')
+            p.alert(text='Download encerrado.\n\n')
         
         elif event == '-abrir_resultados-':
             os.startfile(output_dir)

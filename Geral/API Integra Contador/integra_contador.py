@@ -226,26 +226,11 @@ def cria_pdf(pdf_base64, output_dir, id_empresa, nome_empresa, mes, ano):
 
 
 def run(window, cnpj_contratante, usuario_b64, senha, competencia, input_certificado, input_excel, output_dir):
+    os.makedirs('API_response', exist_ok=True)
     for arq in os.listdir('API_response'):
         os.remove(os.path.join('API_response', arq))
     
-    contador = 0
-    
-    while True:
-        time.sleep(1)
-        try:
-            os.makedirs(os.path.join(output_dir, 'Download de guias DCTFWEB SERPRO'))
-            break
-        except:
-            try:
-                contador += 1
-                os.makedirs(os.path.join(output_dir, f'Download de guias DCTFWEB SERPRO ({str(contador)})'))
-                output_dir = os.path.join(output_dir, f'Download de guias DCTFWEB SERPRO ({str(contador)})')
-                break
-            except:
-                pass
-    
-    if event == '-encerrar-':
+    if event == '-encerrar-' or event == sg.WIN_CLOSED:
         return
         
     # solicita os tokens para realizar a emissão das guias
@@ -260,13 +245,34 @@ def run(window, cnpj_contratante, usuario_b64, senha, competencia, input_certifi
     if not empresas:
         return False
     
+    # cria a pasta onde serão salvos os resultados, no caso sempre será criada uma pasta diferente da criada anteriormente
+    contador = 0
+    while True:
+        try:
+            os.makedirs(os.path.join(output_dir, 'Download de guias DCTFWEB SERPRO'))
+            output_dir = os.path.join(output_dir, 'Download de guias DCTFWEB SERPRO')
+            break
+        except:
+            try:
+                contador += 1
+                os.makedirs(os.path.join(output_dir, f'Download de guias DCTFWEB SERPRO ({str(contador)})'))
+                output_dir = os.path.join(output_dir, f'Download de guias DCTFWEB SERPRO ({str(contador)})')
+                break
+            except:
+                pass
+    
+    time.sleep(1)
+    
     window['-Mensagens-'].update('')
     window.refresh()
     
-    if event == '-encerrar-':
+    if event == '-encerrar-' or event == sg.WIN_CLOSED:
+        try:
+            os.rmdir(output_dir)
+        except:
+            pass
         return
-        
-        # pega a competência das guias que serão emitidas
+    
     for count, empresa in enumerate(empresas, start=1):
         id_empresa, nome_empresa = empresa
         
@@ -292,7 +298,6 @@ def run(window, cnpj_contratante, usuario_b64, senha, competencia, input_certifi
                 mensagen_2 = f'Não gerou PDF {e}'
         
         # escreve os andamentos
-        os.makedirs(output_dir, exist_ok=True)
         escreve_relatorio_csv(f'{id_empresa};{nome_empresa};{mensagens};{mensagen_2}', local=output_dir, nome=f'Andamentos DCTF-WEB {mes}-{ano}')
         
         # atualiza a barra de progresso
@@ -300,10 +305,11 @@ def run(window, cnpj_contratante, usuario_b64, senha, competencia, input_certifi
         window['-Progresso_texto-'].update(str(round(float(count) / int(len(empresas)) * 100, 1)) + '%')
         window.refresh()
         
-        if event == '-encerrar-':
+        if event == '-encerrar-' or event == sg.WIN_CLOSED:
+            p.alert(text='Download encerrado.\n\n')
             return
         
-    p.alert(text='Robô finalizado!')
+    p.alert(text='Download finalizado!')
     
 
 # Define o ícone global da aplicação
@@ -342,7 +348,7 @@ if __name__ == '__main__':
         [sg.Text('Selecione um arquivo Excel com os dados dos clientes:')],
         [sg.FileBrowse('Pesquisar', key='-abrir1-', file_types=(('Planilhas Excel', '*.csv'),)), sg.InputText(key='-input_excel-', size=80, disabled=True)],
         [sg.Text('Selecione um diretório para salvar os resultados:')],
-        [sg.FolderBrowse('Pesquisar', key='-abrir2-', target='teste'), sg.InputText(key='-output_dir-', size=80, disabled=True)],
+        [sg.FolderBrowse('Pesquisar', key='-abrir2-'), sg.InputText(key='-output_dir-', size=80, disabled=True)],
         [sg.Text('')],
         [sg.Text('', key='-Mensagens-')],
         [sg.Text(size=6, text='', key='-Progresso_texto-'), sg.ProgressBar(max_value=0, orientation='h', size=(54, 5), key='-progressbar-', bar_color='#f0f0f0')],
@@ -406,7 +412,6 @@ if __name__ == '__main__':
             # Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
             except Exception as erro:
                 time.sleep(1)
-                print(erro)
                 if str(erro) == 'Invalid password or PKCS12 data':
                     p.alert(text=f'Senha do certificado digital inválida.')
                 else:
@@ -468,16 +473,13 @@ if __name__ == '__main__':
         elif event == 'Log do sistema':
             os.startfile('API_response')
         
-        #elif event == 'Ajuda':
-            #os.startfile('Manual do usuário - Download NFSe_VP SIGISSWEB.pdf')
+        elif event == 'Ajuda':
+            os.startfile('Manual do usuário - Download de guias de DCTFWEB API SERPRO.pdf')
         
         elif event == '-iniciar-':
             # Cria uma nova thread para executar o script
             script_thread = Thread(target=run_script_thread)
             script_thread.start()
-        
-        elif event == '-encerrar-':
-            p.alert(text='Download encerrado.\n\n')
         
         elif event == '-abrir_resultados-':
             os.startfile(output_dir)

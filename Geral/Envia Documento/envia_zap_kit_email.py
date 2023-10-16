@@ -221,6 +221,8 @@ def mover_email(pasta=''):
     time.sleep(0.5)
     _click_img('tela_mover_email.png', conf=0.9)
     time.sleep(0.5)
+    _wait_img('lista_caixas_email.png', conf=0.9)
+    time.sleep(0.5)
     _click_img('lista_caixas_email.png', conf=0.9)
     
     time.sleep(1)

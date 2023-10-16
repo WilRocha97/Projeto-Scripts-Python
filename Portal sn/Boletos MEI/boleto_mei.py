@@ -1,13 +1,14 @@
-import pyautogui as p
+import pyautogui as p, PySimpleGUI as sg
 import time
 import os
 import pyperclip
+from threading import Thread
 
 from sys import path
 path.append(r'..\..\_comum')
 from chrome_comum import _abrir_chrome
 from pyautogui_comum import _find_img, _click_img, _wait_img
-from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
+from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start, _barra_de_status
 
 
 def verificacoes(empresa, andamentos):
@@ -79,6 +80,8 @@ def boleto_mei(empresa, andamentos):
     
     # espera o site abrir
     while not _wait_img('informe_cnpj.png', conf=0.9, timeout=-1):
+        if event == '-encerrar-':
+            return
         time.sleep(1)
     
     print('>>> inserindo CNPJ')
@@ -88,9 +91,12 @@ def boleto_mei(empresa, andamentos):
     time.sleep(0.5)
     p.press('enter')
     time.sleep(0.5)
-
+    
+    print('>>> Aguardando tela para emissão da guia')
     # Emitir guia de pagamento DAS
     while not _find_img('emitir_guia.png', conf=0.9):
+        if event == '-encerrar-':
+            return
         time.sleep(1)
         if _find_img('nao_optante_3.png', conf=0.95):
             _escreve_relatorio_csv(f'{cnpj};Não optante;{comp};{ano}', nome=andamentos)
@@ -186,7 +192,8 @@ def boleto_mei(empresa, andamentos):
 
 
 @_time_execution
-def run():
+@_barra_de_status
+def run(window):
     empresas = _open_lista_dados()
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:
@@ -194,7 +201,7 @@ def run():
 
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        
+        window['-Mensagens-'].update(f'{str(count)} / {str(len(total_empresas))}')
         _indice(count, total_empresas, empresa, index)
         cnpj, comp, ano, venc = empresa
         andamentos = f'Boletos MEI {comp}-{ano}'
@@ -208,6 +215,9 @@ def run():
           
         # Salvar a guia
         imprimir(empresa, andamentos)
+        
+        if event == '-encerrar-':
+            return
         
     time.sleep(2)
     p.hotkey('ctrl', 'w')

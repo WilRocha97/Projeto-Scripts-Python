@@ -71,6 +71,8 @@ def busca_cpf(cpf):
 def consulta_relatorio():
     # aguarda o menu do ecac aparecer
     while not _find_img('acoes_ecac.png', conf=0.9):
+        if _find_img('cookies.png', conf=0.9):
+            _click_img('entendi_cookies.png', conf=0.9)
         time.sleep(1)
     
     # clica no menu do ecac

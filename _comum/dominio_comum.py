@@ -296,16 +296,6 @@ def _salvar_pdf():
     return True
 
 
-def _verifica_dominio():
-    
-    if not _find_img('app_controler.png', pasta='imgs_c', conf=0.9):
-        return 'dominio fechou'
-    if _find_img('modulos.png', pasta='imgs_c', conf=0.9):
-        return 'modulo fechou'
-    else:
-        return 'continue'
-
-
 def _encerra_dominio():
     processo = 'C:\Program Files (x86)\GraphOn\AppController\AppController.exe'
     with open(os.devnull, 'w') as devnull:

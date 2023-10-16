@@ -6,6 +6,8 @@ from requests import Session
 from functools import wraps
 from pathlib import Path
 from pyautogui import alert, confirm
+from threading import Thread
+import PySimpleGUI as sg
 import os
 import re
 import tempfile
@@ -23,6 +25,55 @@ _headers = {
     'Cache-Control': 'max-age=0',
     'Connection': 'keep-alive',
 }
+
+
+def barra_de_status(func):
+    @wraps(func)
+    def wrapper():
+        sg.theme('GrayGrayGray')  # Define o tema do PySimpleGUI
+        # sg.theme_previewer()
+        # Layout da janela
+        layout = [
+            [sg.Text('Rotina automática em execução, por favor não interfira.', key='-titulo-', text_color='#fca400'),
+             sg.Button('Iniciar', key='-iniciar-', border_width=0),
+             sg.Text('', key='-Mensagens-', size=10)],
+        ]
+        
+        # guarda a janela na variável para manipula-la
+        screen_width, screen_height = sg.Window.get_screen_size()
+        window = sg.Window('', layout, no_titlebar=True, location=(0, 0), size=(screen_width, 35), keep_on_top=True)
+        
+        def run_script_thread():
+            try:
+                # habilita e desabilita os botões conforme necessário
+                window['-iniciar-'].update(disabled=True)
+                
+                # Chama a função que executa o script
+                func(window)
+                
+                # habilita e desabilita os botões conforme necessário
+                window['-iniciar-'].update(disabled=False)
+                
+                # apaga qualquer mensagem na interface
+                window['-Mensagens-'].update('')
+            except:
+                pass
+        
+        while True:
+            # captura o evento e os valores armazenados na interface
+            event, values = window.read()
+            
+            if event == sg.WIN_CLOSED:
+                break
+            
+            elif event == '-iniciar-':
+                # Cria uma nova thread para executar o script
+                script_thread = Thread(target=run_script_thread)
+                script_thread.start()
+        
+        window.close()
+    return wrapper
+_barra_de_status = barra_de_status
 
 
 # Decorator que mede o tempo de execução de uma função decorada com ela
@@ -238,6 +289,7 @@ def open_lista_dados(i_dir='ignore', encode='latin-1'):
     print('>>> usando dados de ' + file.split('/')[-1])
     return list(map(lambda x: tuple(x.replace('\n', '').split(';')), dados))
 _open_lista_dados = open_lista_dados
+
 
 
 # Recebe o 'response' de um request e salva o conteudo num arquivo 'name' na pasta 'pasta'

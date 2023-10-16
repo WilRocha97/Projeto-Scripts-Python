@@ -5,8 +5,8 @@ from datetime import datetime
 from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
-from comum_comum import _indice, _time_execution, _open_lista_dados, _escreve_relatorio_csv, _where_to_start
-from dominio_comum import _login, _login_web, _abrir_modulo, _salvar_pdf, _verifica_dominio, _encerra_dominio
+from comum_comum import _indice, _time_execution, _open_lista_dados, _escreve_relatorio_csv, _where_to_start, _barra_de_status
+from dominio_comum import _login, _login_web, _abrir_modulo, _salvar_pdf, _encerra_dominio
 
 
 def escreve_dados(cod, nome):
@@ -33,13 +33,9 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
     # espera o botão de relatórios do domínio aparecer na tela
     _wait_img('relatorios.png', conf=0.9, timeout=-1)
     
+    print('>>> Gerando o relatório')
     # tenta abrir a tela do gerador de relatórios até abrir
     while not _find_img('gerenciador_de_relatorios.png', conf=0.9):
-        verificacao = _verifica_dominio()
-        if verificacao != 'continue':
-            return verificacao
-        time.sleep(1)
-        
         # Relatórios
         p.hotkey('alt', 'r')
         time.sleep(0.5)
@@ -52,6 +48,7 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
     # escreve o nome da opção para selecionar
     time.sleep(0.5)
     
+    print('>>> Buscando relatório')
     p.press('pgup', presses=10)
     while not _find_img('relacao_empregados.png', conf=0.9):
         p.press('pgdn')
@@ -102,11 +99,6 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
     
     # enquanto o relatório não é gerado, verifica se aparece a mensagem dizendo que não possuí dados para emitir
     while not _find_img('contrato_experiencia.png', conf=0.9):
-        verificacao = _verifica_dominio()
-        if verificacao != 'continue':
-            return verificacao
-        time.sleep(1)
-        
         if _find_img('sem_dados.png', conf=0.9):
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para emitir']), nome=andamento)
             print('❌ Sem dados para emitir')
@@ -115,7 +107,7 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
             p.press('esc')
             time.sleep(1)
             return 'ok'
-    
+        
     # se gerar o relatório para todas as empresas só salva o pdf, se não tenta enviar o arquivo para o cliente
     if cod == '*':
         _salvar_pdf()
@@ -237,8 +229,8 @@ def define_data():
     return hoje.replace('//', '/'), data_subtraida.replace('//', '/')
 
 
-@_time_execution
-def run():
+@_barra_de_status
+def run(window):
     # define o nome da planilha de andamentos
     dia = datetime.now().day
     mes = datetime.now().month
@@ -273,6 +265,7 @@ def run():
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
+        window['-Mensagens-'].update(f'{str(count)} / {str(len(total_empresas))}')
         _indice(count, total_empresas, empresa, index)
         
         while True:

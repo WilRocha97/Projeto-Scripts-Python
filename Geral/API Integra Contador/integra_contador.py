@@ -81,7 +81,8 @@ def solicita_token(usuario_b64, input_certificado, senha):
                                   headers=headers,
                                   verify=True,
                                   pkcs12_filename=input_certificado,
-                                  pkcs12_password=senha)
+                                  pkcs12_password=senha,
+                                  timeout=30)
     
     resposta_string_json = json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True)
     resposta = pagina.json()
@@ -149,16 +150,27 @@ def solicita_dctf(comp, cnpj_contratante, id_empresa, access_token, jwt_token):
                'Content-Type': 'application/json',
                'jwt_token': jwt_token}
     
-    pagina = requests.post('https://gateway.apiserpro.serpro.gov.br/integra-contador/v1/Emitir', headers=headers, data=json.dumps(data))
-    resposta = pagina.json()
+    tentativas = 0
+    while True:
+        pagina = requests.post('https://gateway.apiserpro.serpro.gov.br/integra-contador/v1/Emitir', headers=headers, data=json.dumps(data))
+        resposta = pagina.json()
+        
+        try:
+            resposta['message']
+        except:
+            break
+            
+        tentativas += 1
+        
+        if tentativas >= 10:
+            break
+            
     resposta_string_json = json.dumps(json.loads(pagina.content.decode("utf-8")), indent=4, separators=(',', ': '), sort_keys=True)
     
     # anota as respostas da API para tratar possíveis erros
     os.makedirs(output_dir, exist_ok=True)
     escreve_doc(resposta, nome='resposta_jason_guia')
     escreve_doc(f'{id_empresa}\n{resposta_string_json}', nome='string_json_guia')
-    escreve_doc(resposta['dados'], nome='pdf_base_64')
-    
     #
     # output
     # {
@@ -200,14 +212,18 @@ def solicita_dctf(comp, cnpj_contratante, id_empresa, access_token, jwt_token):
     # }
     #
     try:
+        escreve_doc(resposta['dados'], nome='pdf_base_64')
         dados_pdf = json.loads(resposta["dados"])
         return mes, ano, dados_pdf["PDFByteArrayBase64"], resposta['mensagens'][0]['texto']
     except:
         try:
             return mes, ano, resposta['dados'], resposta['mensagens'][2]['texto']
         except:
-            return mes, ano, resposta['dados'], resposta['mensagens'][0]['texto']
-        
+            try:
+                return mes, ano, resposta['dados'], resposta['mensagens'][0]['texto']
+            except:
+                return mes, ano, None, resposta['message']
+            
 
 # cria o PDF usando os bytes retornados da requisição na API
 def cria_pdf(pdf_base64, output_dir, id_empresa, nome_empresa, mes, ano):
@@ -286,7 +302,9 @@ def run(window, cnpj_contratante, usuario_b64, senha, competencia, input_certifi
         # se não retornar o PDF não precisa da segunda mensagem
         if not pdf_base64:
             mensagen_2 = ''
-        
+            if mensagens == 'Runtime Error':
+                mensagen_2 = 'Erro ao acessar a API'
+                
         # se retornar o PDF
         else:
             try:

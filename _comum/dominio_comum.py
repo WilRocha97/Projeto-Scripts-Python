@@ -159,21 +159,21 @@ def _login_web():
         
         caminho = os.path.join('abrir_app.png')
         caminho2 = os.path.join('abrir_app_2.png')
-        while not _find_img(caminho, pasta='imgs_c', conf=0.9):
-            if _find_by_class('trta1-btn-primary', driver):
-                driver.find_element(by=By.CLASS_NAME, value='trta1-btn-primary').click()
-            if _find_img(caminho2, pasta='imgs_c', conf=0.9):
-                sleep(1)
-                while _find_img(caminho2, pasta='imgs_c', conf=0.9):
-                    _click_img(caminho2, pasta='imgs_c', conf=0.9)
-                break
-                
-        if _find_img(caminho, pasta='imgs_c', conf=0.9):
-            _click_img(caminho, pasta='imgs_c', conf=0.9)
-        
+        caminho3 = os.path.join('abrir_app_3.png')
+
         print('>>> Aguardando modulos')
         while not _find_img('modulos.png', pasta='imgs_c', conf=0.9):
             sleep(1)
+            
+            if _find_img(caminho2, pasta='imgs_c', conf=0.9):
+                _click_img(caminho2, pasta='imgs_c', conf=0.9)
+            
+            if _find_img(caminho3, pasta='imgs_c', conf=0.9):
+                _click_img(caminho3, pasta='imgs_c', conf=0.9)
+        
+            if _find_img(caminho, pasta='imgs_c', conf=0.9):
+                _click_img(caminho, pasta='imgs_c', conf=0.9)
+            
         driver.quit()
         return True
     else:

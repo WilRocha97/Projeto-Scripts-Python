@@ -6,8 +6,8 @@ from sys import path
 
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
-from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, _escreve_header_csv, e_dir, _open_lista_dados, _where_to_start, ask_for_dir
-from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf, _verifica_dominio, _encerra_dominio
+from comum_comum import _indice, _time_execution, _barra_de_status, _escreve_relatorio_csv, _escreve_header_csv, e_dir, _open_lista_dados, _where_to_start, ask_for_dir
+from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf, _encerra_dominio
 
 
 def faturamento_compra(ano, empresa, andamento):
@@ -25,9 +25,6 @@ def faturamento_compra(ano, empresa, andamento):
     p.press('enter')
     
     while not _find_img('demonstrativo_mensal.png', conf=0.9):
-        verificacao = _verifica_dominio()
-        if verificacao != 'continue':
-            return verificacao
         time.sleep(1)
     
     time.sleep(1)
@@ -80,10 +77,6 @@ def espera_gerar(empresa, andamento):
     timer = 0
     # espera gerar
     while not _find_img('demonstrativo_mensal_gerado.png', conf=0.9):
-        verificacao = _verifica_dominio()
-        if verificacao != 'continue':
-            return verificacao
-        
         print('>>> Aguardando gerar')
         if _find_img('sem_dados.png', conf=0.9):
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para imprimir']), nome=andamento)
@@ -148,7 +141,7 @@ def captura_info_pdf(andamento, arquivo, refaz_planilha='não'):
                 meses = re.compile(r'(\w.+)\n.+,.+\n.+,.+\n.+\n(.+,.+)\n(.+,.+)\n(.+,.+)\n.+,.+\n.+,.+\n.+,.+\n.+,.+').findall(textinho)
                 totais = re.compile(r'Totais\n.+\n(.+)\n(.+)\n(.+)').search(textinho)
                 
-                lista_meses  = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                lista_meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
                           'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
                 
                 # para cada tipo, inicia a linha no '.csv' com as infos da empresa
@@ -184,13 +177,14 @@ def captura_info_pdf(andamento, arquivo, refaz_planilha='não'):
                     _escreve_relatorio_csv(f'{totais.group(tipo[0])}', nome=andamento)
                     print(f'✔ Valores referentes a {tipo[1]} coletados')
                     
-            except():
+            except:
                 print(textinho)
                 print('ERRO')
 
 
 @_time_execution
-def run():
+@_barra_de_status
+def run(window):
     # configura o ano e digita no domínio
     ano = int(datetime.now().year)
     if int(datetime.now().month) < 3:
@@ -221,7 +215,9 @@ def run():
         _abrir_modulo('escrita_fiscal')
 
         for count, empresa in enumerate(empresas[index:], start=1):
-            _indice(count, total_empresas, empresa)
+            # printa o indice da empresa que está sendo executada
+            window['-Mensagens-'].update(f'{str(count)} / {str(len(total_empresas))}')
+            _indice(count, total_empresas, empresa, index)
             
             while True:
                 if not _login(empresa, andamentos):
@@ -242,6 +238,6 @@ def run():
     _escreve_header_csv('CÓDIGO;CNPJ;NOME;SITUAÇÃO;JANEIRO;FEVEREIRO;MARÇO;ABRIL;MAIO;JUNHO;JULHO;AGOSTO;SETEMBRO;OUTUBRO;NOVEMBRO;DEZEMBRO;TOTAIS', nome=andamentos)
     _encerra_dominio()
 
+
 if __name__ == '__main__':
-    _encerra_dominio()
     run()

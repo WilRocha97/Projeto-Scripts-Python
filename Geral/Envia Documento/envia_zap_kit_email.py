@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 import datetime, os, random, time, re, pywhatkit, pandas as pd, pyautogui as p
+
+import pyperclip
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from pathlib import Path
 
 from sys import path
 path.append(r'..\..\_comum')
+from chrome_comum import _abrir_chrome
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers, _remove_emojis
 from chrome_comum import _initialize_chrome, _find_by_id
 from pyautogui_comum import _find_img, _click_img, _wait_img, _click_position_img
@@ -40,7 +43,7 @@ def login_email(driver):
     return driver
 
 
-def captura_link_email(driver):
+def captura_dados_email(driver):
     print('>>> Capturando dados da mensagem')
     
     while not _find_by_id('messageViewFrame', driver):
@@ -51,7 +54,7 @@ def captura_link_email(driver):
     titulo = titulo.replace('-&nbsp;', '- ').replace(' &nbsp;', ' ').replace('&nbsp; ', ' ').replace('&nbsp;', ' ').replace('&amp;', '&')
     
     print(titulo)
-    pasta_anexos = os.path.join('V:', 'Setor Robô', 'Scripts Python', 'Geral', 'Envia Documento', 'ignore', 'Anexos')
+    pasta_anexos = 'V:\\Setor Robô\\Scripts Python\\Geral\\Envia Documento\\ignore\\Anexos'
     
     if _find_img('anexos.png', conf=0.9):
         for arq in os.listdir(pasta_anexos):
@@ -66,9 +69,24 @@ def captura_link_email(driver):
         time.sleep(2)
         
         for arq in os.listdir(pasta_anexos):
-            anexo = os.path.join(pasta_anexos, arq)
+            anexo = os.path.join('V:\\', 'Setor Robô', 'Scripts Python', 'Geral', 'Envia Documento', 'ignore', 'Anexos', arq)
         
-        return driver, titulo, cnpj, cnpj_limpo, '', anexo
+        _click_img('fechar_anexos.png', conf=0.9)
+        
+        # Encontra o elemento do frame pelo nome ou índice
+        frame = driver.find_element(by=By.ID, value='messageViewFrame')
+        # frame = driver.find_element_by_index(0)
+        
+        # Alterna o driver para o contexto do frame
+        driver.switch_to.frame(frame)
+        mensagem_email = re.compile(r'\[(.+)].+Prezado cliente. <br><br>(.+). <br><br></div>').search(driver.page_source)
+        cnpj = mensagem_email.group(1)
+        cnpj_limpo = cnpj
+        
+        corpo_email = mensagem_email.group(2)
+        corpo_email = corpo_email.replace('<br>', '\n').replace('desse e-mail', 'dessa conversa').replace('este e-mail', 'esta conversa')
+        
+        return driver, titulo, cnpj, cnpj_limpo, corpo_email, '', anexo
         
     # Encontra o elemento do frame pelo nome ou índice
     frame = driver.find_element(by=By.ID, value='messageViewFrame')
@@ -76,7 +94,6 @@ def captura_link_email(driver):
     
     # Alterna o driver para o contexto do frame
     driver.switch_to.frame(frame)
-
     try:
         # pega cnpj da empresa que vai receber a mensagem
         cnpj = re.compile(r'(\d\d\.\d\d\d\.\d\d\d/\d\d\d\d-\d\d)').search(driver.page_source).group(1)
@@ -98,7 +115,7 @@ def captura_link_email(driver):
                 print(cnpj)
                 print(cnpj_limpo)
             except:
-                return driver, titulo, 'x', 'x', 'x', 'x'
+                return driver, titulo, 'x', 'x', 'x', 'x', 'x'
         
     # pega a data de vencimento do documento que está no link da mensagem
     try:
@@ -123,7 +140,7 @@ def captura_link_email(driver):
     
     link_mensagem = link_mensagem.replace(' ', '').replace('&amp;', '&')
     print(link_mensagem)
-    return driver, titulo, cnpj, cnpj_limpo, vencimento, str(link_mensagem)
+    return driver, titulo, cnpj, cnpj_limpo, None, vencimento, str(link_mensagem)
 
 
 def verifica_o_numero(cnpj_pesquisado):
@@ -155,7 +172,7 @@ def verifica_o_numero(cnpj_pesquisado):
         return False
 
 
-def envia(resultado_anterior, contato, titulo, vencimento, link_mensagem, nome_planilha):
+def envia(resultado_anterior, contato, titulo, vencimento, link_mensagem, corpo_email, nome_planilha):
     cnpj = str(contato['cnpj'])
     nome = str(contato['nome'])
     numero = str(contato['numero'])
@@ -164,15 +181,18 @@ def envia(resultado_anterior, contato, titulo, vencimento, link_mensagem, nome_p
     if numero == 'numero':
         return 'erro'
     try:
-        pywhatkit.sendwhatmsg_instantly('+55' + numero, f"Olá!\n"
-                                                        f"{titulo}\n"
-                                                        f"{vencimento}\n"
-                                                        f"{link_mensagem}\n"
-                                                        f"Obrigado,\n"
-                                                        f"R.POSTAL SERVICOS CONTABEIS LTDA\n"
-                                                        f"veigaepostal@veigaepostal.com.br\n"
-                                                        f"(19)3829-8959", 40, True, 5)
-        
+        if not corpo_email:
+            pywhatkit.sendwhatmsg_instantly('+55' + numero, f"Olá!\n"
+                                                            f"{titulo}\n"
+                                                            f"{vencimento}\n"
+                                                            f"{link_mensagem}\n"
+                                                            f"Obrigado,\n"
+                                                            f"R.POSTAL SERVICOS CONTABEIS LTDA\n"
+                                                            f"veigaepostal@veigaepostal.com.br\n"
+                                                            f"(19)3829-8959", 40, True, 5)
+        else:
+            enviar_anexo(numero, link_mensagem, corpo_email)
+            
         time.sleep(2)
         # verifica se o script secundário localizou algum erro no whatsapp
         arquivos = os.listdir(os.path.join('ignore', 'controle'))
@@ -205,6 +225,51 @@ def envia(resultado_anterior, contato, titulo, vencimento, link_mensagem, nome_p
             return 'ok'
         else:
             return 'erro'
+        
+        
+def enviar_anexo(numero, anexo, corpo_email):
+    mensagem = (f"Olá!\n"
+                f"{corpo_email}\n"
+                f"Obrigado,\n"
+                f"R.POSTAL SERVICOS CONTABEIS LTDA\n"
+                f"veigaepostal@veigaepostal.com.br\n"
+                f"(19)3829-8959")
+    
+    _abrir_chrome('https://web.whatsapp.com/', fechar_janela=False)
+    _wait_img('pesquisar_contato.png', conf=0.9)
+    _click_img('pesquisar_contato.png', conf=0.9)
+    time.sleep(1)
+    p.write(numero)
+    time.sleep(2)
+    p.press('enter')
+    _wait_img('anexar.png', conf=0.9)
+    _click_img('anexar.png', conf=0.9)
+    time.sleep(1)
+    _wait_img('documento.png', conf=0.9)
+    _click_img('documento.png', conf=0.9)
+    _wait_img('abrir.png', conf=0.9)
+    time.sleep(1)
+    
+    pyperclip.copy(anexo)
+    time.sleep(1)
+    p.hotkey('ctrl', 'v')
+
+    time.sleep(1)
+    p.press('enter')
+    _wait_img('digitar_mensagem.png', conf=0.9)
+    time.sleep(1)
+    p.press('enter')
+    time.sleep(1)
+    
+    pyperclip.copy(mensagem)
+    time.sleep(1)
+    p.hotkey('ctrl', 'v')
+    time.sleep(1)
+    p.press('enter')
+    
+    time.sleep(5)
+    p.hotkey('ctrl', 'w')
+    time.sleep(1)
     
 
 def mover_email(pasta=''):
@@ -277,7 +342,7 @@ def run():
         nao_envia = 'x'
         # try:
         
-        driver, titulo, cnpj, cnpj_limpo, vencimento, link_mensagem = captura_link_email(driver)
+        driver, titulo, cnpj, cnpj_limpo, corpo_email, vencimento, link_mensagem = captura_dados_email(driver)
         
         # determina o tempo de espera entre uma mensagem e outra para tentar evitar span
         numero = random.randint(1, 10)
@@ -326,7 +391,7 @@ def run():
         else:
             resultado = ''
             for contato in cnpjs_iguais:
-                resultado = envia(resultado, contato, titulo, vencimento, link_mensagem, nome_planilha)
+                resultado = envia(resultado, contato, titulo, vencimento, link_mensagem, corpo_email, nome_planilha)
             # se der erro ao enviar
             if resultado == 'erro':
                 time.sleep(1)

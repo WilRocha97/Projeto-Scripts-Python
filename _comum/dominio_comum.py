@@ -136,8 +136,8 @@ def verifica_empresa(cod):
             codigo = codigo.replace(' ', '')
         
             if codigo != cod:
-                print(codigo)
-                print(cod)
+                print(f'Código da empresa: {codigo}')
+                print(f'Código encontrado no Domínio: {cod}')
                 return False
             else:
                 return True

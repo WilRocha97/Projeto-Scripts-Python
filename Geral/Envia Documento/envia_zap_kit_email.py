@@ -182,14 +182,15 @@ def envia(resultado_anterior, contato, titulo, vencimento, link_mensagem, corpo_
         return 'erro'
     try:
         if not corpo_email:
-            pywhatkit.sendwhatmsg_instantly('+55' + numero, f"Olá!\n"
+            enviar(numero, link_mensagem, titulo, vencimento)
+            """pywhatkit.sendwhatmsg_instantly('+55' + numero, f"Olá!\n"
                                                             f"{titulo}\n"
                                                             f"{vencimento}\n"
                                                             f"{link_mensagem}\n"
                                                             f"Obrigado,\n"
                                                             f"R.POSTAL SERVICOS CONTABEIS LTDA\n"
                                                             f"veigaepostal@veigaepostal.com.br\n"
-                                                            f"(19)3829-8959", 40, True, 5)
+                                                            f"(19)3829-8959", 50, True, 10)"""
         else:
             enviar_anexo(numero, link_mensagem, corpo_email)
             
@@ -214,7 +215,7 @@ def envia(resultado_anterior, contato, titulo, vencimento, link_mensagem, corpo_
         _escreve_relatorio_csv(f'{cnpj};{nome};{numero};{titulo_sem_emoji};Mensagem enviada', nome=nome_planilha, local=e_dir)
         print('✔ Mensagem enviada\n')
         return 'ok'
-    
+
     except:
         try:
             _escreve_relatorio_csv(f'{cnpj};{nome};{numero};{titulo};Erro ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
@@ -225,8 +226,40 @@ def envia(resultado_anterior, contato, titulo, vencimento, link_mensagem, corpo_
             return 'ok'
         else:
             return 'erro'
-        
-        
+
+
+def enviar(numero, link_mensagem, titulo, vencimento):
+    mensagem = (f"Olá!\n"
+                f"{titulo}\n"
+                f"{vencimento}\n"
+                f"{link_mensagem}\n"
+                f"Obrigado,\n"
+                f"R.POSTAL SERVICOS CONTABEIS LTDA\n"
+                f"veigaepostal@veigaepostal.com.br\n"
+                f"(19)3829-8959")
+    
+    
+    _abrir_chrome('https://web.whatsapp.com/', fechar_janela=False)
+    _wait_img('pesquisar_contato.png', conf=0.9)
+    _click_img('pesquisar_contato.png', conf=0.9)
+    time.sleep(1)
+    p.write(numero)
+    time.sleep(2)
+    p.press('enter')
+    _wait_img('anexar.png', conf=0.9)
+    time.sleep(1)
+    
+    pyperclip.copy(mensagem)
+    time.sleep(1)
+    p.hotkey('ctrl', 'v')
+    time.sleep(1)
+    p.press('enter')
+    
+    time.sleep(5)
+    p.hotkey('ctrl', 'w')
+    time.sleep(1)
+ 
+    
 def enviar_anexo(numero, anexo, corpo_email):
     mensagem = (f"Olá!\n"
                 f"{corpo_email}\n"

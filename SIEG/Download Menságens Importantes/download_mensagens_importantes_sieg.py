@@ -2,6 +2,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
+from selenium.webdriver.common.action_chains import ActionChains
 import pyperclip, os, time, re, csv, shutil, fitz, pyautogui as p
 
 from sys import path
@@ -52,6 +53,14 @@ def imprime_mensagem(driver):
     while not _find_by_path('/html/body/form/div[5]/div[3]/div/div[1]/div[3]/div[2]/div/table/tbody/tr[1]', driver):
         if _find_img('sem_mensagens.png', conf=0.8):
             return False
+        if _find_by_path('/html/body/form/div[6]/div/div', driver):
+            # Encontre um elemento que esteja fora do modal e clique nele
+            while not _find_by_id('txtDateRange', driver):
+                time.sleep(1)
+            
+            elemento_fora_modal = driver.find_element(by=By.ID, value='txtDateRange')
+            ActionChains(driver).move_to_element(elemento_fora_modal).click().perform()
+        
         time.sleep(1)
         
     # aguarda e clica para filtrar abrir o dropdown de filtro de mensagens não lidas
@@ -70,10 +79,10 @@ def imprime_mensagem(driver):
     # aguarda e clica na mensagem
     while not _find_by_path('/html/body/form/div[5]/div[3]/div/div[1]/div[3]/div[2]/div/table/tbody/tr[1]', driver):
         if _find_img('sem_mensagens.png', conf=0.8):
-            return False
+            return driver, False
         time.sleep(1)
     
-    return driver
+    return driver, True
     
 
 def salvar_pdf(driver, pasta_analise):
@@ -151,6 +160,7 @@ def salvar_pdf(driver, pasta_analise):
             p.press('s')
     time.sleep(1)
     
+    p.press('esc')
     print('✔ Mensagem salva com sucesso')
     return driver, 'Mensagem salva com sucesso'
 
@@ -253,26 +263,34 @@ def run():
     options.add_argument("--start-maximized")
     options.add_argument("--force-device-scale-factor=0.9")
     
-    # iniciar o driver do chrome
-    status, driver = _initialize_chrome(options)
-    driver = login_sieg(driver)
-    
     while True:
+        # iniciar o driver do chrome
+        status, driver = _initialize_chrome(options)
+        driver = login_sieg(driver)
+        
         driver = sieg_iris(driver, modulo)
         
-        if imprime_mensagem(driver):
+        driver, resultado = imprime_mensagem(driver)
+        
+        if resultado:
             driver, resultado = salvar_pdf(driver, pasta_analise)
             if resultado == 'acabou':
                 driver.close()
-                return
+                break
                 
             # tenta analisar o PDF, se der erro chama a função novamente, porem com o parametro 'erro' para entrar em uma exceção criada dentro da função
             try:
                 verifica_mensagem(pasta_analise, pasta_final, modulo)
             except:
                 verifica_mensagem(pasta_analise, pasta_final, 'erro')
-                return
-                
+                break
+        
+        else:
+            driver.close()
+            break
+        
+        driver.close()
+        
             
 if __name__ == '__main__':
     run()

@@ -142,10 +142,14 @@ _find_by_class = find_by_class
 
 
 # abre o chrome padrão instalado no PC
-def abrir_chrome(url, fechar_janela=True):
+def abrir_chrome(url, fechar_janela=True, outra_janela=False):
     def abrir_nova_janela():
         time.sleep(0.5)
         os.startfile(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
+        if outra_janela:
+            while _find_img(outra_janela, conf=0.9):
+                time.sleep(1)
+        
         while not _find_img('google.png', conf=0.9):
             time.sleep(1)
             if _find_img('restaurar_pagina.png', conf=0.9):

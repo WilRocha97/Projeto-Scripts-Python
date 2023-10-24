@@ -145,7 +145,7 @@ def verifica_empresa(cod):
             erro = 'sim'
     
 
-def _login_web():
+def _login_web(usuario=user[0], senha=user[1]):
     if not _find_img('app_controler.png', pasta='imgs_c', conf=0.9):
         options = webdriver.ChromeOptions()
         options.add_argument("--start-maximized")
@@ -153,8 +153,8 @@ def _login_web():
         status, driver = _initialize_chrome(options)
     
         driver.get('https://www.dominioweb.com.br/')
-        _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[1]/span[2]/input', user[0], driver)
-        _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[2]/span[2]/input', user[3], driver)
+        _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[1]/span[2]/input', usuario, driver)
+        _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[2]/span[2]/input', senha, driver)
         driver.find_element(by=By.ID, value='enterButton').click()
         
         caminho = os.path.join('abrir_app.png')
@@ -185,7 +185,7 @@ def _login_web():
             p.press('enter')
             
 
-def _abrir_modulo(modulo):
+def _abrir_modulo(modulo, usuario=user[2], senha=user[3]):
     if _find_img('inicial.png', pasta='imgs_c', conf=0.9):
         return True
     
@@ -215,12 +215,12 @@ def _abrir_modulo(modulo):
     
     sleep(0.5)
     p.press('del', presses=10)
-    p.write(user[1])
+    p.write(usuario)
     sleep(0.5)
     p.press('tab')
     sleep(0.5)
     p.press('del', presses=10)
-    p.write(user[2])
+    p.write(senha)
     sleep(0.5)
     p.hotkey('alt', 'o')
     while not _find_img('onvio.png', pasta='imgs_c', conf=0.9):

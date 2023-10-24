@@ -7,7 +7,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
-from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf, _verifica_dominio, _encerra_dominio
+from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf, _encerra_dominio
 
 
 def relatorio_darf_dctf(empresa, periodo, andamento):
@@ -23,7 +23,6 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
     p.press('m')
 
     while not _find_img('resumo_de_impostos.png', conf=0.9):
-        verificacao = _verifica_dominio()
         if verificacao != 'continue':
             return verificacao
         time.sleep(1)
@@ -71,7 +70,6 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
     sem_layout = 0
 
     while not _find_img('resumo_gerado_3.png', conf=0.8):
-        verificacao = _verifica_dominio()
         if verificacao != 'continue':
             return verificacao
         time.sleep(1)
@@ -80,7 +78,6 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
             p.press('enter')
         if sem_layout == 1:
             while not _find_img('resumo_de_impostos.png', conf=0.9):
-                verificacao = _verifica_dominio()
                 if verificacao != 'continue':
                     return verificacao
                 p.press('enter')

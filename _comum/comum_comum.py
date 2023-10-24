@@ -329,6 +329,6 @@ def remove_emojis(text):
                                u"\U0001F1E0-\U0001F1FF"  # bandeiras de país
                                "]+", flags=re.UNICODE)
     text = emoji_pattern.sub(r'', text)
-    text = text[1:-1]
+    text = text[0:-1]
     return text
 _remove_emojis = remove_emojis

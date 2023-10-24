@@ -56,6 +56,9 @@ def captura_dados_email(driver):
     print(titulo)
     pasta_anexos = 'V:\\Setor Robô\\Scripts Python\\Geral\\Envia Documento\\ignore\\Anexos'
     
+    if titulo[:3] == 'Re:':
+        return driver, titulo, 'x', 'x', 'x', 'x', 'x'
+    
     if _find_img('anexos.png', conf=0.9):
         for arq in os.listdir(pasta_anexos):
             os.remove(os.path.join(pasta_anexos, arq))
@@ -79,7 +82,8 @@ def captura_dados_email(driver):
         
         # Alterna o driver para o contexto do frame
         driver.switch_to.frame(frame)
-        mensagem_email = re.compile(r'\[(.+)].+Prezado cliente. <br><br>(.+). <br><br></div>').search(driver.page_source)
+        # print(driver.page_source)
+        mensagem_email = re.compile(r'\[(.+)].+Prezado cliente, tenha um excelente dia.<br> <br>(.+),<br><br><\/div>').search(driver.page_source)
         cnpj = mensagem_email.group(1)
         cnpj_limpo = cnpj
         
@@ -205,8 +209,11 @@ def envia(resultado_anterior, contato, titulo, vencimento, link_mensagem, corpo_
                 return 'ok'
             else:
                 return resultado
-        
-        _escreve_relatorio_csv(f'{cnpj};{nome};{numero};{titulo_sem_emoji};Mensagem enviada', nome=nome_planilha, local=e_dir)
+        try:
+            _escreve_relatorio_csv(f'{cnpj};{nome};{numero};{titulo};Mensagem enviada', nome=nome_planilha, local=e_dir)
+        except:
+            _escreve_relatorio_csv(f'{cnpj};{nome};{numero};{titulo_sem_emoji};Mensagem enviada', nome=nome_planilha, local=e_dir)
+            
         print('✔ Mensagem enviada\n')
         return 'ok'
 
@@ -243,7 +250,7 @@ def enviar(numero, link_mensagem, titulo, vencimento):
         time.sleep(1)
         p.hotkey('ctrl', 'w')
         time.sleep(1)
-        return 'Número não encontrado'
+        return 'Número inválido'
     
     p.press('enter')
     _wait_img('anexar.png', conf=0.9)
@@ -281,7 +288,7 @@ def enviar_anexo(numero, anexo, corpo_email):
         time.sleep(1)
         p.hotkey('ctrl', 'w')
         time.sleep(1)
-        return 'Número não encontrado'
+        return 'Número inválido'
     
     p.press('enter')
     _wait_img('anexar.png', conf=0.9)
@@ -384,13 +391,19 @@ def run():
         
         titulo = 'x'
         nao_envia = 'x'
-        try:
-            driver, titulo, cnpj, cnpj_limpo, corpo_email, vencimento, link_mensagem = captura_dados_email(driver)
-            
-            # determina o tempo de espera entre uma mensagem e outra para tentar evitar span
-            numero = random.randint(1, 10)
-            time.sleep(numero)
-            
+        # try:
+        driver, titulo, cnpj, cnpj_limpo, corpo_email, vencimento, link_mensagem = captura_dados_email(driver)
+        
+        # determina o tempo de espera entre uma mensagem e outra para tentar evitar span
+        numero = random.randint(1, 10)
+        time.sleep(numero)
+        
+        if titulo[:3] == 'Re:':
+            time.sleep(1)
+            mover_email('nao_enviados')
+            _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo}', nome=nome_planilha, local=e_dir)
+            print(f'❗ {titulo}\n')
+        else:
             if cnpj_limpo != 'x':
                 cnpjs_iguais = verifica_o_numero(cnpj_limpo)
             else:
@@ -427,7 +440,11 @@ def run():
             elif not cnpjs_iguais:
                 time.sleep(1)
                 mover_email('nao_enviados')
-                _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji};Número não encontrado', nome=nome_planilha + ' erros', local=e_dir)
+                try:
+                    _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo};Número não encontrado', nome=nome_planilha + ' erros', local=e_dir)
+                except:
+                    _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji};Número não encontrado', nome=nome_planilha + ' erros', local=e_dir)
+                    
                 print('❌ Número não encontrado\n')
             
             # se tiver como enviar e encontrar o número na planilha
@@ -448,16 +465,16 @@ def run():
                 else:
                     time.sleep(1)
                     mover_email('nao_enviados')
-            
-        # se der erro em qualquer etapa
-        except:
-            time.sleep(1)
-            print(driver.page_source)
-            try:
-                _escreve_relatorio_csv(f'x;x;x;{titulo};Erro geral ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
+                
+            """# se der erro em qualquer etapa
             except:
-                _escreve_relatorio_csv(f'x;x;x;{titulo_sem_emoji};Erro geral ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
-            print('❌ Erro ao enviar a mensagem\n')
+                time.sleep(1)
+                print(driver.page_source)
+                try:
+                    _escreve_relatorio_csv(f'x;x;x;{titulo};Erro geral ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
+                except:
+                    _escreve_relatorio_csv(f'x;x;x;{titulo_sem_emoji};Erro geral ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
+                print('❌ Erro ao enviar a mensagem\n')"""
 
         driver.close()
         

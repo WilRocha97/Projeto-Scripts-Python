@@ -9,6 +9,53 @@ import pathlib
 e_dir = pathlib.Path('execução')
 
 
+def abrir_chrome(url, fechar_janela=True, outra_janela=False):
+    def abrir_nova_janela():
+        time.sleep(0.5)
+        os.startfile(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
+        if outra_janela:
+            while find_img(outra_janela, conf=0.9):
+                time.sleep(1)
+        
+        while not find_img('google.png', conf=0.9):
+            time.sleep(1)
+            if find_img('restaurar_pagina.png', conf=0.9):
+                click_img('restaurar_pagina.png', conf=0.9)
+                time.sleep(1)
+                p.press('esc')
+                time.sleep(1)
+    
+    if fechar_janela:
+        p.hotkey('win', 'm')
+    
+    if fechar_janela:
+        if find_img('chrome_aberto.png', conf=0.99):
+            click_img('chrome_aberto.png', conf=0.99, timeout=1)
+        else:
+            abrir_nova_janela()
+    else:
+        abrir_nova_janela()
+        
+        click_img('google.png', conf=0.9)
+        time.sleep(1)
+        p.hotkey('alt', 'space', 'x')
+        time.sleep(1)
+    
+    for i in range(4):
+        p.click(1000, 51)
+        time.sleep(1)
+        p.hotkey('ctrl', 'a')
+        time.sleep(1)
+        pyperclip.copy(url)
+        time.sleep(1)
+        p.hotkey('ctrl', 'v')
+        time.sleep(1)
+        p.press('delete')
+    
+    time.sleep(1)
+    p.press('enter')
+
+
 def escreve_relatorio_csv(texto, nome='resumo', local=e_dir, end='\n', encode='latin-1'):
     if local == e_dir:
         local = pathlib.Path(local)
@@ -112,8 +159,7 @@ def click_img(img, pasta='imgs', conf=1.0, delay=1, timeout=20, button='left', c
         return False
 
 
-def verificacoes(consulta_tipo, andamento, empresa):
-    identificacao, nome = empresa
+def verificacoes(consulta_tipo, andamento, identificacao, nome):
     if find_img('inscricao_cancelada.png', conf=0.9):
         escreve_relatorio_csv('{};{};inscrição cancelada de ofício pela Secretaria Especial da Receita Federal do Brasil - RFB'.format(identificacao, nome), nome=andamento)
         print('❌ inscrição cancelada de ofício pela Secretaria Especial da Receita Federal do Brasil - RFB')
@@ -140,6 +186,11 @@ def verificacoes(consulta_tipo, andamento, empresa):
         print(f'❌ CPF inválido')
         return False
     
+    if find_img('declaracao_inapta.png', conf=0.9):
+        escreve_relatorio_csv('{};{};CNPJ com situação cadastral declarada inapta pela Secretaria Especial da Receita Federal do Brasil - RFB'.format(identificacao, nome), nome=andamento)
+        print(f'❌ Situação cadastral inapta')
+        return False
+    
     if find_img('ErroNaConsulta.png', conf=0.9):
         p.press('enter')
         time.sleep(2)
@@ -148,18 +199,17 @@ def verificacoes(consulta_tipo, andamento, empresa):
     return True
 
 
-def salvar(consulta_tipo, andamento, empresa, pasta):
-    identificacao, nome = empresa
+def salvar(consulta_tipo, andamento, identificacao, nome):
     # espera abrir a tela de salvar o arquivo
     while not find_img('SalvarComo.png', conf=0.9):
         time.sleep(1)
-        if find_img('em_processamento.png', conf=0.9):
-            consulta(consulta_tipo, empresa)
+        if find_img('em_processamento.png', conf=0.9) or find_img('erro_captcha.png', conf=0.9):
+            consulta(consulta_tipo, identificacao)
 
         if find_img('NovaCertidao.png', conf=0.9):
             click_img('NovaCertidao.png', conf=0.9)
 
-        situacao = verificacoes(consulta_tipo, andamento, empresa)
+        situacao = verificacoes(consulta_tipo, andamento, identificacao, nome)
         
         if not situacao:
             p.hotkey('ctrl', 'w')
@@ -181,7 +231,7 @@ def salvar(consulta_tipo, andamento, empresa, pasta):
     erro = 'sim'
     while erro == 'sim':
         try:
-            pyperclip.copy('V:\Setor Robô\Scripts Python\Receita Federal\Consulta Certidão Negativa\execução\Certidões CPF')
+            pyperclip.copy('V:\Setor Robô\Scripts Python\Receita Federal\Consulta Certidão Negativa\execução\Certidões ' + consulta_tipo)
             p.hotkey('ctrl', 'v')
             time.sleep(1)
             erro = 'não'
@@ -200,43 +250,22 @@ def salvar(consulta_tipo, andamento, empresa, pasta):
     return True
 
 
-def consulta(consulta_tipo, empresa):
-    identificacao, nome = empresa
-    p.hotkey('win', 'm')
-
-    # Abrir o site
-    if find_img('Chrome.png', conf=0.99):
-        pass
-    elif find_img('ChromeAberto.png', conf=0.99):
-        click_img('ChromeAberto.png', conf=0.99)
-    else:
-        time.sleep(0.5)
-        click_img('ChromeAtalho.png', conf=0.9, clicks=2)
-        while not find_img('Google.png', conf=0.9, ):
-            time.sleep(5)
-            p.moveTo(1163, 377)
-            p.click()
-
+def consulta(consulta_tipo, identificacao):
     if consulta_tipo == 'CNPJ':
         link = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PJ/Emitir'
     else:
         link = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PF/Emitir'
-
-    click_img('Maxi.png', conf=0.9, timeout=1)
+    
     # espera o site abrir e recarrega caso demore
     while not find_img(f'Informe{consulta_tipo}.png', conf=0.9):
-        p.click(1110, 51)
-        time.sleep(1)
-        p.write(link.lower())
-        time.sleep(1)
-        p.press('enter')
-        for i in range(10):
+        abrir_chrome(link)
+        
+        for i in range(60):
             time.sleep(1)
             if find_img(f'Informe{consulta_tipo}.png', conf=0.9):
                 break
-            
-    while not find_img(f'Informe{consulta_tipo}.png', conf=0.9):
-        time.sleep(1)
+        
+    time.sleep(1)
 
     click_img(f'Informe{consulta_tipo}.png', conf=0.9)
     time.sleep(1)
@@ -244,7 +273,6 @@ def consulta(consulta_tipo, empresa):
     p.write(identificacao)
     time.sleep(1)
     p.press('enter')
-
     return True
 
 
@@ -263,32 +291,34 @@ def run():
     
     for count, empresa in enumerate(empresas[index:], start=1):
         indice(count, total_empresas, empresa)
+        identificacao, nome = empresa
+        nome = nome.replace('/', '')
+        
         situacao = 'erro'
-        try:
-            while situacao == 'erro':
-                consulta(consulta_tipo, empresa)
-                situacao = salvar(consulta_tipo, andamento, empresa, pasta)
-                
-                if not situacao:
-                    p.hotkey('ctrl', 'w')
-                    continue
-                
-                elif situacao:
-                    identificacao, nome = empresa
-                    print('✔ Certidão gerada')
-                    escreve_relatorio_csv('{};{};{} gerada'.format(identificacao, nome, andamento), nome=andamento)
-                    time.sleep(1)
-                
-        except:
-            time.sleep(2)
+        # try:
+        while situacao == 'erro':
+            consulta(consulta_tipo, identificacao)
+            situacao = salvar(consulta_tipo, andamento, identificacao, nome)
             p.hotkey('ctrl', 'w')
+            
+            if not situacao:
+                continue
+            
+            elif situacao:
+                print('✔ Certidão gerada')
+                escreve_relatorio_csv('{};{};{} gerada'.format(identificacao, nome, andamento), nome=andamento)
+                time.sleep(1)
+                
+        """except:
+            time.sleep(2)
+            p.hotkey('ctrl', 'w')"""
 
     p.hotkey('ctrl', 'w')
 
 
 if __name__ == '__main__':
-    try:
-        run()
-        p.alert(text='Consulta de Certidão Negativa PF e PJ finalizada')
-    except:
-        p.alert(text='Consulta de Certidão Negativa PF e PJ finalizada inesperadamente!')
+    # try:
+    run()
+    p.alert(text='Consulta de Certidão Negativa PF e PJ finalizada')
+    """except:
+        p.alert(text='Consulta de Certidão Negativa PF e PJ finalizada inesperadamente!')"""

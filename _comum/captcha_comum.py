@@ -167,10 +167,14 @@ _solve_recaptcha_v3 = solve_recaptcha_v3
 
 
 # Recebe a imagem do captcha e envia para a api e retorna o texto da imagem
-def solve_text_captcha(driver, id_captcha):
+def solve_text_captcha(driver, captcha_element, element_type='id'):
     os.makedirs('ignore\captcha', exist_ok=True)
     # captura a imagem do captcha
-    element = driver.find_element(by=By.ID, value=id_captcha)
+    if element_type == 'id':
+        element = driver.find_element(by=By.ID, value=captcha_element)
+    elif element_type == 'xpath':
+        element = driver.find_element(by=By.XPATH, value=captcha_element)
+    
     location = element.location
     size = element.size
     driver.save_screenshot('ignore\captcha\pagina.png')
@@ -234,3 +238,9 @@ def solve_hcaptcha(data, visible=False):
                 print(solver.error_code)
                 return solver.error_code
 _solve_hcaptcha = solve_hcaptcha
+
+
+def solve_audio_captcha():
+    os.makedirs('ignore\captcha_audio', exist_ok=True)
+
+_solve_audio_captcha = solve_audio_captcha

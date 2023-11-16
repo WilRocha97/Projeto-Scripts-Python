@@ -82,11 +82,15 @@ def abre_irpf_atual():
     while not _find_img('meu_irpf_ecac.png', conf=0.9):
         if _find_img('login_invalido.png', conf=0.9):
             return '❗ Os serviços só estão disponíveis caso o login esteja válido! Verifique na aba ECAC o login e senha por favor.'
+        if _find_img('meu_irpf_ecac_2.png', conf=0.9):
+            break
+        p.press('PgDn')
         time.sleep(1)
     
     print('>>> Acessando ECAC')
     # clica no botão do Meu IRPF do ECAC
     _click_position_img('meu_irpf_ecac.png', '+', pixels_y=92, conf=0.9)
+    _click_position_img('meu_irpf_ecac_2.png', '+', pixels_y=50, conf=0.9)
     
     timer = 0
     tentativas = 0
@@ -191,8 +195,11 @@ def salvar_pdf(arquivo, pasta_final):
             _click_img('salvar_como_pdf.png', conf=0.9)
     
     # aguarda aparecer o botão de salvar e clica nele
-    _wait_img('botao_salvar.png', conf=0.9)
+    while not _find_img('botao_salvar.png', conf=0.9):
+        if _find_img('botao_salvar_2.png', conf=0.9):
+            break
     _click_img('botao_salvar.png', conf=0.9)
+    _click_img('botao_salvar_2.png', conf=0.9)
     
     print('>>> Salvando relatório')
     while not _find_img('salvar_como.png', conf=0.9):

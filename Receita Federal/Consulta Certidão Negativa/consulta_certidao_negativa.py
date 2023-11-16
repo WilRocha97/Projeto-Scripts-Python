@@ -186,6 +186,11 @@ def verificacoes(consulta_tipo, andamento, identificacao, nome):
         print(f'❌ CPF inválido')
         return False
     
+    if find_img('cnpj_suspenso.png', conf=0.9):
+        escreve_relatorio_csv('{};{};CNPJ suspenso'.format(identificacao, nome), nome=andamento)
+        print(f'❌ CNPJ suspenso')
+        return False
+    
     if find_img('declaracao_inapta.png', conf=0.9):
         escreve_relatorio_csv('{};{};CNPJ com situação cadastral declarada inapta pela Secretaria Especial da Receita Federal do Brasil - RFB'.format(identificacao, nome), nome=andamento)
         print(f'❌ Situação cadastral inapta')

@@ -196,13 +196,13 @@ def salvar_pdf(arquivo, pasta_final):
     
     # aguarda aparecer o botão de salvar e clica nele
     while not _find_img('botao_salvar.png', conf=0.9):
-        if _find_img('botao_salvar_2.png', conf=0.9):
-            break
-    _click_img('botao_salvar.png', conf=0.9)
-    _click_img('botao_salvar_2.png', conf=0.9)
+        time.sleep(1)
     
-    print('>>> Salvando relatório')
+    p.click(p.locateCenterOnScreen(f'imgs/botao_salvar.png', confidence=0.9))
+    
     while not _find_img('salvar_como.png', conf=0.9):
+        print('>>> Salvando relatório')
+        p.click(p.locateCenterOnScreen(f'imgs/botao_salvar.png', confidence=0.9))
         time.sleep(1)
     
     time.sleep(1)

@@ -90,8 +90,8 @@ def boleto_mei(empresa, andamentos):
     p.write(cnpj)
     time.sleep(0.5)
     p.press('enter')
-    time.sleep(0.5)
-    
+    time.sleep(2)
+    _click_img('emitir_guia.png', conf=0.9)
     print('>>> Aguardando tela para emissão da guia')
     # Emitir guia de pagamento DAS
     while not _find_img('emitir_guia.png', conf=0.9):

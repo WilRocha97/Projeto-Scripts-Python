@@ -83,12 +83,16 @@ def consulta_relatorio():
     while not _find_img('cnd_ecac.png', conf=0.9):
         if _find_img('login_invalido.png', conf=0.9):
             return '❗ Os serviços só estão disponíveis caso o login esteja válido! Verifique na aba ECAC o login e senha por favor.'
+        if _find_img('cnd_ecac_2.png', conf=0.9):
+            break
+        p.press('PgDn')
         time.sleep(1)
     
     print('>>> Acessando ECAC')
     # clica no botão de CND do ecac
     _click_position_img('cnd_ecac.png', '+', pixels_y=92, conf=0.9)
-
+    _click_position_img('cnd_ecac_2.png', '+', pixels_y=50, conf=0.9)
+    
     resultado = gera_relatorio()
     if resultado != 'ok':
         return resultado

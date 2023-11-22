@@ -246,13 +246,13 @@ def verifica_mensagem(pasta_analise, pasta_final, modulo):
 @_time_execution
 def run():
     modulo = p.confirm(title='Script incrível', buttons=('Termo(s) de Exclusão do Simples Nacional', 'Termo(s) de Intimação', 'Renomear arquivo'))
-    pasta_analise = r'V:\Setor Robô\Scripts Python\SIEG\Download Menságens Importantes\ignore\Mensagens'
-    pasta_final = os.path.join(r'V:\Setor Robô\Scripts Python\SIEG\Download Menságens Importantes\execução', modulo)
+    pasta_analise = r'V:\Setor Robô\Scripts Python\SIEG\Download Mensagens Importantes\ignore\Mensagens'
+    pasta_final = os.path.join(r'V:\Setor Robô\Scripts Python\SIEG\Download Mensagens Importantes\execução', modulo)
     
     # exceção para renomear alguma menagem que foi salva ou só aberta, mas o script parou
     if modulo == 'Renomear arquivo':
         modulo = p.confirm(title='Script incrível', buttons=('Termo(s) de Exclusão do Simples Nacional', 'Termo(s) de Intimação'))
-        pasta_final = os.path.join(r'V:\Setor Robô\Scripts Python\SIEG\Download Menságens Importantes\execução', modulo)
+        pasta_final = os.path.join(r'V:\Setor Robô\Scripts Python\SIEG\Download Mensagens Importantes\execução', modulo)
         verifica_mensagem(pasta_analise, pasta_final, modulo)
         return
         

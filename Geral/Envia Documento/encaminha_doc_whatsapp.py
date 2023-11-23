@@ -250,7 +250,13 @@ def enviar(numero, link_mensagem, titulo, vencimento):
         time.sleep(1)
         p.hotkey('ctrl', 'w')
         time.sleep(1)
-        return 'Número inválido'
+        return 'Nenhum contato encontrado'
+    
+    if _find_img('sem_contato.png', conf=0.9):
+        time.sleep(1)
+        p.hotkey('ctrl', 'w')
+        time.sleep(1)
+        return 'Nenhum contato encontrado'
     
     p.press('enter')
     _wait_img('anexar.png', conf=0.9)
@@ -288,7 +294,13 @@ def enviar_anexo(numero, anexo, corpo_email):
         time.sleep(1)
         p.hotkey('ctrl', 'w')
         time.sleep(1)
-        return 'Número inválido'
+        return 'Contato não encontrado'
+    
+    if _find_img('sem_contato.png', conf=0.9):
+        time.sleep(1)
+        p.hotkey('ctrl', 'w')
+        time.sleep(1)
+        return 'Contato não encontrado'
     
     p.press('enter')
     _wait_img('anexar.png', conf=0.9)
@@ -311,6 +323,7 @@ def enviar_anexo(numero, anexo, corpo_email):
     time.sleep(1)
     
     pyperclip.copy(mensagem)
+
     time.sleep(1)
     p.hotkey('ctrl', 'v')
     time.sleep(1)

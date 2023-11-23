@@ -17,23 +17,29 @@ user = user.split('/')
 
 def login(driver):
     print(f'>>> Logando no Onvio')
+    # abre a tela de login
     driver.get('https://onvio.com.br/#/')
-    
     while not _find_by_id('trauth-continue-signin-btn', driver):
         time.sleep(1)
     
+    # clica para iniciar o login
     driver.execute_script("document.getElementById('trauth-continue-signin-btn').click()")
     
+    # aguarda o campo de email carregar
     while not _find_by_id('username', driver):
         time.sleep(1)
+    # insere o email e confirma
     driver.find_element(by=By.ID, value='username').send_keys(user[0])
     driver.find_element(by=By.XPATH, value='/html/body/div/div/div/div[2]/div/main/section/div/div/div/div[1]/div/form/div[2]/button').click()
     
+    # aguarda o campo de senha carregar
     while not _find_by_id('password', driver):
         time.sleep(1)
+    # insere a senha e confirma
     driver.find_element(by=By.ID, value='password').send_keys(user[1])
     driver.find_element(by=By.XPATH, value='/html/body/div/div/div/div[2]/div/main/section/div/div/div/form/div[3]/button').click()
     
+    # aguarda o site carregar
     while not _find_by_id('mainView', driver):
         time.sleep(1)
     
@@ -42,8 +48,10 @@ def login(driver):
     
 def adiciona_cliente(driver, nome_contato, numero):
     print(f'>>> Abrindo o Messenger')
+    # abre a home do messenger
     driver.get('https://onvio.com.br/br-messenger/home')
     
+    # clica para abrir o messenger
     while True:
         try:
             driver.find_element(by=By.XPATH, value='/html/body/app-root/div[1]/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/on-nav/nav/div[2]').click()
@@ -51,25 +59,32 @@ def adiciona_cliente(driver, nome_contato, numero):
         except:
             time.sleep(1)
     
+    # o messenger abre em outra aba
+    # aguarda dois segundos para abrir uma nova aba, troca o driver para essa nova aba e a fecha, depois volta para a aba inicial
+    # esse procedimento serve para, gerar cookies da janela de contatos do messenger e o script conseguir abri-la diretamente na mesma aba
     time.sleep(2)
     driver.switch_to.window(driver.window_handles[1])
     driver.close()
     driver.switch_to.window(driver.window_handles[0])
     time.sleep(1)
     
+    # abre diretamente na aba de cadastro de contato
     driver.get('https://app.gestta.com.br/messenger-v2/#/chat/contact-list')
     
     print(f'>>> Preenchendo dados do cliente')
     while not _find_by_path('/html/body/div[1]/div/div[2]/div[2]/div/div[2]/div[3]/div[4]/div/div/button', driver):
         time.sleep(1)
+    # clica para abrir o formulário
     driver.find_element(by=By.XPATH, value='/html/body/div[1]/div/div[2]/div[2]/div/div[2]/div[3]/div[4]/div/div/button').click()
     time.sleep(1)
     
+    # insere as informações do contato: nome, DDD e número
     driver.find_element(by=By.XPATH, value='/html/body/div[1]/div/div[2]/div[2]/div/div[2]/div[3]/div[4]/div/div/div/div/div/form/div[1]/div[1]/div[1]/div[2]/input').send_keys(nome_contato)
     driver.find_element(by=By.XPATH, value='/html/body/div[1]/div/div[2]/div[2]/div/div[2]/div[3]/div[4]/div/div/div/div/div/form/div[1]/div[2]/div[2]/div[1]/div[2]/input').send_keys(numero[:2])
     driver.find_element(by=By.XPATH, value='/html/body/div[1]/div/div[2]/div[2]/div/div[2]/div[3]/div[4]/div/div/div/div/div/form/div[1]/div[2]/div[3]/div[1]/div[2]/input').send_keys(numero[2:])
     time.sleep(1)
     
+    # confirma o novo contato
     driver.find_element(by=By.XPATH, value='/html/body/div[1]/div/div[2]/div[2]/div/div[2]/div[3]/div[4]/div/div/div/div/div/form/div[3]/div/div[2]/button').click()
     time.sleep(1)
     
@@ -86,6 +101,7 @@ def verificacoes(driver):
 
 
 def manda_primeira_mensagem(driver):
+    # primeira mensagem enviada ao cliente.
     primeira_mensagem = ('Prezado cliente.\n'
                          'Com o intuito de proporcionar um atendimento com mais qualidade, agilidade e praticidade, a Veiga & Postal disponibiliza mais um canal de WhatsApp, sendo o número (19) 9 8146-6111.\n'
                          'Além disso, será através deste novo número que a Veiga & Postal enviará informativos a sua empresa e relatório de pendências tributárias, caso tenha.\n'
@@ -94,8 +110,9 @@ def manda_primeira_mensagem(driver):
     while not _find_by_path('/html/body/div[1]/div/div[2]/div[2]/div/div[3]/div[2]/div[6]/div[4]/div/textarea', driver):
         time.sleep(1)
     
+    # insere a mensagem no campo
     driver.find_element(by=By.XPATH, value='/html/body/div[1]/div/div[2]/div[2]/div/div[3]/div[2]/div[6]/div[4]/div/textarea').send_keys(primeira_mensagem)
-    
+    # clica em enviar mensagem
     driver.find_element(by=By.XPATH, value='/html/body/div[1]/div/div[2]/div[2]/div/div[3]/div[2]/div[6]/div[4]/div/div[2]').click()
     
     time.sleep(5)

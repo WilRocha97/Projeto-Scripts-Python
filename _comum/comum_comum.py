@@ -36,7 +36,7 @@ def barra_de_status(func):
         layout = [
             [sg.Text('Rotina automática em execução, por favor não interfira.', key='-titulo-', text_color='#fca400'),
              sg.Button('Iniciar', key='-iniciar-', border_width=0),
-             sg.Text('', key='-Mensagens-', size=10)],
+             sg.Text('', key='-Mensagens-', size=100)],
         ]
         
         # guarda a janela na variável para manipula-la

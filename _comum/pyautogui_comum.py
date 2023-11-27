@@ -69,7 +69,7 @@ def click_img(img, pasta='imgs', conf=1.0, delay=1, timeout=20, button='left', c
     for i in range(timeout):
         box = a.locateCenterOnScreen(img, confidence=conf)
         if box:
-            a.click(*box, button=button, clicks=clicks)
+            a.click(a.locateCenterOnScreen(img, confidence=conf), button=button, clicks=clicks)
             return True
         sleep(delay)
     else:
@@ -94,6 +94,8 @@ _click_position_img = click_position_img
 # e checa se a entrada satisfaz o modelo definido em 'strptime'
 # Retorna a competencia em string em caso de sucesso
 # Retorna false caso a caixa de texto seja fechada
+
+
 def get_comp(printable, strptime, subject='competencia'):
     text = base = f'Digite {subject} no modelo {printable}:'
 

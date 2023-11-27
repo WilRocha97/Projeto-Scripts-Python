@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-import atexit, PySimpleGUI as sg
-import sys
+import atexit, sys, fitz, PySimpleGUI as sg
+import re
+
 from bs4 import BeautifulSoup
 from datetime import datetime
-from fitz import open as abrir_pdf
 from openpyxl import load_workbook
 from os import makedirs, path, startfile, remove, getpid, listdir
 from pandas import read_excel
@@ -134,13 +134,14 @@ def download_nota(nota, s, pasta_final):
 def analisa_nota(nome_nota, pasta_final):
     # Abrir o pdf
     arq = path.join(pasta_final, 'Notas', nome_nota)
-    with abrir_pdf(arq) as pdf:
+    with fitz.open(arq) as pdf:
         # Para cada página do pdf
         for count, page in enumerate(pdf):
             # Pega o texto da pagina
             textinho = page.get_text('text', flags=1 + 2 + 8)
-            # print(textinho)
-            # sleep(12)
+            
+            cancelada = compile(r'CANCELADA').search(textinho)
+        
             try:
                 cnpj_cliente = compile(r'(\d\d\.\d\d\d\.\d\d\d/\d\d\d\d-\d\d)\nTELEFONE / FAX').search(textinho).group(1)
             except:
@@ -170,7 +171,7 @@ def analisa_nota(nome_nota, pasta_final):
                 
             numero_nota = compile(r'(.+)\nNÚMERO').search(textinho).group(1)
             data_nota = compile(r'(.+)\n.+\nDATA EMISSÃO').search(textinho).group(1)
-
+            
             acumulador = '2102'
                 
             valor_servico = compile(r'VALOR BRUTO DA NOTA FISCAL\n.+\n.+\nR\$ (.+)').search(textinho).group(1)
@@ -237,7 +238,12 @@ def analisa_nota(nome_nota, pasta_final):
                 pasta_final_nota = path.join(pasta_final, 'Notas CPF')
                 nome_nota_final = f'nfe_{numero_nota}_tomador_{cnpj_cliente}.pdf'
                 makedirs(pasta_final_nota, exist_ok=True)
-                
+            
+            # verifica se a nota está cancelada
+            elif cancelada:
+                escreve_relatorio_csv(f"NFSe_{numero_nota}.pdf;Nota fiscal cancelada;'{cnpj_cliente}", nome='Andamentos', local=pasta_final)
+                nome_nota_final = f'nfe_{numero_nota} - CANCELADA.pdf'
+               
             # se não constar CNPJ do cliente na nota, anota a ocorrência
             elif cnpj_cliente == '':
                 escreve_relatorio_csv(f"NFSe_{numero_nota}.pdf;Tomador sem CNPJ informado", nome='Andamentos', local=pasta_final)
@@ -331,6 +337,9 @@ def captura_dados_xml(window_xml, count, numeros_notas, quantidade_notas, arq_na
                         data_nota = data_nota_formatada.split('-')
                         data_nota = f'{data_nota[2]}/{data_nota[1]}/{data_nota[0]}'
                         dados_notas.append(data_nota)
+                    # troca o ponto por vírgula nos valores para importar no sistema
+                    elif compile(r'\d.\d').search(dado):
+                        dados_notas.append(dado.replace('.', ','))
                     else:
                         dados_notas.append(compile(r'{}'.format(str(busca_dados[0]) + str(i) + str(busca_dados[1]))).search(arq).group(2))
                         
@@ -345,7 +354,16 @@ def captura_dados_xml(window_xml, count, numeros_notas, quantidade_notas, arq_na
         dados_notas.insert(1, numero_da_nota) #1
         
         if cidade == 'Jundiaí':
-            dados_notas.insert(2, '26.973.312/0002-56') #2
+            for i in range(500):
+                try:
+                    cnpj = compile(r'<ns2:Numero>\n\s+' + str(numero_da_nota) + '(\n.+){' + str(i) + '}<ns2:Prestador>\n.\s+<ns2:CpfCnpj>\n.\s+<ns2:Cnpj>\n.\s+(\d+)\n').search(arq).group(2)
+                    break
+                except:
+                    pass
+                
+            cnpj = re.sub(r'(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})', r'\1.\2.\3/\4-\5', str(cnpj))
+            dados_notas.insert(2, cnpj) #2
+            
         if cidade == 'Campinas':
             dados_notas.insert(2, '26.973.312/0003-37')  # 2
             

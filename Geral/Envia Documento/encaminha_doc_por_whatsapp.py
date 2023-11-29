@@ -18,7 +18,6 @@ dados = "V:\\Setor Robô\\Scripts Python\\_comum\\Dados e-mail.txt"
 f = open(dados, 'r', encoding='utf-8')
 user = f.read()
 user = user.split('/')
-
 email = user[0]
 senha = user[1]
 
@@ -240,8 +239,8 @@ def enviar(numero, link_mensagem, titulo, vencimento):
                 f"(19)3829-8959")
     
     _abrir_chrome('https://web.whatsapp.com/', fechar_janela=False, outra_janela='email.png')
-    _wait_img('pesquisar_contato.png', conf=0.9)
-    _click_img('pesquisar_contato.png', conf=0.9)
+    _wait_img('nova_conversa.png', conf=0.9)
+    _click_img('nova_conversa.png', conf=0.9)
     time.sleep(1)
     p.write(numero)
     time.sleep(2)
@@ -258,6 +257,9 @@ def enviar(numero, link_mensagem, titulo, vencimento):
         time.sleep(1)
         return 'Nenhum contato encontrado'
     
+    while _find_img('procurando_numero.png', conf=0.9):
+        time.sleep(2)
+        
     p.press('enter')
     _wait_img('anexar.png', conf=0.9)
     time.sleep(1)

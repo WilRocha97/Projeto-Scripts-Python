@@ -26,12 +26,12 @@ def guarda_info(page, resumo_evento):
     return prevpagina, prev_resumo_evento
 
 
-def cria_pdf(page, resumo_evento, pdf, file_name, paginainicial, prevpagina, andamento):
+def cria_pdf(page, resumo_evento, pdf, pasta_final, file_name, paginainicial, prevpagina, andamento):
     with fitz.open() as new_pdf:
         # Define a página inicial e a final
         new_pdf.insert_pdf(pdf, from_page=paginainicial, to_page=prevpagina)
         print(file_name)
-        new_pdf.save(file_name)
+        new_pdf.save(os.path.join(pasta_final, file_name))
         print(andamento)
 
         prevpagina = page.number
@@ -47,12 +47,13 @@ def separa():
     folder = ask_for_dir(title='Selecione o local para criar a pasta com os arquivos separados')
     if not folder:
         return False
-    pasta_final = os.path.join(folder, 'DARFs')
+    pasta_final = os.path.join(folder, 'Resumos por evento')
     os.makedirs(pasta_final, exist_ok=True)
     
     messagebox.showinfo(title=None, message='Locais selecionados, clique em "OK" e aguarde o procedimento finalizar.')
     
     for file_name in os.listdir(documentos):
+        print(file_name)
         file = os.path.join(documentos, file_name)
         try:
             with fitz.open(file) as pdf:
@@ -75,7 +76,7 @@ def separa():
                 try:
                     resumo_evento = re.compile(r'(Resumo por Eventos)').search(textinho).group(1)
                 except:
-                    print(textinho)
+                    # print(textinho)
                     continue
 
                 # Se estiver na primeira página, guarda as informações
@@ -97,12 +98,12 @@ def separa():
                         # define qual é a primeira página e o nome da empresa
                         paginainicial = prevpagina - paginas
                         andamento = '\n' + 'Paginas = ' + str(paginainicial + 1) + ' até ' + str(prevpagina + 1) + '\n\n'
-                        prevpagina, prev_resumo_evento = cria_pdf(page, resumo_evento, pdf, file_name, paginainicial, prevpagina, andamento)
+                        prevpagina, prev_resumo_evento = cria_pdf(page, resumo_evento, pdf, pasta_final, file_name, paginainicial, prevpagina, andamento)
                         paginas = 0
                     # Se for uma página entra a qui
                     elif paginas == 0:
                         andamento = '\n' + 'Pagina = ' + str(prevpagina + 1) + '\n\n'
-                        prevpagina, prev_resumo_evento = cria_pdf(page, resumo_evento, pdf, file_name, prevpagina, prevpagina, andamento)
+                        prevpagina, prev_resumo_evento = cria_pdf(page, resumo_evento, pdf, pasta_final, file_name, prevpagina, prevpagina, andamento)
                 '''except:
                     print('❌ ERRO')
                     continue'''
@@ -111,18 +112,15 @@ def separa():
             if paginas > 0:
                 paginainicial = prevpagina - paginas
                 andamento = '\n' + 'Paginas = ' + str(paginainicial + 1) + ' até ' + str(prevpagina + 1) + '\n\n'
-                cria_pdf(page, resumo_evento, pdf, file_name, paginainicial, prevpagina, andamento)
+                cria_pdf(page, resumo_evento, pdf, pasta_final, file_name, paginainicial, prevpagina, andamento)
                 
             elif paginas == 0:
                 andamento = '\n' + 'Pagina = ' + str(prevpagina + 1) + '\n\n'
-                cria_pdf(page, resumo_evento, pdf, file_name, prevpagina, prevpagina, andamento)
+                cria_pdf(page, resumo_evento, pdf, pasta_final, file_name, prevpagina, prevpagina, andamento)
 
 
 if __name__ == '__main__':
     # o robo pega o pdf na pasta PDF e cria outro para colocar os separados
-    os.makedirs('Separados', exist_ok=True)
     inicio = datetime.now()
-
     separa()
-
     print(datetime.now() - inicio)

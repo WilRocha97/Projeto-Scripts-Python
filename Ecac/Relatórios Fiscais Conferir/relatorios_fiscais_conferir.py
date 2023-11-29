@@ -117,8 +117,7 @@ def reiniciar_ecac():
         _click_position_img('cnd_ecac.png', '+', pixels_y=92, conf=0.9)
         time.sleep(1)
     
-
-
+    
 def gera_relatorio():
     # aguarda o botão de emissão da certidão aparecer
     timer = 0
@@ -138,7 +137,12 @@ def gera_relatorio():
         # se aparecer a tela de mensagens do ecac, retorna o erro
         if _find_img('mensagens_importantes_ecac.png', conf=0.9):
             return '❗ Este CPF possuí mensagens importantes no ECAC, não é possível emitir o relatório até que a mensagem seja aberta.'
-         
+            
+        # se aparecer a tela de consulta em processamento, retorna o erro
+        if _find_img('erro_sistema_6.png', conf=0.9):
+            reiniciar_ecac()
+            timer = 0
+        
         if _find_img('erro_sistema_5.png', conf=0.9):
             reiniciar_ecac()
             timer = 0
@@ -158,7 +162,6 @@ def gera_relatorio():
         if _find_img('pagina_dirf.png', conf=0.9):
             reiniciar_ecac()
             timer = 0
-            tentativas += 1
             
         # se demorar 5 segundos para o botão de emissão da certidão aparecer, verifica se a tela de login do ecac stá bugada
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente

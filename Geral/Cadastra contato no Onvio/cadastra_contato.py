@@ -93,7 +93,7 @@ def adiciona_cliente(driver, nome_contato, numero):
     
 def verificacoes(driver):
     print('>>> Verificando contato')
-    print(driver.page_source)
+    # print(driver.page_source)
     if re.compile(r'Este número de telefone já está cadastrado nos contatos').search(driver.page_source):
         return False, driver, 'Este número de telefone já está cadastrado nos contatos.'
     
@@ -120,7 +120,7 @@ def manda_primeira_mensagem(driver):
     if re.compile(r'Este arquivo está sendo enviado para um número inexistente, verifique o número do contato.').search(driver.page_source):
         return False, driver, 'Este arquivo está sendo enviado para um número inexistente, verifique o número do contato.'
     
-    print(driver.page_source)
+    # print(driver.page_source)
     return True, driver, 'Número cadastrado, mensagem enviada'
 
     
@@ -166,6 +166,12 @@ def run():
         resultado, driver, mensagem = manda_primeira_mensagem(driver)
         _escreve_relatorio_csv(f'{cnpj};{razao};{nome};{numero};{mensagem}')
         print(f'✔ {mensagem}')
+        
+        driver.close()
+        
+        status, driver = _initialize_chrome(options)
+        # faz o login uma vez
+        driver = login(driver)
 
 
 if __name__ == '__main__':

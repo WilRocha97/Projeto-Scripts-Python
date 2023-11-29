@@ -18,6 +18,8 @@ def abrir_chrome(url, fechar_janela=True, outra_janela=False):
                 time.sleep(1)
         
         while not find_img('google.png', conf=0.9):
+            if find_img('google_2.png', conf=0.9):
+                break
             time.sleep(1)
             if find_img('restaurar_pagina.png', conf=0.9):
                 click_img('restaurar_pagina.png', conf=0.9)
@@ -166,7 +168,6 @@ def verificacoes(consulta_tipo, andamento, identificacao, nome):
         return False
 
     if find_img('NaoFoiPossivel.png', conf=0.9):
-        escreve_relatorio_csv('{};{};Não foi possível concluir a consulta'.format(identificacao, nome), nome=andamento)
         print('❌ Não foi possível concluir a consulta')
         return 'erro'
 
@@ -206,11 +207,18 @@ def verificacoes(consulta_tipo, andamento, identificacao, nome):
 
 def salvar(consulta_tipo, andamento, identificacao, nome):
     # espera abrir a tela de salvar o arquivo
+    contador = 0
     while not find_img('SalvarComo.png', conf=0.9):
         time.sleep(1)
         if find_img('em_processamento.png', conf=0.9) or find_img('erro_captcha.png', conf=0.9):
             consulta(consulta_tipo, identificacao)
-
+            if contador >= 4:
+                escreve_relatorio_csv('{};{};Consulta em processamento, volte daqui alguns minutos.'.format(identificacao, nome), nome=andamento)
+                print(f'❗ Consulta em processamento, volte daqui alguns minutos.')
+                p.hotkey('ctrl', 'w')
+                return False
+            contador += 1
+            
         if find_img('NovaCertidao.png', conf=0.9):
             click_img('NovaCertidao.png', conf=0.9)
 
@@ -222,7 +230,7 @@ def salvar(consulta_tipo, andamento, identificacao, nome):
         
         if situacao == 'erro':
             return situacao
-
+        
     # escreve o nome do arquivo (.upper() serve para deixar em letra maiúscula)
     time.sleep(1)
     p.write(f'{nome.upper()} - {identificacao} - Certidao')
@@ -299,20 +307,23 @@ def run():
         identificacao, nome = empresa
         nome = nome.replace('/', '')
         
-        situacao = 'erro'
         # try:
-        while situacao == 'erro':
+        while True:
             consulta(consulta_tipo, identificacao)
             situacao = salvar(consulta_tipo, andamento, identificacao, nome)
             p.hotkey('ctrl', 'w')
             
             if not situacao:
-                continue
+                break
             
-            elif situacao:
+            elif situacao == 'erro':
+                continue
+                
+            else:
                 print('✔ Certidão gerada')
                 escreve_relatorio_csv('{};{};{} gerada'.format(identificacao, nome, andamento), nome=andamento)
                 time.sleep(1)
+                break
                 
         """except:
             time.sleep(2)

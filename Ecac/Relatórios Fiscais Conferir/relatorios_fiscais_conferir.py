@@ -126,44 +126,35 @@ def gera_relatorio():
     while not _find_img('gerar_relatorio.png', conf=0.9):
         time.sleep(1)
         timer += 1
-        # se aparecer a tela de mensagens do ecac, retorna o erro
-        if _find_img('erro_sistema_3.png', conf=0.9):
-            return '❗ Solicitação rejeitada pelo sistema, tente novamente mais tarde.'
-            
-        # se aparecer a tela de consulta em processamento, retorna o erro
-        if _find_img('erro_sistema_7.png', conf=0.9):
-            return '❗ Consulta não liberada pelo sistema, tente mais tarde.'
-            
-        # se aparecer a tela de mensagens do ecac, retorna o erro
-        if _find_img('mensagens_importantes_ecac.png', conf=0.9):
-            return '❗ Este CPF possuí mensagens importantes no ECAC, não é possível emitir o relatório até que a mensagem seja aberta.'
-            
-        # se aparecer a tela de consulta em processamento, retorna o erro
-        if _find_img('erro_sistema_6.png', conf=0.9):
-            reiniciar_ecac()
-            timer = 0
         
-        if _find_img('erro_sistema_5.png', conf=0.9):
-            reiniciar_ecac()
-            timer = 0
-            tentativas += 1
-            
-        if _find_img('erro_sistema_8.png', conf=0.9):
-            reiniciar_ecac()
-            timer = 0
-            tentativas += 1
-            
-        if _find_img('erro_sistema_9.png', conf=0.9):
-            reiniciar_ecac()
-            timer = 0
-            tentativas += 1
+        erros = [('erro_sistema_10.png', 'tipo1', ''),
+                 ('pagina_dirf.png', 'tipo1', ''),
+                 ('erro_sistema_6.png', 'tipo1', ''),
+                 ('pagina_login_ecac.png', 'tipo1', ''),
+                 ('erro_sistema_5.png', 'tipo2', ''),
+                 ('erro_sistema_8.png', 'tipo2', ''),
+                 ('erro_sistema_9.png', 'tipo2', ''),
+                 ('mensagens_importantes_ecac.png', 'tipo3', '❗ Este CPF possuí mensagens importantes no ECAC, não é possível emitir o relatório até que a mensagem seja aberta.'),
+                 ('erro_sistema_7.png', 'tipo3', '❗ Consulta não liberada pelo sistema, tente mais tarde.'),
+                 ('erro_sistema_3.png', 'tipo3', '❗ Solicitação rejeitada pelo sistema, tente novamente mais tarde.')]
         
-        # se aparecer a tela de consulta em processamento, retorna o erro
-        if _find_img('pagina_dirf.png', conf=0.9):
-            reiniciar_ecac()
-            timer = 0
+        for erro in erros:
+            if _find_img(erro[0], conf=0.9):
+                # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
+                if erro[1] == 'tipo1':
+                    reiniciar_ecac()
+                    timer = 0
+                    break
+                # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
+                if erro[1] == 'tipo2':
+                    reiniciar_ecac()
+                    timer = 0
+                    tentativas += 1
+                    break
+                    
+                if erro[1] == 'tipo3':
+                    return erro[2]
             
-        # se demorar 5 segundos para o botão de emissão da certidão aparecer, verifica se a tela de login do ecac stá bugada
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
         if timer > 60:
             reiniciar_ecac()

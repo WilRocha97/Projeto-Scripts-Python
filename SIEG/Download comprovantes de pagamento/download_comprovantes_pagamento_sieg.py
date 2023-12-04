@@ -170,9 +170,13 @@ def download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
         
         while re.compile(r'crdownload').search(arquivo):
             print('>>> Aguardando download...')
-            time.sleep(3)
+            time.sleep(5)
             for arq in os.listdir(download_folder):
                 arquivo = arq
+                if re.compile(r'crdownload').search(arquivo):
+                    os.remove(os.path.join(download_folder, arquivo))
+                    return driver, contador, 'ok', True
+            
             
         else:
             if tipo == 'Consulta anual':

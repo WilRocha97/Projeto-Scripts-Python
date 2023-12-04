@@ -197,9 +197,9 @@ def transmitir(empresa, comp):
     _click_img('identificacao.png', conf=0.9)
 
     # usuário e senha do contribuinte para transmitir sedif sem movimento
-    p.write('RPOSTAL')
+    p.write('EVANDROMAZANO')
     p.press('tab')
-    p.write('f7j54kymq4')
+    p.write('66a3tk2ter')
     _click_img('ok.png', conf=0.9)
     
     excecoes = [('cpf_do_responsavel_invalido.png', 'CPF do responsável inválido'),

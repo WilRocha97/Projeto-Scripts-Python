@@ -456,11 +456,11 @@ def run():
                 time.sleep(1)
                 mover_email('nao_enviados')
                 try:
-                    _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo};Número não encontrado', nome=nome_planilha + ' erros', local=e_dir)
+                    _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo};Número não encontrado na planilha de dados', nome=nome_planilha + ' erros', local=e_dir)
                 except:
-                    _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji};Número não encontrado', nome=nome_planilha + ' erros', local=e_dir)
+                    _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji};Número não encontrado na planilha de dados', nome=nome_planilha + ' erros', local=e_dir)
                     
-                print('❌ Número não encontrado\n')
+                print('❌ Número não encontrado na planilha de dados\n')
             
             # se tiver como enviar e encontrar o número na planilha
             else:

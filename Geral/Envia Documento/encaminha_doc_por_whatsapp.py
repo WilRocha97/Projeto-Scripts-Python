@@ -455,12 +455,18 @@ def run():
             elif not cnpjs_iguais:
                 time.sleep(1)
                 mover_email('nao_enviados')
-                try:
-                    _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo};Número não encontrado na planilha de dados', nome=nome_planilha + ' erros', local=e_dir)
-                except:
-                    _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji};Número não encontrado na planilha de dados', nome=nome_planilha + ' erros', local=e_dir)
-                    
-                print('❌ Número não encontrado na planilha de dados\n')
+                if cnpjs_iguais == 'x':
+                    try:
+                        _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo};CNPJ não encontrado no corpo do e-mail', nome=nome_planilha + ' erros', local=e_dir)
+                    except:
+                        _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji};CNPJ não encontrado no corpo do e-mail', nome=nome_planilha + ' erros', local=e_dir)
+                    print('❌ CNPJ não encontrado no corpo do e-mail\n')
+                else:
+                    try:
+                        _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo};Número não encontrado na planilha de dados', nome=nome_planilha + ' erros', local=e_dir)
+                    except:
+                        _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo_sem_emoji};Número não encontrado na planilha de dados', nome=nome_planilha + ' erros', local=e_dir)
+                    print('❌ Número não encontrado na planilha de dados\n')
             
             # se tiver como enviar e encontrar o número na planilha
             else:

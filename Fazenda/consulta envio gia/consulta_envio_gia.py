@@ -141,6 +141,12 @@ def consulta_gia(ie, comp, driver, sid):
     
 @_time_execution
 def run():
+    # opções para fazer com que o chrome trabalhe em segundo plano (opcional)
+    options = webdriver.ChromeOptions()
+    # options.add_argument('--headless')
+    # options.add_argument('--window-size=1920,1080')
+    options.add_argument("--start-maximized")
+    
     comp = _get_comp(printable='mm/yyyy', strptime='%m/%Y')
     comp_formatado = comp.replace("/", "-")
     # função para abrir a lista de dados
@@ -175,7 +181,7 @@ def run():
             while True:
                 try:
                     # cookies, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil)
-                    driver, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil, retorna_driver=True)
+                    driver, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil, retorna_driver=True, options=options)
                     break
                 except:
                     print('❗ Erro ao logar na empresa, tentando novamente')

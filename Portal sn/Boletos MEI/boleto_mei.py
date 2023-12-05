@@ -71,7 +71,7 @@ def imprimir(empresa, andamentos):
     time.sleep(1)
     _escreve_relatorio_csv(f'{cnpj};Guia gerada;{comp};{ano}', nome=andamentos)
     print('✔ Guia gerada')
-    time.sleep(8)
+    time.sleep(5)
     p.hotkey('ctrl', 'w')
 
 
@@ -215,9 +215,6 @@ def run(window):
           
         # Salvar a guia
         imprimir(empresa, andamentos)
-        
-        if event == '-encerrar-':
-            return
         
     time.sleep(2)
     p.hotkey('ctrl', 'w')

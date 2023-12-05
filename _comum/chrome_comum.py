@@ -94,10 +94,10 @@ def send_input(elem_id, data, driver):
 _send_input = send_input
 
 
-def send_input_xpath(elem_id, data, driver):
+def send_input_xpath(elem_path, data, driver):
     while True:
         try:
-            elem = driver.find_element(by=By.XPATH, value=elem_id)
+            elem = driver.find_element(by=By.XPATH, value=elem_path)
             elem.send_keys(data)
             break
         except:

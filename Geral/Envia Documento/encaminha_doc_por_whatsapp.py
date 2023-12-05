@@ -338,9 +338,11 @@ def enviar_anexo(numero, anexo, corpo_email):
     return 'ok'
 
 
-def mover_email(pasta=''):
+def mover_email(driver, pasta=''):
+    # Volte para o contexto padrão (página principal)
+    driver.switch_to.default_content()
     # clica no menu
-    _click_img('menu_email.png', conf=0.9)
+    _click_img('menu_email.png', conf=0.9, clicks=2)
     
     # espera o menu abrir e clica na opção de mover
     _wait_img('mover_email.png', conf=0.9)
@@ -353,7 +355,7 @@ def mover_email(pasta=''):
     _click_img('tela_mover_email.png', conf=0.9)
     time.sleep(0.5)
     _wait_img('lista_caixas_email.png', conf=0.9)
-    time.sleep(0.5)
+    time.sleep(1)
     _click_img('lista_caixas_email.png', conf=0.9)
     
     time.sleep(1)
@@ -362,12 +364,16 @@ def mover_email(pasta=''):
         p.press('down')
     
     # seleciona a caixa
-    p.press('enter')
+    _click_img(f'caixa_{pasta}_email.png', conf=0.9)
     
-    time.sleep(1)
+    while not _find_img('confirma_mover_email.png', conf=0.9):
+        time.sleep(1)
+        
     # confirmar a seleção
     _click_img('confirma_mover_email.png', conf=0.9)
     time.sleep(2)
+
+    return driver
 
 
 @_time_execution
@@ -415,7 +421,7 @@ def run():
         
         if titulo[:3] == 'Re:':
             time.sleep(1)
-            mover_email('nao_enviados')
+            driver = mover_email(driver, 'nao_enviados')
             _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo}', nome=nome_planilha, local=e_dir)
             print(f'❗ {titulo}\n')
         else:
@@ -447,15 +453,15 @@ def run():
             # se não tiver como enviar
             if nao_envia:
                 time.sleep(1)
-                mover_email('nao_enviados')
+                driver = mover_email(driver, 'nao_enviados')
                 _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo}', nome=nome_planilha, local=e_dir)
                 print(f'❗ {titulo}\n')
             
             # se não encontrar o número da planilha
             elif not cnpjs_iguais:
                 time.sleep(1)
-                mover_email('nao_enviados')
-                if cnpjs_iguais == 'x':
+                driver = mover_email(driver, 'nao_enviados')
+                if cnpj_limpo == 'x':
                     try:
                         _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo};CNPJ não encontrado no corpo do e-mail', nome=nome_planilha + ' erros', local=e_dir)
                     except:
@@ -476,16 +482,16 @@ def run():
                 # se der erro ao enviar
                 if resultado == 'erro':
                     time.sleep(1)
-                    mover_email('nao_enviados')
+                    driver = mover_email(driver, 'nao_enviados')
                     
                 # se conseguir enviar
                 elif resultado == 'ok':
                     time.sleep(1)
-                    mover_email('enviados')
+                    driver = mover_email(driver, 'enviados')
                 # se der algum erro específico ao enviar
                 else:
                     time.sleep(1)
-                    mover_email('nao_enviados')
+                    driver = mover_email(driver, 'nao_enviados')
                 
             """# se der erro em qualquer etapa
             except:

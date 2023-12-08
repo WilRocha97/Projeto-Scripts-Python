@@ -21,7 +21,6 @@ user = user.split('/')
 email = user[0]
 senha = user[1]
 
-
 def login_email(driver):
     driver.get('https://smartermail.hiway.com.br/')
     print('>>> Acessando o site')
@@ -245,12 +244,6 @@ def enviar(numero, link_mensagem, titulo, vencimento):
     p.write(numero)
     time.sleep(2)
     
-    if _find_img('numero_nao_encontrado.png', conf=0.9):
-        time.sleep(1)
-        p.hotkey('ctrl', 'w')
-        time.sleep(1)
-        return 'Nenhum contato encontrado'
-    
     if _find_img('sem_contato.png', conf=0.9):
         time.sleep(1)
         p.hotkey('ctrl', 'w')
@@ -291,12 +284,6 @@ def enviar_anexo(numero, anexo, corpo_email):
     time.sleep(1)
     p.write(numero)
     time.sleep(2)
-    
-    if _find_img('numero_nao_encontrado.png', conf=0.9):
-        time.sleep(1)
-        p.hotkey('ctrl', 'w')
-        time.sleep(1)
-        return 'Contato não encontrado'
     
     if _find_img('sem_contato.png', conf=0.9):
         time.sleep(1)
@@ -423,7 +410,7 @@ def run():
             time.sleep(1)
             driver = mover_email(driver, 'nao_enviados')
             _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo}', nome=nome_planilha, local=e_dir)
-            print(f'❗ {titulo}\n')
+            print(f'{titulo}\n')
         else:
             if cnpj_limpo != 'x':
                 cnpjs_iguais = verifica_o_numero(cnpj_limpo)
@@ -455,7 +442,7 @@ def run():
                 time.sleep(1)
                 driver = mover_email(driver, 'nao_enviados')
                 _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo}', nome=nome_planilha, local=e_dir)
-                print(f'❗ {titulo}\n')
+                print(f'{titulo}\n')
             
             # se não encontrar o número da planilha
             elif not cnpjs_iguais:

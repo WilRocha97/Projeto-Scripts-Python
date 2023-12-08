@@ -52,7 +52,7 @@ def login(cnpj, cpf, cod, options):
         
         if session == 'Erro Login - Caracteres anti-robô inválidos. Tente novamente.':
             print('❌ Erro Login - Caracteres anti-robô inválidos. Tente novamente')
-            driver.quit()
+            driver.close()
         else:
             return driver, session
             
@@ -146,16 +146,16 @@ def run():
                 # se existe uma sessão realiza a consulta
                 if isinstance(session, Session):
                     text = consulta(driver, empresa, comp, download_folder, final_foder)
-                    driver.quit()
+                    driver.close()
                     if text != 'erro':
                         break
                 else:
                     text = '❌ ' + session
                     if session != 'Erro Login - Por favor, solucione o captcha para efetuar o acesso.':
-                        driver.quit()
+                        driver.close()
                         break
                     print(text)
-                    driver.quit()
+                    driver.close()
             except:
                 pass
                 

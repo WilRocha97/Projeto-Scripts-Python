@@ -29,7 +29,7 @@ def login(driver, cnpj, nome):
     
     if not captcha:
         print('Erro Login - não encontrou captcha')
-        return driver, 'erro captcha'
+        return driver, False
         
     # insere a solução do captcha via javascript
     _send_input('ctl00_conteudoPaginaPlaceHolder_filtroTabContainer_filtroEmitirCertidaoTabPanel_imagemDinamicaTextBox', captcha, driver)
@@ -107,7 +107,7 @@ def pega_info(cnpj, driver):
     enderecos = re.sub(pattern, '', enderecos)
     
     _escreve_relatorio_csv(f"{cnpj};Ok;{infos}{enderecos}", nome='Consulta ao cadastro de ICMS')
-    print(f'✔ Dados coletados')
+    print(f'Dados coletados')
     return driver, True
 
 
@@ -147,12 +147,12 @@ def run():
             # faz login na empresa
             driver, resultado = login(driver, cnpj, nome)
             if not resultado:
-                driver.quit()
+                driver.close()
             else:
                 if resultado != 'erro':
                     # pega as infos da empresa para preencher a planilha
                     driver, resultado = pega_info(cnpj, driver)
-                driver.quit()
+                driver.close()
                 break
             
     _escreve_header_csv(';'.join(['CNPJ', 'CONSULTA', 'IE', 'NOME', 'SITUAÇÃO CADASTRAL', 'DATA DA SITUAÇÃO', 'OCORRÊNCIA FISCAL', 'DATA DE INATIVIDADE', 'NATUREZA JURÍDICA',

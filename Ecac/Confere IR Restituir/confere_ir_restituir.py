@@ -102,17 +102,7 @@ def abre_irpf_atual():
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
         if timer > 60:
             print('>>> Erro no ECAC, tentando novamente')
-            p.click(1000, 10)
-            time.sleep(1)
-            p.hotkey('ctrl', 'w')
-            time.sleep(1)
-            p.press('f5')
-            time.sleep(2)
-            
-            while not _find_img('meu_irpf_ecac.png', conf=0.95):
-                time.sleep(1)
-            
-            _click_position_img('meu_irpf_ecac.png', '+', pixels_y=92, conf=0.95)
+            reiniciar_ecac()
             timer = 0
             
             tentativas += 1
@@ -153,23 +143,18 @@ def confere_restituir(cpf, nome, pasta_restituir, pasta_pagar):
         
         # sem saldo de imposto
         if _find_img('sem_saldo.png', conf=0.9):
-            p.hotkey('ctrl', 'w')
             return '✔ Sem saldo de imposto;0,0;' + pendencias
         
         # imposto a restituir
         if _find_img('restituir.png', conf=0.9):
             salvar_pdf(f'{cpf} - {nome} - Imposto a Restituir{pendencias_pdf}', pasta_restituir)
             valor = copia_valor()
-            
-            p.hotkey('ctrl', 'w')
             return f'✔ Imposto a restituir;{valor};' + pendencias
         
         # imposto a pagar
         if _find_img('pagar.png', conf=0.9):
             '''salvar_pdf(f'{cpf} - {nome} - Imposto a Restituir{pendencias_pdf}', pasta_pagar)'''
             valor = copia_valor()
-            
-            p.hotkey('ctrl', 'w')
             return f'❗ Imposto a pagar;{valor};' + pendencias
         
         p.press('pgdn')
@@ -177,7 +162,40 @@ def confere_restituir(cpf, nome, pasta_restituir, pasta_pagar):
         if timer > 60:
             return 'erro'
       
-        
+
+def confere_guias(cpf, nome, pasta_guias):
+    print('>>> Verificando se existe restituição')
+    
+    
+    
+    
+    return f'✔ Guia gerada'
+
+
+def reiniciar_ecac():
+    print('>>> Erro no ECAC, tentando novamente')
+    p.click(1000, 10)
+    time.sleep(1)
+    p.hotkey('ctrl', 'w')
+    time.sleep(1)
+    p.press('f5')
+    time.sleep(2)
+    
+    # aguarda o botão de CND no ecac aparecer, se aparecer uma mensagem sobre login inválido retorna o erro
+    while not _find_img('meu_irpf_ecac.png', conf=0.9):
+        if _find_img('login_invalido.png', conf=0.9):
+            return '❗ Os serviços só estão disponíveis caso o login esteja válido! Verifique na aba ECAC o login e senha por favor.'
+        if _find_img('meu_irpf_ecac_2.png', conf=0.9):
+            break
+        p.press('PgDn')
+        time.sleep(1)
+    
+    print('>>> Acessando ECAC')
+    # clica no botão do Meu IRPF do ECAC
+    _click_position_img('meu_irpf_ecac.png', '+', pixels_y=92, conf=0.9)
+    _click_position_img('meu_irpf_ecac_2.png', '+', pixels_y=50, conf=0.9)
+ 
+    
 def salvar_pdf(arquivo, pasta_final):
     p.hotkey('ctrl', 'p')
     
@@ -263,8 +281,14 @@ def copia_valor():
 
 @_time_execution
 def run():
-    pasta_restituir = r'V:\Setor Robô\Scripts Python\Ecac\Confere IR Restituir\Execução\Imposto a Restituir'
-    pasta_pagar = r'V:\Setor Robô\Scripts Python\Ecac\Confere IR Restituir\Execução'
+    consulta = p.confirm(buttons=['Consulta IR a restituir', 'Consulta e gera DARF'])
+    
+    if consulta == 'Consulta IR a restituir':
+        pasta_restituir = r'V:\Setor Robô\Scripts Python\Ecac\Confere IR Restituir\Execução\Imposto a Restituir'
+        pasta_pagar = r'V:\Setor Robô\Scripts Python\Ecac\Confere IR Restituir\Execução'
+    if consulta == 'Consulta e gera DARF':
+        pasta_guias = r'V:\Setor Robô\Scripts Python\Ecac\Confere IR Restituir\Execução\Guias DARF'
+    
     # abrir a planilha de dados
     empresas = _open_lista_dados()
     if not empresas:
@@ -282,17 +306,24 @@ def run():
         
         while True:
             print('>>> Abrindo o site do Conferir')
-            _abrir_chrome('https://portal.conferironline.com.br')
+            time.sleep(1)
+            _abrir_chrome('https://portal.conferironline.com.br', fechar_janela=False)
             resultado = busca_cpf(cpf)
             if resultado == '✔ OK':
                 resultado = abre_irpf_atual()
             
             if resultado == '✔ OK':
-                situacao = confere_restituir(cpf, nome, pasta_restituir, pasta_pagar)
+                if consulta == 'Consulta IR a restituir':
+                    situacao = confere_restituir(cpf, nome, pasta_restituir, pasta_pagar)
+                if consulta == 'Consulta e gera DARF':
+                    situacao = confere_guias(cpf, nome, pasta_guias)
+                    
                 if situacao != 'erro':
+                    p.hotkey('ctrl', 'w')
                     break
             else:
                 situacao = '✖ '
+                p.hotkey('ctrl', 'w')
                 break
             
             p.hotkey('ctrl', 'w')

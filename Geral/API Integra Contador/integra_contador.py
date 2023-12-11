@@ -49,8 +49,11 @@ def escreve_relatorio_csv(texto, nome='resumo', local='Desktop', end='\n', encod
 
 
 # escreve arquivos .txt com as respostas da API
-def escreve_doc(texto, nome='Log', encode='latin-1'):
-    local = 'API_response'
+def escreve_doc(texto, local=None, nome='Log', encode='latin-1'):
+    if not local == 'T:/ROBO/DCTF-WEB':
+        local = 'API_response'
+    else:
+        local = 'T:/ROBO/DCTF-WEB/Response'
     os.makedirs(local, exist_ok=True)
     
     try:
@@ -69,7 +72,7 @@ def converter_base64(usuario):
 
 
 # solicita as chaves de acesso para o serviço
-def solicita_token(usuario_b64, input_certificado, senha):
+def solicita_token(usuario_b64, input_certificado, senha, output_dir):
     headers = {
         "Authorization": "Basic " + usuario_b64,
         "role-type": "TERCEIROS",
@@ -88,9 +91,9 @@ def solicita_token(usuario_b64, input_certificado, senha):
     resposta = pagina.json()
     
     # anota as respostas para tratar possíveis erros
-    escreve_doc(pagina.status_code, nome='status_code')
-    escreve_doc(resposta, nome='resposta_jason')
-    escreve_doc(resposta_string_json, nome='string_json')
+    escreve_doc(pagina.status_code, nome='status_code', local=output_dir)
+    escreve_doc(resposta, nome='resposta_jason', local=output_dir)
+    escreve_doc(resposta_string_json, nome='string_json', local=output_dir)
     
     #
     # Output:
@@ -114,10 +117,17 @@ def solicita_token(usuario_b64, input_certificado, senha):
     
 
 # solicita a guia de DCTF WEB na API
-def solicita_dctf(comp, cnpj_contratante, id_empresa, access_token, jwt_token):
-    mes = comp.split('/')[0]
-    ano = comp.split('/')[1]
-    
+def solicita_dctf(output_dir, categoria, comp, cnpj_contratante, id_empresa, access_token, jwt_token):
+    categoria_guias = ''
+    if categoria == '-categoria_mensal-':
+        mes = comp.split('/')[0]
+        ano = comp.split('/')[1]
+        categoria_guias = "{\"categoria\": \"GERAL_MENSAL\",\"anoPA\":\"" + str(ano) + "\",\"mesPA\":\"" + str(mes) + "\"}"
+    if categoria == '-categoria_13-':
+        mes = '13'
+        ano = comp
+        categoria_guias = "{\"categoria\": \"GERAL_13o_SALARIO\",\"anoPA\":\"" + str(ano) + "\"}"
+        
     # verifica se a guia será para CPF ou CNPJ, se for CPF é código 1 e CNPJ é código 2
     if len(id_empresa) > 12:
         cod_consulta = 2
@@ -141,7 +151,7 @@ def solicita_dctf(comp, cnpj_contratante, id_empresa, access_token, jwt_token):
                 "idSistema": "DCTFWEB",
                 "idServico": "GERARGUIA31",
                 "versaoSistema": "1.0",
-                "dados": "{\"categoria\": \"GERAL_MENSAL\",\"anoPA\":\"" + str(ano) + "\",\"mesPA\":\"" + str(mes) + "\"}"
+                "dados": categoria_guias
               }
             }
     
@@ -169,8 +179,8 @@ def solicita_dctf(comp, cnpj_contratante, id_empresa, access_token, jwt_token):
     
     # anota as respostas da API para tratar possíveis erros
     os.makedirs(output_dir, exist_ok=True)
-    escreve_doc(resposta, nome='resposta_jason_guia')
-    escreve_doc(f'{id_empresa}\n{resposta_string_json}', nome='string_json_guia')
+    escreve_doc(resposta, nome='resposta_jason_guia', local=output_dir)
+    escreve_doc(f'{id_empresa}\n{resposta_string_json}', nome='string_json_guia', local=output_dir)
     #
     # output
     # {
@@ -212,7 +222,7 @@ def solicita_dctf(comp, cnpj_contratante, id_empresa, access_token, jwt_token):
     # }
     #
     try:
-        escreve_doc(resposta['dados'], nome='pdf_base_64')
+        escreve_doc(resposta['dados'], nome='pdf_base_64', local=output_dir)
         dados_pdf = json.loads(resposta["dados"])
         return mes, ano, dados_pdf["PDFByteArrayBase64"], resposta['mensagens'][0]['texto']
     except:
@@ -241,7 +251,7 @@ def cria_pdf(pdf_base64, output_dir, id_empresa, nome_empresa, mes, ano):
         file.write(pdf_bytes)
 
 
-def run(window, cnpj_contratante, usuario_b64, senha, competencia, input_certificado, input_excel, output_dir):
+def run(window, cnpj_contratante, usuario_b64, senha, categoria, competencia, input_certificado, input_excel, output_dir):
     os.makedirs('API_response', exist_ok=True)
     for arq in os.listdir('API_response'):
         os.remove(os.path.join('API_response', arq))
@@ -250,7 +260,7 @@ def run(window, cnpj_contratante, usuario_b64, senha, competencia, input_certifi
         return
         
     # solicita os tokens para realizar a emissão das guias
-    jwt_token, access_token = solicita_token(usuario_b64, input_certificado, senha)
+    jwt_token, access_token = solicita_token(usuario_b64, input_certificado, senha, output_dir)
     
     if jwt_token == 'Unauthorized':
         p.alert(text='Consumer Secret ou Consumer Key inválido')
@@ -293,7 +303,7 @@ def run(window, cnpj_contratante, usuario_b64, senha, competencia, input_certifi
         id_empresa, nome_empresa = empresa
         
         # solicita a guia de DCTF
-        mes, ano, pdf_base64, mensagens = solicita_dctf(competencia, cnpj_contratante, id_empresa, str(access_token), str(jwt_token))
+        mes, ano, pdf_base64, mensagens = solicita_dctf(output_dir, categoria, competencia, cnpj_contratante, id_empresa, str(access_token), str(jwt_token))
 
         if re.compile(r'Acesso negado').search(mensagens):
             p.alert(text=mensagens)
@@ -345,6 +355,8 @@ if __name__ == '__main__':
     atexit.register(remove_lock_file, lock_file_path)
     
     sg.theme('GrayGrayGray')  # Define o tema do PySimpleGUI
+    categoria_key = ('GERAL_MENSAL', 'GERAL_13o_SALARIO')
+    categoria_nome = ('Mensal', '13º')
     # sg.theme_previewer()
     # Layout da janela
     layout = [
@@ -358,15 +370,16 @@ if __name__ == '__main__':
         [sg.InputText(key='-input_consumer_secret-', size=90, password_char='*')],
         [sg.Text('Informe a senha do certificado digital:')],
         [sg.InputText(key='-input_senha_certificado-', size=90, password_char='*')],
-        [sg.Text('Informe a competência das guias "00/0000":')],
+        [sg.Checkbox(key='-categoria_mensal-', text='Mensal', enable_events=True), sg.Checkbox(key='-categoria_13-', text='13º', enable_events=True)],
+        [sg.Text('Informe a competência das guias. (Mensal = "00/0000") (13º = "0000"):')],
         [sg.InputText(key='-input_competencia-', size=90)],
         [sg.Text('')],
         [sg.Text('Selecione o certificado digital:')],
         [sg.FileBrowse('Pesquisar', key='-abrir-', file_types=(('PFX files', '*.pfx'),)), sg.InputText(key='-input_certificado-', size=80, disabled=True)],
         [sg.Text('Selecione um arquivo Excel com os dados dos clientes:')],
         [sg.FileBrowse('Pesquisar', key='-abrir1-', file_types=(('Planilhas Excel', '*.csv'),)), sg.InputText(key='-input_excel-', size=80, disabled=True)],
-        [sg.Text('Selecione um diretório para salvar os resultados:')],
-        [sg.FolderBrowse('Pesquisar', key='-abrir2-'), sg.InputText(key='-output_dir-', size=80, disabled=True)],
+        [sg.Text('Selecione um diretório para salvar os resultados (Servidor "Comum T:" é o padrão):')],
+        [sg.FolderBrowse('Pesquisar', key='-abrir2-'), sg.InputText(default_text='T:/ROBO/DCTF-WEB',key='-output_dir-', size=80, disabled=True)],
         [sg.Text('')],
         [sg.Text('', key='-Mensagens-')],
         [sg.Text(size=6, text='', key='-Progresso_texto-'), sg.ProgressBar(max_value=0, orientation='h', size=(54, 5), key='-progressbar-', bar_color='#f0f0f0')],
@@ -378,89 +391,108 @@ if __name__ == '__main__':
     
     
     def run_script_thread():
+        # try:
+        if not cnpj_contratante:
+            p.alert(text=f'Por favor informe o CNPJ do contratante da API SERPRO.')
+            return
+        if not len(cnpj_contratante) == 14:
+            p.alert(text=f'Por favor informe um CNPJ válido.')
+            return
+        if not consumer_key:
+            p.alert(text=f'Por favor informe o consumerKey.')
+            return
+        if not consumer_secret:
+            p.alert(text=f'Por favor informe o consumerSecret.')
+            return
+        if not senha:
+            p.alert(text=f'Por favor informe a senha do certificado digital.')
+            return
+        if not categoria:
+            p.alert(text=f'Por favor informe se a categoria é Mensal ou 13º.')
+            return
+        if not competencia:
+            p.alert(text=f'Por favor informe a competência das guias.')
+            return
+        if not input_certificado:
+            p.alert(text=f'Por favor selecione um certificado digital.')
+            return
+        if not input_excel:
+            p.alert(text=f'Por favor selecione uma planilha de dados.')
+            return
+        if categoria == '-categoria_13-':
+            if len(competencia) > 4:
+                p.alert(text=f'Por favor insira apenas o ano referente a competência de 13º.')
+                return
+        else:
+            if not re.compile(r'\d\d/\d\d\d\d').search(competencia):
+                p.alert(text=f'Competência no formato inválido.')
+                return
+            
+        # habilita e desabilita os botões conforme necessário
+        window['-input_cnpj_contratante-'].update(disabled=True)
+        window['-input_consumer_key-'].update(disabled=True)
+        window['-input_consumer_secret-'].update(disabled=True)
+        window['-input_senha_certificado-'].update(disabled=True)
+        window['-categoria_mensal-'].update(disabled=True)
+        window['-categoria_13-'].update(disabled=True)
+        window['-input_competencia-'].update(disabled=True)
+        window['-abrir-'].update(disabled=True)
+        window['-abrir1-'].update(disabled=True)
+        window['-abrir2-'].update(disabled=True)
+        window['-iniciar-'].update(disabled=True)
+        window['-encerrar-'].update(disabled=False)
+        window['-abrir_resultados-'].update(disabled=False)
+        
+        window['-Mensagens-'].update('Validando credenciais...')
+        # atualiza a barra de progresso para ela ficar mais visível
+        window['-progressbar-'].update(bar_color=('#fca400', '#ffe0a6'))
+        
         try:
-            if not cnpj_contratante:
-                p.alert(text=f'Por favor informe o CNPJ do contratante da API SERPRO.')
-                return
-            if not len(cnpj_contratante) == 14:
-                p.alert(text=f'Por favor informe um CNPJ válido.')
-                return
-            if not consumer_key:
-                p.alert(text=f'Por favor informe o consumerKey.')
-                return
-            if not consumer_secret:
-                p.alert(text=f'Por favor informe o consumerSecret.')
-                return
-            if not senha:
-                p.alert(text=f'Por favor informe a senha do certificado digital.')
-                return
-            if not competencia:
-                p.alert(text=f'Por favor informe a competência das guias.')
-                return
-            if not input_certificado:
-                p.alert(text=f'Por favor selecione um certificado digital.')
-                return
-            if not input_excel:
-                p.alert(text=f'Por favor selecione uma planilha de dados.')
-                return
-            if not output_dir:
-                p.alert(text=f'Por favor selecione um diretório para salvar os resultados.')
-                return
-                
-            # habilita e desabilita os botões conforme necessário
-            window['-input_cnpj_contratante-'].update(disabled=True)
-            window['-input_consumer_key-'].update(disabled=True)
-            window['-input_consumer_secret-'].update(disabled=True)
-            window['-input_senha_certificado-'].update(disabled=True)
-            window['-input_competencia-'].update(disabled=True)
-            window['-abrir-'].update(disabled=True)
-            window['-abrir1-'].update(disabled=True)
-            window['-abrir2-'].update(disabled=True)
-            window['-iniciar-'].update(disabled=True)
-            window['-encerrar-'].update(disabled=False)
-            window['-abrir_resultados-'].update(disabled=False)
-            
-            window['-Mensagens-'].update('Validando credenciais...')
-            # atualiza a barra de progresso para ela ficar mais visível
-            window['-progressbar-'].update(bar_color=('#fca400', '#ffe0a6'))
-            
-            try:
-                # Chama a função que executa o script
-                run(window, cnpj_contratante, usuario_b64, senha, competencia, input_certificado, input_excel, output_dir)
-            # Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
-            except Exception as erro:
-                time.sleep(1)
-                if str(erro) == 'Invalid password or PKCS12 data':
-                    p.alert(text=f'Senha do certificado digital inválida.')
-                else:
-                    window['Log do sistema'].update(disabled=False)
-                    p.alert(text=f"Erro :'(\n\n"
-                               f'Abra o pasta de "Log do sistema" e envie o arquivo "Log.txt" para o desenvolvedor.\n')
-                    escreve_doc(erro)
-                
-            # habilita e desabilita os botões conforme necessário
-            window['-input_cnpj_contratante-'].update(disabled=False)
-            window['-input_consumer_key-'].update(disabled=False)
-            window['-input_consumer_secret-'].update(disabled=False)
-            window['-input_senha_certificado-'].update(disabled=False)
-            window['-input_competencia-'].update(disabled=False)
-            window['-abrir-'].update(disabled=False)
-            window['-abrir1-'].update(disabled=False)
-            window['-abrir2-'].update(disabled=False)
-            window['-iniciar-'].update(disabled=False)
-            window['-encerrar-'].update(disabled=True)
-            
-            # apaga qualquer mensagem na interface
-            window['-Mensagens-'].update('')
-            # atualiza a barra de progresso para ela ficar mais visível
-            window['-progressbar-'].update_bar(0)
-            window['-Progresso_texto-'].update('')
-            window['-progressbar-'].update(bar_color='#f0f0f0')
-        except:
-            pass
+            # Chama a função que executa o script
+            run(window, cnpj_contratante, usuario_b64, senha, categoria, competencia, input_certificado, input_excel, output_dir)
+        # Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
+        except Exception as erro:
+            time.sleep(1)
+            if str(erro) == 'Invalid password or PKCS12 data':
+                p.alert(text=f'Senha do certificado digital inválida.')
+            elif re.compile(r'ConnectTimeoutError').search(str(erro)):
+                window['Log do sistema'].update(disabled=False)
+                p.alert(text=f'Erro de conexão com o serviço.\n\n'
+                             f'Mais detalhes no arquivo "Log.txt" em "Log do sistema"\n')
+                escreve_doc(erro, local=output_dir)
+            else:
+                window['Log do sistema'].update(disabled=False)
+                p.alert(text=f"Erro :'(\n\n"
+                           f'Abra o pasta de "Log do sistema" e envie o arquivo "Log.txt" para o desenvolvedor.\n')
+                escreve_doc(erro, local=output_dir)
+        
+        # habilita e desabilita os botões conforme necessário
+        window['-input_cnpj_contratante-'].update(disabled=False)
+        window['-input_consumer_key-'].update(disabled=False)
+        window['-input_consumer_secret-'].update(disabled=False)
+        window['-input_senha_certificado-'].update(disabled=False)
+        window['-categoria_mensal-'].update(disabled=False)
+        window['-categoria_13-'].update(disabled=False)
+        window['-input_competencia-'].update(disabled=False)
+        window['-abrir-'].update(disabled=False)
+        window['-abrir1-'].update(disabled=False)
+        window['-abrir2-'].update(disabled=False)
+        window['-iniciar-'].update(disabled=False)
+        window['-encerrar-'].update(disabled=True)
+        
+        # apaga qualquer mensagem na interface
+        window['-Mensagens-'].update('')
+        # atualiza a barra de progresso para ela ficar mais visível
+        window['-progressbar-'].update_bar(0)
+        window['-Progresso_texto-'].update('')
+        window['-progressbar-'].update(bar_color='#f0f0f0')
+        """except:
+            pass"""
     
     
+    categoria = None
     while True:
+        checkboxes = ['-categoria_mensal-', '-categoria_13-']
         # captura o evento e os valores armazenados na interface
         event, values = window.read()
         try:
@@ -473,7 +505,6 @@ if __name__ == '__main__':
             # concatena os tokens para gerar um único em base64
             usuario = consumer_key + ":" + consumer_secret
             usuario_b64 = converter_base64(usuario)
-            
             senha = values['-input_senha_certificado-']
             competencia = values['-input_competencia-']
             input_certificado = values['-input_certificado-']
@@ -485,12 +516,22 @@ if __name__ == '__main__':
             input_excel = 'Desktop'
             output_dir = 'Desktop'
         
+        if event in ('-categoria_mensal-', '-categoria_13-'):
+            for checkbox in checkboxes:
+                if checkbox != event:
+                    window[checkbox].update(value=False)
+                else:
+                    categoria = checkbox
+            
         if event == sg.WIN_CLOSED:
             break
         
         elif event == 'Log do sistema':
-            os.startfile('API_response')
-        
+            if not output_dir == 'T:/ROBO/DCTF-WEB':
+                os.startfile('API_response')
+            else:
+                os.startfile('T:/ROBO/DCTF-WEB/Response')
+                
         elif event == 'Ajuda':
             os.startfile('Manual do usuário - Download de guias de DCTFWEB API SERPRO.pdf')
         

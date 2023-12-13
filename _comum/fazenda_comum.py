@@ -149,7 +149,7 @@ def new_session_fazenda_driver(cnpj, user, pwd, perfil, retorna_driver=False, op
         time.sleep(1)
     
     elif perfil != 'contribuinte':
-        driver.quit()
+        driver.close()
         return False
     
     print(f'>>> Logando no usuário')
@@ -188,18 +188,23 @@ def new_session_fazenda_driver(cnpj, user, pwd, perfil, retorna_driver=False, op
             resposta = padrao.search(str(soup))
             
             if not resposta:
-                padrao = re.compile(r'(ERRO INTERNO AO SISTEMA DE CONTROLE DE ACESSO)')
-                driver.save_screenshot(r'ignore\debug_screen.png')
+                padrao = re.compile(r'(Favor informar o login e a senha corretamente.)')
                 resposta = padrao.search(str(soup))
             
+                if not resposta:
+                    padrao = re.compile(r'(ERRO INTERNO AO SISTEMA DE CONTROLE DE ACESSO)')
+                    driver.save_screenshot(r'ignore\debug_screen.png')
+                    resposta = padrao.search(str(soup))
+            
             sid = resposta.group(1)
+            print(f'❌ {sid}')
             cokkies = 'erro'
-            driver.quit()
+            driver.close()
             
             return cokkies, sid
         except:
             driver.save_screenshot(r'ignore\debug_screen.png')
-            driver.quit()
+            driver.close()
             return False
     
     if retorna_driver:

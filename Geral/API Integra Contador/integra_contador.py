@@ -252,9 +252,14 @@ def cria_pdf(pdf_base64, output_dir, id_empresa, nome_empresa, mes, ano):
 
 
 def run(window, cnpj_contratante, usuario_b64, senha, categoria, competencia, input_certificado, input_excel, output_dir):
-    os.makedirs('API_response', exist_ok=True)
-    for arq in os.listdir('API_response'):
-        os.remove(os.path.join('API_response', arq))
+    if not output_dir == 'T:/ROBO/DCTF-WEB':
+        local = 'API_response'
+    else:
+        local = 'T:/ROBO/DCTF-WEB/Response'
+    os.makedirs(local, exist_ok=True)
+    
+    for arq in os.listdir(local):
+        os.remove(os.path.join(local, arq))
     
     if event == '-encerrar-' or event == sg.WIN_CLOSED:
         return

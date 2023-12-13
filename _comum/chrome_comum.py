@@ -132,12 +132,12 @@ def find_by_path(item, driver):
 _find_by_path = find_by_path
 
 
-def find_by_class(iten, driver):
+def find_by_class(item, driver):
     try:
-        elem = driver.find_element(by=By.CLASS_NAME, value=iten)
-        return elem
+        driver.find_element(by=By.CLASS_NAME, value=item)
+        return True
     except:
-        return None
+        return False
 _find_by_class = find_by_class
 
 

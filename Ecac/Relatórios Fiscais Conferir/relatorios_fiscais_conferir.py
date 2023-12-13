@@ -60,6 +60,8 @@ def busca_cpf(cpf):
     while not _find_img('empresa.png', conf=0.9):
         if _find_img('nenhum_resultado_encontrado.png', conf=0.9):
             return '❗ CPF não encontrado no sistema'
+        if _find_img('erro_fatal.png', conf=0.9):
+            return '❌ Conferir parou de funcionar, tentando novamente em 30 segundos'
         time.sleep(1)
     
     # abre o perfil do CPF
@@ -134,6 +136,7 @@ def gera_relatorio():
                  ('erro_sistema_5.png', 'tipo2', ''),
                  ('erro_sistema_8.png', 'tipo2', ''),
                  ('erro_sistema_9.png', 'tipo2', ''),
+                 ('erro_sistema_11.png', 'tipo2', ''),
                  ('mensagens_importantes_ecac.png', 'tipo3', '❗ Este CPF possuí mensagens importantes no ECAC, não é possível emitir o relatório até que a mensagem seja aberta.'),
                  ('erro_sistema_7.png', 'tipo3', '❗ Consulta não liberada pelo sistema, tente mais tarde.'),
                  ('erro_sistema_3.png', 'tipo3', '❗ Solicitação rejeitada pelo sistema, tente novamente mais tarde.')]
@@ -292,18 +295,25 @@ def run():
         _indice(count, total_empresas, empresa, index)
         cpf, nome = empresa
         
-        print('>>> Abrindo o site do Conferir')
-        _abrir_chrome('https://portal.conferironline.com.br/dashboard')
-        resultado = busca_cpf(cpf)
-        if resultado == '✔ OK':
-            resultado = consulta_relatorio()
+        while True:
+            print('>>> Abrindo o site do Conferir')
+            _abrir_chrome('https://portal.conferironline.com.br/dashboard')
+            resultado = busca_cpf(cpf)
+            if resultado == '❌ Conferir parou de funcionar, tentando novamente em 30 segundos':
+                p.hotkey('ctrl', 'w')
+                print(resultado)
+            else:
+                if resultado == '✔ OK':
+                    resultado = consulta_relatorio()
+                    
+                if resultado == '✔ OK':
+                    resultado = salvar_pdf(pasta_analise)
+                    situacao = verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias)
+                    
+                else:
+                    situacao = ''
+                break
             
-        if resultado == '✔ OK':
-            resultado = salvar_pdf(pasta_analise)
-            situacao = verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias)
-        else:
-            situacao = ''
-
         p.hotkey('ctrl', 'w')
         print(f'{resultado} - {situacao}'.replace(';', ' - '))
         _escreve_relatorio_csv(f'{cpf};{nome};{resultado[2:]};{situacao[2:]}', nome='Relatórios Fiscais Conferir')

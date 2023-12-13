@@ -13,6 +13,7 @@ from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dad
 from chrome_comum import _initialize_chrome, _find_by_id
 from pyautogui_comum import _find_img, _click_img, _wait_img, _click_position_img
 
+
 e_dir = Path('//vpsrv03/Arq_Robo/Envia WP por e-mail/Execução')
 dados = "V:\\Setor Robô\\Scripts Python\\_comum\\Dados e-mail.txt"
 f = open(dados, 'r', encoding='utf-8')

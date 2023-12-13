@@ -1,280 +1,240 @@
 # -*- coding: utf-8 -*-
-import tkinter.filedialog
-import os
-import time
-import pyperclip
-import pyautogui as p
-import pathlib
+import time, re, os, fitz, shutil
+from requests.exceptions import ConnectionError
+from bs4 import BeautifulSoup
+from sys import path
+from requests import Session
+from time import sleep
+from selenium import webdriver
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.by import By
 
-e_dir = pathlib.Path('execução')
+path.append(r'..\..\_comum')
+from fazenda_comum import _get_info_post, _new_session_fazenda_driver
+from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header_csv, _download_file, _open_lista_dados, _where_to_start, _indice
+from chrome_comum import _find_by_id, _find_by_path
 
 
-def escreve_relatorio_csv(texto, nome='resumo', local=e_dir, end='\n', encode='latin-1'):
-    if local == e_dir:
-        local = pathlib.Path(local)
-    os.makedirs(local, exist_ok=True)
-
+def abre_pagina_consulta(driver):
+    print('>>> Abrindo Conta Fiscal')
+    
     try:
-        f = open(str(local / f"{nome}.csv"), 'a', encoding=encode)
+        while not re.compile(r'>Conta Fiscal do ICMS e Parcelamento').search(driver.page_source):
+            try:
+                button = driver.find_element(by=By.XPATH, value='/html/body/div[2]/section/div/div/div/div[2]/div/ul/li/form/div[5]/div/a')
+                button.click()
+                time.sleep(3)
+            except:
+                pass
+            time.sleep(1)
     except:
-        f = open(str(local / f"{nome}-auxiliar.csv"), 'a', encoding=encode)
+        print('❗ Erro ao logar na empresa, tentando novamente')
+        return driver, 'erro'
 
-    f.write(texto + end)
-    f.close()
-
-
-def ask_for_file(title='Abrir arquivo', filetypes='*', initialdir=os.getcwd()):
-    root = tkinter.filedialog.Tk()
-    root.withdraw()
-    root.wm_attributes('-topmost', 1)
+    url_consulta = re.compile(r'<a href=\"(.+\d).+>Conta Fiscal do ICMS e Parcelamento').search(driver.page_source).group(1)
+ 
+    driver.get(url_consulta)
     
-    file = tkinter.filedialog.askopenfilename(
-        title=title,
-        filetypes=filetypes,
-        initialdir=initialdir
-    )
+    while not _find_by_id('divcontainer', driver):
+        time.sleep(1)
     
-    return file if file else False
-
-
-def open_lista_dados(i_dir='ignore', encode='latin-1'):
-    ftypes = [('Plain text files', '*.txt *.csv')]
-    
-    file = ask_for_file(title='Selecione o arquivos com os dados para a consulta', filetypes=ftypes, initialdir=i_dir)
-    if not file:
-        return False
-    
-    try:
-        with open(file, 'r', encoding=encode) as f:
-            dados = f.readlines()
-    except Exception as e:
-        alert(title='Mensagem erro', text=f'Não pode abrir arquivo\n{str(e)}')
-        return False
-    
-    print('>>> usando dados de ' + file.split('/')[-1])
-    return list(map(lambda x: tuple(x.replace('\n', '').split(';')), dados))
-
-
-def where_to_start(idents, encode='latin-1'):
-    title = 'Execucao anterior'
-    text = 'Deseja continuar execucao anterior?'
-    
-    res = p.confirm(title=title, text=text, buttons=('sim', 'não'))
-    if not res:
-        return None
-    if res == 'não':
-        return 0
-    
-    ftypes = [('Plain text files', '*.txt *.csv')]
-    file = ask_for_file(title='Selecione o arquivo de resumo da execução', filetypes=ftypes)
-    if not file:
-        return None
-    
-    try:
-        with open(file, 'r', encoding=encode) as f:
-            dados = f.readlines()
-    except Exception as e:
-        alert(title='Mensagem erro', text=f'Não pode abrir arquivo\n{str(e)}')
-        return None
-    
-    try:
-        elem = dados[-1].split(';')[0]
-        return idents.index(elem) + 1
-    except ValueError:
-        return 0
-
-
-def indice(count, total_empresas, empresa):
-    if count > 1:
-        print(f'[ {len(total_empresas) - (count - 1)} Restantes ]\n\n')
-    # Cria um indice para saber qual linha dos dados está
-    indice_dados = f'[ {str(count)} de {str(len(total_empresas))} ]'
-    
-    empresa = str(empresa).replace("('", '[ ').replace("')", ' ]').replace("',)", " ]").replace(',)', ' ]').replace("', '", ' - ')
-    
-    print(f'{indice_dados} - {empresa}')
-
-
-def find_img(img, pasta='imgs', conf=1.0):
-    path = os.path.join(pasta, img)
-    return p.locateOnScreen(path, confidence=conf)
-
-
-def wait_img(img, pasta='imgs', conf=1.0, delay=1, timeout=20, debug=False):
-    if debug:
-        print('\tEsperando', img)
-
-    aux = 0
+    print('>>> Abrindo consulta de CNDNI')
     while True:
-        box = find_img(img, pasta, conf=conf)
-        if box:
-            return box
-        time.sleep(delay)
-
-        if timeout < 0:
-            continue
-        if timeout == aux:
+        try:
+            url_consulta_cndni = re.compile(r'href="(https:\/\/www10.fazenda.sp.gov.br\/CertidaoNegativaDeb\/Pages.+)" tabindex="-1">Verificar Impedimentos eCND').search(driver.page_source).group(1)
             break
-        aux += 1
-
-    return None
-
-
-def click_img(img, pasta='imgs', conf=1.0, delay=1, timeout=20, button='left', clicks=1):
-    img = os.path.join(pasta, img)
-    for i in range(timeout):
-        box = p.locateCenterOnScreen(img, confidence=conf)
-        if box:
-            p.click(*box, button=button, clicks=clicks)
-            return True
-        time.sleep(delay)
-    else:
-        return False
+        except:
+            pass
+    
+    driver.get(url_consulta_cndni)
+    
+    return driver, 'ok'
     
     
-def salvar_pdf(cnpj, nome, debito=''):
-    # navega na tela até aparecer o botão de emitir relatório
-    while not find_img('emitir_relatorios.png', conf=0.9):
-        p.press('pgDn')
-    click_img('emitir_relatorios.png', conf=0.9)
-    wait_img('salvar.png', conf=0.9, timeout=-1)
-    time.sleep(1)
-    # escreve o nome do PDF
-    pyperclip.copy(f'{nome} - {cnpj} - CNDNI{debito}.pdf')
-    p.hotkey('ctrl', 'v')
-    time.sleep(1)
-    p.press('enter')
-    time.sleep(0.5)
-    p.hotkey('alt', 'l')
-    time.sleep(1)
-
-    # caso já exista um PDF com o mesmo nome ele substitui
-    if find_img('salvar_como.png', conf=0.9):
-        p.hotkey('alt', 's')
+def consulta_cndni(driver, nome, cnpj, pasta_inicial):
+    print('>>> Consultando.')
+    while not _find_by_id('MainContent_txtDocumento', driver):
         time.sleep(1)
-
-    texto = f'{cnpj};Com pendências {debito}'
-    print(f'❗ Com pendências {debito}')
-    escreve_relatorio_csv(texto)
-
-    # esperar aparecer o botão de voltar e clica nele
-    wait_img('voltar.png', conf=0.9)
-    click_img('voltar.png', conf=0.9)
-
-
-def consulta_ipva(cnpj, nome):
-    # url para entrar no site
-    # url_cnpj = 'https://www10.fazenda.sp.gov.br/CertidaoNegativaDeb/Pages/Restrita/PesquisarContribuinte.aspx'
-
-    # espera a pagina inicial para inserir o cnpj
-    while not find_img('cnpj.png', conf=0.9):
-        if find_img('certificado.png', conf=0.9):
-            click_img('certificado.png', conf=0.9)
-        if find_img('verificar_impedimentos.png', conf=0.9):
-            click_img('verificar_impedimentos.png', conf=0.9)
-        time.sleep(1)
-        p.click(700, 400)
-
-    click_img('campo.png', conf=0.9)
-    time.sleep(1)
-    # limpa o campo do cnpj
-    p.press('delete', presses=15)
-    p.write(cnpj)
-    time.sleep(1)
-    p.click(700, 400)
-    time.sleep(1)
-    click_img('consultar.png', conf=0.9)
-    time.sleep(2)
-
-    # aguarda a tela de carregamento
-    while find_img('aguarde.png', conf=0.9):
-        time.sleep(1)
-
-    # espera a tela da empresa abrir e caso apareça a tela de erro da F5 na página
-    timer = 0
-    while not find_img('dados.png', conf=0.9):
-        if find_img('atencao.png', conf=0.9):
-            if find_img('atencao_ok.png', conf=0.9):
-                click_img('atencao_ok.png', conf=0.9)
-            else:
-                p.press('enter')
-                p.press('f5')
-            if find_img('falha.png', conf=0.9):
-                p.press('enter')
-                p.press('f5')
         
-        time.sleep(5)
-        timer += 5
-        if timer >= 60:
+    time.sleep(1)
+    driver.find_element(by=By.ID, value='MainContent_txtDocumento').clear()
+    time.sleep(1)
+    driver.find_element(by=By.ID, value='MainContent_txtDocumento').send_keys(cnpj)
+    time.sleep(1)
+    driver.find_element(by=By.ID, value='MainContent_btnPesquisar').click()
+    
+    # Wait for the alert to be displayed and store it in a variable
+    try:
+        wait = WebDriverWait(driver, 5)
+        alert = wait.until(expected_conditions.alert_is_present())
+        if alert:
+            # Store the alert text in a variable
+            text = alert.text
+            # Press the OK button
+            alert.accept()
+            print(f'❌ {text}')
+            return driver, text
+    except:
+        pass
+    
+    contador = 0
+    while not _find_by_id('MainContent_lnkImprimirCertidaoBotao1', driver):
+        print('>>> Consultando..')
+        time.sleep(1)
+        contador += 1
+        if contador > 15:
+            print('❌ Erro ao consultar CNDNI, tentando novamente')
+            return driver, 'erro'
+
+    contador = 0
+    while True:
+        if re.compile(r"Server Error in '/CertidaoNegativaDeb' Application.").search(driver.page_source):
+            print('❌ Erro ao acessar o site, tentando novamente')
+            return driver, 'erro'
+        
+        try:
+            driver.find_element(by=By.ID, value='MainContent_lnkImprimirCertidaoBotao1').click()
+            resultado = renomeia_cndni(nome, cnpj, pasta_inicial)
+            if resultado:
+                break
+            
+        except:
+            driver.execute_script("window.scrollBy(0,100)")
+            time.sleep(1)
+            print('>>> Consultando...')
+            contador += 1
+        
+        if re.compile(r'Acesso negado').search(driver.page_source):
+            print('❌ Acesso negado para essa empresa')
+            return driver, 'Acesso negado para essa empresa'
+        
+        if contador > 30:
+            print('❌ Erro ao consultar CNDNI, tentando novamente')
+            return driver, 'erro'
+    
+    driver.execute_script('document.getElementById("MainContent_lnkVoltar").click()')
+    return driver, resultado
+
+
+def renomeia_cndni(nome, cnpj, pasta_inicial):
+    while os.listdir(pasta_inicial) == []:
+        time.sleep(1)
+    
+    time.sleep(1)
+    for cndni in os.listdir(pasta_inicial):
+        arq = os.path.join(pasta_inicial, cndni)
+        if arq.endswith('.crdownload'):
+            os.remove(arq)
             return False
-
-    time.sleep(1)
-    if find_img('atencao_ok.png', conf=0.9):
-        click_img('atencao_ok.png', conf=0.9)
-
-    if find_img('falha.png', conf=0.9):
-        p.press('enter')
-        p.press('f5')
-     
-    debitos = ('ha_debitos.png', 'ha_pendencias.png', 'ha_pendencias_2.png', 'icms_declarado.png', 'icms_parcelado.png', 'aiim.png', 'ipva.png')
-    # navega na tela até aparecer o botão de emitir relatório e caso tenha algum débito, salva o relatório
-    while not find_img('emitir_relatorios.png', conf=0.9):
-        p.press('pgDn')
+            
+        while True:
+            try:
+                doc = fitz.open(arq, filetype="pdf")
+                break
+            except:
+                print('>>> Aguardando download')
+                pass
         
-        for debito in debitos:
-            if find_img(debito, conf=0.9):
-                while not find_img('emitir_relatorios.png', conf=0.9):
-                    p.press('pgDn')
-                    if find_img('gia.png', conf=0.9):
-                        salvar_pdf(cnpj, nome, debito=' - GIA')
-                        return True
-                        
-                salvar_pdf(cnpj, nome)
-                return True
-
-    # define o texto que ira escrever na planilha
-    texto = f'{cnpj};Empresa sem pendências'
-    print('✔ Empresa sem pendências')
-    escreve_relatorio_csv(texto)
-
-    # voltar pra tela de login da empresa
-    wait_img('voltar.png', conf=0.9)
-    click_img('voltar.png', conf=0.9)
-    return True
+        for page in doc:
+            texto = page.get_text('text', flags=1 + 2 + 8)
+            
+            if re.compile(r'\n(Há Débitos.+)').search(texto):
+                doc.close()
+                pasta_debito = os.path.join('Execução', 'CNDNI com débitos')
+                os.makedirs(pasta_debito, exist_ok=True)
+                shutil.move(arq, os.path.join(pasta_debito, f'{nome[:30]} - {cnpj} - CNDNI Débitos.pdf'))
+                print('❗ Com Débitos')
+                return 'Com débitos'
+        
+        doc.close()
+        pasta_sem_debito = os.path.join('Execução', 'CNDNI')
+        os.makedirs(pasta_sem_debito, exist_ok=True)
+        shutil.move(arq, os.path.join(pasta_sem_debito, f'{nome[:30]} - {cnpj} - CNDNI.pdf'))
+    
+    print('✔ Sem débitos')
+    return 'Sem débitos'
 
 
+@_time_execution
 def run():
-    # abre arquivo de dados
-    empresas = open_lista_dados()
-
-    # define a primeira empresa que vai executar o script
-    index = where_to_start(tuple(i[0] for i in empresas))
+    andamentos = 'Consulta de Débitos Não Inscritos'
+    pasta_inicial = "V:\\Setor Robô\\Scripts Python\\Fazenda\\Consulta de Certidão Negativa de Débitos Tributários Não Inscritos\\ignore\\CNDNI"
+    
+    for cndni in os.listdir(pasta_inicial):
+        os.remove(os.path.join(pasta_inicial, cndni))
+        
+    # opções para fazer com que o chrome trabalhe em segundo plano (opcional)
+    options = webdriver.ChromeOptions()
+    # options.add_argument('--headless')
+    # options.add_argument('--window-size=1920,1080')
+    options.add_argument("--start-maximized")
+    options.add_experimental_option('prefs', {
+        "download.default_directory": pasta_inicial,  # Change default directory for downloads
+        "download.prompt_for_download": False,  # To auto download the file
+        "download.directory_upgrade": True,
+        "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
+    })
+    
+    # função para abrir a lista de dados
+    empresas = _open_lista_dados()
+    
+    # função para saber onde o robô começa na lista de dados
+    index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:
         return False
-
-    # define o número total de empresas
-    total_empresas = empresas[index:]
-
-    # começa a repetição
-    for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, nome = empresa
-        nome = nome.replace('/', ' ')
-        # printa o indice dos dados
-        indice(count, total_empresas, empresa)
-
-        # executa a consulta
-        if not consulta_ipva(cnpj, nome):
-            return False
     
+    # cria o indice para cada empresa da lista de dados
+    total_empresas = empresas[index:]
+    # inicia a variável que verifica se o usuário da execução anterior é igual ao atual
+    usuario_anterior = 'padrão'
+    driver = ''
+    for count, empresa in enumerate(empresas[index:], start=1):
+        cnpj, nome, usuario, senha, perfil = empresa
+        nome = nome.replace('/', '')
+        
+        # printa o indice da empresa que está sendo executada
+        _indice(count, total_empresas, empresa, index)
+        resultado = 'ok'
+        while True:
+            # verifica se o usuario anterior é o mesmo para não fazer login de novo com o mesmo usuário
+            if usuario_anterior != usuario:
+                # se o usuario anterior for diferente e existir uma sessão aberta, a sessão é fechada
+                try:
+                    driver.close()
+                except:
+                    pass
+                
+                while True:
+                    try:
+                        driver, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil, retorna_driver=True, options=options)
+                        break
+                    except:
+                        print('❗ Erro ao logar na empresa, tentando novamente')
+                
+                if driver == 'erro':
+                    _escreve_relatorio_csv(f'{cnpj};{nome};{sid}', nome=andamentos)
+                    usuario_anterior = usuario
+                    break
+                    
+                else:
+                    driver, resultado = abre_pagina_consulta(driver)
+            
+            if resultado == 'ok':
+                driver, resultado = consulta_cndni(driver, nome, cnpj, pasta_inicial)
+                
+                if resultado != 'erro':
+                    _escreve_relatorio_csv(f'{cnpj};{nome};{resultado}', nome=andamentos)
+                    usuario_anterior = usuario
+                    break
+                    
+                driver.close()
+                usuario_anterior = 'padrão'
+                continue
+                
+    driver.close()
     return True
 
 
 if __name__ == '__main__':
-    '''try:'''
-    if not run():
-        p.alert(text='Consulta de Certidão Negativa de Débitos Tributários Não Inscritos finalizada inesperadamente!')
-    else:
-        p.alert(text='Consulta de Certidão Negativa de Débitos Tributários Não Inscritos finalizada')
-    '''except:
-        p.alert(text='Consulta de Certidão Negativa de Débitos Tributários Não Inscritos finalizada inesperadamente!')
-'''
+    run()

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import time, re
 from requests.exceptions import ConnectionError
 from bs4 import BeautifulSoup
@@ -77,7 +78,6 @@ def confere_pendencias(pagina):
     
     return ' e '.join(situacao)
 
-
 def consulta_deb_estaduais(cnpj, s, s_id):
     print('>>> Consultando débitos')
     url_base = 'https://www10.fazenda.sp.gov.br/ContaFiscalIcms/Pages'
@@ -152,7 +152,6 @@ def consulta_deb_estaduais(cnpj, s, s_id):
         situacao = _situacoes['E']
     
     return situacao
-
 
 @_time_execution
 def run():
@@ -238,7 +237,6 @@ def run():
     # escreve o cabeçalho na planilha de andamentos
     _escreve_header_csv('cnpj;situacao')
     return True
-
 
 if __name__ == '__main__':
     run()

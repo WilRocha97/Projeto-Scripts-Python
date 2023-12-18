@@ -49,11 +49,8 @@ def escreve_relatorio_csv(texto, nome='resumo', local='Desktop', end='\n', encod
 
 
 # escreve arquivos .txt com as respostas da API
-def escreve_doc(texto, local=None, nome='Log', encode='latin-1'):
-    if not local == 'T:/ROBO/DCTF-WEB':
-        local = 'API_response'
-    else:
-        local = 'T:/ROBO/DCTF-WEB/Response'
+def escreve_doc(texto, local='Desktop', nome='Log', encode='latin-1'):
+    local = os.path.join(local, 'API_Response')
     os.makedirs(local, exist_ok=True)
     
     try:
@@ -118,21 +115,23 @@ def solicita_token(usuario_b64, input_certificado, senha, output_dir):
 
 # solicita a guia de DCTF WEB na API
 def solicita_dctf(output_dir, categoria, comp, cnpj_contratante, id_empresa, access_token, jwt_token):
+    # verifica se a guia será para CPF ou CNPJ, se for CPF é código 1 e CNPJ é código 2
+    if len(id_empresa) > 12:
+        cod_consulta = 2
+        tipo_categoria = 'GERAL'
+    else:
+        cod_consulta = 1
+        tipo_categoria = 'PF'
+        
     categoria_guias = ''
     if categoria == '-categoria_mensal-':
         mes = comp.split('/')[0]
         ano = comp.split('/')[1]
-        categoria_guias = "{\"categoria\": \"GERAL_MENSAL\",\"anoPA\":\"" + str(ano) + "\",\"mesPA\":\"" + str(mes) + "\"}"
+        categoria_guias = "{\"categoria\": \"" + tipo_categoria + "_MENSAL\",\"anoPA\":\"" + str(ano) + "\",\"mesPA\":\"" + str(mes) + "\"}"
     if categoria == '-categoria_13-':
         mes = '13'
         ano = comp
-        categoria_guias = "{\"categoria\": \"GERAL_13o_SALARIO\",\"anoPA\":\"" + str(ano) + "\"}"
-        
-    # verifica se a guia será para CPF ou CNPJ, se for CPF é código 1 e CNPJ é código 2
-    if len(id_empresa) > 12:
-        cod_consulta = 2
-    else:
-        cod_consulta = 1
+        categoria_guias = "{\"categoria\": \"" + tipo_categoria + "_13o_SALARIO\",\"anoPA\":\"" + str(ano) + "\"}"
     
     data = {
               "contratante": {
@@ -151,7 +150,7 @@ def solicita_dctf(output_dir, categoria, comp, cnpj_contratante, id_empresa, acc
                 "idSistema": "DCTFWEB",
                 "idServico": "GERARGUIA31",
                 "versaoSistema": "1.0",
-                "dados": categoria_guias
+                "dados": str(categoria_guias)
               }
             }
     
@@ -241,7 +240,7 @@ def cria_pdf(pdf_base64, output_dir, id_empresa, nome_empresa, mes, ano):
     nome_empresa = nome_empresa.replace('/', ' ').replace(',', '')
     
     # verifica se a pasta para salvar o PDF existe, se não então cria
-    e_dir_guias = os.path.joi(output_dir, 'Guias ' + mes + '-' + ano)
+    e_dir_guias = os.path.join(output_dir, 'Guias ' + mes + '-' + ano)
     os.makedirs(e_dir_guias, exist_ok=True)
     
     # decodifica a base64 em bytes
@@ -252,30 +251,6 @@ def cria_pdf(pdf_base64, output_dir, id_empresa, nome_empresa, mes, ano):
 
 
 def run(window, cnpj_contratante, usuario_b64, senha, categoria, competencia, input_certificado, input_excel, output_dir):
-    if not output_dir == 'T:/ROBO/DCTF-WEB':
-        local = 'API_response'
-    else:
-        local = 'T:/ROBO/DCTF-WEB/Response'
-    os.makedirs(local, exist_ok=True)
-    
-    for arq in os.listdir(local):
-        os.remove(os.path.join(local, arq))
-    
-    if event == '-encerrar-' or event == sg.WIN_CLOSED:
-        return
-        
-    # solicita os tokens para realizar a emissão das guias
-    jwt_token, access_token = solicita_token(usuario_b64, input_certificado, senha, output_dir)
-    
-    if jwt_token == 'Unauthorized':
-        p.alert(text='Consumer Secret ou Consumer Key inválido')
-        return
-    
-    # abrir a planilha de dados
-    empresas = open_lista_dados(input_excel)
-    if not empresas:
-        return False
-    
     # cria a pasta onde serão salvos os resultados, no caso sempre será criada uma pasta diferente da criada anteriormente
     contador = 0
     while True:
@@ -291,6 +266,26 @@ def run(window, cnpj_contratante, usuario_b64, senha, categoria, competencia, in
                 break
             except:
                 pass
+    local = os.path.join(output_dir, 'API_response')
+    os.makedirs(local, exist_ok=True)
+    
+    for arq in os.listdir(local):
+        os.remove(os.path.join(local, arq))
+        
+    if event == '-encerrar-' or event == sg.WIN_CLOSED:
+        return
+        
+    # solicita os tokens para realizar a emissão das guias
+    jwt_token, access_token = solicita_token(usuario_b64, input_certificado, senha, output_dir)
+    
+    if jwt_token == 'Unauthorized':
+        p.alert(text='Consumer Secret ou Consumer Key inválido')
+        return
+    
+    # abrir a planilha de dados
+    empresas = open_lista_dados(input_excel)
+    if not empresas:
+        return False
     
     time.sleep(1)
     
@@ -365,14 +360,14 @@ if __name__ == '__main__':
     # sg.theme_previewer()
     # Layout da janela
     layout = [
-        [sg.Button('Ajuda', border_width=0), sg.Button('Log do sistema', border_width=0, disabled=True)],
+        [sg.Button('Ajuda', border_width=0), sg.Button('Log do sistema', border_width=0)],
         [sg.Text('')],
         [sg.Text('Informe o CNPJ do contratante do serviço SERPRO:')],
-        [sg.InputText(key='-input_cnpj_contratante-', size=90)],
+        [sg.InputText(key='-input_cnpj_contratante-', size=90, default_text='35586086000160')],
         [sg.Text('Informe a Consumer Key:')],
-        [sg.InputText(key='-input_consumer_key-', size=90, password_char='*')],
+        [sg.InputText(key='-input_consumer_key-', size=90, password_char='*', default_text='9Y7ZKzXrx_aX9QmB0tjS8KZzAoEa')],
         [sg.Text('Informe a Consumer Secret:')],
-        [sg.InputText(key='-input_consumer_secret-', size=90, password_char='*')],
+        [sg.InputText(key='-input_consumer_secret-', size=90, password_char='*', default_text='fg9aJWoqEfacM2TaEjTIJSxNucka')],
         [sg.Text('Informe a senha do certificado digital:')],
         [sg.InputText(key='-input_senha_certificado-', size=90, password_char='*')],
         [sg.Checkbox(key='-categoria_mensal-', text='Mensal', enable_events=True), sg.Checkbox(key='-categoria_13-', text='13º', enable_events=True)],
@@ -532,11 +527,8 @@ if __name__ == '__main__':
             break
         
         elif event == 'Log do sistema':
-            if not output_dir == 'T:/ROBO/DCTF-WEB':
-                os.startfile('API_response')
-            else:
-                os.startfile('T:/ROBO/DCTF-WEB/Response')
-                
+            os.startfile(output_dir)
+
         elif event == 'Ajuda':
             os.startfile('Manual do usuário - Download de guias de DCTFWEB API SERPRO.pdf')
         

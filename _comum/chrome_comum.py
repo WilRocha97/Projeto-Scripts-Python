@@ -176,14 +176,14 @@ def abrir_chrome(url, fechar_janela=True, outra_janela=False):
     
     for i in range(4):
         p.click(1000, 51)
-        time.sleep(1)
+        time.sleep(0.5)
         p.hotkey('ctrl', 'a')
-        time.sleep(1)
-        pyperclip.copy(url)
-        time.sleep(1)
-        p.hotkey('ctrl', 'v')
-        time.sleep(1)
+        time.sleep(0.5)
         p.press('delete')
+        time.sleep(0.2)
+        pyperclip.copy(url)
+        time.sleep(0.2)
+        p.hotkey('ctrl', 'v')
 
     time.sleep(1)
     p.press('enter')

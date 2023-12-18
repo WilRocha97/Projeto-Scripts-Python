@@ -22,13 +22,20 @@ user = user.split('/')
 email = user[0]
 senha = user[1]
 
+
 def login_email(driver):
     driver.get('https://smartermail.hiway.com.br/')
     print('>>> Acessando o site')
-    time.sleep(2)
-    driver.find_element(by=By.ID, value='loginUsernameBox').send_keys(email)
-    driver.find_element(by=By.ID, value='loginPasswordBox').send_keys(senha)
-    time.sleep(1)
+    time.sleep(0.5)
+    while True:
+        try:
+            driver.find_element(by=By.ID, value='loginUsernameBox').send_keys(email)
+            driver.find_element(by=By.ID, value='loginPasswordBox').send_keys(senha)
+            break
+        except:
+            pass
+        
+    time.sleep(0.5)
     
     driver.find_element(by=By.XPATH, value='/html/body/div[2]/div/div/div[1]/div[1]/form/div[2]/div[2]/button').click()
     
@@ -197,7 +204,7 @@ def envia(resultado_anterior, contato, titulo, vencimento, link_mensagem, corpo_
         else:
             resultado = enviar_anexo(numero, link_mensagem, corpo_email)
             
-        time.sleep(2)
+        time.sleep(1)
         if resultado != 'ok':
             try:
                 _escreve_relatorio_csv(f'{cnpj};{nome};{numero};{titulo};{resultado}', nome=nome_planilha + ' erros', local=e_dir)
@@ -252,7 +259,7 @@ def enviar(numero, link_mensagem, titulo, vencimento):
         return 'Nenhum contato encontrado'
     
     while _find_img('procurando_numero.png', conf=0.9):
-        time.sleep(2)
+        time.sleep(1)
         
     p.press('enter')
     _wait_img('anexar.png', conf=0.9)
@@ -348,8 +355,16 @@ def mover_email(driver, pasta=''):
     
     time.sleep(1)
     # enquanto a caixa não aparecer aperta para descer a lista
+    contador = 0
     while not _find_img(f'caixa_{pasta}_email.png', conf=0.9):
         p.press('down')
+        contador += 1
+        if contador > 5:
+            if _find_img('inbox_1.png', conf=0.9):
+                _click_img('inbox_1.png', conf=0.9)
+            if _find_img('inbox_2.png', conf=0.9):
+                _click_img('inbox_2.png', conf=0.9)
+            contador = 0
     
     # seleciona a caixa
     _click_img(f'caixa_{pasta}_email.png', conf=0.9)
@@ -392,7 +407,7 @@ def run():
         
         status, driver = _initialize_chrome(options)
         driver = login_email(driver)
-        time.sleep(3)
+        time.sleep(1)
         
         print('>>> Aguardando e-mail')
         while re.compile(r'<div class=\"no-items\" style=\"\">Sem itens para mostrar</div>').search(driver.page_source):
@@ -405,7 +420,7 @@ def run():
         
         # determina o tempo de espera entre uma mensagem e outra para tentar evitar span
         numero = random.randint(1, 10)
-        time.sleep(numero)
+        time.sleep(1)
         
         if titulo[:3] == 'Re:':
             time.sleep(1)

@@ -81,13 +81,20 @@ def consulta_relatorio():
     _click_img('acoes_ecac.png', conf=0.9)
     time.sleep(1)
     
+    while not _find_img('tela_servicos_ecac.png', conf=0.9):
+        time.sleep(1)
+        
+    # clica na tela
+    _click_img('tela_servicos_ecac.png', conf=0.9)
+    time.sleep(1)
+    
     # aguarda o botão de CND no ecac aparecer, se aparecer uma mensagem sobre login inválido retorna o erro
     while not _find_img('cnd_ecac.png', conf=0.9):
         if _find_img('login_invalido.png', conf=0.9):
             return '❗ Os serviços só estão disponíveis caso o login esteja válido! Verifique na aba ECAC o login e senha por favor.'
         if _find_img('cnd_ecac_2.png', conf=0.9):
             break
-        p.press('PgDn')
+        p.press('pgdn')
         time.sleep(1)
     
     print('>>> Acessando ECAC')
@@ -129,6 +136,11 @@ def gera_relatorio():
         time.sleep(1)
         timer += 1
         
+        # clica no botão de CND do ecac
+        _click_position_img('cnd_ecac.png', '+', pixels_y=92, conf=0.9)
+        p.hotkey('pgdn')
+        _click_position_img('cnd_ecac_2.png', '+', pixels_y=50, conf=0.9)
+        
         erros = [('erro_sistema_10.png', 'tipo1', ''),
                  ('pagina_dirf.png', 'tipo1', ''),
                  ('erro_sistema_6.png', 'tipo1', ''),
@@ -156,6 +168,7 @@ def gera_relatorio():
                     break
                     
                 if erro[1] == 'tipo3':
+                    p.hotkey('ctrl', 'w')
                     return erro[2]
             
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente

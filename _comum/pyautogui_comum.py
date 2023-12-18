@@ -30,8 +30,11 @@ _focus = focus
 # Retorna uma tupla com os valores (x, y, altura, largura) caso ache a img
 # Retorna None caso não ache a img
 def find_img(img, pasta='imgs', conf=1.0):
-    path = os.path.join(pasta, img)
-    return a.locateOnScreen(path, confidence=conf)
+    try:
+        path = os.path.join(pasta, img)
+        return a.locateOnScreen(path, confidence=conf)
+    except:
+        return False
 _find_img = find_img
 
 

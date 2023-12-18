@@ -190,11 +190,15 @@ def new_session_fazenda_driver(cnpj, user, pwd, perfil, retorna_driver=False, op
             if not resposta:
                 padrao = re.compile(r'(Favor informar o login e a senha corretamente.)')
                 resposta = padrao.search(str(soup))
-            
+                
                 if not resposta:
-                    padrao = re.compile(r'(ERRO INTERNO AO SISTEMA DE CONTROLE DE ACESSO)')
-                    driver.save_screenshot(r'ignore\debug_screen.png')
+                    padrao = re.compile(r'(O usuário não tem acesso a este serviço do sistema ou o serviço não foi liberado para a sua utilização.)')
                     resposta = padrao.search(str(soup))
+                    
+                    if not resposta:
+                        padrao = re.compile(r'(ERRO INTERNO AO SISTEMA DE CONTROLE DE ACESSO)')
+                        driver.save_screenshot(r'ignore\debug_screen.png')
+                        resposta = padrao.search(str(soup))
             
             sid = resposta.group(1)
             print(f'❌ {sid}')

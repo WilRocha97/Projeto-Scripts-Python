@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import fitz, re, time, os, pyautogui as p, datetime as date_time, pyperclip as clip
+import shutil, fitz, re, time, os, pyautogui as p, datetime as date_time, pyperclip as clip
 from datetime import datetime
 
 from sys import path
@@ -129,6 +129,16 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
     
 
 def pega_empresas_com_exp():
+    folder = 'C:\\'
+    final_folder = 'V:\\Setor Robô\\Scripts Python\\Domínio\\Gera e Envia Experiência a Vencer\\ignore'
+    arquivo = 'Relação de Empregados - Contratos_Vencimento_Modelo_Veiga.pdf'
+    try:
+        os.remove(os.path.join(final_folder, arquivo))
+    except:
+        pass
+    time.sleep(1)
+    shutil.move(os.path.join(folder, arquivo), os.path.join(final_folder, arquivo))
+    
     # Definir os padrões de regex
     padraozinho_nome1 = re.compile(r'Local\n(\d) - (.+)\n')
     padraozinho_nome2 = re.compile(r'Local\n(\d\d) - (.+)\n')
@@ -139,9 +149,10 @@ def pega_empresas_com_exp():
     # para cada página do pdf
     if os.path.exists(os.path.join('ignore', 'Dados.csv')):
         os.remove(os.path.join('ignore', 'Dados.csv'))
+    
         
     # abre o pdf gerado no domínio com todas as empresas que possuem experiência a vencer
-    with fitz.open(os.path.join('ignore', 'Relação de Empregados - Contratos_Vencimento_Modelo_Veiga.pdf')) as pdf:
+    with fitz.open(os.path.join('ignore', arquivo)) as pdf:
         for page in pdf:
             andamento = f'Pagina = {str(page.number + 1)}'
             try:
@@ -274,13 +285,6 @@ def run(window):
                 break
             # gera o arquivo específico da empresa
             resultado = gera_arquivo(comp, andamentos, cod=empresa[0], cnpj=empresa[1], nome=empresa[2])
-
-            if resultado == 'dominio fechou':
-                _login_web()
-                _abrir_modulo('escrita_fiscal')
-
-            if resultado == 'modulo fechou':
-                _abrir_modulo('escrita_fiscal')
             
             if resultado == 'ok':
                 break

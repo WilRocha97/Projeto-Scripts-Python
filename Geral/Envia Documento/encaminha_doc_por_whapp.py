@@ -359,11 +359,17 @@ def mover_email(driver, pasta=''):
     while not _find_img(f'caixa_{pasta}_email.png', conf=0.9):
         p.press('down')
         contador += 1
-        if contador > 5:
+        if contador > 10:
             if _find_img('inbox_1.png', conf=0.9):
                 _click_img('inbox_1.png', conf=0.9)
             if _find_img('inbox_2.png', conf=0.9):
                 _click_img('inbox_2.png', conf=0.9)
+            if _find_img('tela_mover_email.png', conf=0.9):
+                _click_img('tela_mover_email.png', conf=0.9)
+                time.sleep(0.5)
+                _wait_img('lista_caixas_email.png', conf=0.9)
+                time.sleep(1)
+                _click_img('lista_caixas_email.png', conf=0.9)
             contador = 0
     
     # seleciona a caixa

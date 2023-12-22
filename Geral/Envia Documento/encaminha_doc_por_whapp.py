@@ -8,9 +8,8 @@ from pathlib import Path
 
 from sys import path
 path.append(r'..\..\_comum')
-from chrome_comum import _abrir_chrome
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers, _remove_emojis
-from chrome_comum import _initialize_chrome, _find_by_id
+from chrome_comum import _abrir_chrome, _initialize_chrome, _find_by_id
 from pyautogui_comum import _find_img, _click_img, _wait_img, _click_position_img
 
 
@@ -251,20 +250,20 @@ def enviar(numero, link_mensagem, titulo, vencimento):
     time.sleep(1)
     p.write(numero)
     time.sleep(2)
-    
+
     if _find_img('sem_contato.png', conf=0.9):
         time.sleep(1)
         p.hotkey('ctrl', 'w')
         time.sleep(1)
         return 'Nenhum contato encontrado'
-    
+
     while _find_img('procurando_numero.png', conf=0.9):
         time.sleep(1)
-        
+
     p.press('enter')
     _wait_img('anexar.png', conf=0.9)
     time.sleep(1)
-    
+    ''
     pyperclip.copy(mensagem)
     time.sleep(1)
     p.hotkey('ctrl', 'v')
@@ -287,17 +286,20 @@ def enviar_anexo(numero, anexo, corpo_email):
                 f"(19)3829-8959")
     
     _abrir_chrome('https://web.whatsapp.com/', fechar_janela=False, outra_janela='email.png')
-    _wait_img('pesquisar_contato.png', conf=0.9)
-    _click_img('pesquisar_contato.png', conf=0.9)
+    _wait_img('nova_conversa.png', conf=0.9)
+    _click_img('nova_conversa.png', conf=0.9)
     time.sleep(1)
     p.write(numero)
     time.sleep(2)
-    
+
     if _find_img('sem_contato.png', conf=0.9):
         time.sleep(1)
         p.hotkey('ctrl', 'w')
         time.sleep(1)
-        return 'Contato não encontrado'
+        return 'Nenhum contato encontrado'
+
+    while _find_img('procurando_numero.png', conf=0.9):
+        time.sleep(1)
     
     p.press('enter')
     _wait_img('anexar.png', conf=0.9)

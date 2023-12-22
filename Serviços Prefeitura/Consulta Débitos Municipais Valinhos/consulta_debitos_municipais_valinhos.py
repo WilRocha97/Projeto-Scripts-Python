@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 # from selenium.common.exceptions import NoSuchElementException
 import os, time, re
@@ -22,6 +23,7 @@ def reset_table(table):
         tag.attrs = None
         try:
             tag.string = tag.string.strip()
+
         except:
             pass
 
@@ -137,9 +139,8 @@ def login(driver, cnpj, insc_muni, nome):
                 pass
         timer += 1
         if timer >= 10:
-            _escreve_relatorio_csv(f'{cnpj};{insc_muni};{nome};Erro no login')
             print(f'❌ Erro no login')
-            return driver, False
+            return driver, 'Erro no login'
     
     return driver, 'ok'
 
@@ -186,7 +187,7 @@ def run():
     for count, empresa in enumerate(empresas[index:], start=1):
         cnpj, insc_muni, nome = empresa
 
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
         
         resultado = 'Texto da imagem incorreto'
         while resultado == 'Texto da imagem incorreto':

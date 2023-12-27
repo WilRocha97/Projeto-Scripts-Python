@@ -69,13 +69,16 @@ _wait_img = wait_img
 # Retorna False caso não ache a imagem ou exceda o 'timeout'
 def click_img(img, pasta='imgs', conf=1.0, delay=1, timeout=20, button='left', clicks=1):
     img = os.path.join(pasta, img)
-    for i in range(timeout):
-        box = a.locateCenterOnScreen(img, confidence=conf)
-        if box:
-            a.click(a.locateCenterOnScreen(img, confidence=conf), button=button, clicks=clicks)
-            return True
-        sleep(delay)
-    else:
+    try:
+        for i in range(timeout):
+            box = a.locateCenterOnScreen(img, confidence=conf)
+            if box:
+                a.click(a.locateCenterOnScreen(img, confidence=conf), button=button, clicks=clicks)
+                return True
+            sleep(delay)
+        else:
+            return False
+    except:
         return False
 _click_img = click_img
 

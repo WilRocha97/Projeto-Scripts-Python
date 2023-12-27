@@ -18,7 +18,7 @@ def analiza():
             try:
                 # Pega o texto da pagina
                 textinho = page.get_text('text', flags=1 + 2 + 8)
-                """if page.number == 26:
+                """if page.number == 3:
                     print(textinho)
                     time.sleep(33)"""
                 dados = re.compile(r'(.+)\n(.+)\n(.+)\n(.+)\n.+\nAté:').findall(textinho)
@@ -38,9 +38,15 @@ def analiza():
                             except:
                                 cpf = 'CPF não encontrado'
                     except:
-                        cpf = 'CPF não encontrado'
+                        try:
+                            cpf = re.compile(r'(.+)\n(.+)\n' + nome).search(textinho)
+                            cpf = cpf.group(1)
+                            cpf = cpf.replace('.', '').replace('-', '')
+                            int(cpf)
+                        except:
+                            cpf = 'CPF não encontrado'
                     
-                    empregado_cod = 0
+                    empregado_cod = ''
                     empregado_nome_separado = ''
                     for i in range(150):
                         empregado = re.compile(r'(.+)\n(.+)\n(.+\n){' + str(i) + '}' + nome).search(textinho)
@@ -50,10 +56,13 @@ def analiza():
                             for i in str(empregado_nome):
                                 try:
                                     int(i)
-                                    empregado_cod += int(i)
+                                    empregado_cod += str(i)
                                 except:
                                     empregado_nome_separado += str(i)
                             break
+                    
+                    if empregado_nome_separado == '':
+                        empregado_nome_separado = re.compile(r'(.+)\nCódigo:').search(textinho).group(1)
                     
                     try:
                         id_empregador = re.compile(r'(.+)\nCNPJ').search(textinho).group(1)

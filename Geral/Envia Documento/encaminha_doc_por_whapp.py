@@ -244,7 +244,7 @@ def enviar(numero, link_mensagem, titulo, vencimento):
                 f"veigaepostal@veigaepostal.com.br\n"
                 f"(19)3829-8959")
     
-    _abrir_chrome('https://web.whatsapp.com/', fechar_janela=False, outra_janela='email.png')
+    _abrir_chrome('https://web.whatsapp.com/', fechar_janela=False, outra_janela='email.png', anti_travamento=True)
     _wait_img('nova_conversa.png', conf=0.9)
     _click_img('nova_conversa.png', conf=0.9)
     time.sleep(1)
@@ -300,7 +300,7 @@ def enviar_anexo(numero, anexo, corpo_email):
 
     while _find_img('procurando_numero.png', conf=0.9):
         time.sleep(1)
-    
+
     p.press('enter')
     _wait_img('anexar.png', conf=0.9)
     _click_img('anexar.png', conf=0.9)

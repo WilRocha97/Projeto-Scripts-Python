@@ -332,3 +332,11 @@ def remove_emojis(text):
     text = text[0:-1]
     return text
 _remove_emojis = remove_emojis
+
+
+def remove_espacos(text):
+    string = re.compile(r"\s\s")
+    text = string.sub(r'', text)
+    text = text[0:-1]
+    return text
+_remove_espacos = remove_espacos

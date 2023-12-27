@@ -6,6 +6,11 @@ path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
 
+dados = "V:\\Setor Robô\\Scripts Python\\_comum\\Dados SEDIF.txt"
+f = open(dados, 'r', encoding='utf-8')
+user = f.read()
+user = user.split('/')
+
 
 def reinstala_sedif():
     time.sleep(2)
@@ -197,9 +202,9 @@ def transmitir(empresa, comp):
     _click_img('identificacao.png', conf=0.9)
 
     # usuário e senha do contribuinte para transmitir sedif sem movimento
-    p.write('EVANDROMAZANO')
+    p.write(user[0])
     p.press('tab')
-    p.write('66a3tk2ter')
+    p.write(user[1])
     _click_img('ok.png', conf=0.9)
     
     excecoes = [('cpf_do_responsavel_invalido.png', 'CPF do responsável inválido'),

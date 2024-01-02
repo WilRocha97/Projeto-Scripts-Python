@@ -5,7 +5,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from chrome_comum import _abrir_chrome
 from pyautogui_comum import _click_img, _wait_img, _find_img, _click_position_img, _click_position_img
-from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
+from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _barra_de_status
 
 dados = "V:\\Setor Robô\\Scripts Python\\_comum\\Dados Confere IR.txt"
 f = open(dados, 'r', encoding='utf-8')
@@ -59,6 +59,11 @@ def busca_cpf(cpf):
     
     # aguarda o CPF consultado aparecer
     while not _find_img('empresa.png', conf=0.9):
+        if _find_img('tela_login.png', conf=0.9):
+            login_conferir()
+            time.sleep(3)
+            return 'login'
+        
         if _find_img('nenhum_resultado_encontrado.png', conf=0.9):
             return '❗ CPF não encontrado no sistema'
         time.sleep(1)
@@ -280,7 +285,8 @@ def copia_valor():
 
 
 @_time_execution
-def run():
+@_barra_de_status
+def run(window):
     consulta = p.confirm(buttons=['Consulta IR a restituir', 'Consulta e gera DARF'])
     
     if consulta == 'Consulta IR a restituir':
@@ -300,8 +306,10 @@ def run():
 
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        # configurar o índice para localizar em qual empresa está
+        # printa o indice da empresa que está sendo executada
+        window['-Mensagens-'].update(f'{str(count + index)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index))} Restantes')
         _indice(count, total_empresas, empresa, index)
+        
         cpf, nome = empresa
         
         while True:

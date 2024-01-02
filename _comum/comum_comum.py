@@ -36,12 +36,13 @@ def barra_de_status(func):
         layout = [
             [sg.Text('Rotina automática em execução, por favor não interfira.', key='-titulo-', text_color='#fca400'),
              sg.Button('Iniciar', key='-iniciar-', border_width=0),
-             sg.Text('', key='-Mensagens-', size=100)],
+             sg.Text('', key='-Mensagens-')],
         ]
         
         # guarda a janela na variável para manipula-la
         screen_width, screen_height = sg.Window.get_screen_size()
-        window = sg.Window('', layout, no_titlebar=True, location=(0, 0), size=(screen_width, 35), keep_on_top=True)
+        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(600, 30), border_depth=0, finalize=True)
+        window.move(screen_width // 2 - window.size[0] // 2, 0)
         
         def run_script_thread():
             try:

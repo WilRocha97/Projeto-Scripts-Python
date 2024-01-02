@@ -10,7 +10,7 @@ from pyperclip import copy
 from sys import path
 path.append(r'..\..\_comum')
 from chrome_comum import _initialize_chrome, _send_input, _find_by_path, _find_by_id
-from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
+from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _barra_de_status
 from captcha_comum import _solve_text_captcha
 from pyautogui_comum import _find_img, _wait_img, _click_img
 
@@ -142,7 +142,8 @@ def salvar_guia(cnpj):
 
 
 @_time_execution
-def run():
+@_barra_de_status
+def run(window):
     empresas = _open_lista_dados()
     
     index = _where_to_start(tuple(i[0] for i in empresas))
@@ -154,9 +155,9 @@ def run():
     
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, insc_muni, nome = empresa
-        
-        _indice(count, total_empresas, empresa)
+        # printa o indice da empresa que está sendo executada
+        window['-Mensagens-'].update(f'{str(count + index)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index))} Restantes')
+        _indice(count, total_empresas, empresa, index)
         
         situacao, situacao_print = pesquisar(options, cnpj, insc_muni)
         print(situacao_print)

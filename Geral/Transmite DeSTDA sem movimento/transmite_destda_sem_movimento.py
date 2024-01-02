@@ -4,7 +4,7 @@ import pyperclip, time, os, pyautogui as p
 from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
-from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
+from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start, _barra_de_status
 
 dados = "V:\\Setor Robô\\Scripts Python\\_comum\\Dados SEDIF.txt"
 f = open(dados, 'r', encoding='utf-8')
@@ -313,7 +313,8 @@ def transmitir(empresa, comp):
 
 
 @_time_execution
-def run():
+@_barra_de_status
+def run(window):
     comp = p.prompt(title='Script incrível', text='Qual competência', default='00/0000')
     empresas = _open_lista_dados()
     
@@ -323,7 +324,10 @@ def run():
     
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        window['-Mensagens-'].update(f'{str(count + index)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index))} Restantes')
         _indice(count, total_empresas, empresa, index)
+        
         erro = 'sim'
         while erro == 'sim':
             reinstala_sedif()

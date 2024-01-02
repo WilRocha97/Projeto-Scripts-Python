@@ -6,8 +6,8 @@ from sys import path
 
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
-from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
-from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf, _encerra_dominio
+from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start, _barra_de_status
+from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf
 
 
 def relatorio_darf_dctf(empresa, periodo, andamento):
@@ -21,8 +21,9 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
     # Resumo
     time.sleep(0.5)
     p.press('m')
-
+    verificacao = 'continue'
     while not _find_img('resumo_de_impostos.png', conf=0.9):
+        
         if verificacao != 'continue':
             return verificacao
         time.sleep(1)
@@ -132,7 +133,8 @@ def mover_relatorio(cod):
 
 
 @_time_execution
-def run():
+@_barra_de_status
+def run(window):
     periodo = p.prompt(text='Qual o período do relatório', title='Script incrível', default='00/0000')
     empresas = _open_lista_dados()
     andamentos = 'Relatórios para DARF DCTF'
@@ -147,7 +149,9 @@ def run():
     _abrir_modulo('escrita_fiscal')
 
     for count, empresa in enumerate(empresas[index:], start=1):
-        _indice(count, total_empresas, empresa)
+        # printa o indice da empresa que está sendo executada
+        window['-Mensagens-'].update(f'{str(count + index)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index))} Restantes')
+        _indice(count, total_empresas, empresa, index)
 
         while True:
             if not _login(empresa, andamentos):
@@ -165,8 +169,6 @@ def run():
                 if resultado == 'ok':
                     break
 
-    _encerra_dominio()
-    
 
 if __name__ == '__main__':
     run()

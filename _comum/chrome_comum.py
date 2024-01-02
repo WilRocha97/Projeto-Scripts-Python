@@ -178,7 +178,7 @@ def abrir_chrome(url, fechar_janela=True, outra_janela=False, anti_travamento=Fa
         p.hotkey('alt', 'space', 'x')
         time.sleep(1)
     
-    for i in range(4):
+    for i in range(3):
         p.click(1000, 51)
         time.sleep(0.5)
         p.hotkey('ctrl', 'a')

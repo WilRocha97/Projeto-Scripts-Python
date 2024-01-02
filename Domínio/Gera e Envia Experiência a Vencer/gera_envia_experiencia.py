@@ -6,7 +6,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _indice, _time_execution, _open_lista_dados, _escreve_relatorio_csv, _where_to_start, _barra_de_status
-from dominio_comum import _login, _login_web, _abrir_modulo, _salvar_pdf, _encerra_dominio
+from dominio_comum import _login, _login_web, _abrir_modulo, _salvar_pdf
 
 
 def escreve_dados(cod, nome):
@@ -240,6 +240,7 @@ def define_data():
     return hoje.replace('//', '/'), data_subtraida.replace('//', '/')
 
 
+@_time_execution
 @_barra_de_status
 def run(window):
     # define o nome da planilha de andamentos
@@ -276,7 +277,7 @@ def run(window):
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
-        window['-Mensagens-'].update(f'{str(count)} / {str(len(total_empresas))}')
+        window['-Mensagens-'].update(f'{str(count + index)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index))} Restantes')
         _indice(count, total_empresas, empresa, index)
         
         while True:
@@ -288,8 +289,6 @@ def run(window):
             
             if resultado == 'ok':
                 break
-
-    _encerra_dominio()
     
 
 if __name__ == '__main__':

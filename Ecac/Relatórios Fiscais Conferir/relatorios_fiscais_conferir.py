@@ -5,7 +5,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from chrome_comum import _abrir_chrome
 from pyautogui_comum import _click_img, _wait_img, _find_img, _click_position_img, _click_position_img
-from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
+from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _barra_de_status
 
 dados = "V:\\Setor Robô\\Scripts Python\\_comum\\Dados Confere IR.txt"
 f = open(dados, 'r', encoding='utf-8')
@@ -282,7 +282,8 @@ def verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias):
 
 
 @_time_execution
-def run():
+@_barra_de_status
+def run(window):
     pasta_analise = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\ignore\Relatórios'
     pasta_final = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\execução\Relatórios'
     pasta_final_sem_pendencias = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\execução\Relatórios Sem Pendências'
@@ -304,8 +305,10 @@ def run():
 
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        # configurar o índice para localizar em qual empresa está
+        # printa o indice da empresa que está sendo executada
+        window['-Mensagens-'].update(f'{str(count + index)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index))} Restantes')
         _indice(count, total_empresas, empresa, index)
+        
         cpf, nome = empresa
         
         while True:

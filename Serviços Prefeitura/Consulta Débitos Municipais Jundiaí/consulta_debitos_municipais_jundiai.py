@@ -9,7 +9,7 @@ from sys import path
 
 path.append(r'..\..\_comum')
 from chrome_comum import _initialize_chrome, _send_input, _find_by_path, _find_by_id
-from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice
+from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _barra_de_status
 from captcha_comum import _solve_recaptcha
 
 os.makedirs('execução/Certidões', exist_ok=True)
@@ -115,7 +115,8 @@ def login(options, cnpj, insc_muni):
 
 
 @_time_execution
-def run():
+@_barra_de_status
+def run(window):
     # função para abrir a lista de dados
     empresas = _open_lista_dados()
     
@@ -138,10 +139,9 @@ def run():
     # cria o indice para cada empresa da lista de dados
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, insc_muni, nome = empresa
-        
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa)
+        window['-Mensagens-'].update(f'{str(count + index)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index))} Restantes')
+        _indice(count, total_empresas, empresa, index)
         
         while True:
             situacao, situacao_print = login(options, cnpj, insc_muni)

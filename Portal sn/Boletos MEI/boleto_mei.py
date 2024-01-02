@@ -201,8 +201,10 @@ def run(window):
 
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        window['-Mensagens-'].update(f'{str(count)} / {str(len(total_empresas))}')
+        # printa o indice da empresa que está sendo executada
+        window['-Mensagens-'].update(f'{str(count + index)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index))} Restantes')
         _indice(count, total_empresas, empresa, index)
+        
         cnpj, comp, ano, venc = empresa
         andamentos = f'Boletos MEI {comp}-{ano}'
         

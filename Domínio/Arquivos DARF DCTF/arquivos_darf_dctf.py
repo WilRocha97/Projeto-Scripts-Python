@@ -5,8 +5,8 @@ from sys import path
 
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
-from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
-from dominio_comum import _login_web, _abrir_modulo, _login, _encerra_dominio
+from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start, _barra_de_status
+from dominio_comum import _login_web, _abrir_modulo, _login
 
 
 def arquivos_darf_dctf(empresa, periodo, andamento):
@@ -32,8 +32,6 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
     p.press('m')
 
     while not _find_img('dctf_mensal.png', conf=0.9):
-        if verificacao != 'continue':
-            return verificacao, nome_arquivo
         if _find_img('dctf_mensal_2.png', conf=0.9):
             break
         time.sleep(1)
@@ -54,8 +52,6 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
     p.hotkey('alt', 'o')
 
     while not _find_img('outros_dados.png', conf=0.9):
-        if verificacao != 'continue':
-            return verificacao, nome_arquivo
         if _find_img('outros_dados_2.png', conf=0.9):
             break
             
@@ -93,16 +89,11 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
     time.sleep(1)
 
     while _find_img('outros_dados.png', conf=0.9):
-        if verificacao != 'continue':
-            return verificacao, nome_arquivo
         time.sleep(2)
 
     p.hotkey('alt', 'x')
     print('>>> Gerando arquivo')
     while _find_img('dctf_mensal.png', conf=0.9) or _find_img('dctf_mensal_2.png', conf=0.9):
-        if verificacao != 'continue':
-            return verificacao, nome_arquivo
-        
         time.sleep(1)
         if _find_img('nao_gerou_arquivo.png', conf=0.9):
             p.press('enter')
@@ -177,7 +168,8 @@ def mover_arquivo(nome_arquivo):
 
 
 @_time_execution
-def run():
+@_barra_de_status
+def run(window):
     periodo = p.prompt(text='Qual o período do arquivo', title='Script incrível', default='00/0000')
     empresas = _open_lista_dados()
     andamentos = 'Arquivos para DARF DCTF'
@@ -192,8 +184,10 @@ def run():
     _abrir_modulo('escrita_fiscal')
     
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        window['-Mensagens-'].update(f'{str(count + index)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index))} Restantes')
         _indice(count, total_empresas, empresa, index)
-
+        
         while True:
             if not _login(empresa, andamentos):
                 break
@@ -212,8 +206,6 @@ def run():
                 
                 if resultado == 'ok':
                     break
-                    
-    _encerra_dominio()
     
 
 if __name__ == '__main__':

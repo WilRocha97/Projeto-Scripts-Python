@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from decimal import Decimal
 import os, time, re, fitz, shutil
 
 from sys import path
@@ -54,6 +55,7 @@ def consulta_notas(download_folder, driver, cod_dominio, cnpj, nome):
     paginas = 1
     quantidade_de_notas = 0
     dados = []
+    dados_para_somar_valores = []
     while True:
         # percorre infinitas páginas
         driver.get('https://www.nfse.gov.br/EmissorNacional/Notas/Emitidas?pg=' + str(paginas) + '&=2')
@@ -80,7 +82,8 @@ def consulta_notas(download_folder, driver, cod_dominio, cnpj, nome):
             time.sleep(1)
             
             # coleta os dados da nota no site
-            dados_do_site = coleta_dados_da_nota_no_site(driver)
+            dados_do_site, data_emissao = coleta_dados_da_nota_no_site(driver)
+            
             # verifica se a nota foi cancelada
             nf_cancelada = ' - '
             situacao = '0'
@@ -97,24 +100,57 @@ def consulta_notas(download_folder, driver, cod_dominio, cnpj, nome):
             time.sleep(1)
             
             # move para pasta final e captura informações para anotar na planilha e renomear o arquivo
-            dados_pdf = coleta_dados_e_renomeia_arquivo(download_folder, link_pdf, nome, nf_cancelada)
+            dados_pdf, valor_total = coleta_dados_e_renomeia_arquivo(download_folder, link_pdf, nome, nf_cancelada)
             
             # se ao coletar os dados no site for encontrado que o tomador não foi informado na nota, não irá anotar os dados na planilha referente a essa nota,
             # só insere na planilha notas com tomador informado
             if dados_do_site != 'O tomador e o intermediário não foram identificados pelo emitente' and dados_do_site != 'Nota fiscal sem tomador, apenas intermediário':
                 dados.append(f'{dados_do_site};{situacao};{dados_pdf}')
             
+            # cria uma lista só com as datas
+            if situacao != '2':
+                data_emissao = data_emissao.split('/')
+                dados_para_somar_valores.append((f'{data_emissao[1]}/{data_emissao[2]}', valor_total))
+            
         paginas += 1
+    
+    comp_nota_anterior = ''
+    valor_total_mes = 0
+    contador = 0
+    dados_para_somar_valores = sorted(dados_para_somar_valores)
+    for count, dado in enumerate(dados_para_somar_valores):
+        if count == 0:
+            valor_total_mes = valor_total_mes + Decimal(float(str(dado[1]).replace('.', '').replace(',', '.')))
+            comp_nota_anterior = dado[0]
+            contador += 1
+            continue
+            
+        elif dado[0] == comp_nota_anterior:
+            valor_total_mes = valor_total_mes + Decimal(float(str(dado[1]).replace('.', '').replace(',', '.')))
+            comp_nota_anterior = dado[0]
+            contador += 1
+            continue
+    
+        valor_total_mes = round(valor_total_mes, 2)
+        valor_total_mes = str(valor_total_mes).replace('.', ',')
+        # anota na planilha de resumo o andamento da consulta e quantas notas foram baixadas
+        _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{contador} notas encontradas;{comp_nota_anterior};{valor_total_mes}', nome='Resumo')
         
+        valor_total_mes = Decimal(float(str(dado[1]).replace('.', '').replace(',', '.')))
+        comp_nota_anterior = dado[0]
+        contador = 1
+    
+    valor_total_mes = round(valor_total_mes, 2)
+    valor_total_mes = str(valor_total_mes).replace('.', ',')
+    # anota na planilha de resumo o andamento da consulta e quantas notas foram baixadas
+    _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{contador} notas encontradas;{comp_nota_anterior};{valor_total_mes}', nome='Resumo')
+    
     # para cada nota armazenada na variável, insere na planilha de notas
     for nota in dados:
         _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{nota}', nome='Notas')
         # cria um txt com os dados das notas em uma pasta nomeada com o código no domínio e o cnpj do prestador
         cria_txt(cod_dominio, cnpj, nota)
     
-    # anota na planilha de resumo o andamento da consulta e quantas notas foram baixadas
-    _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{quantidade_de_notas} notas encontradas', nome='Resumo')
-        
     return driver, 'ok'
 
 
@@ -127,11 +163,13 @@ def coleta_dados_da_nota_no_site(driver):
     # se não foi informado retorna e não coleta mais nada, pois só irá anotar na planilha se o tomador for informado
     nao_tem_tomador = re.compile(r'O tomador e o indermediário não foram identificados pelo emitente').search(driver.page_source)
     tem_intermediario = re.compile(r'Intermediário').search(driver.page_source)
+    
+    data_emissao = re.compile(r'Data de emissão</span></label><span class=\"form-control-static texto\">(.+) \n\s+ .+\n\s+ .+</span></div>').search(driver.page_source).group(1)
     if nao_tem_tomador:
-        return 'O tomador e o intermediário não foram identificados pelo emitente'
+        return 'O tomador e o intermediário não foram identificados pelo emitente', data_emissao
     
     if tem_intermediario:
-        return 'Nota fiscal sem tomador, apenas intermediário'
+        return 'Nota fiscal sem tomador, apenas intermediário', data_emissao
     
     # captura o CNPJ ou CPF do tomador
     # a variável é iniciada fora do 'for', pois caso não encontre pode ser se o tomador seja fora do Brasil
@@ -176,9 +214,8 @@ def coleta_dados_da_nota_no_site(driver):
     # pega mais informações da nota
     numero_nota = re.compile(r'Número</span></label><span class=\"form-control-static texto\">(.+)</span></div>').search(driver.page_source).group(1)
     serie_nota = re.compile(r'Série</span></label><span class=\"form-control-static texto\">(.+)</span></div>').search(driver.page_source).group(1)
-    data_emissao = re.compile(r'Data de emissão</span></label><span class=\"form-control-static texto\">(.+) \n\s+ .+\n\s+ .+</span></div>').search(driver.page_source).group(1)
     
-    return f'{cpf_cnpj_tomador};{nome_tomador};{uf};{cidade};{endereco};{numero_nota};{serie_nota};{data_emissao}'
+    return f'{cpf_cnpj_tomador};{nome_tomador};{uf};{cidade};{endereco};{numero_nota};{serie_nota};{data_emissao}', data_emissao
 
 
 def coleta_dados_e_renomeia_arquivo(download_folder, link_pdf, nome, nf_cancelada):
@@ -274,7 +311,7 @@ def coleta_dados_e_renomeia_arquivo(download_folder, link_pdf, nome, nf_cancelad
     shutil.move(os.path.join(download_folder, nome_arquivo), os.path.join(download_folder, novo_arquivo))
     print(novo_arquivo)
     
-    return dados_pdf.replace('.', '')
+    return dados_pdf.replace('.', ''), valor_servico
 
 
 def cria_txt(codigo, cnpj, dados_nota, tipo='NFSe-MEI', encode='latin-1'):
@@ -305,9 +342,9 @@ def run():
         return False
     
     options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--window-size=1920,1080')
-    # options.add_argument("--start-maximized")
+    # options.add_argument('--headless')
+    # options.add_argument('--window-size=1920,1080')
+    options.add_argument("--start-maximized")
     options.add_experimental_option('prefs', {
         "download.default_directory": download_folder,  # muda o diretório padrão de download do navegador
         "download.prompt_for_download": False,  # faz o download automatico sem perguntar onde salvar

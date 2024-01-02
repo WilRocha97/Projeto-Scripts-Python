@@ -182,7 +182,6 @@ def captura_info_pdf(andamento, arquivo, refaz_planilha='não'):
                 print('ERRO')
 
 
-@_time_execution
 @_barra_de_status
 def run(window):
     # configura o ano e digita no domínio

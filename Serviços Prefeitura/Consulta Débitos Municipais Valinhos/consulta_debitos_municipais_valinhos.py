@@ -171,7 +171,6 @@ def consulta(driver, cnpj, insc_muni, nome):
     return driver, True
 
 
-@_time_execution
 def run():
     empresas = _open_lista_dados()
 
@@ -185,8 +184,7 @@ def run():
 
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, insc_muni, nome = empresa
-
+        # printa o indice da empresa que está sendo executada
         _indice(count, total_empresas, empresa, index)
         
         resultado = 'Texto da imagem incorreto'

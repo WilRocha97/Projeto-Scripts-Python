@@ -70,7 +70,7 @@ def run():
             _escreve_relatorio_csv(f'{cod_ae};{nome};{cnpj};{matricula};Não encontrou fatura paga referente a {ref}', nome=nome_planilha)
             print(f'❌ Não encontrou fatura paga referente a {ref}')
         
-    _escreve_header_csv('CÓDIGO AE;NOME;REFERENCIA;VENCIMENTO;EMISSÃO;VALOR;DATA DE PAGAMENTO;LOCAL DE PAGAMENTO', nome=nome_planilha)
+    _escreve_header_csv('CÓDIGO AE;NOME;REFERENCIA;MATRÍCULA;REFERENCIA;VENCIMENTO;EMISSÃO;VALOR;DATA DE PAGAMENTO;LOCAL DE PAGAMENTO', nome=nome_planilha)
     
     
 if __name__ == '__main__':

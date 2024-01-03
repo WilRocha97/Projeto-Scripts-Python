@@ -154,14 +154,22 @@ def abrir_chrome(url, fechar_janela=True, outra_janela=False, anti_travamento=Fa
             if anti_travamento:
                 if _find_img('chrome_travado.png', conf=0.9):
                     _click_img('chrome_travado.png', conf=0.9)
-
+        
+        _click_img('google.png', conf=0.9)
+        time.sleep(1)
+        p.hotkey('alt', 'space', 'x')
+        p.hotkey('alt', 'space', 'x')
+        p.hotkey('alt', 'space', 'x')
+        p.hotkey('alt', 'space', 'x')
+        p.hotkey('alt', 'space', 'x')
+        
+        time.sleep(1)
+        if _find_img('restaurar_pagina.png', conf=0.9):
+            _click_img('restaurar_pagina.png', conf=0.9)
             time.sleep(1)
-            if _find_img('restaurar_pagina.png', conf=0.9):
-                _click_img('restaurar_pagina.png', conf=0.9)
-                time.sleep(1)
-                p.press('esc')
-                time.sleep(1)
-    
+            p.press('esc')
+            time.sleep(1)
+        
     if fechar_janela:
         p.hotkey('win', 'm')
     
@@ -170,15 +178,11 @@ def abrir_chrome(url, fechar_janela=True, outra_janela=False, anti_travamento=Fa
             _click_img('chrome_aberto.png', conf=0.99, timeout=1)
         else:
             abrir_nova_janela()
+            
     else:
         abrir_nova_janela()
-        
-        _click_img('google.png', conf=0.9)
-        time.sleep(1)
-        p.hotkey('alt', 'space', 'x')
-        time.sleep(1)
     
-    for i in range(3):
+    for i in range(4):
         p.click(1000, 51)
         time.sleep(0.5)
         p.hotkey('ctrl', 'a')

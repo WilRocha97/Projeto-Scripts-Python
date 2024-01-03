@@ -158,6 +158,8 @@ def run(window):
         # printa o indice da empresa que está sendo executada
         window['-Mensagens-'].update(f'{str(count + index)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index))} Restantes')
         _indice(count, total_empresas, empresa, index)
+
+        cnpj, insc_muni, nome= empresa
         
         situacao, situacao_print = pesquisar(options, cnpj, insc_muni)
         print(situacao_print)

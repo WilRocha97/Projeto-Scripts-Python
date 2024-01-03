@@ -82,7 +82,7 @@ def consulta_notas(download_folder, driver, cod_dominio, cnpj, nome):
             time.sleep(1)
             
             # coleta os dados da nota no site
-            dados_do_site, data_emissao = coleta_dados_da_nota_no_site(driver)
+            dados_do_site, data_emissao, nome_tomador = coleta_dados_da_nota_no_site(driver)
             
             # verifica se a nota foi cancelada
             nf_cancelada = ' - '
@@ -103,9 +103,11 @@ def consulta_notas(download_folder, driver, cod_dominio, cnpj, nome):
             dados_pdf, valor_total = coleta_dados_e_renomeia_arquivo(download_folder, link_pdf, nome, nf_cancelada)
             
             # se ao coletar os dados no site for encontrado que o tomador não foi informado na nota, não irá anotar os dados na planilha referente a essa nota,
-            # só insere na planilha notas com tomador informado
-            if dados_do_site != 'O tomador e o intermediário não foram identificados pelo emitente' and dados_do_site != 'Nota fiscal sem tomador, apenas intermediário':
+            # só cria txt das notas com tomador informado
+            if nome_tomador != 'O tomador e o intermediário não foram identificados pelo emitente' and nome_tomador != 'Nota fiscal sem tomador, apenas intermediário':
                 dados.append(f'{dados_do_site};{situacao};{dados_pdf}')
+            # adiciona na planilha todas as notas
+            _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{dados_do_site};{situacao};{dados_pdf}', nome='Notas')
             
             # cria uma lista só com as datas
             if situacao != '2':
@@ -147,7 +149,6 @@ def consulta_notas(download_folder, driver, cod_dominio, cnpj, nome):
     
     # para cada nota armazenada na variável, insere na planilha de notas
     for nota in dados:
-        _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{nota}', nome='Notas')
         # cria um txt com os dados das notas em uma pasta nomeada com o código no domínio e o cnpj do prestador
         cria_txt(cod_dominio, cnpj, nota)
     
@@ -164,12 +165,23 @@ def coleta_dados_da_nota_no_site(driver):
     nao_tem_tomador = re.compile(r'O tomador e o indermediário não foram identificados pelo emitente').search(driver.page_source)
     tem_intermediario = re.compile(r'Intermediário').search(driver.page_source)
     
-    data_emissao = re.compile(r'Data de emissão</span></label><span class=\"form-control-static texto\">(.+) \n\s+ .+\n\s+ .+</span></div>').search(driver.page_source).group(1)
     if nao_tem_tomador:
-        return 'O tomador e o intermediário não foram identificados pelo emitente', data_emissao
+        nome_tomador = 'O tomador e o intermediário não foram identificados pelo emitente'
     
-    if tem_intermediario:
-        return 'Nota fiscal sem tomador, apenas intermediário', data_emissao
+    elif tem_intermediario:
+        nome_tomador = 'Nota fiscal sem tomador, apenas intermediário'
+    
+    else:
+        # captura o nome do tomador, o campo pode variar de posição no código do site, por isso o 'for' para editar o regex até encontrar
+        for i in range(20):
+            try:
+                nome_tomador = re.compile(r'Tomador.+(\n.+){' + str(i) + '}Razão Social</span></label><span class=\"form-control-static .+\">(.+)</span></div>').search(driver.page_source).group(2)
+                nome_tomador = nome_tomador.replace('&amp;', '&')
+                break
+            except:
+                pass
+    
+    data_emissao = re.compile(r'Data de emissão</span></label><span class=\"form-control-static texto\">(.+) \n\s+ .+\n\s+ .+</span></div>').search(driver.page_source).group(1)
     
     # captura o CNPJ ou CPF do tomador
     # a variável é iniciada fora do 'for', pois caso não encontre pode ser se o tomador seja fora do Brasil
@@ -177,15 +189,6 @@ def coleta_dados_da_nota_no_site(driver):
     for id_tomador in ['CNPJ', 'CPF']:
         try:
             cpf_cnpj_tomador = re.compile(r'Tomador.+(\n.+){4}' + id_tomador + '</span></label><span class=\"form-control-static .+\">(.+)</span></div>').search(driver.page_source).group(2)
-            break
-        except:
-            pass
-    
-    # captura o nome do tomador, o campo pode variar de posição no código do site, por isso o 'for' para editar o regex até encontrar
-    for i in range(20):
-        try:
-            nome_tomador = re.compile(r'Tomador.+(\n.+){' + str(i) + '}Razão Social</span></label><span class=\"form-control-static .+\">(.+)</span></div>').search(driver.page_source).group(2)
-            nome_tomador = nome_tomador.replace('&amp;', '&')
             break
         except:
             pass
@@ -215,7 +218,7 @@ def coleta_dados_da_nota_no_site(driver):
     numero_nota = re.compile(r'Número</span></label><span class=\"form-control-static texto\">(.+)</span></div>').search(driver.page_source).group(1)
     serie_nota = re.compile(r'Série</span></label><span class=\"form-control-static texto\">(.+)</span></div>').search(driver.page_source).group(1)
     
-    return f'{cpf_cnpj_tomador};{nome_tomador};{uf};{cidade};{endereco};{numero_nota};{serie_nota};{data_emissao}', data_emissao
+    return f'{cpf_cnpj_tomador};{nome_tomador};{uf};{cidade};{endereco};{numero_nota};{serie_nota};{data_emissao}', data_emissao, nome_tomador
 
 
 def coleta_dados_e_renomeia_arquivo(download_folder, link_pdf, nome, nf_cancelada):
@@ -342,9 +345,9 @@ def run():
         return False
     
     options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')
-    # options.add_argument('--window-size=1920,1080')
-    options.add_argument("--start-maximized")
+    options.add_argument('--headless')
+    options.add_argument('--window-size=1920,1080')
+    # options.add_argument("--start-maximized")
     options.add_experimental_option('prefs', {
         "download.default_directory": download_folder,  # muda o diretório padrão de download do navegador
         "download.prompt_for_download": False,  # faz o download automatico sem perguntar onde salvar

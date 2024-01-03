@@ -187,6 +187,8 @@ def run():
         # printa o indice da empresa que está sendo executada
         _indice(count, total_empresas, empresa, index)
         
+        cnpj, insc_muni, nome = empresa
+        
         resultado = 'Texto da imagem incorreto'
         while resultado == 'Texto da imagem incorreto':
             status, driver = _initialize_chrome(options)

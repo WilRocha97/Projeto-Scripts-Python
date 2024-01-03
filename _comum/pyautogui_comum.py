@@ -93,6 +93,12 @@ def click_position_img(img, operacao, pixels_x=0, pixels_y=0, pasta='imgs', conf
     if operacao == '-':
         a.click(int(local_mouse[0] - int(pixels_x)), int(local_mouse[1] - int(pixels_y)), clicks=clicks)
         return True
+    if operacao == '+x-y':
+        a.click(int(local_mouse[0] + int(pixels_x)), int(local_mouse[1] - int(pixels_y)), clicks=clicks)
+        return True
+    if operacao == '-x+y':
+        a.click(int(local_mouse[0] - int(pixels_x)), int(local_mouse[1] + int(pixels_y)), clicks=clicks)
+        return True
 _click_position_img = click_position_img
 
 

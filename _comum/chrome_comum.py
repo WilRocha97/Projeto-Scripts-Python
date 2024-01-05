@@ -142,7 +142,7 @@ _find_by_class = find_by_class
 
 
 # abre o chrome padrão instalado no PC
-def abrir_chrome(url, fechar_janela=True, outra_janela=False, anti_travamento=False):
+def abrir_chrome(url, tela_inicial_site=False, fechar_janela=True, outra_janela=False, anti_travamento=False):
     def abrir_nova_janela():
         time.sleep(0.5)
         os.startfile(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
@@ -166,9 +166,9 @@ def abrir_chrome(url, fechar_janela=True, outra_janela=False, anti_travamento=Fa
         time.sleep(1)
         if _find_img('restaurar_pagina.png', conf=0.9):
             _click_img('restaurar_pagina.png', conf=0.9)
-            time.sleep(1)
+            time.sleep(0.5)
             p.press('esc')
-            time.sleep(1)
+            time.sleep(0.5)
         
     if fechar_janela:
         p.hotkey('win', 'm')
@@ -181,18 +181,46 @@ def abrir_chrome(url, fechar_janela=True, outra_janela=False, anti_travamento=Fa
             
     else:
         abrir_nova_janela()
-    
-    for i in range(4):
-        p.click(1000, 51)
-        time.sleep(0.5)
-        p.hotkey('ctrl', 'a')
-        time.sleep(0.5)
-        p.press('delete')
-        time.sleep(0.2)
-        pyperclip.copy(url)
-        time.sleep(0.2)
-        p.hotkey('ctrl', 'v')
 
-    time.sleep(1)
-    p.press('enter')
+    if tela_inicial_site:
+        timer = 0
+        while not _find_img(tela_inicial_site, conf=0.9):
+            print('>>> Aguardando o site carregar...')
+            if timer == 0:
+                for i in range(4):
+                    p.click(1000, 51)
+                    time.sleep(0.5)
+                    p.hotkey('ctrl', 'a')
+                    time.sleep(0.5)
+                    p.press('delete')
+                    time.sleep(0.2)
+                    pyperclip.copy(url)
+                    time.sleep(0.2)
+                    p.hotkey('ctrl', 'v')
+            
+                time.sleep(1)
+                p.press('enter')
+                p.press('enter')
+                
+            time.sleep(1)
+            timer += 1
+            if timer > 60:
+                timer = 0
+
+    else:
+        for i in range(4):
+            p.click(1000, 51)
+            time.sleep(0.5)
+            p.hotkey('ctrl', 'a')
+            time.sleep(0.5)
+            p.press('delete')
+            time.sleep(0.2)
+            pyperclip.copy(url)
+            time.sleep(0.2)
+            p.hotkey('ctrl', 'v')
+        
+        time.sleep(1)
+        p.press('enter')
+        p.press('enter')
+
 _abrir_chrome = abrir_chrome

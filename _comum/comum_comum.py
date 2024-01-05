@@ -41,7 +41,7 @@ def barra_de_status(func):
         
         # guarda a janela na variável para manipula-la
         screen_width, screen_height = sg.Window.get_screen_size()
-        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(600, 30), border_depth=0, finalize=True, location=((screen_width // 2) - (600 // 2), 0))
+        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(600, 32), border_depth=0, finalize=True, location=((screen_width // 2) - (600 // 2), 0))
         # window.move(screen_width // 2 - window.size[0] // 2, 0)
         
         def run_script_thread():

@@ -39,14 +39,12 @@ def copiar(limpar_info=False, deletar_final=0):
     
     # retorna com algumas configurações padrão e também
     # com um parámetro para decidir quantos caracteres serão apagados do final da string, para retirar bug de quebra de linha
-    return str(texto[:-deletar_final]).replace("/", "-").replace("\n", "-").replace("Bras", "Brasil").replace("Contribuin", "Contribuinte")
+    return str(texto[:-deletar_final]).replace("/", "-").replace("\n", "-").replace("\r", "")
 
 
 def login(cnpj):
     # espera o site abrir
-    while not _wait_img('cnpj.png', conf=0.9, timeout=-1):
-        time.sleep(1)
-    
+    print('>>> Abrindo infos da empresa')
     _click_img('cnpj.png', conf=0.9)
     time.sleep(1)
     p.write(cnpj)
@@ -71,8 +69,14 @@ def analise(cnpj, nome):
     _click_img('mais_info.png', conf=0.9)
     
     # aguarda a tela carregar
+    timer = 0
     while not _find_img('periodos_anteriores.png', conf=0.9):
         time.sleep(1)
+        timer += 1
+        if timer > 10:
+            # abre a tela para mais informações
+            _click_img('mais_info.png', conf=0.9)
+            timer = 0
     
     print('>>> Analisando situação SN')
     # enquanto não encontrar a mensagem referente a não ter eventos desce a tela
@@ -93,7 +97,7 @@ def analise(cnpj, nome):
             opcoes_sn = copiar(deletar_final=2)
             
             # salva um print da tela em PDF para usar como comprovante
-            salvar_pdf(f'{cnpj} - {nome} - Excluída do Simples Nacional em {data_final_anterior}')
+            salvar_pdf(f'{cnpj} - {nome} - Excluída do Simples Nacional em {data_final_anterior}', data_final_anterior)
             break
     
     # se tiver a mensagem referente a não ter eventos, copia ela e zera as variáveis das datas
@@ -137,8 +141,12 @@ def analise(cnpj, nome):
     return situacao_sn, situacao_simei, opcoes_sn, opcoes_simei, data_inicial_anterior, data_final_anterior, data_inicial_anterior_simei, data_final_anterior_simei
     
  
-def salvar_pdf(arquivo):
-    download_folder = 'V:\Setor Robô\Scripts Python\Portal sn\Consulta Optante Simples Nacional\execução\Relatórios'
+def salvar_pdf(arquivo, data_final):
+    ano_final = data_final.split('-')[2]
+    pasta_final = os.path.join('V:\Setor Robô\Scripts Python\Portal sn\Consulta Optante Simples Nacional\execução\Relatórios', f'Excluídas em {ano_final}')
+    os.makedirs(pasta_final, exist_ok=True)
+    
+    download_folder = f'V:\Setor Robô\Scripts Python\Portal sn\Consulta Optante Simples Nacional\execução\Relatórios\Excluídas em {ano_final}'
     p.hotkey('ctrl', 'p')
     
     print('>>> Aguardando tela de impressão')
@@ -164,8 +172,6 @@ def salvar_pdf(arquivo):
         print('>>> Salvando relatório')
         p.click(p.locateCenterOnScreen(f'imgs/botao_salvar.png', confidence=0.9))
         time.sleep(1)
-    
-    os.makedirs(download_folder, exist_ok=True)
     
     while True:
         try:
@@ -221,7 +227,7 @@ def run(window):
         cnpj, nome = empresa
         nome = nome.replace('/', '')
         
-        _abrir_chrome('https://consopt.www8.receita.fazenda.gov.br/consultaoptantes')
+        _abrir_chrome('https://consopt.www8.receita.fazenda.gov.br/consultaoptantes', tela_inicial_site='cnpj.png')
         if not login(cnpj):
             continue
         
@@ -229,7 +235,7 @@ def run(window):
         situacao_sn, situacao_simei, opcoes_sn, opcoes_simei, data_inicial_anterior, data_final_anterior, data_inicial_anterior_simei, data_final_anterior_simei = analise(cnpj, nome)
         _escreve_relatorio_csv(f'{cnpj};{nome};{situacao_sn};{situacao_simei};{opcoes_sn};{data_inicial_anterior};{data_final_anterior};{opcoes_simei};{data_inicial_anterior_simei};{data_final_anterior_simei};', nome=andamentos)
     
-    _escreve_header_csv('CNPJ;NOME;OPTANTE SN;OPTANTE SIMEI;OCORRÊNCIAS SN;DATA DE INÍCIO SN;DATA FINAL SN;OCORRÊNCIAS SIMEI;DATA DE INÍCIO SIMEI;DATA FINAL SIMEI', nome=andamentos)
+    _escreve_header_csv('CNPJ;NOME;SITUAÇÃO SN;SITUAÇÃO SIMEI;EVENTOS SN;DATA DE INÍCIO SN;DATA FINAL SN;EVENTOS SIMEI;DATA DE INÍCIO SIMEI;DATA FINAL SIMEI', nome=andamentos)
 
 
 if __name__ == '__main__':

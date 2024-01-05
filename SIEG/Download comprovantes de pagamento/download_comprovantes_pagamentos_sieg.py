@@ -7,7 +7,7 @@ import os, time, re, csv, shutil, fitz
 
 from sys import path
 path.append(r'..\..\_comum')
-from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers
+from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers, _barra_de_status
 from chrome_comum import _initialize_chrome, _find_by_path, _find_by_id
 from pyautogui_comum import _click_img
 
@@ -125,7 +125,14 @@ def procura_empresa(execucao, tipo, competencia, empresa, driver, options):
         _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento referente a {competencia} encontrado para essa empresa', nome=execucao)
         print(f'❗ Nenhum comprovante de pagamento referente a {competencia} encontrado para essa empresa')
         return driver
-    
+        
+    # verifica se existe algum comprovante referente a competência digitada
+    nenhum_dado = re.compile(r'Nenhum dado encontrado').search(driver.page_source)
+    if nenhum_dado:
+        _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento encontrado para essa empresa', nome=execucao)
+        print(f'❗ Nenhum comprovante de pagamento encontrado para essa empresa')
+        return driver
+        
     contador = 0
     erro = ''
     sem_recibo = ''
@@ -134,7 +141,7 @@ def procura_empresa(execucao, tipo, competencia, empresa, driver, options):
         print('>>> Tentando baixar o comprovantes de pagamento')
         download = True
         while download:
-            driver, contador, erro, download= download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
+            driver, contador, erro, download = download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
         if erro == 'erro':
             sem_recibo = 'Existe um comprovante com o botão de download desabilitado'
             print(f'❌ Existe um comprovante com o botão de download desabilitado')
@@ -222,7 +229,8 @@ def click(driver, comprovante):
     return True
 
 @_time_execution
-def run():
+@_barra_de_status
+def run(window):
     execucao = 'Download Comprovantes de pagamento IRIS SIEG'
     tipo = confirm(title='Script incrível', buttons=('Consulta mensal', 'Consulta anual'))
     
@@ -261,8 +269,8 @@ def run():
     
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        
-        # configurar o indice para localizar em qual empresa está
+        # printa o indice da empresa que está sendo executada
+        window['-Mensagens-'].update(f'{str(count + index)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index))} Restantes')
         _indice(count, total_empresas, empresa, index)
 
         while True:

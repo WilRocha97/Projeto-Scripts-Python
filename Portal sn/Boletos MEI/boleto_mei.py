@@ -7,7 +7,7 @@ from threading import Thread
 from sys import path
 path.append(r'..\..\_comum')
 from chrome_comum import _abrir_chrome
-from pyautogui_comum import _find_img, _click_img, _wait_img
+from pyautogui_comum import _find_img, _click_img, _wait_img, _click_position_img
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start, _barra_de_status
 
 
@@ -80,8 +80,6 @@ def boleto_mei(empresa, andamentos):
     
     # espera o site abrir
     while not _wait_img('informe_cnpj.png', conf=0.9, timeout=-1):
-        if event == '-encerrar-':
-            return
         time.sleep(1)
     
     print('>>> inserindo CNPJ')
@@ -92,11 +90,10 @@ def boleto_mei(empresa, andamentos):
     p.press('enter')
     time.sleep(2)
     _click_img('emitir_guia.png', conf=0.9)
+
     print('>>> Aguardando tela para emissão da guia')
     # Emitir guia de pagamento DAS
     while not _find_img('emitir_guia.png', conf=0.9):
-        if event == '-encerrar-':
-            return
         time.sleep(1)
         if _find_img('nao_optante_3.png', conf=0.95):
             _escreve_relatorio_csv(f'{cnpj};Não optante;{comp};{ano}', nome=andamentos)
@@ -119,18 +116,14 @@ def boleto_mei(empresa, andamentos):
         p.hotkey('ctrl', 'w')
         return False
 
-    if not _find_img('2023.png', conf=0.9):
+    if not _find_img('2023.png', conf=0.99):
         _escreve_relatorio_csv(f'{cnpj};Ano não liberado;{comp};{ano}', nome=andamentos)
         print('❌ Ano não liberado')
         p.hotkey('ctrl', 'w')
         return False
 
     # while not _find_img('ano_de_consulta.png', conf=0.9):
-    p.press('up')
-    time.sleep(0.5)
-    p.press('up')
-    time.sleep(0.5)
-    p.press('enter')
+    _click_img('2023.png', conf=0.99)
     time.sleep(1)
     _click_img('ok.png', conf=0.9)
     time.sleep(1)
@@ -157,7 +150,7 @@ def boleto_mei(empresa, andamentos):
     _wait_img('selecione.png', conf=0.9, timeout=-1)
     time.sleep(3)
 
-    if not _find_img('mes' + comp + '.png', conf=0.99):
+    if not _find_img('mes' + comp + '.png'):
         p.press('pgDn')
         time.sleep(5)
         if not _find_img('mes' + comp + '.png', conf=0.99):
@@ -166,7 +159,7 @@ def boleto_mei(empresa, andamentos):
             p.hotkey('ctrl', 'w')
             return False
 
-    _click_img('mes' + comp + '.png', conf=0.99)
+    _click_position_img('mes' + comp + '.png', '-', pixels_x=7, conf=0.99)
 
     # Descer a página e clicar em apurar
     time.sleep(1)

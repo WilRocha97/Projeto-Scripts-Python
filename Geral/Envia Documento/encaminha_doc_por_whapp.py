@@ -8,7 +8,7 @@ from pathlib import Path
 
 from sys import path
 path.append(r'..\..\_comum')
-from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers, _remove_emojis
+from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers, _remove_emojis, _barra_de_status
 from chrome_comum import _abrir_chrome, _initialize_chrome, _find_by_id
 from pyautogui_comum import _find_img, _click_img, _wait_img, _click_position_img
 
@@ -138,6 +138,8 @@ def captura_dados_email(driver):
     link_email_padrao = re.compile(r'<a href=\"(https://api\.gestta\.com\.br.+)\" style=\"margin: 0; padding: 0; font-family:').findall(driver.page_source)
     if not link_email_padrao:
         link_email_padrao = re.compile(r'<a href=\"(https://app\.gestta\.com\.br.+)\" style=\"margin: 0; padding: 0; font-family:').findall(driver.page_source)
+        if not link_email_padrao:
+            link_email_padrao = re.compile(r'href=\"(https://forms.office.com.+)\">https:').findall(driver.page_source)
     
     link_email = list(set(link_email_padrao))
     
@@ -244,8 +246,7 @@ def enviar(numero, link_mensagem, titulo, vencimento):
                 f"veigaepostal@veigaepostal.com.br\n"
                 f"(19)3829-8959")
     
-    _abrir_chrome('https://web.whatsapp.com/', fechar_janela=False, outra_janela='email.png', anti_travamento=True)
-    _wait_img('nova_conversa.png', conf=0.9)
+    _abrir_chrome('https://web.whatsapp.com/', tela_inicial_site='nova_conversa.png', fechar_janela=False, outra_janela='email.png')
     _click_img('nova_conversa.png', conf=0.9)
     time.sleep(1)
     p.write(numero)
@@ -285,8 +286,8 @@ def enviar_anexo(numero, anexo, corpo_email):
                 f"veigaepostal@veigaepostal.com.br\n"
                 f"(19)3829-8959")
     
-    _abrir_chrome('https://web.whatsapp.com/', fechar_janela=False, outra_janela='email.png')
-    _wait_img('nova_conversa.png', conf=0.9)
+    _abrir_chrome('https://web.whatsapp.com/', tela_inicial_site='nova_conversa.png', fechar_janela=False, outra_janela='email.png')
+
     _click_img('nova_conversa.png', conf=0.9)
     time.sleep(1)
     p.write(numero)
@@ -388,7 +389,8 @@ def mover_email(driver, pasta=''):
 
 
 @_time_execution
-def run():
+@_barra_de_status
+def run(window):
     print('>>> Aguardando documentos...')
     
     # opções para fazer com que o chrome trabalhe em segundo plano (opcional)

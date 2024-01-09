@@ -83,9 +83,13 @@ def analisa_relatorio(final_folder, cnpj):
                 continue
             # Pega o texto da pagina
             textinho = page.get_text('text', flags=1 + 2 + 8)
-
+            
+            print(textinho)
+            time.sleep(33)
+            
             socios = re.compile(r'Sócio:(.+)').findall(textinho)
-
+            
+            socio_anterior = ''
             for socio in socios:
                 for i in range(100):
                     empresa = re.compile(r'Sócio:' + socio + '(\n.+){' + str(i) + '}\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+)\n(\d\d\.\d\d\d\.\d\d\d/\d\d\d\d\-\d\d)').search(textinho)

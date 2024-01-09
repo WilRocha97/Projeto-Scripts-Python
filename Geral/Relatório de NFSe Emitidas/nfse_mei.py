@@ -380,7 +380,12 @@ def run():
                 
             driver.close()
         driver.close()
-
+        
+        _escreve_header_csv('CÓD. DOMÍNIO;CNPJ;NOME;CNPJ/CPF/NIF TOMADOR;NOME TOMADOR;UF TOMADOR;MUNICÍPIO TOMADOR;ENDEREÇO TOMADOR;NÚMERO DA NOTA;'
+                            'SÉRIE DA NOTA;DATA DE EMISSÃO;SITUAÇÃO DA NOTA;ACUMULADOR;CFPS;VALOR DO SERVIÇO;VALOR DO DESCONTOS;VALOR DAS DEDUÇÕES;'
+                            'VALOR CONTÁBIL;BASE DE CÁLCULO;ALÍQUOTA ISS;VALOR ISS;VALOR ISS;RETIDO;VALOR IRRF;VALOR PIS;VALOR COFINS;VALOR CSLL;CALOR CRF;'
+                            'VALOR INSS;CODIGO ITEM;QUANTIDADE;VALOR UNITÁRIO', nome='Notas')
+    
     
 if __name__ == '__main__':
     run()

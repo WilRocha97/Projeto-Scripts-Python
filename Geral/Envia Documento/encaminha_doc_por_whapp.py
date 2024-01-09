@@ -103,6 +103,7 @@ def captura_dados_email(driver):
     
     # Alterna o driver para o contexto do frame
     driver.switch_to.frame(frame)
+    # print(driver.page_source)
     try:
         # pega cnpj da empresa que vai receber a mensagem
         cnpj = re.compile(r'(\d\d\.\d\d\d\.\d\d\d/\d\d\d\d-\d\d)').search(driver.page_source).group(1)
@@ -124,7 +125,14 @@ def captura_dados_email(driver):
                 print(cnpj)
                 print(cnpj_limpo)
             except:
-                return driver, titulo, 'x', 'x', 'x', 'x', 'x'
+                try:
+                    # pega cnpj da empresa que vai receber a mensagem
+                    cnpj = re.compile(r'CNPJ: (\d\d\d\d\d\d\d\d\d\d\d)&nbsp').search(driver.page_source).group(1)
+                    cnpj_limpo = cnpj.replace('.', '').replace('/', '').replace('-', '')
+                    print(cnpj)
+                    print(cnpj_limpo)
+                except:
+                    return driver, titulo, 'x', 'x', 'x', 'x', 'x'
         
     # pega a data de vencimento do documento que está no link da mensagem
     try:

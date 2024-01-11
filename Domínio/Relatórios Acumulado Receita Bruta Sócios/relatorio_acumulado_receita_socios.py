@@ -16,12 +16,12 @@ def relatorio_acumulado(empresa, periodo, andamento):
     # Relatórios
     p.hotkey('alt', 'r')
     time.sleep(0.5)
-    # Impostos
+    # Acompanhamentos
     p.press('a')
     # Resumo
     time.sleep(0.5)
     p.press('b')
-    verificacao = 'continue'
+
     while not _find_img('receita_bruta_global.png', conf=0.9):
         time.sleep(1)
     
@@ -37,15 +37,11 @@ def relatorio_acumulado(empresa, periodo, andamento):
         time.sleep(1)
         p.press('esc')
         time.sleep(1)
-        return 'ok'
+        return
     
     resultado = espera_gerar(empresa, andamento)
     if not resultado:
-        return 'ok'
-    elif resultado:
-        pass
-    else:
-        return resultado
+        return
     
     _salvar_pdf()
     time.sleep(1)
@@ -53,7 +49,7 @@ def relatorio_acumulado(empresa, periodo, andamento):
     final_folder = 'V:\\Setor Robô\\Scripts Python\\Domínio\\Relatórios Acumulado Receita Bruta Sócios\\execução\\Relatórios'
     
     mover_relatorio(final_folder)
-    analisa_relatorio(final_folder, cnpj)
+    analisa_relatorio(final_folder, cnpj, nome)
     
     _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Relatório gerado']), nome=andamento)
     print('✔ Relatório gerado')
@@ -61,7 +57,7 @@ def relatorio_acumulado(empresa, periodo, andamento):
     p.press('esc', presses=4)
     time.sleep(2)
     
-    return 'ok'
+    return
 
 
 def mover_relatorio(final_folder):
@@ -72,9 +68,10 @@ def mover_relatorio(final_folder):
     shutil.move(os.path.join(folder, arq), os.path.join(final_folder, arq))
     
 
-def analisa_relatorio(final_folder, cnpj):
+def analisa_relatorio(final_folder, cnpj, nome_consulta):
     print('>>> Analisando relatório...')
     arq = 'Simples Nacional - Receita Bruta Global Acumulada.pdf'
+    planilha = []
     with (fitz.open(os.path.join(final_folder, arq)) as pdf):
         
         # Para cada página do pdf, se for a segunda página o script ignora
@@ -84,14 +81,13 @@ def analisa_relatorio(final_folder, cnpj):
             # Pega o texto da pagina
             textinho = page.get_text('text', flags=1 + 2 + 8)
             
-            print(textinho)
-            time.sleep(33)
+            #print(textinho)
+            #time.sleep(33)
             
             socios = re.compile(r'Sócio:(.+)').findall(textinho)
             
-            socio_anterior = ''
             for socio in socios:
-                for i in range(100):
+                for i in range(150):
                     empresa = re.compile(r'Sócio:' + socio + '(\n.+){' + str(i) + '}\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+,\d\d)\n(.+)\n(\d\d\.\d\d\d\.\d\d\d/\d\d\d\d\-\d\d)').search(textinho)
                 
                     if empresa:
@@ -111,11 +107,16 @@ def analisa_relatorio(final_folder, cnpj):
                         dez = empresa.group(13)
                         total = empresa.group(5)
                         
-                        _escreve_relatorio_csv(f'{socio};{cnpj_lista};{nome};{jan};{fev};{mar};{abr};{mai};{jun};{jul};{ago};{sep};{out};{nov};{dez};{total}')
-
+                        linha = f'{cnpj};{nome_consulta};{socio};{cnpj_lista};{nome};{jan};{fev};{mar};{abr};{mai};{jun};{jul};{ago};{sep};{out};{nov};{dez};{total}'
+                        
+                        if linha not in planilha:
+                            planilha.append(linha)
+    
     new_arq = f'Base da consulta= {cnpj} - Receita bruta global.pdf'
     shutil.move(os.path.join(final_folder, arq), os.path.join(final_folder, new_arq))
-
+    for linha in planilha:
+        _escreve_relatorio_csv(linha)
+    
 
 def espera_gerar(empresa, andamento):
     cod, cnpj, nome = empresa
@@ -141,43 +142,29 @@ def espera_gerar(empresa, andamento):
     return True
 
 
-#@_time_execution
-#@_barra_de_status
-def run():
+@_time_execution
+@_barra_de_status
+def run(window):
+    _login_web()
+    _abrir_modulo('escrita_fiscal')
+    
+    total_empresas = empresas[index:]
+    for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        window['-Mensagens-'].update(f'{str(count + index)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index))} Restantes')
+        _indice(count, total_empresas, empresa, index)
+
+        if not _login(empresa, andamentos):
+            continue
+
+        relatorio_acumulado(empresa, periodo, andamentos)
+
+    
+if __name__ == '__main__':
     periodo = p.prompt(text='Qual o período do relatório', title='Script incrível', default='0000')
     empresas = _open_lista_dados()
     andamentos = 'Relatórios Acumulado Sócios'
-
+    
     index = _where_to_start(tuple(i[0] for i in empresas))
-    if index is None:
-        return False
-
-    total_empresas = empresas[index:]
-
-    _login_web()
-    _abrir_modulo('escrita_fiscal')
-
-    for count, empresa in enumerate(empresas[index:], start=1):
-        # printa o indice da empresa que está sendo executada
-        # window['-Mensagens-'].update(f'{str(count + index)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index))} Restantes')
-        _indice(count, total_empresas, empresa, index)
-
-        while True:
-            if not _login(empresa, andamentos):
-                break
-            else:
-                resultado = relatorio_acumulado(empresa, periodo, andamentos)
-            
-                if resultado == 'dominio fechou':
-                    _login_web()
-                    _abrir_modulo('escrita_fiscal')
-            
-                if resultado == 'modulo fechou':
-                    _abrir_modulo('escrita_fiscal')
-                
-                if resultado == 'ok':
-                    break
-
-
-if __name__ == '__main__':
-    run()
+    if index is not None:
+        run()

@@ -231,38 +231,6 @@ def click(driver, comprovante):
 @_time_execution
 @_barra_de_status
 def run(window):
-    execucao = 'Download Comprovantes de pagamento IRIS SIEG'
-    tipo = confirm(title='Script incrível', buttons=('Consulta mensal', 'Consulta anual'))
-    
-    if tipo == 'Consulta mensal':
-        competencia = prompt(title='Script incrível', text='Qual competência referente?', default='00/0000')
-    else:
-        competencia = prompt(title='Script incrível', text='Qual competência referente?', default='0000')
-        
-    os.makedirs('execução/Comprovantes', exist_ok=True)
-    os.makedirs('ignore/Comprovantes', exist_ok=True)
-    
-    # opções para fazer com que o chome trabalhe em segundo plano (opcional)
-    options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')
-    # options.add_argument('--window-size=1920,1080')
-    options.add_argument("--start-maximized")
-    options.add_experimental_option('prefs', {
-        "download.default_directory": "V:\\Setor Robô\\Scripts Python\\SIEG\\Download comprovantes de pagamento\\ignore\\Comprovantes",  # Change default directory for downloads
-        "download.prompt_for_download": False,  # To auto download the file
-        "download.directory_upgrade": True,
-        "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
-    })
-
-    # abrir a planilha de dados
-    empresas = _open_lista_dados()
-    if not empresas:
-        return False
-    
-    index = _where_to_start(tuple(i[0] for i in empresas))
-    if index is None:
-        return False
-    
     # iniciar o driver do chome
     status, driver = _initialize_chrome(options)
     driver = login_sieg(driver)
@@ -287,4 +255,32 @@ def run(window):
     
 
 if __name__ == '__main__':
-    run()
+    execucao = 'Download Comprovantes de pagamento IRIS SIEG'
+    tipo = confirm(title='Script incrível', buttons=('Consulta mensal', 'Consulta anual'))
+    
+    if tipo == 'Consulta mensal':
+        competencia = prompt(title='Script incrível', text='Qual competência referente?', default='00/0000')
+    else:
+        competencia = prompt(title='Script incrível', text='Qual competência referente?', default='0000')
+    
+    os.makedirs('execução/Comprovantes', exist_ok=True)
+    os.makedirs('ignore/Comprovantes', exist_ok=True)
+    
+    # opções para fazer com que o chome trabalhe em segundo plano (opcional)
+    options = webdriver.ChromeOptions()
+    # options.add_argument('--headless')
+    # options.add_argument('--window-size=1920,1080')
+    options.add_argument("--start-maximized")
+    options.add_experimental_option('prefs', {
+        "download.default_directory": "V:\\Setor Robô\\Scripts Python\\SIEG\\Download comprovantes de pagamento\\ignore\\Comprovantes",  # Change default directory for downloads
+        "download.prompt_for_download": False,  # To auto download the file
+        "download.directory_upgrade": True,
+        "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
+    })
+    
+    # abrir a planilha de dados
+    empresas = _open_lista_dados()
+    if empresas:
+        index = _where_to_start(tuple(i[0] for i in empresas))
+        if index is not None:
+            run()

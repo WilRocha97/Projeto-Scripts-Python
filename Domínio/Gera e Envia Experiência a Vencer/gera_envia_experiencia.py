@@ -243,26 +243,6 @@ def define_data():
 @_time_execution
 @_barra_de_status
 def run(window):
-    # define o nome da planilha de andamentos
-    dia = datetime.now().day
-    mes = datetime.now().month
-    ano = datetime.now().year
-    
-    comp = f'{dia}-{mes}-{ano}'
-    empresas = ''
-    index = ''
-    
-    andamentos = 'Experiência a Vencer'
-    # pergunta se deve gerar uma nova planilha de dados
-    novo = p.confirm(title='Script incrível', text='Gerar nova planilha de dados?', buttons=('Sim', 'Não'))
-
-    # se não for gerar uma nova planilha, seleciona a que já existe e pergunta se vai continuar de onde parou
-    if novo == 'Não':
-        empresas = _open_lista_dados()
-        index = _where_to_start(tuple(i[0] for i in empresas))
-        if index is None:
-            return False
-    
     # abre o Domínio Web e o módulo, no caso será o módulo Folha
     _login_web()
     _abrir_modulo('folha')
@@ -292,4 +272,22 @@ def run(window):
     
 
 if __name__ == '__main__':
-    run()
+    # define o nome da planilha de andamentos
+    dia = datetime.now().day
+    mes = datetime.now().month
+    ano = datetime.now().year
+    
+    comp = f'{dia}-{mes}-{ano}'
+    empresas = ''
+    index = ''
+    
+    andamentos = 'Experiência a Vencer'
+    # pergunta se deve gerar uma nova planilha de dados
+    novo = p.confirm(title='Script incrível', text='Gerar nova planilha de dados?', buttons=('Sim', 'Não'))
+    
+    # se não for gerar uma nova planilha, seleciona a que já existe e pergunta se vai continuar de onde parou
+    if novo == 'Não':
+        empresas = _open_lista_dados()
+        index = _where_to_start(tuple(i[0] for i in empresas))
+        if index is not None:
+            run()

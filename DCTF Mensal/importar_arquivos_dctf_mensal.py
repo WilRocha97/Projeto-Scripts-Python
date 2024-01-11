@@ -4,19 +4,59 @@ from tkinter.filedialog import askdirectory, Tk
 from threading import Thread
 from pathlib import Path
 from functools import wraps
+import pybase64
+from io import BytesIO
+from PIL import Image
 from sys import path
 
 e_dir = Path('dados')
 
 
 def barra_de_status(func):
+    """with open("Assets/loading.gif", "rb") as img_file:
+        my_string = pybase64.b64encode(img_file.read())"""
+    
+    
+    
+    # Add your new theme colors and settings
+    sg.LOOK_AND_FEEL_TABLE['tema'] = {'BACKGROUND': '#ffffff',
+                                                'TEXT': '#000000',
+                                                'INPUT': '#ffffff',
+                                                'TEXT_INPUT': '#ffffff',
+                                                'SCROLL': '#ffffff',
+                                                'BUTTON': ('#000000', '#ffffff'),
+                                                'PROGRESS': ('#ffffff', '#ffffff'),
+                                                'BORDER': 0, 'SLIDER_DEPTH': 0,
+                                                'PROGRESS_DEPTH': 0, }
+    
     @wraps(func)
     def wrapper():
-        sg.theme('GrayGrayGray')  # Define o tema do PySimpleGUI
+        def image_to_data(im):
+            """
+            Image object to bytes object.
+            : Parameters
+              im - Image object
+            : Return
+              bytes object.
+            """
+            with BytesIO() as output:
+                im.save(output, format="PNG")
+                data = output.getvalue()
+            return data
+        
+        filename = 'V:/Setor Robô/Scripts Python/_comum/Assets/loading.gif'
+        im = Image.open(filename)
+        
+        index = 0
+        frames = im.n_frames
+        im.seek(index)
+        
+        sg.theme('tema')  # Define o tema do PySimpleGUI
         # sg.theme_previewer()
         # Layout da janela
         layout = [
-            [sg.Text('Rotina automática em execução, por favor não interfira.', key='-titulo-', text_color='#fca400'),
+            [sg.Image(data=image_to_data(im), key='loading'),
+             sg.Text('Rotina automática, não interfira.', key='-titulo-', text_color='#ff4d00'),
              sg.Button('Iniciar', key='-iniciar-', border_width=0),
              sg.Button('Encerrar', key='-encerrar-', border_width=0),
              sg.Text('', key='-Mensagens-')],
@@ -24,10 +64,8 @@ def barra_de_status(func):
         
         # guarda a janela na variável para manipula-la
         screen_width, screen_height = sg.Window.get_screen_size()
-        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(650, 35), border_depth=0, finalize=True, location=((screen_width // 2) - (600 // 2), 0))
-        
-        # window.move(screen_width // 2 - window.size[0] // 2, 0)
-        
+        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, size=(650, 35), margins=(0,0), element_justification='center', finalize=True, location=((screen_width // 2) - (600 // 2), 0))
+    
         def run_script_thread():
             # habilita e desabilita os botões conforme necessário
             window['-iniciar-'].update(disabled=True)
@@ -47,7 +85,7 @@ def barra_de_status(func):
         
         while True:
             # captura o evento e os valores armazenados na interface
-            event, values = window.read()
+            event, values = window.read(timeout=15)
             
             if event == sg.WIN_CLOSED:
                 break
@@ -59,7 +97,11 @@ def barra_de_status(func):
                 # Cria uma nova thread para executar o script
                 script_thread = Thread(target=run_script_thread)
                 script_thread.start()
-        
+            
+            index = (index + 1) % frames
+            im.seek(index)
+            window['loading'].update(data=image_to_data(im))
+                
         window.close()
     
     return wrapper

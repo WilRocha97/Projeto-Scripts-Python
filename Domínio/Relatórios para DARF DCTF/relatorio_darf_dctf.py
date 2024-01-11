@@ -135,19 +135,10 @@ def mover_relatorio(cod):
 @_time_execution
 @_barra_de_status
 def run(window):
-    periodo = p.prompt(text='Qual o período do relatório', title='Script incrível', default='00/0000')
-    empresas = _open_lista_dados()
-    andamentos = 'Relatórios para DARF DCTF'
-
-    index = _where_to_start(tuple(i[0] for i in empresas))
-    if index is None:
-        return False
-
-    total_empresas = empresas[index:]
-
     _login_web()
     _abrir_modulo('escrita_fiscal')
-
+    
+    total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
         window['-Mensagens-'].update(f'{str(count + index)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index))} Restantes')
@@ -171,4 +162,10 @@ def run(window):
 
 
 if __name__ == '__main__':
-    run()
+    periodo = p.prompt(text='Qual o período do relatório', title='Script incrível', default='00/0000')
+    empresas = _open_lista_dados()
+    andamentos = 'Relatórios para DARF DCTF'
+
+    index = _where_to_start(tuple(i[0] for i in empresas))
+    if index is not None:
+        run()

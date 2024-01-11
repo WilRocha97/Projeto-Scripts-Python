@@ -284,25 +284,6 @@ def verifica_relatorio(pasta_analise, pasta_final, pasta_final_sem_pendencias):
 @_time_execution
 @_barra_de_status
 def run(window):
-    pasta_analise = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\ignore\Relatórios'
-    pasta_final = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\execução\Relatórios'
-    pasta_final_sem_pendencias = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\execução\Relatórios Sem Pendências'
-    
-    os.makedirs(pasta_analise, exist_ok=True)
-    
-    # limpa a pasta de download
-    for file in os.listdir(pasta_analise):
-        os.remove(os.path.join(pasta_analise, file))
-        
-    # abrir a planilha de dados
-    empresas = _open_lista_dados()
-    if not empresas:
-        return False
-    
-    index = _where_to_start(tuple(i[0] for i in empresas))
-    if index is None:
-        return False
-
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
@@ -336,4 +317,19 @@ def run(window):
 
 
 if __name__ == '__main__':
-    run()
+    pasta_analise = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\ignore\Relatórios'
+    pasta_final = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\execução\Relatórios'
+    pasta_final_sem_pendencias = r'V:\Setor Robô\Scripts Python\Ecac\Relatórios Fiscais Conferir\execução\Relatórios Sem Pendências'
+    
+    os.makedirs(pasta_analise, exist_ok=True)
+    
+    # limpa a pasta de download
+    for file in os.listdir(pasta_analise):
+        os.remove(os.path.join(pasta_analise, file))
+    
+    # abrir a planilha de dados
+    empresas = _open_lista_dados()
+    if empresas:
+        index = _where_to_start(tuple(i[0] for i in empresas))
+        if index is not None:
+            run()

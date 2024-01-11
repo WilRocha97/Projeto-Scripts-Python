@@ -12,10 +12,17 @@ from comum_comum import _escreve_relatorio_csv
 from chrome_comum import _initialize_chrome, _send_input_xpath, _find_by_class
 from pyautogui_comum import _find_img, _wait_img, _click_img
 
+
+imagens = "V:\\Setor Robô\\Scripts Python\\_comum\\imgs_dominio"
+
 dados = "V:\\Setor Robô\\Scripts Python\\_comum\\Dados Domínio.txt"
 f = open(dados, 'r', encoding='utf-8')
-user = f.read()
+user = f.readline()
 user = user.split('/')
+
+
+def imagem_dominio():
+    return os.path.join(imagem, nome_da_imagem)
 
 
 def _login(empresa, andamentos):
@@ -25,7 +32,7 @@ def _login(empresa, andamentos):
         sleep(1)
 
     p.click(833, 384)
-
+    
     # espera abrir a janela de seleção de empresa
     while not _find_img('trocar_empresa.png', pasta='imgs_c', conf=0.9):
         p.press('f8')
@@ -33,7 +40,7 @@ def _login(empresa, andamentos):
     sleep(1)
     # clica para pesquisar empresa por código
     if _find_img('codigo.png', pasta='imgs_c', conf=0.9):
-        p.click(p.locateCenterOnScreen(r'imgs_c\codigo.png', confidence=0.9))
+        _click_img('codigo.png', pasta='imgs_c', conf=0.9)
     p.write(cod)
     sleep(3)
     
@@ -242,13 +249,18 @@ def _salvar_pdf():
         if timer > 30:
             return False
     
-    if not _find_img('cliente_c_selecionado.png', pasta='imgs_c', conf=0.9):
-        while not _find_img('cliente_c.png', pasta='imgs_c', conf=0.9) or _find_img('cliente_m.png', pasta='imgs_c', conf=0.9):
-            _click_img('botao.png', pasta='imgs_c', conf=0.9)
-            time.sleep(3)
-                
-        _click_img('cliente_m.png', pasta='imgs_c', conf=0.9, timeout=1)
-        _click_img('cliente_c.png', pasta='imgs_c', conf=0.9, timeout=1)
+    while not _find_img('cliente_c_selecionado.png', pasta='imgs_c', conf=0.9):
+        if _find_img('cliente_m_selecionado.png', pasta='imgs_c', conf=0.9):
+            break
+        if _find_img('cliente_c_selecionado_2.png', pasta='imgs_c', conf=0.9):
+            break
+        _click_img('botao.png', pasta='imgs_c', conf=0.9)
+        time.sleep(3)
+        
+        if _find_img('cliente_c.png', pasta='imgs_c', conf=0.9):
+            _click_img('cliente_c.png', pasta='imgs_c', conf=0.9, timeout=1)
+        if _find_img('cliente_m.png', pasta='imgs_c', conf=0.9):
+            _click_img('cliente_m.png', pasta='imgs_c', conf=0.9, timeout=1)
         time.sleep(5)
     
     p.press('enter')
@@ -294,13 +306,3 @@ def _salvar_pdf():
         time.sleep(2)
         
     return True
-
-
-def _encerra_dominio():
-    processo = 'C:\Program Files (x86)\GraphOn\AppController\AppController.exe'
-    with open(os.devnull, 'w') as devnull:
-        try:
-            subprocess.call(['kill', str(processo)], stdout=devnull, stderr=subprocess.STDOUT)
-            print('\nDomínio Web finalizado.\n')
-        except:
-            print('\nDomínio Web não finalizado.\n')

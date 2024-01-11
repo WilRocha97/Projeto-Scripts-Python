@@ -117,25 +117,6 @@ def login(options, cnpj, insc_muni):
 @_time_execution
 @_barra_de_status
 def run(window):
-    # função para abrir a lista de dados
-    empresas = _open_lista_dados()
-    
-    # função para saber onde o robô começa na lista de dados
-    index = _where_to_start(tuple(i[0] for i in empresas))
-    if index is None:
-        return False
-    
-    options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')
-    # options.add_argument('--window-size=1920,1080')
-    options.add_argument("--start-maximized")
-    options.add_experimental_option('prefs', {
-        "download.default_directory": "V:\\Setor Robô\\Scripts Python\\Serviços Prefeitura\\Consulta Débitos Municipais Jundiaí\\execução\\Certidões",  # Change default directory for downloads
-        "download.prompt_for_download": False,  # To auto download the file
-        "download.directory_upgrade": True,
-        "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
-    })
-    
     # cria o indice para cada empresa da lista de dados
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
@@ -155,4 +136,21 @@ def run(window):
 
 
 if __name__ == '__main__':
-    run()
+    options = webdriver.ChromeOptions()
+    # options.add_argument('--headless')
+    # options.add_argument('--window-size=1920,1080')
+    options.add_argument("--start-maximized")
+    options.add_experimental_option('prefs', {
+        "download.default_directory": "V:\\Setor Robô\\Scripts Python\\Serviços Prefeitura\\Consulta Débitos Municipais Jundiaí\\execução\\Certidões",  # Change default directory for downloads
+        "download.prompt_for_download": False,  # To auto download the file
+        "download.directory_upgrade": True,
+        "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
+    })
+    
+    # função para abrir a lista de dados
+    empresas = _open_lista_dados()
+    
+    # função para saber onde o robô começa na lista de dados
+    index = _where_to_start(tuple(i[0] for i in empresas))
+    if index is not None:
+        run()

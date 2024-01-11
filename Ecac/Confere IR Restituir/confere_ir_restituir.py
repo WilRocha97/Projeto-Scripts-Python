@@ -287,23 +287,6 @@ def copia_valor():
 @_time_execution
 @_barra_de_status
 def run(window):
-    consulta = p.confirm(buttons=['Consulta IR a restituir', 'Consulta e gera DARF'])
-    
-    if consulta == 'Consulta IR a restituir':
-        pasta_restituir = r'V:\Setor Robô\Scripts Python\Ecac\Confere IR Restituir\Execução\Imposto a Restituir'
-        pasta_pagar = r'V:\Setor Robô\Scripts Python\Ecac\Confere IR Restituir\Execução'
-    if consulta == 'Consulta e gera DARF':
-        pasta_guias = r'V:\Setor Robô\Scripts Python\Ecac\Confere IR Restituir\Execução\Guias DARF'
-    
-    # abrir a planilha de dados
-    empresas = _open_lista_dados()
-    if not empresas:
-        return False
-    
-    index = _where_to_start(tuple(i[0] for i in empresas))
-    if index is None:
-        return False
-
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
@@ -342,4 +325,18 @@ def run(window):
 
 
 if __name__ == '__main__':
-    run()
+    consulta = p.confirm(buttons=['Consulta IR a restituir', 'Consulta e gera DARF'])
+    
+    if consulta == 'Consulta IR a restituir':
+        pasta_restituir = r'V:\Setor Robô\Scripts Python\Ecac\Confere IR Restituir\Execução\Imposto a Restituir'
+        pasta_pagar = r'V:\Setor Robô\Scripts Python\Ecac\Confere IR Restituir\Execução'
+    if consulta == 'Consulta e gera DARF':
+        pasta_guias = r'V:\Setor Robô\Scripts Python\Ecac\Confere IR Restituir\Execução\Guias DARF'
+    
+    # abrir a planilha de dados
+    empresas = _open_lista_dados()
+    if empresas:
+    
+        index = _where_to_start(tuple(i[0] for i in empresas))
+        if index is not None:
+            run()

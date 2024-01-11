@@ -18,11 +18,12 @@ from chrome_comum import _find_by_id, _find_by_path
 
 def abre_pagina_consulta(driver):
     print('>>> Abrindo Conta Fiscal')
-    
+
     try:
         while not re.compile(r'>Conta Fiscal do ICMS e Parcelamento').search(driver.page_source):
             try:
-                button = driver.find_element(by=By.XPATH, value='/html/body/div[2]/section/div/div/div/div[2]/div/ul/li/form/div[5]/div/a')
+                button = driver.find_element(by=By.XPATH,
+                                             value='/html/body/div[2]/section/div/div/div/div[2]/div/ul/li/form/div[5]/div/a')
                 button.click()
                 time.sleep(3)
             except:
@@ -32,52 +33,70 @@ def abre_pagina_consulta(driver):
         print('❗ Erro ao logar na empresa, tentando novamente')
         return driver, 'erro'
 
-    url_consulta = re.compile(r'<a href=\"(.+\d).+>Conta Fiscal do ICMS e Parcelamento').search(driver.page_source).group(1)
- 
+    url_consulta = re.compile(r'<a href=\"(.+\d).+>Conta Fiscal do ICMS e Parcelamento').search(
+        driver.page_source).group(1)
+
     driver.get(url_consulta)
-    
+
     while not _find_by_id('divcontainer', driver):
         time.sleep(1)
-    
+
     print('>>> Abrindo consulta de CNDNI')
     while True:
         try:
-            url_consulta_cndni = re.compile(r'href="(https:\/\/www10.fazenda.sp.gov.br\/CertidaoNegativaDeb\/Pages.+)" tabindex="-1">Verificar Impedimentos eCND').search(driver.page_source).group(1)
+            url_consulta_cndni = re.compile(
+                r'href="(https:\/\/www10.fazenda.sp.gov.br\/CertidaoNegativaDeb\/Pages.+)" tabindex="-1">Verificar Impedimentos eCND').search(
+                driver.page_source).group(1)
             break
         except:
             pass
-    
+
     driver.get(url_consulta_cndni)
-    
+
     return driver, 'ok'
-    
-    
+
+
 def consulta_cndni(driver, nome, cnpj, pasta_inicial):
-    print('>>> Consultando.')
-    while not _find_by_id('MainContent_txtDocumento', driver):
+    contador = 0
+    while True:
+        print('>>> Consultando.')
+        while not _find_by_id('MainContent_txtDocumento', driver):
+            time.sleep(1)
+
+
         time.sleep(1)
-        
-    time.sleep(1)
-    driver.find_element(by=By.ID, value='MainContent_txtDocumento').clear()
-    time.sleep(1)
-    driver.find_element(by=By.ID, value='MainContent_txtDocumento').send_keys(cnpj)
-    time.sleep(1)
-    driver.find_element(by=By.ID, value='MainContent_btnPesquisar').click()
-    
-    # Wait for the alert to be displayed and store it in a variable
-    try:
-        wait = WebDriverWait(driver, 5)
-        alert = wait.until(expected_conditions.alert_is_present())
-        if alert:
-            # Store the alert text in a variable
-            text = alert.text
-            # Press the OK button
-            alert.accept()
-            print(f'❌ {text}')
-            return driver, text
-    except:
-        pass
-    
+        driver.find_element(by=By.ID, value='MainContent_txtDocumento').clear()
+        time.sleep(1)
+        driver.find_element(by=By.ID, value='MainContent_txtDocumento').send_keys(cnpj)
+        time.sleep(1)
+        driver.find_element(by=By.ID, value='MainContent_btnPesquisar').click()
+
+        # Wait for the alert to be displayed and store it in a variable
+        try:
+            wait = WebDriverWait(driver, 5)
+            alert = wait.until(expected_conditions.alert_is_present())
+            if alert:
+                # Store the alert text in a variable
+                text = alert.text
+                # Press the OK button
+                alert.accept()
+
+                if text != 'Pesquisa não autorizada. Cadastro não localizado.':
+                    print(f'❌ {text}')
+                    return driver, text
+                else:
+                    print(f'❗ Possível erro ao digitar o CNPJ, tentando novamente.')
+                    contador += 1
+
+                if contador >= 3:
+                    print(f'❌ {text}')
+                    return driver, text
+
+            else:
+                break
+        except:
+            break
+
     contador = 0
     while not _find_by_id('MainContent_lnkImprimirCertidaoBotao1', driver):
         print('>>> Consultando..')
@@ -100,8 +119,13 @@ def consulta_cndni(driver, nome, cnpj, pasta_inicial):
                 break
             
         except:
-            driver.execute_script("window.scrollBy(0,100)")
-            time.sleep(1)
+            if re.compile(r"Ocorreu uma falha na geração do relatório!").search(driver.page_source):
+                driver.find_element(by=By.XPATH, value='/html/body/div[4]/div[3]/div/button').click()
+                print('❌ Erro ao emitir relatório, tentando novamente')
+                return driver, 'erro'
+                
+            driver.execute_script("window.scrollBy(0,200)")
+            time.sleep(0.5)
             print('>>> Consultando...')
             contador += 1
         
@@ -109,7 +133,7 @@ def consulta_cndni(driver, nome, cnpj, pasta_inicial):
             print('❌ Acesso negado para essa empresa')
             return driver, 'Acesso negado para essa empresa'
         
-        if contador > 30:
+        if contador > 60:
             print('❌ Erro ao consultar CNDNI, tentando novamente')
             return driver, 'erro'
     
@@ -121,6 +145,7 @@ def renomeia_cndni(nome, cnpj, pasta_inicial):
     while os.listdir(pasta_inicial) == []:
         time.sleep(1)
     
+    debitos = 'não'
     time.sleep(1)
     for cndni in os.listdir(pasta_inicial):
         arq = os.path.join(pasta_inicial, cndni)
@@ -138,14 +163,37 @@ def renomeia_cndni(nome, cnpj, pasta_inicial):
         
         for page in doc:
             texto = page.get_text('text', flags=1 + 2 + 8)
+            if re.compile(r'\nHá Pendências').search(texto):
+                debitos = 'sim'
+            if re.compile(r'\nHá Débitos').search(texto):
+                debitos = 'sim'
             
-            if re.compile(r'\n(Há Débitos.+)').search(texto):
-                doc.close()
-                pasta_debito = os.path.join('Execução', 'CNDNI com débitos')
-                os.makedirs(pasta_debito, exist_ok=True)
-                shutil.move(arq, os.path.join(pasta_debito, f'{nome[:30]} - {cnpj} - CNDNI Débitos.pdf'))
-                print('❗ Com Débitos')
-                return 'Com débitos'
+            if debitos == 'sim':
+                debitos_lista = ''
+                
+                resumo = [('ICMS Declarado', r'ICMS Declarado\nNão há Débitos\n'),
+                          ('ICMS Parcelamento', r'ICMS Parcelamento\nNão há Débitos\n'),
+                          ('IPVA', r'IPVA\nNão há Débitos\n'),
+                          ('ITCMD', r'ITCMD\nNão há Débitos\n'),
+                          ('AIIM', r'AIIM\nNão há Débitos\n'),
+                          ('ICMS Pendência', r'ICMS Pendência\nNão há Pendências\n')]
+                for item in resumo:
+                    if not re.compile(item[1]).search(texto):
+                        debitos_lista += ' - ' + item[0]
+                
+                resumo = [('GIA', r'\nGIA\n'),
+                          ('GIA-EFD', r'\nGIA\/EFD\n'),]
+                for item in resumo:
+                    if re.compile(item[1]).search(texto):
+                        debitos_lista += ' - ' + item[0]
+                
+                if debitos_lista != '':
+                    doc.close()
+                    pasta_debito = os.path.join('Execução', 'CNDNI com débitos')
+                    os.makedirs(pasta_debito, exist_ok=True)
+                    shutil.move(arq, os.path.join(pasta_debito, f'{nome[:30]} - {cnpj} - CNDNI Débitos{debitos_lista}.pdf'))
+                    print('❗ Com Débitos')
+                    return 'Com débitos'
         
         doc.close()
         pasta_sem_debito = os.path.join('Execução', 'CNDNI')
@@ -190,7 +238,7 @@ def run():
     usuario_anterior = 'padrão'
     driver = ''
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, nome, usuario, senha, perfil = empresa
+        codigo, cnpj, nome, usuario, senha, perfil = empresa
         nome = nome.replace('/', '')
         
         # printa o indice da empresa que está sendo executada
@@ -205,15 +253,23 @@ def run():
                 except:
                     pass
                 
+                contador = 0
                 while True:
                     try:
                         driver, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil, retorna_driver=True, options=options)
                         break
                     except:
                         print('❗ Erro ao logar na empresa, tentando novamente')
-                
+                    contador += 1
+                    
+                    if contador >= 5:
+                        print('❌ Impossível de logar com esse usuário')
+                        sid = 'Impossível de logar com esse usuário'
+                        driver = 'erro'
+                        break
+                    
                 if driver == 'erro':
-                    _escreve_relatorio_csv(f'{cnpj};{nome};{sid}', nome=andamentos)
+                    _escreve_relatorio_csv(f'{codigo};{cnpj};{nome};{sid}', nome=andamentos)
                     usuario_anterior = usuario
                     break
                     
@@ -224,17 +280,21 @@ def run():
                 driver, resultado = consulta_cndni(driver, nome, cnpj, pasta_inicial)
                 
                 if resultado != 'erro':
-                    _escreve_relatorio_csv(f'{cnpj};{nome};{resultado}', nome=andamentos)
+                    _escreve_relatorio_csv(f'{codigo};{cnpj};{nome};{resultado}', nome=andamentos)
                     usuario_anterior = usuario
                     break
                     
                 driver.close()
                 usuario_anterior = 'padrão'
                 continue
-                
-    driver.close()
+    
+    try:
+        driver.close()
+    except:
+        pass
     return True
 
 
 if __name__ == '__main__':
     run()
+    

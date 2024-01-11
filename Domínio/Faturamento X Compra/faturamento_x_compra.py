@@ -7,7 +7,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _indice, _time_execution, _barra_de_status, _escreve_relatorio_csv, _escreve_header_csv, e_dir, _open_lista_dados, _where_to_start, ask_for_dir
-from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf, _encerra_dominio
+from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf
 
 
 def faturamento_compra(ano, empresa, andamento):
@@ -184,6 +184,35 @@ def captura_info_pdf(andamento, arquivo, refaz_planilha='não'):
 
 @_barra_de_status
 def run(window):
+    _login_web()
+    _abrir_modulo('escrita_fiscal')
+    
+    total_empresas = empresas[index:]
+    for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        window['-Mensagens-'].update(f'{str(count + index)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index))} Restantes')
+        _indice(count, total_empresas, empresa, index)
+        
+        while True:
+            if not _login(empresa, andamentos):
+                break
+        
+            resultado = faturamento_compra(str(ano), empresa, andamentos)
+            
+            if resultado == 'dominio fechou':
+                _login_web()
+                _abrir_modulo('escrita_fiscal')
+                
+            if resultado == 'modulo fechou':
+                _abrir_modulo('escrita_fiscal')
+            
+            if resultado == 'ok':
+                break
+    
+    _escreve_header_csv('CÓDIGO;CNPJ;NOME;SITUAÇÃO;JANEIRO;FEVEREIRO;MARÇO;ABRIL;MAIO;JUNHO;JULHO;AGOSTO;SETEMBRO;OUTUBRO;NOVEMBRO;DEZEMBRO;TOTAIS', nome=andamentos)
+
+
+if __name__ == '__main__':
     # configura o ano e digita no domínio
     ano = int(datetime.now().year)
     if int(datetime.now().month) < 3:
@@ -200,43 +229,10 @@ def run(window):
             # Abrir o pdf
             arq = os.path.join(documentos, arq)
             captura_info_pdf(andamentos, arq, refaz_planilha='sim')
-        
+    
     else:
         empresas = _open_lista_dados()
         
         index = _where_to_start(tuple(i[0] for i in empresas))
-        if index is None:
-            return andamentos
-    
-        total_empresas = empresas[index:]
-
-        _login_web()
-        _abrir_modulo('escrita_fiscal')
-
-        for count, empresa in enumerate(empresas[index:], start=1):
-            # printa o indice da empresa que está sendo executada
-            window['-Mensagens-'].update(f'{str(count)} / {str(len(total_empresas))}')
-            _indice(count, total_empresas, empresa, index)
-            
-            while True:
-                if not _login(empresa, andamentos):
-                    break
-            
-                resultado = faturamento_compra(str(ano), empresa, andamentos)
-                
-                if resultado == 'dominio fechou':
-                    _login_web()
-                    _abrir_modulo('escrita_fiscal')
-                    
-                if resultado == 'modulo fechou':
-                    _abrir_modulo('escrita_fiscal')
-                
-                if resultado == 'ok':
-                    break
-    
-    _escreve_header_csv('CÓDIGO;CNPJ;NOME;SITUAÇÃO;JANEIRO;FEVEREIRO;MARÇO;ABRIL;MAIO;JUNHO;JULHO;AGOSTO;SETEMBRO;OUTUBRO;NOVEMBRO;DEZEMBRO;TOTAIS', nome=andamentos)
-    _encerra_dominio()
-
-
-if __name__ == '__main__':
-    run()
+        if index is not None:
+            run()

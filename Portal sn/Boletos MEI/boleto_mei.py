@@ -187,11 +187,6 @@ def boleto_mei(empresa, andamentos):
 @_time_execution
 @_barra_de_status
 def run(window):
-    empresas = _open_lista_dados()
-    index = _where_to_start(tuple(i[0] for i in empresas))
-    if index is None:
-        return False
-
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
@@ -216,5 +211,8 @@ def run(window):
 
 
 if __name__ == '__main__':
-    run()
+    empresas = _open_lista_dados()
+    index = _where_to_start(tuple(i[0] for i in empresas))
+    if index is not None:
+        run()
     

@@ -216,7 +216,7 @@ def abrir_chrome(url, tela_inicial_site=False, fechar_janela=True, outra_janela=
             p.press('delete')
             time.sleep(0.2)
             pyperclip.copy(url)
-            time.sleep(0.2)
+            pyperclip.copy(url)
             p.hotkey('ctrl', 'v')
         
         time.sleep(1)

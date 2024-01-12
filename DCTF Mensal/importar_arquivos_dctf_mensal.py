@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re, pyperclip, shutil, time, os, pyautogui as p, PySimpleGUI as sg
+import sys
 from tkinter.filedialog import askdirectory, Tk
 from threading import Thread
 from pathlib import Path
@@ -13,11 +14,6 @@ e_dir = Path('dados')
 
 
 def barra_de_status(func):
-    """with open("Assets/loading.gif", "rb") as img_file:
-        my_string = pybase64.b64encode(img_file.read())"""
-    
-    
-    
     # Add your new theme colors and settings
     sg.LOOK_AND_FEEL_TABLE['tema'] = {'BACKGROUND': '#ffffff',
                                                 'TEXT': '#000000',
@@ -56,7 +52,7 @@ def barra_de_status(func):
         # Layout da janela
         layout = [
             [sg.Image(data=image_to_data(im), key='loading'),
-             sg.Text('Rotina automática, não interfira.', key='-titulo-', text_color='#ff4d00'),
+             sg.Text('', key='-titulo-', text_color='#ff4d00'),
              sg.Button('Iniciar', key='-iniciar-', border_width=0),
              sg.Button('Encerrar', key='-encerrar-', border_width=0),
              sg.Text('', key='-Mensagens-')],
@@ -185,7 +181,7 @@ def open_lista_dados(file, encode='latin-1'):
     return list(map(lambda x: tuple(x.replace('\n', '').split(';')), dados))
 
 
-def ask_for_dir(title='Abrir pasta com os arquivos para importar'):
+def ask_for_dir(title='Abra a pasta com os arquivos ".RFB" para importar'):
     root = Tk()
     root.withdraw()
     root.wm_attributes('-topmost', 1)
@@ -207,11 +203,12 @@ def escreve_relatorio_csv(texto, nome='dados', local=e_dir, end='\n', encode='la
     f.close()
 
 
-def cria_dados(window, pasta_arquivos):
-    window['-Mensagens-'].update('Criando planilha de dados')
-
-    for dado in os.listdir(e_dir):
-        os.remove(os.path.join(e_dir, dado))
+def cria_dados(pasta_arquivos):
+    try:
+        for dado in os.listdir(e_dir):
+            os.remove(os.path.join(e_dir, dado))
+    except:
+        pass
     
     arq_name = []
     for arq in os.listdir(pasta_arquivos):
@@ -231,7 +228,6 @@ def cria_dados(window, pasta_arquivos):
         
     dados = open_lista_dados(os.path.join(e_dir, 'dados.csv'))
 
-    window['-Mensagens-'].update('')
     return dados
     
     
@@ -248,7 +244,7 @@ def abrir_dctf_mensal(event, pasta_arquivos):
     while not find_img('origem_dos_dados.png', conf=0.9):
         p.hotkey('ctrl', 'm')
         if event == '-encerrar-':
-            return ''
+            return
         time.sleep(1)
 
     for imagen in ['unidade_nao_selecionada.png', 'unidade_nao_selecionada_2.png', 'unidade_nao_selecionada_3.png']:
@@ -256,23 +252,23 @@ def abrir_dctf_mensal(event, pasta_arquivos):
             click_img(imagen, conf=0.9, clicks=2)
 
     if event == '-encerrar-':
-        return ''
+        return
 
     p.press(unidade)
     time.sleep(0.5)
 
     if event == '-encerrar-':
-        return ''
+        return
 
     p.press('tab')
     time.sleep(0.5)
 
     if event == '-encerrar-':
-        return ''
+        return
 
     for count, subpasta in enumerate(pasta):
         if event == '-encerrar-':
-            return ''
+            return
         if subpasta != pasta[0]:
             p.write(subpasta)
             time.sleep(2)
@@ -304,7 +300,7 @@ def abrir_arquivo(event, empresa, pasta_arquivos):
             return 'Arquivo inválido'
         if find_img('declaracao_ja_importada.png', conf=0.9):
             p.press('enter')
-            auxiliar = 'Declaração já importada'
+            auxiliar = ', Declaração já importada'
         if find_img('declaracao_nao_importada.png', conf=0.9):
             p.press('enter')
             wait_img('imprimir_relatorio.png', conf=0.9)
@@ -312,10 +308,10 @@ def abrir_arquivo(event, empresa, pasta_arquivos):
             if not imprimir_relatorio(event, empresa, pasta_arquivos):
                 return ''
             p.hotkey('alt', 'f')
-            return 'Erro ao importar a Declaração, relatório salvo'
+            return 'Erro ao importar a Declaração, relatório de erros salvo'
             
     p.press('enter')
-    return f'Arquivo importado com sucesso, {auxiliar}'
+    return f'Arquivo importado com sucesso{auxiliar}'
 
 
 def imprimir_relatorio(event, empresa, pasta_arquivos):
@@ -442,20 +438,16 @@ def move_arquivo_usado(pasta_arquivos, arquivo):
 
 @barra_de_status
 def run(window, event):
-    pasta_arquivos = ask_for_dir()
-    empresas = cria_dados(window, pasta_arquivos)
-
-    if not empresas:
-        p.alert(text='Essa pasta não contem arquivos ".RFB"')
-
     andamentos = 'Importar Arquivos DCTF Mensal'
-
+    
     total_empresas = empresas[:]
     
     abrir_dctf_mensal(event, pasta_arquivos)
     
+    window['-titulo-'].update('Rotina automática, não interfira.')
     for count, empresa in enumerate(empresas[:], start=1):
         # printa o indice da empresa que está sendo executada
+        
         window['-Mensagens-'].update(f'{str(count)} de {str(len(total_empresas))} | {str((len(total_empresas)) - count)} Restantes')
         
         cnpj, arquivo = empresa
@@ -477,4 +469,20 @@ def run(window, event):
 
 
 if __name__ == '__main__':
-    run()
+    empresas = None
+    while True:
+        pasta_arquivos = ask_for_dir()
+        if not pasta_arquivos:
+            break
+
+        empresas = cria_dados(pasta_arquivos)
+
+        if empresas:
+            break
+
+        p.alert(text='Essa pasta não contem arquivos ".RFB"')
+
+    if empresas:
+        run()
+
+    p.alert(text='Execução finalizada.')

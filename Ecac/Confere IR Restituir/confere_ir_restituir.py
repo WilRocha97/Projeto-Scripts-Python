@@ -104,8 +104,10 @@ def abre_irpf_atual():
     while not _find_img('irpf_atual.png', conf=0.9):
         time.sleep(1)
         timer += 1
+        if _find_img('erro_integracao.png', conf=0.9):
+            p.press('f5')
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
-        if timer > 60:
+        if timer > 40:
             print('>>> Erro no ECAC, tentando novamente')
             reiniciar_ecac()
             timer = 0
@@ -161,8 +163,8 @@ def confere_restituir(cpf, nome, pasta_restituir, pasta_pagar):
             '''salvar_pdf(f'{cpf} - {nome} - Imposto a Restituir{pendencias_pdf}', pasta_pagar)'''
             valor = copia_valor()
             return f'❗ Imposto a pagar;{valor};' + pendencias
-        
-        p.press('pgdn')
+
+        p.press('down')
         timer += 1
         if timer > 60:
             return 'erro'
@@ -234,9 +236,7 @@ def salvar_pdf(arquivo, pasta_final):
     while True:
         try:
             pyperclip.copy(arquivo)
-            time.sleep(1)
             pyperclip.copy(arquivo)
-            time.sleep(1)
             p.hotkey('ctrl', 'v')
             break
         except:
@@ -252,6 +252,7 @@ def salvar_pdf(arquivo, pasta_final):
     while True:
         try:
             pyperclip.copy(pasta_final)
+            pyperclip.copy(pasta_final)
             p.hotkey('ctrl', 'v')
             break
         except:
@@ -262,7 +263,7 @@ def salvar_pdf(arquivo, pasta_final):
     time.sleep(1)
     p.hotkey('alt', 'l')
     time.sleep(1)
-    while _find_img('salvar_como.png', conf=0.9):
+    while _find_img('salvar_como_2.png', conf=0.9):
         if _find_img('substituir.png', conf=0.9):
             p.press('s')
     time.sleep(1)
@@ -273,11 +274,8 @@ def copia_valor():
     # copia o valor
     while True:
         try:
-            time.sleep(1)
             p.hotkey('ctrl', 'c')
-            time.sleep(1)
             p.hotkey('ctrl', 'c')
-            time.sleep(1)
             valor = pyperclip.paste()
             return valor
         except:

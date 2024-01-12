@@ -33,8 +33,8 @@ def barra_de_status(func):
     # Add your new theme colors and settings
     sg.LOOK_AND_FEEL_TABLE['tema'] = {'BACKGROUND': '#ffffff',
                                       'TEXT': '#000000',
-                                      'INPUT': '#ffffff',
-                                      'TEXT_INPUT': '#ffffff',
+                                      'INPUT': '#000000',
+                                      'TEXT_INPUT': '#000000',
                                       'SCROLL': '#ffffff',
                                       'BUTTON': ('#000000', '#ffffff'),
                                       'PROGRESS': ('#ffffff', '#ffffff'),
@@ -74,7 +74,7 @@ def barra_de_status(func):
         
         # guarda a janela na variável para manipula-la
         screen_width, screen_height = sg.Window.get_screen_size()
-        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(635, 35), margins=(0,0), finalize=True, location=((screen_width // 2) - (600 // 2), 0))
+        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(550, 35), margins=(0,0), finalize=True, location=((screen_width // 2) - (550 // 2), 0))
         
         def run_script_thread():
             try:
@@ -101,8 +101,7 @@ def barra_de_status(func):
             
             elif event == '-iniciar-':
                 # Cria uma nova thread para executar o script
-                script_thread = Thread(target=run_script_thread)
-                script_thread.start()
+                Thread(target=run_script_thread).start()
 
             index = (index + 1) % frames
             im.seek(index)

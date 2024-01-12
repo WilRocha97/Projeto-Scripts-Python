@@ -172,7 +172,7 @@ def gera_relatorio():
                     return erro[2]
             
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
-        if timer > 60:
+        if timer > 40:
             reiniciar_ecac()
             timer = 0
             tentativas += 1
@@ -231,7 +231,7 @@ def salvar_pdf(pasta_final):
     time.sleep(1)
     p.hotkey('alt', 'l')
     time.sleep(1)
-    while _find_img('salvar_como.png', conf=0.9):
+    while _find_img('salvar_como_2.png', conf=0.9):
         if _find_img('substituir.png', conf=0.9):
             p.press('s')
     time.sleep(1)

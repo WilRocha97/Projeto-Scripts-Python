@@ -33,13 +33,14 @@ def barra_de_status(func):
     # Add your new theme colors and settings
     sg.LOOK_AND_FEEL_TABLE['tema'] = {'BACKGROUND': '#ffffff',
                                       'TEXT': '#000000',
-                                      'INPUT': '#000000',
-                                      'TEXT_INPUT': '#000000',
+                                      'INPUT': '#ffffff',
+                                      'TEXT_INPUT': '#ffffff',
                                       'SCROLL': '#ffffff',
                                       'BUTTON': ('#000000', '#ffffff'),
                                       'PROGRESS': ('#ffffff', '#ffffff'),
-                                      'BORDER': 0, 'SLIDER_DEPTH': 0,
-                                      'PROGRESS_DEPTH': 0, }
+                                      'BORDER': 0,
+                                      'SLIDER_DEPTH': 0,
+                                      'PROGRESS_DEPTH': 0}
     @wraps(func)
     def wrapper():
         def image_to_data(im):
@@ -55,8 +56,11 @@ def barra_de_status(func):
                 data = output.getvalue()
             return data
         
-        filename = 'V:/Setor Robô/Scripts Python/_comum/Assets/loading.gif'
+        filename = 'V:/Setor Robô/Scripts Python/_comum/Assets/processando.gif'
         im = Image.open(filename)
+        
+        filename_check = 'V:/Setor Robô/Scripts Python/_comum/Assets/check.png'
+        im_check = Image.open(filename_check)
         
         index = 0
         frames = im.n_frames
@@ -66,20 +70,23 @@ def barra_de_status(func):
         # sg.theme_previewer()
         # Layout da janela
         layout = [
-            [sg.Image(data=image_to_data(im), key='loading', size=(0,35)),
-             sg.Text('Rotina automática, não interfira.', key='-titulo-', text_color='#ff4d00'),
-             sg.Button('Iniciar', key='-iniciar-', border_width=0),
-             sg.Text('', key='-Mensagens-')],
+            [sg.Button('Iniciar', key='-iniciar-', border_width=0),
+             sg.Text('Rotina automática, não interfira.', key='-titulo-', text_color='#fca103'),
+             sg.Text('', key='-Mensagens-'),
+             sg.Image(data=image_to_data(im), key='-Processando-'),
+             sg.Image(data=image_to_data(im_check), key='-Check-', visible=False)],
         ]
         
         # guarda a janela na variável para manipula-la
         screen_width, screen_height = sg.Window.get_screen_size()
-        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(550, 35), margins=(0,0), finalize=True, location=((screen_width // 2) - (550 // 2), 0))
+        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(550, 34), margins=(0,0), finalize=True, location=((screen_width // 2) - (550 // 2), 0))
         
         def run_script_thread():
             try:
                 # habilita e desabilita os botões conforme necessário
                 window['-iniciar-'].update(disabled=True)
+                window['-Processando-'].update(visible=True)
+                window['-Check-'].update(visible=False)
                 
                 # Chama a função que executa o script
                 func(window)
@@ -89,9 +96,13 @@ def barra_de_status(func):
                 
                 # apaga qualquer mensagem na interface
                 window['-Mensagens-'].update('')
+                
+                window['-Processando-'].update(visible=False)
+                window['-Check-'].update(visible=True)
             except:
                 pass
         
+        processando = 'não'
         while True:
             # captura o evento e os valores armazenados na interface
             event, values = window.read(timeout=15)
@@ -102,11 +113,13 @@ def barra_de_status(func):
             elif event == '-iniciar-':
                 # Cria uma nova thread para executar o script
                 Thread(target=run_script_thread).start()
-
-            index = (index + 1) % frames
-            im.seek(index)
-            window['loading'].update(data=image_to_data(im))
-                
+                processando = 'sim'
+            
+            if processando == 'sim':
+                index = (index + 1) % frames
+                im.seek(index)
+                window['-Processando-'].update(data=image_to_data(im))
+        
         window.close()
     return wrapper
 _barra_de_status = barra_de_status

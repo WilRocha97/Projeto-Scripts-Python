@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 import re, pyperclip, shutil, time, os, pyautogui as p, PySimpleGUI as sg
-import sys
-from tkinter.filedialog import askdirectory, Tk
+from tkinter.filedialog import askopenfilename, askdirectory, Tk
 from threading import Thread
 from pathlib import Path
 from functools import wraps
-import pybase64
 from io import BytesIO
 from PIL import Image
-from sys import path
 
 e_dir = Path('dados')
 
@@ -16,14 +13,15 @@ e_dir = Path('dados')
 def barra_de_status(func):
     # Add your new theme colors and settings
     sg.LOOK_AND_FEEL_TABLE['tema'] = {'BACKGROUND': '#ffffff',
-                                                'TEXT': '#000000',
-                                                'INPUT': '#ffffff',
-                                                'TEXT_INPUT': '#ffffff',
-                                                'SCROLL': '#ffffff',
-                                                'BUTTON': ('#000000', '#ffffff'),
-                                                'PROGRESS': ('#ffffff', '#ffffff'),
-                                                'BORDER': 0, 'SLIDER_DEPTH': 0,
-                                                'PROGRESS_DEPTH': 0, }
+                                      'TEXT': '#000000',
+                                      'INPUT': '#ffffff',
+                                      'TEXT_INPUT': '#ffffff',
+                                      'SCROLL': '#ffffff',
+                                      'BUTTON': ('#000000', '#ffffff'),
+                                      'PROGRESS': ('#ffffff', '#ffffff'),
+                                      'BORDER': 0,
+                                      'SLIDER_DEPTH': 0,
+                                      'PROGRESS_DEPTH': 0, }
     
     @wraps(func)
     def wrapper():
@@ -40,8 +38,11 @@ def barra_de_status(func):
                 data = output.getvalue()
             return data
         
-        filename = 'V:/Setor Robô/Scripts Python/_comum/Assets/loading.gif'
+        filename = 'Assets/processando.gif'
         im = Image.open(filename)
+        
+        filename_check = 'Assets/check.png'
+        im_check = Image.open(filename_check)
         
         index = 0
         frames = im.n_frames
@@ -51,16 +52,17 @@ def barra_de_status(func):
         # sg.theme_previewer()
         # Layout da janela
         layout = [
-            [sg.Image(data=image_to_data(im), key='loading'),
-             sg.Text('', key='-titulo-', text_color='#ff4d00'),
-             sg.Button('Iniciar', key='-iniciar-', border_width=0),
+            [sg.Button('Iniciar', key='-iniciar-', border_width=0),
              sg.Button('Encerrar', key='-encerrar-', border_width=0),
-             sg.Text('', key='-Mensagens-')],
+             sg.Text('', key='-titulo-', text_color='#fca103'),
+             sg.Text('', key='-Mensagens-'),
+             sg.Image(data=image_to_data(im), key='-Processando-'),
+             sg.Image(data=image_to_data(im_check), key='-Check-', visible=False)],
         ]
         
         # guarda a janela na variável para manipula-la
         screen_width, screen_height = sg.Window.get_screen_size()
-        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, size=(650, 35), margins=(0,0), element_justification='center', finalize=True, location=((screen_width // 2) - (600 // 2), 0))
+        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, size=(600, 35), margins=(0,0), element_justification='center', finalize=True, location=((screen_width // 2) - (600 // 2), 0))
     
         def run_script_thread():
             # habilita e desabilita os botões conforme necessário
@@ -78,7 +80,11 @@ def barra_de_status(func):
             # apaga qualquer mensagem na interface
             window['-Mensagens-'].update('')
             
+            window['-Processando-'].update(visible=False)
+            window['-Check-'].update(visible=True)
+            
         
+        processando = 'não'
         while True:
             # captura o evento e os valores armazenados na interface
             event, values = window.read(timeout=15)
@@ -91,12 +97,13 @@ def barra_de_status(func):
                 
             elif event == '-iniciar-':
                 # Cria uma nova thread para executar o script
-                script_thread = Thread(target=run_script_thread)
-                script_thread.start()
+                Thread(target=run_script_thread).start()
+                processando = 'sim'
             
-            index = (index + 1) % frames
-            im.seek(index)
-            window['loading'].update(data=image_to_data(im))
+            if processando == 'sim':
+                index = (index + 1) % frames
+                im.seek(index)
+                window['-Processando-'].update(data=image_to_data(im))
                 
         window.close()
     
@@ -152,33 +159,57 @@ def click_img(img, pasta='imgs', conf=1.0, delay=1, timeout=20, button='left', c
     
 def click_position_img(img, operacao, pixels_x=0, pixels_y=0, pasta='imgs', conf=1.0, clicks=1):
     img = os.path.join(pasta, img)
-    p.moveTo(p.locateCenterOnScreen(img, confidence=conf))
-    local_mouse = p.position()
-    if operacao == '+':
-        p.click(int(local_mouse[0] + int(pixels_x)), int(local_mouse[1] + int(pixels_y)), clicks=clicks)
-        return True
-    if operacao == '-':
-        p.click(int(local_mouse[0] - int(pixels_x)), int(local_mouse[1] - int(pixels_y)), clicks=clicks)
-        return True
-    if operacao == '+x-y':
-        p.click(int(local_mouse[0] + int(pixels_x)), int(local_mouse[1] - int(pixels_y)), clicks=clicks)
-        return True
-    if operacao == '-x+y':
-        p.click(int(local_mouse[0] - int(pixels_x)), int(local_mouse[1] + int(pixels_y)), clicks=clicks)
-        return True
+    try:
+        p.moveTo(p.locateCenterOnScreen(img, confidence=conf))
+        local_mouse = p.position()
+        if operacao == '+':
+            p.click(int(local_mouse[0] + int(pixels_x)), int(local_mouse[1] + int(pixels_y)), clicks=clicks)
+            return True
+        if operacao == '-':
+            p.click(int(local_mouse[0] - int(pixels_x)), int(local_mouse[1] - int(pixels_y)), clicks=clicks)
+            return True
+        if operacao == '+x-y':
+            p.click(int(local_mouse[0] + int(pixels_x)), int(local_mouse[1] - int(pixels_y)), clicks=clicks)
+            return True
+        if operacao == '-x+y':
+            p.click(int(local_mouse[0] - int(pixels_x)), int(local_mouse[1] + int(pixels_y)), clicks=clicks)
+            return True
+    except:
+        return False
 
 
 # Abre uma janela de seleção de arquivos e abre o arquivo selecionado
 # Retorna List de Tuple das linhas dividas por ';' do arquivo caso sucesso
 # Retorna None caso nenhum selecionado ou erro ao ler arquivo
-def open_lista_dados(file, encode='latin-1'):
+def open_lista_dados(file=False, encode='latin-1'):
+    if not file:
+        ftypes = [('Plain text files', '*.txt *.csv')]
+        
+        file = ask_for_file(filetypes=ftypes)
+        if not file:
+            return False
+    
     try:
         with open(file, 'r', encoding=encode) as f:
             dados = f.readlines()
-    except Exception as e:
+    except:
         return False
     
     return list(map(lambda x: tuple(x.replace('\n', '').split(';')), dados))
+
+
+def ask_for_file(title='Abrir arquivo', filetypes='*', initialdir=os.getcwd()):
+    root = Tk()
+    root.withdraw()
+    root.wm_attributes('-topmost', 1)
+    
+    file = askopenfilename(
+        title=title,
+        filetypes=filetypes,
+        initialdir=initialdir
+    )
+    
+    return file if file else False
 
 
 def ask_for_dir(title='Abra a pasta com os arquivos ".RFB" para importar'):
@@ -204,29 +235,33 @@ def escreve_relatorio_csv(texto, nome='dados', local=e_dir, end='\n', encode='la
 
 
 def cria_dados(pasta_arquivos):
-    try:
-        for dado in os.listdir(e_dir):
-            os.remove(os.path.join(e_dir, dado))
-    except:
-        pass
-    
-    arq_name = []
-    for arq in os.listdir(pasta_arquivos):
-        if arq.endswith('.RFB'):
-            with open(os.path.join(pasta_arquivos, arq), 'r') as arquivo:
-                # Leia o conteúdo do arquivo
-                conteudo = arquivo.read()
-                cnpj = re.compile(r'DCTFM\s+\d\d\d\d\d\d\d\d\d(\d\d\d\d\d\d\d\d\d\d\d\d\d\d)\d\d\d\d').search(conteudo).group(1)
+    plainlha_de_dados = p.confirm(buttons=['Criar planilha com os arquivos na pasta selecionada', 'Selecionar planilha já existente'])
+    if plainlha_de_dados == 'Criar planilha com os arquivos na pasta selecionada':
+        try:
+            for dado in os.listdir(e_dir):
+                os.remove(os.path.join(e_dir, dado))
+        except:
+            pass
+        
+        arq_name = []
+        for arq in os.listdir(pasta_arquivos):
+            if arq.endswith('.RFB'):
+                with open(os.path.join(pasta_arquivos, arq), 'r') as arquivo:
+                    # Leia o conteúdo do arquivo
+                    conteudo = arquivo.read()
+                    cnpj = re.compile(r'DCTFM\s+\d\d\d\d\d\d\d\d\d(\d\d\d\d\d\d\d\d\d\d\d\d\d\d)\d\d\d\d').search(conteudo).group(1)
+                
+                names = arq.split('_')
+                codigo = str(names[1]).replace('.RFB', '')
+                arq_name.append((cnpj, codigo))
             
-            names = arq.split('_')
-            codigo = str(names[1]).replace('.RFB', '')
-            arq_name.append((cnpj, codigo))
-        
-    arq_name = sorted(arq_name)
-    for name in arq_name:
-        escreve_relatorio_csv(f'{name[0]};DCTF_{name[1]}.RFB')
-        
-    dados = open_lista_dados(os.path.join(e_dir, 'dados.csv'))
+        arq_name = sorted(arq_name)
+        for name in arq_name:
+            escreve_relatorio_csv(f'{name[0]};DCTF_{name[1]}.RFB')
+            
+        dados = open_lista_dados(os.path.join(e_dir, 'dados.csv'))
+    else:
+        dados = open_lista_dados()
 
     return dados
     
@@ -276,7 +311,7 @@ def abrir_dctf_mensal(event, pasta_arquivos):
             time.sleep(1)
 
             
-def abrir_arquivo(event, empresa, pasta_arquivos):
+def abrir_arquivo(event, arquivo, empresa, pasta_arquivos):
     while not find_img('nome_arquivo.png', conf=0.9):
         if event == '-encerrar-':
             return ''
@@ -297,7 +332,7 @@ def abrir_arquivo(event, empresa, pasta_arquivos):
     while not find_img('declaracao_importada.png', conf=0.9):
         if find_img('arquivo_invalido.png', conf=0.9):
             p.press('enter')
-            return 'Arquivo inválido'
+            return 'Arquivo inválido, ou não encontrado'
         if find_img('declaracao_ja_importada.png', conf=0.9):
             p.press('enter')
             auxiliar = ', Declaração já importada'
@@ -308,15 +343,18 @@ def abrir_arquivo(event, empresa, pasta_arquivos):
             if not imprimir_relatorio(event, empresa, pasta_arquivos):
                 return ''
             p.hotkey('alt', 'f')
+            move_arquivo_usado(pasta_arquivos, 'Arquivos Com Erros', arquivo)
             return 'Erro ao importar a Declaração, relatório de erros salvo'
             
     p.press('enter')
+    move_arquivo_usado(pasta_arquivos, 'Arquivos Importados', arquivo)
     return f'Arquivo importado com sucesso{auxiliar}'
 
 
 def imprimir_relatorio(event, empresa, pasta_arquivos):
+    pasta_relatorio = os.path.join(pasta_arquivos, 'Relatórios de erro').replace('//', '/')
     # cria uma pasta com o nome do relatório para salvar os arquivos
-    os.makedirs(os.path.join(pasta_arquivos, 'Relatórios de erro'), exist_ok=True)
+    os.makedirs(pasta_relatorio, exist_ok=True)
 
     cnpj, arquivo = empresa
     arquivo = arquivo.replace('.RFB', '')
@@ -344,7 +382,7 @@ def imprimir_relatorio(event, empresa, pasta_arquivos):
     if event == '-encerrar-':
         return False
     
-    pyperclip.copy(pasta_arquivos + '/Relatórios de erro')
+    pyperclip.copy(pasta_relatorio)
     p.hotkey('ctrl', 'v')
     time.sleep(0.5)
     
@@ -429,8 +467,8 @@ def cria_copia_de_seguranca():
     time.sleep(2)
 
 
-def move_arquivo_usado(pasta_arquivos, arquivo):
-    pasta_arquivos_importados = os.path.join(pasta_arquivos, 'Arquivos Importados')
+def move_arquivo_usado(pasta_arquivos, local, arquivo):
+    pasta_arquivos_importados = os.path.join(pasta_arquivos, local)
     os.makedirs(pasta_arquivos_importados, exist_ok=True)
 
     shutil.move(os.path.join(pasta_arquivos, arquivo), os.path.join(pasta_arquivos_importados, arquivo))
@@ -451,11 +489,9 @@ def run(window, event):
         window['-Mensagens-'].update(f'{str(count)} de {str(len(total_empresas))} | {str((len(total_empresas)) - count)} Restantes')
         
         cnpj, arquivo = empresa
-        resultado = abrir_arquivo(event, empresa, pasta_arquivos)
+        resultado = abrir_arquivo(event, arquivo, empresa, pasta_arquivos)
         if resultado != '':
             escreve_relatorio_csv(f'{cnpj};{arquivo};{resultado}', nome=andamentos, local=pasta_arquivos)
-
-        move_arquivo_usado(pasta_arquivos, arquivo)
 
         if count % 200 == 0:
             # a cada 200 arquivos, faz um backup

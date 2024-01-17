@@ -124,6 +124,7 @@ def espera_gerar(empresa, andamento):
     # espera gerar
     while not _find_img('receita_bruta_gerada.png', conf=0.9):
         print('>>> Aguardando gerar')
+
         if _find_img('sem_dados.png', conf=0.9):
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para imprimir']), nome=andamento)
             print('❌ Sem dados para imprimir')
@@ -132,6 +133,11 @@ def espera_gerar(empresa, andamento):
             p.press('esc', presses=4, interval=1)
             time.sleep(1)
             return False
+
+        if _find_img('sem_parametro.png', conf=0.9):
+            p.press('enter')
+            time.sleep(1)
+
         time.sleep(1)
         timer += 1
         

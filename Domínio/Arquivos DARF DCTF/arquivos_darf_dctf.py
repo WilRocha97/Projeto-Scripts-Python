@@ -16,6 +16,7 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
     _wait_img('relatorios.png', conf=0.9, timeout=-1)
     # Relatórios mensal
     p.hotkey('alt', 'r')
+    
     time.sleep(0.5)
     # Impostos
     p.press('n')
@@ -41,7 +42,7 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
     p.press('tab')
     time.sleep(1)
 
-    p.press('delete', presses=25)
+    p.press('delete', presses=50)
     time.sleep(1)
 
     p.write(nome_arquivo)
@@ -71,11 +72,10 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
     time.sleep(2)
     p.press('enter')
     time.sleep(2)
-    p.click(1214, 488)
-    time.sleep(2)
 
-    p.click(413, 541)
-    time.sleep(2)
+    if not p.locateOnScreen(r'imgs/criterio_marcado.png'):
+        p.click(413, 541)
+        time.sleep(1)
 
     p.click(1215, 547)
     time.sleep(2)
@@ -87,7 +87,7 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
     time.sleep(1)
 
     while _find_img('outros_dados.png', conf=0.9):
-        time.sleep(2)
+        time.sleep(1)
 
     p.hotkey('alt', 'x')
     print('>>> Gerando arquivo')

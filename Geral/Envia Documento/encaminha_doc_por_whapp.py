@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import datetime, os, random, time, re, pywhatkit, pandas as pd, pyautogui as p
+import datetime, os, random, time, re, pandas as pd, pyautogui as p
 
 import pyperclip
 from selenium import webdriver
@@ -52,9 +52,9 @@ def captura_dados_email(driver):
     print('>>> Capturando dados da mensagem')
     
     while not _find_by_id('messageViewFrame', driver):
+        print('aqui')
         time.sleep(1)
     
-    time.sleep(1)
     titulo = re.compile(r'subject\">(.+)</div>').search(driver.page_source).group(1)
     titulo = titulo.replace('-&nbsp;', '- ').replace(' &nbsp;', ' ').replace('&nbsp; ', ' ').replace('&nbsp;', ' ').replace('&amp;', '&')
     
@@ -272,14 +272,23 @@ def enviar(numero, link_mensagem, titulo, vencimento):
     p.press('enter')
     _wait_img('anexar.png', conf=0.9)
     time.sleep(1)
-    ''
-    pyperclip.copy(mensagem)
-    time.sleep(1)
-    p.hotkey('ctrl', 'v')
+    
+    while True:
+        try:
+            pyperclip.copy(mensagem)
+            pyperclip.copy(mensagem)
+            p.hotkey('ctrl', 'v')
+            break
+        except:
+            pass
+
     time.sleep(1)
     p.press('enter')
+    time.sleep(2)
     
-    time.sleep(5)
+    while p.locateOnScreen(r'imgs/aguardando.png'):
+        time.sleep(1)
+    
     p.hotkey('ctrl', 'w')
     time.sleep(1)
     
@@ -319,9 +328,14 @@ def enviar_anexo(numero, anexo, corpo_email):
     _wait_img('abrir.png', conf=0.9)
     time.sleep(1)
     
-    pyperclip.copy(anexo)
-    time.sleep(1)
-    p.hotkey('ctrl', 'v')
+    while True:
+        try:
+            pyperclip.copy(anexo)
+            pyperclip.copy(anexo)
+            p.hotkey('ctrl', 'v')
+            break
+        except:
+            pass
 
     time.sleep(1)
     p.press('enter')
@@ -330,14 +344,22 @@ def enviar_anexo(numero, anexo, corpo_email):
     p.press('enter')
     time.sleep(1)
     
-    pyperclip.copy(mensagem)
-
-    time.sleep(1)
-    p.hotkey('ctrl', 'v')
+    while True:
+        try:
+            pyperclip.copy(mensagem)
+            pyperclip.copy(mensagem)
+            p.hotkey('ctrl', 'v')
+            break
+        except:
+            pass
+        
     time.sleep(1)
     p.press('enter')
+    time.sleep(2)
     
-    time.sleep(5)
+    while p.locateOnScreen(r'imgs/aguardando.png'):
+        time.sleep(1)
+        
     p.hotkey('ctrl', 'w')
     time.sleep(1)
     
@@ -414,6 +436,9 @@ def run(window):
     })
     
     while True:
+        status, driver = _initialize_chrome(options)
+        driver = login_email(driver)
+        
         mes = datetime.datetime.now().month
         ano = datetime.datetime.now().year
         nome_planilha = f'Envia link {mes}-{ano}'
@@ -423,15 +448,10 @@ def run(window):
         except:
             pass
         
-        status, driver = _initialize_chrome(options)
-        driver = login_email(driver)
-        time.sleep(1)
-        
         print('>>> Aguardando e-mail')
         while re.compile(r'<div class=\"no-items\" style=\"\">Sem itens para mostrar</div>').search(driver.page_source):
             time.sleep(1)
         
-        titulo = 'x'
         nao_envia = 'x'
         # try:
         driver, titulo, cnpj, cnpj_limpo, corpo_email, vencimento, link_mensagem = captura_dados_email(driver)
@@ -526,6 +546,6 @@ def run(window):
 
         driver.close()
         
-            
+
 if __name__ == '__main__':
     run()

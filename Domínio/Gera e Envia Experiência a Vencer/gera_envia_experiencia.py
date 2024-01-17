@@ -243,17 +243,11 @@ def define_data():
 @_time_execution
 @_barra_de_status
 def run(window):
-    # abre o Domínio Web e o módulo, no caso será o módulo Folha
-    _login_web()
-    _abrir_modulo('folha')
-
-    # gera uma nova planilha e a seleciona
-    if novo == 'Sim':
-        index = 0
-        # a função de gerar o relatório, pode ser usada para gerar individualmente para cada empresa ou geral, por padrão ela gera o relatório geral
-        gera_arquivo(comp, andamentos)
-        empresas = pega_empresas_com_exp()
-    
+    if novo == 'Não':
+        # abre o Domínio Web e o módulo, no caso será o módulo Folha
+        _login_web()
+        _abrir_modulo('folha')
+        
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
@@ -291,3 +285,15 @@ if __name__ == '__main__':
         index = _where_to_start(tuple(i[0] for i in empresas))
         if index is not None:
             run()
+        
+    # gera uma nova planilha e a seleciona
+    if novo == 'Sim':
+        # abre o Domínio Web e o módulo, no caso será o módulo Folha
+        _login_web()
+        _abrir_modulo('folha')
+
+        index = 0
+        # a função de gerar o relatório, pode ser usada para gerar individualmente para cada empresa ou geral, por padrão ela gera o relatório geral
+        gera_arquivo(comp, andamentos)
+        empresas = pega_empresas_com_exp()
+        run()

@@ -179,7 +179,7 @@ def run():
         cnpj, nome = empresa
 
         # configurar o indice para localizar em qual empresa está
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
 
         resultado = 'Erro'
         count = 0

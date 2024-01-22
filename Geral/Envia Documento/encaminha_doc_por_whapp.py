@@ -54,10 +54,15 @@ def captura_dados_email(driver):
     while not _find_by_id('messageViewFrame', driver):
         print('aqui')
         time.sleep(1)
-    
-    titulo = re.compile(r'subject\">(.+)</div>').search(driver.page_source).group(1)
-    titulo = titulo.replace('-&nbsp;', '- ').replace(' &nbsp;', ' ').replace('&nbsp; ', ' ').replace('&nbsp;', ' ').replace('&amp;', '&')
-    
+
+    while True:
+        try:
+            titulo = re.compile(r'subject\">(.+)</div>').search(driver.page_source).group(1)
+            titulo = titulo.replace('-&nbsp;', '- ').replace(' &nbsp;', ' ').replace('&nbsp; ', ' ').replace('&nbsp;', ' ').replace('&amp;', '&')
+            break
+        except:
+            print('aqui')
+
     print(titulo)
     pasta_anexos = 'V:\\Setor Robô\\Scripts Python\\Geral\\Envia Documento\\ignore\\Anexos'
     
@@ -201,7 +206,7 @@ def envia(resultado_anterior, contato, titulo, vencimento, link_mensagem, corpo_
         return 'erro'
     try:
         if not corpo_email:
-            resultado = enviar(numero, link_mensagem, titulo, vencimento)
+            resultado = enviar_sem_anexo(numero, link_mensagem, titulo, vencimento)
             """pywhatkit.sendwhatmsg_instantly('+55' + numero, f"Olá!\n"
                                                             f"{titulo}\n"
                                                             f"{vencimento}\n"
@@ -244,7 +249,7 @@ def envia(resultado_anterior, contato, titulo, vencimento, link_mensagem, corpo_
             return 'erro'
 
 
-def enviar(numero, link_mensagem, titulo, vencimento):
+def enviar_sem_anexo(numero, link_mensagem, titulo, vencimento):
     mensagem = (f"Olá!\n"
                 f"{titulo}\n"
                 f"{vencimento}\n"
@@ -419,8 +424,8 @@ def mover_email(driver, pasta=''):
 
 
 @_time_execution
-@_barra_de_status
-def run(window):
+#@_barra_de_status
+def run():
     print('>>> Aguardando documentos...')
     
     # opções para fazer com que o chrome trabalhe em segundo plano (opcional)
@@ -434,30 +439,41 @@ def run(window):
         "download.directory_upgrade": True,
         "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
     })
-    
+
+    status, driver = _initialize_chrome(options)
+    driver = login_email(driver)
+
     while True:
-        status, driver = _initialize_chrome(options)
-        driver = login_email(driver)
-        
         mes = datetime.datetime.now().month
         ano = datetime.datetime.now().year
         nome_planilha = f'Envia link {mes}-{ano}'
         
         try:
-            os.remove(os.path.join('ignore', 'controle', arquivo))
+            for arquivo in os.listdir(os.path.join('ignore', 'controle')):
+                os.remove(os.path.join('ignore', 'controle', arquivo))
         except:
             pass
         
         print('>>> Aguardando e-mail')
+        timer = 0
         while re.compile(r'<div class=\"no-items\" style=\"\">Sem itens para mostrar</div>').search(driver.page_source):
             time.sleep(1)
+            timer += 1
+            if timer > 60:
+                driver.refresh()
+                time.sleep(1)
+                _wait_img('menu_classificacao.png', conf=0.9)
+                _click_img('menu_classificacao.png', conf=0.9)
+                _wait_img('crescente.png', conf=0.9)
+                time.sleep(0.5)
+                _click_img('crescente.png', conf=0.9)
+                time.sleep(1)
+                timer = 0
         
         nao_envia = 'x'
         # try:
         driver, titulo, cnpj, cnpj_limpo, corpo_email, vencimento, link_mensagem = captura_dados_email(driver)
-        
-        # determina o tempo de espera entre uma mensagem e outra para tentar evitar span
-        numero = random.randint(1, 10)
+
         time.sleep(1)
         
         if titulo[:3] == 'Re:':
@@ -544,7 +560,14 @@ def run(window):
                     _escreve_relatorio_csv(f'x;x;x;{titulo_sem_emoji};Erro geral ao enviar a mensagem', nome=nome_planilha + ' erros', local=e_dir)
                 print('❌ Erro ao enviar a mensagem\n')"""
 
-        driver.close()
+        driver.refresh()
+        time.sleep(1)
+        _wait_img('menu_classificacao.png', conf=0.9)
+        _click_img('menu_classificacao.png', conf=0.9)
+        _wait_img('crescente.png', conf=0.9)
+        time.sleep(0.5)
+        _click_img('crescente.png', conf=0.9)
+        time.sleep(1)
         
 
 if __name__ == '__main__':

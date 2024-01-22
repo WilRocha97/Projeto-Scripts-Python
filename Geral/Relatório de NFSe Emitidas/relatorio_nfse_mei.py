@@ -360,7 +360,6 @@ def run():
     
     for count, empresa in enumerate(empresas[index:], start=1):
         cod_dominio, cnpj, nome, usuario, senha = empresa
-        
         # printa o indice da empresa que está sendo executada
         _indice(count, total_empresas, empresa, index)
         

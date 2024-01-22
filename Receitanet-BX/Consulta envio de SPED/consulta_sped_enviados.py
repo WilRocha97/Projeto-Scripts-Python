@@ -326,7 +326,7 @@ def consulta_sped(empresas, index, consulta, sped, ano_consulta, mes, mes_final,
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
 
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
 
         if not _find_img('Pesquisa.png', conf=0.9):
             if not _find_img('Icone.png', conf=0.9):

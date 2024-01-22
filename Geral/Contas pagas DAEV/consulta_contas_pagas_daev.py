@@ -65,7 +65,7 @@ def run():
     for count, empresa in enumerate(empresas[index:], start=1):
         cod_ae, cnpj, nome, matricula = empresa
         # printa o indice da lista
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
         if not consulta(ref, nome_planilha, cod_ae, cnpj, nome, matricula):
             _escreve_relatorio_csv(f'{cod_ae};{nome};{cnpj};{matricula};Não encontrou fatura paga referente a {ref}', nome=nome_planilha)
             print(f'❌ Não encontrou fatura paga referente a {ref}')

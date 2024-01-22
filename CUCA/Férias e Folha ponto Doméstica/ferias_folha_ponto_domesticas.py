@@ -199,7 +199,7 @@ def consultar(emp, index, execucao):
             _iniciar('DPCUCA')
             p.getWindowsWithTitle('DPCUCA PLUS |')[0].maximize()
 
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
 
         cod, cpf, nome = empresa
 

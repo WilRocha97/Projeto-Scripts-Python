@@ -152,7 +152,7 @@ def run():
         cnpj, razao, nome, numero = empresa
         
         # printa o índice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
         
         nome_contato = nome + ' - ' + razao
         driver = adiciona_cliente(driver, nome_contato, numero)

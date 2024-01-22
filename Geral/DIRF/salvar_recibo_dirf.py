@@ -159,7 +159,7 @@ def run():
     '''total_empresas = empresas[index:]'''
     for i in range(866):
 
-        '''_indice(count, total_empresas, empresa)'''
+        '''_indice(count, total_empresas, empresa, index)'''
 
         if not transmitir(i):
             continue

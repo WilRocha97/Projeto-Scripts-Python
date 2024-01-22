@@ -24,7 +24,7 @@ def run():
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         cnpj, numero = empresa
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
         lista_dados = []
         atividades = ''
         socios = ''

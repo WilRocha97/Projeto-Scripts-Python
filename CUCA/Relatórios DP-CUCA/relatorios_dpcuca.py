@@ -625,7 +625,7 @@ def relatorio_dpcuca(index, empresas, relatorio, andamentos):
             _iniciar('dpcuca')
             getWindowsWithTitle('DPCUCA')[0].maximize()'''
 
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
 
         _inicial('dpcuca')
 

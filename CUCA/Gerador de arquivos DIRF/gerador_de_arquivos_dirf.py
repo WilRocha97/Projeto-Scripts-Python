@@ -21,7 +21,7 @@ def gerar_dirf(index, empresas):
             _iniciar('DPCUCA')
             p.getWindowsWithTitle('DPCUCA')[0].maximize()
         
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
         
         _inicial('dpcuca')
 

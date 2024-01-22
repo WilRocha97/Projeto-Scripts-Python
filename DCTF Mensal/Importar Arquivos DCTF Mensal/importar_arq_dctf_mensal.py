@@ -235,8 +235,8 @@ def escreve_relatorio_csv(texto, nome='dados', local=e_dir, end='\n', encode='la
 
 
 def cria_dados(pasta_arquivos):
-    plainlha_de_dados = p.confirm(buttons=['Criar planilha com os arquivos na pasta selecionada', 'Selecionar planilha já existente'])
-    if plainlha_de_dados == 'Criar planilha com os arquivos na pasta selecionada':
+    planilha_de_dados = p.confirm(buttons=['Criar planilha com os arquivos na pasta selecionada', 'Selecionar planilha já existente'])
+    if planilha_de_dados == 'Criar planilha com os arquivos na pasta selecionada':
         try:
             for dado in os.listdir(e_dir):
                 os.remove(os.path.join(e_dir, dado))
@@ -486,7 +486,7 @@ def run(window, event):
     for count, empresa in enumerate(empresas[:], start=1):
         # printa o indice da empresa que está sendo executada
         
-        window['-Mensagens-'].update(f'{str(count)} de {str(len(total_empresas))} | {str((len(total_empresas)) - count)} Restantes')
+        window['-Mensagens-'].update(f'{str(count - 1)} de {str(len(total_empresas))} | {str((len(total_empresas)) - count + 1)} Restantes')
         
         cnpj, arquivo = empresa
         resultado = abrir_arquivo(event, arquivo, empresa, pasta_arquivos)

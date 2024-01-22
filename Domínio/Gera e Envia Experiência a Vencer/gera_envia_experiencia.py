@@ -49,19 +49,21 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
     time.sleep(0.5)
     
     print('>>> Buscando relatório')
-    p.press('pgup', presses=10)
+    p.press('pgup', presses=20)
     while not _find_img('relacao_empregados.png', conf=0.9):
+        if _find_img('relacao_empregados_2.png', conf=0.9):
+            break
         p.press('pgdn')
         time.sleep(0.5)
         
     _click_img('relacao_empregados.png', conf=0.9, clicks=2, timeout=1)
     _click_img('relacao_empregados_2.png', conf=0.9, clicks=2, timeout=1)
     # espera aparecer o tipo do relatório que sera usado e depois clica nele
-    _wait_img('relatorio_modelo_veiga.png', conf=0.9, timeout=-1)
+    _wait_img('relatorio_modelo_veiga.png', conf=0.9)
     _click_img('relatorio_modelo_veiga.png', conf=0.9)
     
     # insere o código da empresa, '*' para selecionar todas
-    time.sleep(0.5)
+    time.sleep(1)
     p.press('tab')
     time.sleep(0.5)
     p.press('del', presses=4)
@@ -251,8 +253,7 @@ def run(window):
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
-        window['-Mensagens-'].update(f'{str(count + index)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index))} Restantes')
-        _indice(count, total_empresas, empresa, index)
+        _indice(count, total_empresas, empresa, index, window)
         
         while True:
             # abre a empresa no domínio

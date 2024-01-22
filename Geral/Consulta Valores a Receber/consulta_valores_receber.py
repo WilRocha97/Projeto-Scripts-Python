@@ -24,7 +24,7 @@ def consultar(empresas, index):
     for count, empresa in enumerate(empresas[index:], start=1):
         info, data = empresa
 
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
 
         # não usa as custom options porque o site não carrega com elas
         status, driver = _initialize_chrome()

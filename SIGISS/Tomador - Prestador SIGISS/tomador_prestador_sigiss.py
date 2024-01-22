@@ -12,7 +12,7 @@ from comum_comum import _indice, _escreve_relatorio_csv, _time_execution, _open_
 def lancamento(empresas, index):
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
 
         # cnpjform, cnpj, senha, nome = qual_empresa
         cnpjform, senha, nome, classif, numero, data, cnpjt, nomet, valor = empresa
@@ -89,7 +89,7 @@ def lancamento(empresas, index):
 def alterar(empresas, index):
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
 
         cnpjform, senha, nome, classif, periodo, num_nota, cnpj_cpf_dest, data_emissao, valor_nf, deducoes, valor_serv, aliquota, valor_imp = empresa
 

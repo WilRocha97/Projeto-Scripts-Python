@@ -76,7 +76,7 @@ def importar_dirf():
     for count, empresa in enumerate(empresas[index:], start=1):
         cod, cnpj, nome, arquivo = empresa
 
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
 
         clicar(r'imagens\TelaInicial.png')
 

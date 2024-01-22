@@ -30,7 +30,7 @@ def consulta_faturamento_vs_compra(execucao, empresas, index):
             _iniciar('cuca')
             p.getWindowsWithTitle('(SP)')[0].maximize()
 
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
 
         cod, cnpj, nome = empresa
 

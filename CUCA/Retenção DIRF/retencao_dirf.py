@@ -97,7 +97,7 @@ def consulta_retencao(index, empresas, andamentos):
             _iniciar('dpcuca')
             p.getWindowsWithTitle('DPCUCA')[0].maximize()
 
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
 
         _inicial('CUCA')
 
@@ -123,11 +123,13 @@ def consulta_retencao(index, empresas, andamentos):
         _escreve_relatorio_csv(';'.join([cod, cnpj, nome, r]), nome=andamentos)
 
         if not gerar_dirf():
-                                    _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Não existe registro para exportar!', r]), nome=andamentos)
-                                    print('** Não existe registro para exportar! **')
-                                else:
-                                    _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Exportação completada com sucesso!', r]), nome=andamentos)
-                                    print('>>> Exportação completada com sucesso! <<<')
+            _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Não existe registro para exportar!', r]),
+                                   nome=andamentos)
+            print('** Não existe registro para exportar! **')
+        else:
+            _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Exportação completada com sucesso!', r]),
+                                   nome=andamentos)
+            print('>>> Exportação completada com sucesso! <<<')
 
         _inicial('CUCA')
 

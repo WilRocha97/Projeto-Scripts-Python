@@ -148,7 +148,7 @@ def consulta():
     for count, empresa in enumerate(empresas[index:], start=1):
         cnpj, senha, nome = empresa
 
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
 
         # faz 3 tentativas, se não der certo anota o erro na planilha
         x = 'Erro'

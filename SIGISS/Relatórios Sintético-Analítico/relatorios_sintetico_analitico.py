@@ -196,7 +196,7 @@ def run():
 
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
         try:
             consulta_xml(execucao, final, empresa, data_inicio, data_final)
         except Exception as e:

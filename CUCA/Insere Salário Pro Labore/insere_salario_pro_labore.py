@@ -79,7 +79,7 @@ def entrar_na_empresa(index, empresas, andamentos, usuario):
     for count, empresa in enumerate(empresas[index:], start=1):
         cod, cnpj, nome, mes, ano, cod_socio, nome_socio, data, valor = empresa
 
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
 
         # CNPJ com os separadores para poder verificar a empresa no cuca
         if not _verificar_empresa(cnpj, andamentos, texto='falso', qual_cuca='dpcuca'):

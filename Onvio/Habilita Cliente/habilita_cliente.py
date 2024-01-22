@@ -17,8 +17,8 @@ def localiza_path(driver, elemento):
         return True
     except:
         return False
-
-
+    
+    
 def localiza_id(driver, elemento):
     try:
         driver.find_element(by=By.ID, value=elemento)
@@ -26,7 +26,7 @@ def localiza_id(driver, elemento):
     except:
         return False
     
-
+    
 def verifica_botao(driver, caminho):
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     html = soup.prettify()
@@ -35,8 +35,8 @@ def verifica_botao(driver, caminho):
         return True
     except:
         return False
-
-
+    
+    
 def login_onvio(driver):
     driver.get('https://onvio.com.br/login/#/')
     print('>>> Acessando o site...')
@@ -170,8 +170,8 @@ def coleta_agencia_indices(html):
         indices[agencia]= indice
         indice += 1
     return indices
-    
-    
+
+
 @_time_execution
 def run():
     # abrir a planilha de dados
@@ -206,7 +206,7 @@ def run():
     for count, empresa in enumerate(empresas[index:], start=1):
         numero, cnpj = empresa
         # configurar o indice para localizar em qual empresa está
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
         
         erro = 'erro'
         tentativas = 1

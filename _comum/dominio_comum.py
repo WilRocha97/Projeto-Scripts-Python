@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
-import pyperclip, time, os, subprocess, pyautogui as p
+import pyperclip, time, os, pyautogui as p
 from time import sleep
-from datetime import datetime
 from sys import path
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
 
 path.append(r'..\..\_comum')
 from comum_comum import _escreve_relatorio_csv
-from chrome_comum import _initialize_chrome, _send_input_xpath, _find_by_class
-from pyautogui_comum import _find_img, _wait_img, _click_img
+from chrome_comum import _initialize_chrome, _send_input_xpath
+from pyautogui_comum import _find_img, _click_img
 
 
 imagens = "V:\\Setor Robô\\Scripts Python\\_comum\\imgs_dominio"
@@ -21,12 +19,16 @@ user = f.readline()
 user = user.split('/')
 
 
-def imagem_dominio():
-    return os.path.join(imagem, nome_da_imagem)
+#def imagem_dominio():
+    #return os.path.join(imagem, nome_da_imagem)
 
 
 def _login(empresa, andamentos):
-    cod, cnpj, nome = empresa
+    try:
+        cod, cnpj, nome, regime = empresa
+    except:
+        cod, cnpj, nome = empresa
+        
     # espera a tela inicial do domínio
     while not _find_img('inicial.png', pasta='imgs_c', conf=0.9):
         sleep(1)

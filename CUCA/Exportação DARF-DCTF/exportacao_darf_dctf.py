@@ -47,7 +47,7 @@ def transferir_info(index, empresas, competencia, ano, execucao):
             abrir_os_dois(usuario)
             p.getWindowsWithTitle('DPCUCA')[0].maximize()
 
-        _indice(count, total_empresas, empresa)
+        _indice(count, total_empresas, empresa, index)
 
         cod, cnpj, nome = empresa
 

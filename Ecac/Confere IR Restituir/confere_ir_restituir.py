@@ -106,6 +106,10 @@ def abre_irpf_atual():
         timer += 1
         if _find_img('erro_integracao.png', conf=0.9):
             p.press('f5')
+            
+        if _find_img('dados_login_invalido.png', conf=0.9):
+            return '❌ Dados de login ecac inválidos.'
+        
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
         if timer > 40:
             print('>>> Erro no ECAC, tentando novamente')
@@ -171,12 +175,25 @@ def confere_restituir(cpf, nome, pasta_restituir, pasta_pagar):
       
 
 def confere_guias(cpf, nome, pasta_guias):
-    print('>>> Verificando se existe restituição')
+    print('>>> Verificando se existe guia em aberto')
     
+    while not _find_img('servicos.png', conf=0.9):
+        if _find_img('dependente.png', conf=0.9):
+            return '❗ Contribuinte consta como dependente em outra declaração'
+        time.sleep(1)
+        
+    time.sleep(1)
+    if not _find_img('consultar_debitos.png', conf=0.9):
+        return f'❗ Não possuí guia para gerar'
     
+    _click_img('consultar_debitos.png', conf=0.9)
+    _wait_img('demonstrativo_debito.png', conf=0.9)
+    if _find_img('liquidado.png', conf=0.9):
+        p.hotkey('ctrl', 'w')
+        return f'✔ Liquidado'
     
-    
-    return f'✔ Guia gerada'
+    p.hotkey('ctrl', 'w')
+    return f'❗ Não liquidado'
 
 
 def reiniciar_ecac():
@@ -318,7 +335,7 @@ def run(window):
             
         p.hotkey('ctrl', 'w')
         print(f'{resultado} - {situacao}'.replace(';', ' - '))
-        _escreve_relatorio_csv(f'{cpf};{nome};{resultado[2:]};{situacao[2:]}', nome='Confere Imposto a Restituir')
+        _escreve_relatorio_csv(f'{cpf};{nome};{resultado[2:]};{situacao[2:]}', nome=consulta)
 
 
 if __name__ == '__main__':

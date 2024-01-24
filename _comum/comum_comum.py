@@ -357,7 +357,7 @@ _download_file = download_file
 # Recebe o indice da empresa atual da consulta e a quantidade total de empresas
 # Se não for a primeira empresa printa quantas faltam e pula 2 linhas
 # Printa o indice da empresa atual mais as infos da mesma
-def indice(count, total_empresas, empresa, index=0, window=False):
+def indice(count, total_empresas, empresa='', index=0, window=False):
     
     if window:
         window['-Mensagens-'].update(f'{str((count + index) - 1)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index) + 1)} Restantes')

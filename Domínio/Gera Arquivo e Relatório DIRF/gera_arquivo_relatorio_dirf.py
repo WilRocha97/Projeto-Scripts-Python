@@ -6,8 +6,8 @@ from sys import path
 
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
-from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
-from dominio_comum import _login, _salvar_pdf
+from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start, _barra_de_status
+from dominio_comum import _login, _salvar_pdf, _login_web, _abrir_modulo
 
 
 def dirf(empresa, ano, andamento):
@@ -154,10 +154,16 @@ def arquivos_dirf(empresa, ano, andamento):
     
     # digita o caminho para salvar o arquivo
     os.makedirs('execução/Arquivos', exist_ok=True)
-    pyperclip.copy('')
-    pyperclip.copy('V:\Setor Robô\Scripts Python\Domínio\Gera Arquivo e Relatório DIRF')
-    time.sleep(1)
-    p.hotkey('ctrl', 'v')
+    
+    while True:
+        try:
+            pyperclip.copy('V:\Setor Robô\Scripts Python\Domínio\Gera Arquivo e Relatório DIRF')
+            pyperclip.copy('V:\Setor Robô\Scripts Python\Domínio\Gera Arquivo e Relatório DIRF')
+            p.hotkey('ctrl', 'v')
+            break
+        except:
+            pass
+        
     time.sleep(1)
 
     # seleciona para gerar sem notas fiscais
@@ -194,8 +200,6 @@ def arquivos_dirf(empresa, ano, andamento):
     p.press('enter')
     time.sleep(3)
     
-    
-
     if _find_img('60_caracteres.png', conf=0.9):
         erro = 'Descrição de outros rendimentos isentos e não-tributáveis superior a 60 caracteres'
         p.hotkey('alt', 'f')
@@ -318,18 +322,16 @@ def mover_relatorio_3(empresa):
             pass
 
 
+
 @_time_execution
+# @_barra_de_status
 def run():
-    ano = p.prompt(text='Qual ano base?', title='Script incrível', default='0000')
-    empresas = _open_lista_dados()
-    andamentos = 'Arquivos DIRF'
-
-    index = _where_to_start(tuple(i[0] for i in empresas))
-    if index is None:
-        return False
-
+    _login_web()
+    _abrir_modulo('folha')
+    
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
         _indice(count, total_empresas, empresa, index)
     
         if not _login(empresa, andamentos):
@@ -338,4 +340,10 @@ def run():
 
 
 if __name__ == '__main__':
-    run()
+    ano = p.prompt(text='Qual ano base?', title='Script incrível', default='0000')
+    empresas = _open_lista_dados()
+    andamentos = 'Arquivos DIRF'
+
+    index = _where_to_start(tuple(i[0] for i in empresas))
+    if index is not None:
+        run()

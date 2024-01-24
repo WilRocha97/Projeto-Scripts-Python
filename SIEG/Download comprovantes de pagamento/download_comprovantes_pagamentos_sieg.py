@@ -9,7 +9,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, _indice, _headers, _barra_de_status
 from chrome_comum import _initialize_chrome, _find_by_path, _find_by_id
-from pyautogui_comum import _click_img
+from pyautogui_comum import _click_img, _find_img
 
 
 def login_sieg(driver):
@@ -90,13 +90,13 @@ def procura_empresa(execucao, tipo, competencia, empresa, driver, options):
     
     print('>>> Consultando comprovantes de pagamento')
     # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
-    contador = 1
     timer = 0
     while not _find_by_path('/html/body/form/div[5]/div[3]/div[1]/div/div[3]/div/table/tbody/tr[1]/td/div/span', driver):
         time.sleep(1)
         timer += 1
         _click_img('comprovantes.png', conf=0.9)
-        if timer >= 60:
+        
+        if re.compile(r'Nenhum dado encontrado').search(driver.page_source) or timer >= 60:
             _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento encontrado para essa empresa', nome=execucao)
             print('❗ Nenhum comprovante de pagamento encontrado para essa empresa')
             return driver
@@ -112,40 +112,58 @@ def procura_empresa(execucao, tipo, competencia, empresa, driver, options):
             print('❗ Nenhum comprovante de pagamento encontrado para essa empresa')
             return driver
     
-    # pega a lista de guias da competência desejada
-    if tipo == 'Consulta mensal':
-        comprovantes = re.compile(r'/\d\d\d\d</td><td class=\" hidden-sm hidden-xs td-background-dt\">\d\d/' + competencia + '</td><td class=\" hidden-sm hidden-xs td-background-dt\">.+</td><td class=\" col-md-1 hidden-sm hidden-xs td-background-dt\">R\$.+id=\"(.+)\" class=')\
-            .findall(driver.page_source)
-    else:
-        comprovantes = re.compile(r'/\d\d\d\d</td><td class=\" hidden-sm hidden-xs td-background-dt\">\d\d/\d\d/' + competencia + '</td><td class=\" hidden-sm hidden-xs td-background-dt\">.+</td><td class=\" col-md-1 hidden-sm hidden-xs td-background-dt\">R\$.+id=\"(.+)\" class=') \
-            .findall(driver.page_source)
-        
-    # verifica se existe algum comprovante referente a competência digitada
-    if not comprovantes:
-        _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento referente a {competencia} encontrado para essa empresa', nome=execucao)
-        print(f'❗ Nenhum comprovante de pagamento referente a {competencia} encontrado para essa empresa')
-        return driver
-        
-    # verifica se existe algum comprovante referente a competência digitada
-    nenhum_dado = re.compile(r'Nenhum dado encontrado').search(driver.page_source)
-    if nenhum_dado:
-        _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento encontrado para essa empresa', nome=execucao)
-        print(f'❗ Nenhum comprovante de pagamento encontrado para essa empresa')
-        return driver
-        
+    pagina = 1
+    achou = 'não'
     contador = 0
     erro = ''
     sem_recibo = ''
-    # faz o download dos comprovantes
-    for comprovante in comprovantes:
-        print('>>> Tentando baixar o comprovantes de pagamento')
-        download = True
-        while download:
-            driver, contador, erro, download = download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
-        if erro == 'erro':
-            sem_recibo = 'Existe um comprovante com o botão de download desabilitado'
-            print(f'❌ Existe um comprovante com o botão de download desabilitado')
-        time.sleep(1)
+    # while para tenta percorrer todas as possíveis páginas.
+    while True:
+        # pega a lista de guias da competência desejada
+        if tipo == 'Consulta mensal':
+            comprovantes = re.compile(r'/\d\d\d\d</td><td class=\" hidden-sm hidden-xs td-background-dt\">\d\d/' + competencia + '</td><td class=\" hidden-sm hidden-xs td-background-dt\">.+</td><td class=\" col-md-1 hidden-sm hidden-xs td-background-dt\">R\$.+id=\"(.+)\" class=')\
+                .findall(driver.page_source)
+        else:
+            comprovantes = re.compile(r'/\d\d\d\d</td><td class=\" hidden-sm hidden-xs td-background-dt\">\d\d/\d\d/' + competencia + '</td><td class=\" hidden-sm hidden-xs td-background-dt\">.+</td><td class=\" col-md-1 hidden-sm hidden-xs td-background-dt\">R\$.+id=\"(.+)\" class=') \
+                .findall(driver.page_source)
+        
+        # verificação para caso o while anterior não encontre nenhum comprovante
+        if achou == 'não':
+            # verifica se existe algum comprovante referente a competência digitada
+            if not comprovantes:
+                _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento referente a {competencia} encontrado para essa empresa', nome=execucao)
+                print(f'❗ Nenhum comprovante de pagamento referente a {competencia} encontrado para essa empresa')
+                return driver
+                
+            # verifica se existe algum comprovante referente a competência digitada
+            nenhum_dado = re.compile(r'Nenhum dado encontrado').search(driver.page_source)
+            if nenhum_dado:
+                _escreve_relatorio_csv(f'{cnpj};{nome};Nenhum comprovante de pagamento encontrado para essa empresa', nome=execucao)
+                print(f'❗ Nenhum comprovante de pagamento encontrado para essa empresa')
+                return driver
+        
+        # faz o download dos comprovantes
+        for comprovante in comprovantes:
+            achou = 'sim'
+            print('>>> Tentando baixar o comprovantes de pagamento')
+            download = True
+            while download:
+                driver, contador, erro, download = download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
+            if erro == 'erro':
+                sem_recibo = 'Existe um comprovante com o botão de download desabilitado'
+                print(f'❌ Existe um comprovante com o botão de download desabilitado')
+            time.sleep(1)
+        
+        # tenta ir para a próxima página, se não conseguir sai do while e anota os resultados na planilha
+        try:
+            driver.find_element(by=By.ID, value='tablePayments_next').click()
+            pagina += 1
+        except:
+            break
+        
+        # se clicar no botão para a próxima página aguarda ela carregar.
+        while not re.compile(r'paginate_button btn btn-default current\" aria-controls=\"tablePayments\" data-dt-idx=\"' + str(pagina)).search(driver.page_source):
+            time.sleep(1)
         
     _escreve_relatorio_csv(f'{cnpj};{nome};Comprovantes {competencia} baixados;{contador} Arquivos;{sem_recibo}', nome=execucao)
     
@@ -162,6 +180,8 @@ def download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
     
     contador_3 = 0
     while os.listdir(download_folder) == []:
+        if _find_img('varios_arquivos.png', conf=0.9):
+            _click_img('confirmar_varios_arquivos.png', conf=0.9)
         if contador_3 > 10:
             if not click(driver, comprovante):
                 return driver, contador, 'erro', False

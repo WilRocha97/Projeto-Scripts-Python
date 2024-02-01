@@ -7,6 +7,7 @@ from comum_comum import _indice, _time_execution, _escreve_header_csv, _escreve_
 
 
 def consulta(ref, nome_planilha, cod_ae, cnpj, nome, matricula):
+    print('>>> Abrindo matricula')
     url = 'https://valinhos.strategos.com.br:9096/api/agenciavirtual/faturasPagas?ftMatricula=' + str(matricula[:-1])
     # fas um get na api usando o número da matrícula sem o último digito
     pagina = requests.get(url)
@@ -14,6 +15,7 @@ def consulta(ref, nome_planilha, cod_ae, cnpj, nome, matricula):
     comp = ''
     
     for fatura in pagina.json():
+        print(fatura)
         try:
             # com o json capturado, pega as infos desejadas
             referencia = fatura['vwFtReferenciaMesAnoFormatado']

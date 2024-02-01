@@ -1,16 +1,20 @@
 # -*- coding: utf-8 -*-
+import re
+
 import pyperclip, time, os, shutil, pyautogui as p
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from sys import path
 
 path.append(r'..\..\_comum')
-from pyautogui_comum import _find_img, _click_img, _wait_img
+from pyautogui_comum import _find_img, _click_img, _wait_img, _click_position_img
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start, _barra_de_status
 from dominio_comum import _login, _salvar_pdf, _login_web, _abrir_modulo
 
 
-def dirf(empresa, ano, andamento):
+def dirf(processos, empresa, ano, andamento):
+    cod, cnpj, nome = empresa
+    
     _wait_img('relatorios.png', conf=0.9, timeout=-1)
     # Relatórios
     p.hotkey('alt', 'r')
@@ -25,7 +29,7 @@ def dirf(empresa, ano, andamento):
     # DIRF
     time.sleep(0.5)
     p.press('d')
-    # apartir de 2010
+    # a partir de 2010
     time.sleep(0.5)
     p.press('enter')
     
@@ -41,33 +45,14 @@ def dirf(empresa, ano, andamento):
     p.write('1')
     time.sleep(0.5)
     p.press('tab')
-    
-    erro = arquivos_dirf(empresa, ano, andamento)
-    
-    relatorio_dirf(empresa, ano, andamento, erro)
-    
-    p.press('esc', presses=4)
-    time.sleep(2)
 
-    
-def relatorio_dirf(empresa, ano, andamento, erro):
-    # seleciona para gerar o relatório
-    if _find_img('dirf_gerada.png', conf=0.9):
-        _click_img('dirf_gerada.png', conf=0.8)
-        p.press('enter')
-    
-    if _find_img('formulario.png', conf=0.9):
-        _click_img('formulario.png', conf=0.9)
-    time.sleep(1)
-    
-    # seleciona para gerar sem notas fiscais
-    if _find_img('escrita_selecionado.png', conf=0.99):
-        _click_img('escrita_selecionado.png', conf=0.99)
-    time.sleep(1)
-    
+    time.sleep(0.5)
+    if not p.locateOnScreen(r'imgs/escrita_selecionado.png'):
+        _click_img('escrita.png', conf=0.99)
+
     # abre a janela de outros dados
     p.hotkey('alt', 'u')
-    
+
     while not _find_img('outros_dados.png', conf=0.9):
         time.sleep(1)
         if _find_img('dirf_gerada.png', conf=0.9):
@@ -83,146 +68,146 @@ def relatorio_dirf(empresa, ano, andamento, erro):
         p.hotkey('alt', 'n')
         time.sleep(1)
         p.press('esc')
-        
-        _escreve_relatorio_csv(f'Não é possível editar aba de folha de pagamento;{erro}', nome=andamento)
+
+        _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Não é possível editar aba de folha de pagamento', nome=andamento)
         print('❌ Não é possível editar aba de folha de pagamento')
         return False
-    
+
     _click_img('tem_folha.png', conf=0.95)
-    time.sleep(2)
-    
+    time.sleep(1)
+
     # clicar para gerar de todos os colaboradores
-    if _find_img('todos.png', conf= 0.95):
+    if _find_img('todos.png', conf=0.95):
         _click_img('todos.png', conf=0.95)
-    time.sleep(1)
-    
-    if _find_img('gerar_info_complementar.png', conf= 0.99):
+    time.sleep(0.2)
+
+    if _find_img('gerar_info_complementar.png', conf=0.99):
         _click_img('gerar_info_complementar.png', conf=0.99)
-    time.sleep(1)
-    
+    time.sleep(0.2)
+
     if _find_img('limitar_60_caractere.png', conf=0.99):
         _click_img('limitar_60_caractere.png', conf=0.99)
-    time.sleep(1)
-    
+    time.sleep(0.2)
+
     p.hotkey('alt', 'g')
-    
+
     while not _find_img('dirf.png', conf=0.9):
         time.sleep(1)
+    
+    if processos == 'Arquivos':
+        resultados = arquivos_dirf(cod, ano)
+    elif processos == 'Relatórios':
+        resultados = relatorio_dirf(cod, cnpj, nome, ano)
+    else:
+        resultado_arquivo = arquivos_dirf(cod, ano)
+        resultado_relatorio = relatorio_dirf(cod, cnpj, nome, ano)
+        resultados = f'{resultado_arquivo};{resultado_relatorio}'
+
+    _escreve_relatorio_csv(f'{cod};{cnpj};{nome};{resultados}', nome=andamento)
+    p.press('esc', presses=4)
+    time.sleep(2)
+
+    
+def relatorio_dirf(cod, cnpj, nome, ano):
+    print('>>> Gerando relatório')
+    # seleciona para gerar o relatório
+    if _find_img('dirf_gerada.png', conf=0.9):
+        _click_img('dirf_gerada.png', conf=0.8)
+        p.press('enter')
+    
+    if _find_img('formulario.png', conf=0.9):
+        _click_img('formulario.png', conf=0.9)
+    time.sleep(1)
 
     p.hotkey('alt', 'o')
     
-    while not _find_img('relatorio_gerado.png', conf=0.9):
-        time.sleep(1)
-
-        if _find_img('relatorio_gerado_2.png', conf=0.9):
-            _salvar_pdf()
-            mover_relatorio_2(empresa)
+    while True:
+        if _find_img('relatorio_gerado.png', conf=0.9):
             break
-
+        if _find_img('relatorio_gerado_2.png', conf=0.9):
+            break
         if _find_img('sem_dados_arquivo.png', conf=0.9):
             p.press('enter')
-            _escreve_relatorio_csv(f'Sem dados para emitir;{erro}', nome=andamento)
             print('❗ Sem dados para emitir')
-            return False
-
-    if _find_img('relatorio_gerado.png', conf=0.9):
-        salvar_pdf(empresa)
+            return 'Sem dados para emitir'
     
-    _escreve_relatorio_csv(f'Relatório DIRF {ano} gerado;{erro}', nome=andamento)
+    p.hotkey('ctrl', 'd')
+    
+    print('>>> Salvando relatório')
+    cnpj = cnpj.replace('/', '').replace('.', '').replace('-', '')
+    nome = nome.replace('/', ' ').replace('?', ' ').replace(':', ' ').replace('"', ' ').replace('*', ' ')
+    while True:
+        if _find_img('salvar_em_pdf.png', pasta='imgs_c', conf=0.9):
+            _salvar_pdf(abriu_janela=True)
+            mover_relatorio_2(cod, cnpj, nome)
+            break
+        if _find_img('procurar_pasta.png', conf=0.9):
+            salvar_pdf()
+            mover_relatorio(cod, cnpj, nome)
+            break
+        
     print('✔ Relatório gerado')
+    return f'Relatório DIRF {ano} gerado'
 
-    return True
 
+def arquivos_dirf(cod, ano):
+    caminho = 'M:\\'
 
-def arquivos_dirf(empresa, ano, andamento):
-    cod, cnpj, nome = empresa
+    print('>>> Gerando arquivo')
     erro = ''
-    
-    nome = nome.replace('/', ' ')
 
     # seleciona para gerar o relatório
     if _find_img('arquivo.png', conf=0.9):
         _click_img('arquivo.png', conf=0.9)
-    time.sleep(1)
-    
-    # desce para a linha onde sera digitado o caminho para salvar o arquivo
-    p.press('tab')
-    time.sleep(1)
-    
-    # apaga qualuer texto que esteja no campo
-    p.press('del', presses=85)
-    
-    # digita o caminho para salvar o arquivo
-    os.makedirs('execução/Arquivos', exist_ok=True)
-    
-    while True:
-        try:
-            pyperclip.copy('V:\Setor Robô\Scripts Python\Domínio\Gera Arquivo e Relatório DIRF')
-            pyperclip.copy('V:\Setor Robô\Scripts Python\Domínio\Gera Arquivo e Relatório DIRF')
-            p.hotkey('ctrl', 'v')
-            break
-        except:
-            pass
-        
-    time.sleep(1)
+    time.sleep(0.5)
 
-    # seleciona para gerar sem notas fiscais
-    if _find_img('escrita_selecionado.png', conf=0.99):
-        _click_img('escrita_selecionado.png', conf=0.99)
-    time.sleep(1)
-    
-    # abre a janela de outros dados
-    p.hotkey('alt', 'u')
-
-    while not _find_img('outros_dados.png', conf=0.9):
+    while not _find_img('pasta_de_destino_correto.png', conf=0.9):
+        # desce para a linha onde sera digitado o caminho para salvar o arquivo
+        _click_position_img('pasta_de_destino.png', '+', pixels_x=70, conf=0.9, clicks=2)
         time.sleep(1)
 
-    p.hotkey('alt', 'g')
+        # apaga qualquer texto que esteja no campo
+        p.press('del', presses=85)
+        p.press('backspace', presses=85)
 
-    while not _find_img('dirf.png', conf=0.9):
-        time.sleep(1)
+        # digita o caminho para salvar o arquivo
+        while True:
+            try:
+                pyperclip.copy(caminho)
+                pyperclip.copy(caminho)
+                p.hotkey('ctrl', 'v')
+                break
+            except:
+                pass
+
+    time.sleep(1)
 
     p.hotkey('alt', 'o')
     
     while not _find_img('dirf_gerada.png', conf=0.9):
         time.sleep(1)
         if _find_img('outros_dados_nao_digitados.png', conf=0.9):
-            erro = 'Outros dados não digitados'
+            erro = ' - Outros dados não digitados'
             p.hotkey('enter')
         
         if _find_img('sem_dados_arquivo.png', conf=0.9):
             p.press('enter')
-            _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Sem dados para emitir', nome=andamento, end=';')
-            print('❗ Sem dados para emitir')
-            return erro
+            print(f'❗ Sem dados para emitir{erro}')
+            return f'Sem dados para emitir{erro}'
 
     _click_img('dirf_gerada.png', conf=0.8)
     p.press('enter')
     time.sleep(3)
     
-    if _find_img('60_caracteres.png', conf=0.9):
-        erro = 'Descrição de outros rendimentos isentos e não-tributáveis superior a 60 caracteres'
-        p.hotkey('alt', 'f')
-        
-    _escreve_relatorio_csv(f'{cod};{cnpj};{nome};Arquivo DIRF {ano} gerado', nome=andamento, end=';')
-    print('✔ Arquivo gerado')
-
-    mover_arquivo()
-    return erro
+    erro = mover_arquivo(cod)
+    print(f'✔ Arquivo gerado{erro}')
+    return f'Arquivo DIRF {ano} gerado{erro}'
 
 
-def salvar_pdf(empresa):
-    p.hotkey('ctrl', 'd')
-    
+def salvar_pdf():
     timer = 0
     while not _find_img('procurar_pasta.png', conf=0.9):
         time.sleep(1)
-        if _find_img('salvar_em_pdf.png', pasta='imgs_c', conf=0.9):
-            p.press('esc')
-            _salvar_pdf()
-            mover_relatorio_3(empresa)
-            return True
-
         timer += 1
         if timer > 30:
             return False
@@ -236,6 +221,7 @@ def salvar_pdf(empresa):
         time.sleep(3)
 
     while not _find_img('arquivos.png', conf=0.9):
+        os.makedirs('C:/Arquivos', exist_ok=True)
         time.sleep(1)
 
     _click_img('arquivos.png', conf=0.9, timeout=1)
@@ -254,23 +240,24 @@ def salvar_pdf(empresa):
     while _find_img('sera_finalizada.png', pasta='imgs_c', conf=0.9):
         p.press('esc')
 
-    mover_relatorio_3(empresa)
     return True
 
 
-def mover_arquivo():
-    download_folder = "V:\\Setor Robô\\Scripts Python\\Domínio\\Gera Arquivo e Relatório DIRF"
-    folder = "V:\\Setor Robô\\Scripts Python\\Domínio\\Gera Arquivo e Relatório DIRF\\execução\\Arquivos"
-    for file in os.listdir(download_folder):
-        if file.endswith('.txt'):
-            shutil.move(file, os.path.join(folder, file))
-            time.sleep(2)
+def mover_arquivo(cod):
+    os.makedirs('execução/Arquivos', exist_ok=True)
+    final_folder = "execução\\Arquivos"
+    folder = 'C:\\'
+    
+    for arq in [f'DIRF{cod}.txt', f'DIRF0{cod}.txt', f'DIRF00{cod}.txt', f'DIRF000{cod}.txt', f'DIRF0000{cod}.txt', f'DIRF00000{cod}.txt']:
+        try:
+            shutil.move(os.path.join(folder, arq), os.path.join(final_folder, f'DIRF_{cod}.txt'))
+            return ''
+        except:
+            pass
+    
+    return ' - Erro ao mover o arquivo'
 
-
-def mover_relatorio(empresa):
-    cod, cnpj, nome = empresa
-    cnpj = cnpj.replace('/', '').replace('.', '').replace('-', '')
-    nome = nome.replace('/', ' ').replace('?', ' ').replace(':', ' ').replace('"', ' ').replace('*', ' ')
+def mover_relatorio(cod, cnpj, nome):
     os.makedirs('execução/Relatórios', exist_ok=True)
 
     download_folder = "C:\\Arquivos"
@@ -284,34 +271,19 @@ def mover_relatorio(empresa):
             pass
 
 
-def mover_relatorio_2(empresa):
-    cod, cnpj, nome = empresa
-    cnpj = cnpj.replace('/', '').replace('.', '').replace('-', '')
-    nome = nome.replace('/', ' ')
+def mover_relatorio_2(cod, cnpj, nome):
     os.makedirs('execução/Relatórios', exist_ok=True)
 
     folder = "V:\\Setor Robô\\Scripts Python\\Domínio\\Gera Arquivo e Relatório DIRF\\execução\\Relatórios"
-    guia = os.path.join('C:\\DIRF Escrita.pdf')
-    while not os.path.exists(guia):
-        time.sleep(1)
-        
-    while os.path.exists(guia):
-        try:
-            shutil.move(guia, os.path.join(folder, f'DIRF{cod} - {cnpj} - {nome}.pdf'))
-            time.sleep(2)
-        except:
-            pass
-
-
-def mover_relatorio_3(empresa):
-    cod, cnpj, nome = empresa
-    cnpj = cnpj.replace('/', '').replace('.', '').replace('-', '')
-    nome = nome.replace('/', ' ')
-    os.makedirs('execução/Relatórios', exist_ok=True)
-
-    folder = "V:\\Setor Robô\\Scripts Python\\Domínio\\Gera Arquivo e Relatório DIRF\\execução\\Relatórios"
-    guia = os.path.join('C:\\DIRF Folha.pdf')
-    while not os.path.exists(guia):
+    guia_folha = os.path.join('C:\\DIRF Folha.pdf')
+    guia_escrita = os.path.join('C:\\DIRF Escrita.pdf')
+    while True:
+        if os.path.exists(guia_folha):
+            guia = guia_folha
+            break
+        if os.path.exists(guia_escrita):
+            guia = guia_escrita
+            break
         time.sleep(1)
 
     while os.path.exists(guia):
@@ -320,27 +292,27 @@ def mover_relatorio_3(empresa):
             time.sleep(2)
         except:
             pass
-
 
 
 @_time_execution
-# @_barra_de_status
-def run():
+@_barra_de_status
+def run(window):
     _login_web()
     _abrir_modulo('folha')
     
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index)
+        _indice(count, total_empresas, empresa, index, window)
     
         if not _login(empresa, andamentos):
             continue
-        dirf(empresa, ano, andamentos)
+        dirf(processos, empresa, ano, andamentos)
 
 
 if __name__ == '__main__':
     ano = p.prompt(text='Qual ano base?', title='Script incrível', default='0000')
+    processos = p.confirm(buttons=['Arquivos', 'Relatórios', 'Arquivos e Relatórios'])
     empresas = _open_lista_dados()
     andamentos = 'Arquivos DIRF'
 

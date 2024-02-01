@@ -13,13 +13,14 @@ from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir,
 
 def verificacoes(consulta_tipo, andamento, identificacao, nome):
     if _find_img('inscricao_cancelada.png', conf=0.9):
-        _('{};{};inscrição cancelada de ofício pela Secretaria Especial da Receita Federal do Brasil - RFB'.format(identificacao, nome), nome=andamento)
+        _escreve_relatorio_csv('{};{};inscrição cancelada de ofício pela Secretaria Especial da Receita Federal do Brasil - RFB'.format(identificacao, nome), nome=andamento)
         print('❌ inscrição cancelada de ofício pela Secretaria Especial da Receita Federal do Brasil - RFB')
         return False
 
     if _find_img('nao_foi_possivel.png', conf=0.9):
         print('❌ Não foi possível concluir a consulta')
         return 'erro'
+
 
     if _find_img('info_insuficiente.png', conf=0.9):
         _escreve_relatorio_csv('{};{};As informações disponíveis na Secretaria da Receita Federal do Brasil - RFB sobre o contribuinte '

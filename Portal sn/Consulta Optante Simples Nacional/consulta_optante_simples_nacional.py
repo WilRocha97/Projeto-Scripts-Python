@@ -2,9 +2,6 @@ import pyautogui as p
 import time
 import os
 import pyperclip
-from bs4 import BeautifulSoup
-from threading import Thread
-from pathlib import Path
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -64,7 +61,10 @@ def analise(cnpj, nome):
     # captura a info referente a situação SIMEI
     _click_img('optante_simei.png', conf=0.9, clicks=3)
     situacao_simei = copiar(limpar_info=True, deletar_final=2)
-    
+
+    if situacao_sn != 'NÃO optante pelo Simples Nacional':
+        return situacao_sn, '', '', '', '', '', '', ''
+
     # abre a tela para mais informações
     _click_img('mais_info.png', conf=0.9)
     

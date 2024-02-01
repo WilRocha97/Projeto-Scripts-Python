@@ -122,6 +122,7 @@ def _login(empresa, andamentos):
 
 
 def verifica_empresa(cod):
+    time.sleep(1)
     erro = 'sim'
     while erro == 'sim':
         try:
@@ -129,17 +130,13 @@ def verifica_empresa(cod):
     
             while True:
                 try:
-                    time.sleep(1)
                     p.hotkey('ctrl', 'c')
-                    time.sleep(1)
                     p.hotkey('ctrl', 'c')
-                    time.sleep(1)
                     cnpj_codigo = pyperclip.paste()
                     break
                 except:
                     pass
         
-            time.sleep(0.5)
             codigo = cnpj_codigo.split('-')
             codigo = str(codigo[1])
             codigo = codigo.replace(' ', '')
@@ -186,7 +183,7 @@ def _login_web(usuario=user[0], senha=user[1]):
         driver.quit()
         return True
     else:
-        _click_img('app_controler_desfocado.png', pasta='imgs_c', conf=0.9)
+        _click_img('app_controler_desfocado.png', pasta='imgs_c', conf=0.85)
         sleep(2)
         if _find_img('lista_de_programas.png', pasta='imgs_c', conf=0.9):
             p.press('right', presses=2, interval=1)
@@ -242,8 +239,9 @@ def _abrir_modulo(modulo, usuario=user[2], senha=user[3]):
     return True
 
 
-def _salvar_pdf():
-    p.hotkey('ctrl', 'd')
+def _salvar_pdf(abriu_janela=False):
+    if not abriu_janela:
+        p.hotkey('ctrl', 'd')
     timer = 0
     while not _find_img('salvar_em_pdf.png', pasta='imgs_c', conf=0.9):
         time.sleep(1)

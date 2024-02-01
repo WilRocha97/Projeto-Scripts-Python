@@ -122,7 +122,7 @@ def analiza():
                     
                     # procura o nome referente ao valor da rubrica
                     totais = None
-                    indice = 5
+                    indice = 0
                     
                     while not totais:
                         indice = str(indice)

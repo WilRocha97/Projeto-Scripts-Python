@@ -77,6 +77,7 @@ def busca_cpf(cpf):
 def abre_irpf_atual():
     # aguarda o menu do ecac aparecer
     while not _find_img('acoes_ecac.png', conf=0.9):
+        print('>>> Aguardando botão do Meu IRPF')
         time.sleep(1)
     
     # clica no menu do ecac
@@ -85,7 +86,10 @@ def abre_irpf_atual():
     
     # aguarda o botão de CND no ecac aparecer, se aparecer uma mensagem sobre login inválido retorna o erro
     while not _find_img('meu_irpf_ecac.png', conf=0.9):
+        print('>>> Buscando botão do Meu IRPF')
         if _find_img('login_invalido.png', conf=0.9):
+            return '❗ Os serviços só estão disponíveis caso o login esteja válido! Verifique na aba ECAC o login e senha por favor.'
+        if _find_img('login_invalido_2.png', conf=0.9):
             return '❗ Os serviços só estão disponíveis caso o login esteja válido! Verifique na aba ECAC o login e senha por favor.'
         if _find_img('meu_irpf_ecac_2.png', conf=0.9):
             break
@@ -96,7 +100,10 @@ def abre_irpf_atual():
     # clica no botão do Meu IRPF do ECAC
     _click_position_img('meu_irpf_ecac.png', '+', pixels_y=92, conf=0.9)
     _click_position_img('meu_irpf_ecac_2.png', '+', pixels_y=50, conf=0.9)
+    return '✔ OK'
+
     
+def aguarda_ecac(cpf):
     timer = 0
     tentativas = 0
     # aguarda a tela do Meu IRPF
@@ -112,23 +119,21 @@ def abre_irpf_atual():
         
         # se a tela de login do ecac estiver bugada, fecha a janela, recarrega a página no conferir e clica no botão de CND do ecac novamente
         if timer > 40:
+            p.hotkey('ctrl', 'w')
+            time.sleep(1)
+            p.hotkey('ctrl', 'w')
+            time.sleep(1)
+            p.hotkey('ctrl', 'w')
             print('>>> Erro no ECAC, tentando novamente')
-            reiniciar_ecac()
+            _abrir_chrome('https://portal.conferironline.com.br', fechar_janela=False)
+            busca_cpf(cpf)
+            abre_irpf_atual()
             timer = 0
             
             tentativas += 1
             if tentativas >= 5:
                 return '❌ Não é possível acessar o ECAC, sistema demorou muito pra responder'
 
-    time.sleep(2)
-    # clica para abrir a tela do relatório
-    print('>>> Consultando IRPF')
-    _click_img('irpf_atual.png', conf=0.9)
-    
-    # aguarda a tela referênte ao IRPF atual
-    while not _find_img('exercicio.png', conf=0.9):
-        time.sleep(1)
-    
     return '✔ OK'
 
 
@@ -196,7 +201,7 @@ def confere_guias(cpf, nome, pasta_guias):
     return f'❗ Não liquidado'
 
 
-def reiniciar_ecac():
+"""def reiniciar_ecac():
     print('>>> Erro no ECAC, tentando novamente')
     p.click(1000, 10)
     time.sleep(1)
@@ -217,7 +222,7 @@ def reiniciar_ecac():
     print('>>> Acessando ECAC')
     # clica no botão do Meu IRPF do ECAC
     _click_position_img('meu_irpf_ecac.png', '+', pixels_y=92, conf=0.9)
-    _click_position_img('meu_irpf_ecac_2.png', '+', pixels_y=50, conf=0.9)
+    _click_position_img('meu_irpf_ecac_2.png', '+', pixels_y=50, conf=0.9)"""
  
     
 def salvar_pdf(arquivo, pasta_final):
@@ -300,12 +305,12 @@ def copia_valor():
 
 
 @_time_execution
-@_barra_de_status
-def run(window):
+#@_barra_de_status
+def run():
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index, window)
+        _indice(count, total_empresas, empresa, index)
         
         cpf, nome = empresa
         
@@ -316,7 +321,18 @@ def run(window):
             resultado = busca_cpf(cpf)
             if resultado == '✔ OK':
                 resultado = abre_irpf_atual()
-            
+                
+            if resultado == '✔ OK':
+                resultado = aguarda_ecac(cpf)
+                time.sleep(2)
+                # clica para abrir a tela do relatório
+                print('>>> Consultando IRPF')
+                _click_img('irpf_atual.png', conf=0.9)
+                
+                # aguarda a tela referênte ao IRPF atual
+                while not _find_img('exercicio.png', conf=0.9):
+                    time.sleep(1)
+                
             if resultado == '✔ OK':
                 if consulta == 'Consulta IR a restituir':
                     situacao = confere_restituir(cpf, nome, pasta_restituir, pasta_pagar)

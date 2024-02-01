@@ -291,7 +291,7 @@ def enviar_sem_anexo(numero, link_mensagem, titulo, vencimento):
     p.press('enter')
     time.sleep(2)
     
-    while p.locateOnScreen(r'imgs/aguardando.png'):
+    while p.locateOnScreen(r'imgs/aguardando.png', confidence=0.99):
         time.sleep(1)
     
     p.hotkey('ctrl', 'w')

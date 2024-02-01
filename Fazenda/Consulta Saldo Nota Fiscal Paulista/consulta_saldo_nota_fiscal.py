@@ -57,7 +57,6 @@ def login():
             else:
                 if not re.compile(r'Escolha a empresa com a qual deseja operar o sistema').search(soup):
                     return False
-                
                 return s
 
 
@@ -79,7 +78,6 @@ def consulta_saldo(driver, empresas, semestre, ano, andamentos):
             
         driver.execute_script(empresa)
         while not re.compile(r'Bem-vindo ao sistema da Nota Fiscal Paulista').search(driver.page_source):
-            driver.save_screenshot('debug.png')
             if re.compile(r'As funcionalidades do sistema permanecerão indisponíveis enquanto o perfil estiver incompleto').search(driver.page_source):
                 break
             time.sleep(0.1)
@@ -89,6 +87,7 @@ def consulta_saldo(driver, empresas, semestre, ano, andamentos):
             nome = re.compile(r'ctl00\$ConteudoPagina\$TxtRazaoSocial\" type=\"text\" value=\"(.+)\" disabled=\"disabled\"').search(driver.page_source).group(1)
             
             cnpj = re.sub(r'(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})', r'\1.\2.\3/\4-\5', cnpj)
+            nome = nome.replace('&amp;', '&')
             _escreve_relatorio_csv(f'{cnpj};{nome};{semestre};{ano};Cadastro incompleto', nome=andamentos)
             print(f'{cnpj} - {nome}')
             print(f'❌ Cadastro incompleto')
@@ -104,7 +103,6 @@ def consulta_saldo(driver, empresas, semestre, ano, andamentos):
         driver.execute_script(r"javascript:__doPostBack('ctl00$Menu$UCMenu$LoginView1$menuSuperior','Consultar\\CONSULTAR_NF')")
         timer = 0
         while not re.compile(r'Para consultar os documentos fiscais eletrônicos emitidos, acesse:').search(driver.page_source):
-            driver.save_screenshot('debug.png')
             time.sleep(0.1)
             timer += 0.1
             if timer > 20:
@@ -114,7 +112,6 @@ def consulta_saldo(driver, empresas, semestre, ano, andamentos):
         driver.find_element(by=By.ID, value='rblTipo_1').click()
         
         while not re.compile(r'Semestre de').search(driver.page_source):
-            driver.save_screenshot('debug.png')
             time.sleep(0.1)
         
         print(f'>>> Consultando {semestre} - {ano}')
@@ -129,7 +126,6 @@ def consulta_saldo(driver, empresas, semestre, ano, andamentos):
         driver.find_element(by=By.ID, value='btnConsultarNFSemestre').click()
         
         while not re.compile(r'Saldo Disponível Para Saque').search(driver.page_source):
-            driver.save_screenshot('debug.png')
             time.sleep(0.1)
         
         saldo = re.compile(r'Saldo Disponível Para Saque:&nbsp;<span id=\"lblSaldo\">(.+)</span></strong>').search(driver.page_source).group(1)

@@ -21,7 +21,6 @@ def verificacoes(consulta_tipo, andamento, identificacao, nome):
         print('❌ Não foi possível concluir a consulta')
         return 'erro'
 
-
     if _find_img('info_insuficiente.png', conf=0.9):
         _escreve_relatorio_csv('{};{};As informações disponíveis na Secretaria da Receita Federal do Brasil - RFB sobre o contribuinte '
                                'são insuficientes para a emissão de certidão por meio da Internet.'.format(identificacao, nome), nome=andamento)
@@ -37,7 +36,7 @@ def verificacoes(consulta_tipo, andamento, identificacao, nome):
         _escreve_relatorio_csv('{};{};CPF inválido'.format(identificacao, nome), nome=andamento)
         print(f'❌ CPF inválido')
         return False
-    
+
     if _find_img('cnpj_suspenso.png', conf=0.9):
         _escreve_relatorio_csv('{};{};CNPJ suspenso'.format(identificacao, nome), nome=andamento)
         print(f'❌ CNPJ suspenso')
@@ -51,7 +50,6 @@ def verificacoes(consulta_tipo, andamento, identificacao, nome):
     if _find_img('erro_na_consulta.png', conf=0.9):
         p.press('enter')
         time.sleep(2)
-        p.press('enter')
 
     return True
 
@@ -62,6 +60,7 @@ def salvar(consulta_tipo, andamento, identificacao, nome):
     while not _find_img('salvar_como.png', conf=0.9):
         time.sleep(1)
         if _find_img('em_processamento.png', conf=0.9) or _find_img('erro_captcha.png', conf=0.9):
+            print('>>> Tentando novamente')
             consulta(consulta_tipo, identificacao)
             if contador >= 4:
                 _escreve_relatorio_csv('{};{};Consulta em processamento, volte daqui alguns minutos.'.format(identificacao, nome), nome=andamento)
@@ -110,7 +109,8 @@ def salvar(consulta_tipo, andamento, identificacao, nome):
     
     if _find_img('substituir.png', conf=0.9):
         p.hotkey('alt', 's')
-        
+    
+    time.sleep(3)
     return True
 
 
@@ -136,7 +136,7 @@ def consulta(consulta_tipo, identificacao):
 
     p.write(identificacao)
     time.sleep(1)
-    p.press('enter')
+    p.press('enter', presses=2, interval=0.2)
     return True
 
 

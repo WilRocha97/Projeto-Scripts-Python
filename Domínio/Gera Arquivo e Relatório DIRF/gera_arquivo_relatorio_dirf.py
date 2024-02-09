@@ -4,8 +4,8 @@ import re
 import pyperclip, time, os, shutil, pyautogui as p
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-from sys import path
 
+from sys import path
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img, _click_position_img
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start, _barra_de_status
@@ -186,20 +186,40 @@ def arquivos_dirf(cod, ano):
     
     while not _find_img('dirf_gerada.png', conf=0.9):
         time.sleep(1)
-        if _find_img('outros_dados_nao_digitados.png', conf=0.9):
-            erro = ' - Outros dados não digitados'
+        if _find_img('rodar_processo.png', conf=0.9):
+            p.hotkey('enter')
+            while not _find_img('movimento_de_notas.png', conf=0.9):
+                time.sleep(1)
+            p.hotkey('alt', 'g')
+            while not _find_img('dados_gravados.png', conf=0.9):
+                time.sleep(1)
             p.hotkey('enter')
         
+        if _find_img('outros_dados_nao_digitados.png', conf=0.9):
+            erro += ' - Outros dados não digitados'
+            p.hotkey('enter')
+        
+        if _find_img('nao_tem_parametro.png', conf=0.9):
+            erro += ' - Não existe parâmetro informado'
+            p.hotkey('enter')
+        
+        if _find_img('erro_arquivo.png', conf=0.9):
+            erro += ' - Não é possível gerar o arquivo'
+            p.hotkey('enter')
+            
         if _find_img('sem_dados_arquivo.png', conf=0.9):
             p.press('enter')
             print(f'❗ Sem dados para emitir{erro}')
             return f'Sem dados para emitir{erro}'
 
-    _click_img('dirf_gerada.png', conf=0.8)
-    p.press('enter')
+        if _find_img('responsavel_invalido.png', conf=0.9):
+            p.press('enter')
+            print(f'❗ Responsável inválido{erro}')
+            return f'Responsável inválido{erro}'
+
     time.sleep(3)
-    
-    erro = mover_arquivo(cod)
+
+    erro += mover_arquivo(cod)
     print(f'✔ Arquivo gerado{erro}')
     return f'Arquivo DIRF {ano} gerado{erro}'
 
@@ -256,6 +276,7 @@ def mover_arquivo(cod):
             pass
     
     return ' - Erro ao mover o arquivo'
+
 
 def mover_relatorio(cod, cnpj, nome):
     os.makedirs('execução/Relatórios', exist_ok=True)

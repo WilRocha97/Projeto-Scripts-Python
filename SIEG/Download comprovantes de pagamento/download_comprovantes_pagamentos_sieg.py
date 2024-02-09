@@ -155,12 +155,12 @@ def procura_empresa(execucao, tipo, competencia, empresa, driver, options):
             time.sleep(1)
         
         # tenta ir para a próxima página, se não conseguir sai do while e anota os resultados na planilha
-        try:
+        if re.compile(r'tablePayments_next').search(driver.page_source):
             driver.find_element(by=By.ID, value='tablePayments_next').click()
             pagina += 1
-        except:
+        else:
             break
-        
+
         # se clicar no botão para a próxima página aguarda ela carregar.
         while not re.compile(r'paginate_button btn btn-default current\" aria-controls=\"tablePayments\" data-dt-idx=\"' + str(pagina)).search(driver.page_source):
             time.sleep(1)
@@ -253,6 +253,7 @@ def click(driver, comprovante):
 def run(window):
     # iniciar o driver do chome
     status, driver = _initialize_chrome(options)
+    driver.set_page_load_timeout(30)
     driver = login_sieg(driver)
     
     total_empresas = empresas[index:]

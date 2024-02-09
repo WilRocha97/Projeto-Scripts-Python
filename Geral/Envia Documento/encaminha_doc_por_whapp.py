@@ -61,7 +61,7 @@ def captura_dados_email(driver):
             titulo = titulo.replace('-&nbsp;', '- ').replace(' &nbsp;', ' ').replace('&nbsp; ', ' ').replace('&nbsp;', ' ').replace('&amp;', '&')
             break
         except:
-            print('aqui')
+            print('aqui2')
 
     print(titulo)
     pasta_anexos = 'V:\\Setor Robô\\Scripts Python\\Geral\\Envia Documento\\ignore\\Anexos'
@@ -424,8 +424,8 @@ def mover_email(driver, pasta=''):
 
 
 @_time_execution
-#@_barra_de_status
-def run():
+@_barra_de_status
+def run(window):
     print('>>> Aguardando documentos...')
     
     # opções para fazer com que o chrome trabalhe em segundo plano (opcional)

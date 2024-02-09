@@ -84,7 +84,6 @@ def barra_de_status(func):
             window['-Processando-'].update(visible=False)
             window['-Check-'].update(visible=True)
             
-        
         processando = 'não'
         while True:
             # captura o evento e os valores armazenados na interface
@@ -120,10 +119,8 @@ def find_img(img, pasta='imgs', conf=1.0):
 
 
 # Espera pela imagem 'img' que atenda ao nível de correspondência 'conf'
-# Até que o 'timeout' seja excedido ou indefinidamente para 'timeout' negativo
 # Retorna uma tupla com os valores (x, y, altura, largura) caso ache a img
-# Retorna None caso não ache a imagem ou exceda o 'timeout'
-def wait_img(img, pasta='imgs', conf=1.0, delay=1, timeout=20, debug=False):
+def wait_img(img, pasta='imgs', conf=1.0, delay=1, debug=False):
     if debug:
         print('\tEsperando', img)
 
@@ -134,26 +131,19 @@ def wait_img(img, pasta='imgs', conf=1.0, delay=1, timeout=20, debug=False):
             return box
         time.sleep(delay)
 
-        if timeout < 0:
-            continue
-        if timeout == aux:
-            break
         aux += 1
 
     return None
 
 
-def click_img(img, pasta='imgs', conf=1.0, delay=1, timeout=20, button='left', clicks=1):
+def click_img(img, pasta='imgs', conf=1.0, delay=1, button='left', clicks=1):
     img = os.path.join(pasta, img)
     try:
-        for i in range(timeout):
-            box = p.locateCenterOnScreen(img, confidence=conf)
-            if box:
-                p.click(p.locateCenterOnScreen(img, confidence=conf), button=button, clicks=clicks)
-                return True
-            time.sleep(delay)
-        else:
-            return False
+        box = p.locateCenterOnScreen(img, confidence=conf)
+        if box:
+            p.click(p.locateCenterOnScreen(img, confidence=conf), button=button, clicks=clicks)
+            return True
+        time.sleep(delay)
     except:
         return False
     
@@ -251,20 +241,22 @@ def cria_dados(window, planilha_de_dados, pasta_arquivos):
                 with open(os.path.join(pasta_arquivos, arq), 'r', encoding="latin-1") as arquivo:
                     # Leia o conteúdo do arquivo
                     conteudo = arquivo.read()
-                    for tipo in [r'DECPJ\|(\d\d\d\d\d\d\d\d\d\d\d\d\d\d)\|', r'DECPF\|(\d\d\d\d\d\d\d\d\d\d\d)\|']:
+                    for tipo in [r'DECPJ\|(\d\d\d\d\d\d\d\d\d\d\d\d\d\d)\|(.+)\|\d\|', r'DECPF\|(\d\d\d\d\d\d\d\d\d\d\d)\|(.+)\|\d\|']:
                         try:
-                            cnpj = re.compile(tipo).search(conteudo).group(1)
+                            info = re.compile(tipo).search(conteudo)
+                            cnpj = info.group(1)
+                            nome = info.group(2)
                             break
                         except:
                             pass
                         
                 names = arq.split('_')
                 codigo = str(names[1]).replace('.txt', '')
-                arq_name.append((cnpj, codigo))
+                arq_name.append((cnpj, codigo, nome))
             
         arq_name = sorted(arq_name)
         for name in arq_name:
-            escreve_relatorio_csv(f'{name[0]};DIRF_{name[1]}.txt')
+            escreve_relatorio_csv(f'{name[0]};DIRF_{name[1]}.txt;{name[2]}')
             
         dados = open_lista_dados(os.path.join(e_dir, 'dados.csv'))
     else:
@@ -284,16 +276,17 @@ def abrir_dirf(event):
 
 
 def busca_arquivo(event, arquivo, pasta_arquivos):
-    p.hotkey('alt', 'i')
     timer = 0
     while not find_img('nome_arquivo.png', conf=0.9):
+        p.hotkey('alt', 'i')
         if event == '-encerrar-':
             return ''
         time.sleep(1)
+        
         timer += 1
         if timer > 10:
             p.click(p.locateCenterOnScreen(r'imgs\buscar_arquivo.png', confidence=0.95))
-    
+
     # escreve o nome do arquivo
     while True:
         try:
@@ -311,14 +304,31 @@ def busca_arquivo(event, arquivo, pasta_arquivos):
     time.sleep(2)
 
     
-def abrir_arquivo(event, arquivo, empresa, pasta_arquivos, pasta_arquivos_importados, pasta_arquivos_importados_com_erros_avisos, pasta_relatorios, pasta_log):
-    
+def abrir_arquivo(event, cnpj, arquivo, empresa, pasta_arquivos, pasta_arquivos_importados, pasta_arquivos_nao_importados, pasta_arquivos_importados_com_erros_avisos, pasta_relatorios, pasta_log):
     busca_arquivo(event, arquivo, pasta_arquivos)
     
     timer = 0
     auxiliar = ''
     print('>>> Aguardando importar')
     while not p.locateOnScreen(r'imgs\arquivo_selecionado.png'):
+        if find_img('erros_avisos.png', conf=0.9):
+            print('>>> Foram encontrados erros e/ou avisos')
+            p.hotkey('alt', 'n')
+            resultado, mensagem = imprimir_relatorio(event, empresa, pasta_relatorios)
+            if resultado == 'erro critico':
+                return resultado
+            if resultado == 'erro':
+                move_arquivo_usado(pasta_arquivos, pasta_arquivos_nao_importados, arquivo, verifica=pasta_arquivos_importados)
+                move_arquivo_log(pasta_log, arquivo)
+                return f'Arquivo não importado{auxiliar}{mensagem}, arquivos de log salvos'
+            
+            auxiliar += ';Declaração com erros ou avisos, relatório salvo'
+            move_arquivo_usado(pasta_arquivos, pasta_arquivos_nao_importados, arquivo, verifica=pasta_arquivos_importados)
+            p.hotkey('alt', 'f4')
+            return f'Arquivo não importado{auxiliar}'
+        
+        if find_img('tela_selecao.png', conf=0.9):
+            return ''
         if p.locateOnScreen(r'imgs\arquivo_selecionado_2.png'):
             break
         time.sleep(1)
@@ -349,6 +359,9 @@ def abrir_arquivo(event, arquivo, empresa, pasta_arquivos, pasta_arquivos_import
     time.sleep(0.5)
     
     while not find_img('resumo_importacao.png', conf=0.9):
+        if find_img('tela_selecao.png', conf=0.9):
+            return ''
+        
         if find_img('declaracao_ja_importada.png', conf=0.9):
             while find_img('declaracao_ja_importada.png', conf=0.9):
                 click_img('declaracao_ja_importada.png', conf=0.9)
@@ -365,25 +378,40 @@ def abrir_arquivo(event, arquivo, empresa, pasta_arquivos, pasta_arquivos_import
             time.sleep(0.5)
             p.hotkey('alt', 'i')
             time.sleep(0.5)
+            if find_img('nome_arquivo.png', conf=0.9):
+                p.hotkey('alt', 'f4')
+            if p.locateCenterOnScreen(r'imgs\buscar_arquivo.png', confidence=0.95):
+                p.hotkey('alt', 'f4')
+            
             p.hotkey('alt', 'a')
     
     if find_img('erros_avisos.png', conf=0.9):
+        print('>>> Foram encontrados erros e/ou avisos')
         p.hotkey('alt', 'n')
         resultado, mensagem = imprimir_relatorio(event, empresa, pasta_relatorios)
+        
         if resultado == 'erro critico':
             return resultado
         if resultado == 'erro':
-            move_arquivo_usado(pasta_arquivos, pasta_arquivos_importados_com_erros_avisos, arquivo)
+            move_arquivo_usado(pasta_arquivos, pasta_arquivos_importados_com_erros_avisos, arquivo, verifica=pasta_arquivos_importados)
             move_arquivo_log(pasta_log, arquivo)
             return f'Arquivo importado com sucesso{auxiliar}{mensagem}, arquivos de log salvos'
         
-        auxiliar += ';Declaração com erros ou avisos, relatório salvo'
-        move_arquivo_usado(pasta_arquivos, pasta_arquivos_importados_com_erros_avisos, arquivo)
         p.hotkey('alt', 'f4')
-        return f'Arquivo importado com sucesso{auxiliar}'
+        time.sleep(1)
+        if find_img('nao_importou.png', conf=0.9):
+            auxiliar += ';Declaração com erros ou avisos, relatório salvo'
+            move_arquivo_usado(pasta_arquivos, pasta_arquivos_nao_importados, arquivo, verifica=pasta_arquivos_importados)
+            return f'Arquivo não importado{auxiliar}'
         
+        auxiliar += ';Declaração com erros ou avisos, relatório salvo'
+        move_arquivo_usado(pasta_arquivos, pasta_arquivos_importados_com_erros_avisos, arquivo, verifica=pasta_arquivos_importados)
+        return f'Arquivo importado com sucesso{auxiliar}'
+
     p.hotkey('alt', 'n')
-    move_arquivo_usado(pasta_arquivos, pasta_arquivos_importados, arquivo)
+    move_arquivo_usado(pasta_arquivos, pasta_arquivos_importados, arquivo, verifica=pasta_arquivos_importados_com_erros_avisos)
+    deletar_relatorios_antigos(cnpj, arquivo, pasta_relatorios)
+    auxiliar += ';Declaração ok'
     return f'Arquivo importado com sucesso{auxiliar}'
 
 
@@ -404,20 +432,23 @@ def imprimir_relatorio(event, empresa, pasta_relatorios):
     print('>>> Salvando relatório')
     while True:
         while not find_img('salvar_em.png', conf=0.9):
-            click_img('imprimir.png', conf=0.99, timeout=1)
+            click_img('imprimir.png', conf=0.99)
             p.moveTo(10, 10)
             time.sleep(1)
         
-        click_img('desktop.png', conf=0.99, timeout=1)
+        click_img('desktop.png', conf=0.99)
         
-        cnpj, arquivo = empresa
+        cnpj, arquivo, nome = empresa
         arquivo = arquivo.replace('.txt', '')
         
         time.sleep(0.5)
         nome_arquivo = f'{cnpj} - {arquivo} - Relatório de erro.pdf'
         
         while find_img('salvar_em.png', conf=0.9):
-            click_position_img('digita_nome_arquivo.png', '+', pixels_x=100, conf=0.9, clicks=2)
+            if find_img('digita_nome_arquivo.png', conf=0.9):
+                click_position_img('digita_nome_arquivo.png', '+', pixels_x=100, conf=0.9, clicks=2)
+            if find_img('digita_nome_arquivo_2.png', conf=0.9):
+                click_position_img('digita_nome_arquivo_2.png', '+', pixels_x=230, conf=0.9, clicks=2)
             p.press('del', presses=50)
             p.press('backspace', presses=50)
             time.sleep(0.5)
@@ -483,7 +514,15 @@ def cria_copia_de_seguranca(window):
         time.sleep(1)
     
     
-def move_arquivo_usado(pasta_arquivos, pasta, arquivo):
+def move_arquivo_usado(pasta_arquivos, pasta, arquivo, verifica=''):
+    try:
+        for arq in os.listdir(verifica):
+            if arq == arquivo:
+                os.remove(os.path.join(verifica, arq))
+                break
+    except:
+        pass
+    
     os.makedirs(pasta, exist_ok=True)
 
     shutil.move(os.path.join(pasta_arquivos, arquivo), os.path.join(pasta, arquivo))
@@ -500,20 +539,9 @@ def move_arquivo_log(pasta_log, arquivo):
     shutil.copy(os.path.join(pasta_log_original, arquivo_xml), os.path.join(pasta_log, arquivo_xml))
 
 
-def deletar_relatorios_antigos(pasta_arquivos_importados, pasta_relatorios):
-    for arq in os.listdir(pasta_arquivos_importados):
-        if arq.endswith('.txt'):
-            with open(os.path.join(pasta_arquivos_importados, arq), 'r', encoding="latin-1") as arquivo:
-                # Leia o conteúdo do arquivo
-                conteudo = arquivo.read()
-                for tipo in [r'DECPJ\|(\d\d\d\d\d\d\d\d\d\d\d\d\d\d)\|', r'DECPF\|(\d\d\d\d\d\d\d\d\d\d\d)\|']:
-                    try:
-                        cnpj = re.compile(tipo).search(conteudo).group(1)
-                        break
-                    except:
-                        pass
-            
-            arq = arq.replace('.txt', '')
+def deletar_relatorios_antigos(cnpj, arq, pasta_relatorios):
+    for relatorio in pasta_relatorios:
+        if relatorio == f'{cnpj} - {arq} - Relatório de erro.pdf':
             try:
                 os.remove(os.path.join(pasta_relatorios, f'{cnpj} - {arq} - Relatório de erro.pdf'))
             except:
@@ -528,17 +556,181 @@ def fechar_dirf():
         time.sleep(1)
 
 
+def transmitir_dirf(event, cnpj, arquivo, empresa, pasta_arquivos_importados, pasta_arquivos_nao_importados, pasta_arquivos_importados_com_erros_avisos, nome, pasta_recibos, pasta_relatorios_gravacao):
+    print('>>> Trasmitindo arquivo')
+    p.hotkey('ctrl', 'g')
+    timer = 0
+    while not find_img('tela_selecao.png', conf=0.9):
+        p.hotkey('ctrl', 'g')
+        time.sleep(1)
+        timer += 1
+        if timer > 5:
+            abrir_arquivo(event, cnpj, arquivo, empresa, pasta_arquivos_importados, pasta_arquivos_nao_importados, pasta_arquivos_importados, pasta_arquivos_importados_com_erros_avisos, '', '')
+            timer = 0
+        
+    p.hotkey('alt', 'o')
+    
+    wait_img('tela_gravacao.png', conf=0.9)
+    p.hotkey('alt', 'a')
+    
+    while not find_img('local_transmissao.png', conf=0.9):
+        if find_img('avancar_transmissao.png', conf=0.9):
+            p.hotkey('alt', 'a')
+        else:
+            if find_img('erro_gravar.png', conf=0.9):
+                p.hotkey('alt', 'r')
+                resultado, mensagem = imprimir_relatorio(event, empresa, pasta_relatorios_gravacao)
+                p.hotkey('alt', 'f4')
+                p.hotkey('alt', 'c')
+                return 'erro', f'Erro ao gravar arquivo, relatório salvo{mensagem}'
+
+    click_position_img('local_transmissao.png', '+', pixels_x=120, conf=0.9)
+    time.sleep(0.5)
+    
+    p.write('SP')
+    time.sleep(0.5)
+    
+    p.press('enter')
+    time.sleep(0.5)
+    
+    p.hotkey('alt', 'a')
+    
+    wait_img('deseja_transmitir.png', conf=0.99)
+    click_img('transmitir_sim.png', conf=0.99)
+    
+    if find_img('com_certificado.png', conf=0.99):
+        click_img('com_certificado.png', conf=0.99)
+    time.sleep(0.2)
+    
+    p.hotkey('alt', 'a')
+    
+    wait_img('rpem_contabil.png', conf=0.9)
+    click_img('rpem_contabil.png', conf=0.9)
+    time.sleep(0.5)
+    
+    wait_img('assinar.png', conf=0.9)
+    p.hotkey('alt', 'a')
+    
+    wait_img('resultado_transmissao.png', conf=0.9)
+    
+    while not find_img('transmitido.png', conf=0.99):
+        if find_img('procuracao_cancelada.png', conf=0.9):
+            p.hotkey('alt', 'n')
+            return 'erro', 'Procuração eletrônica cadastrada para o detentor do certificado digital apresentado foi cancelada'
+        if find_img('procuracao_rejeitada.png', conf=0.9):
+            p.hotkey('alt', 'n')
+            return 'erro', 'Procuração eletrônica cadastrada para o detentor do certificado digital apresentado foi rejeitada por unidade de atendimento da Secretaria da Receita Federal do Brasil'
+        if find_img('procuracao_expirou.png', conf=0.9):
+            p.hotkey('alt', 'n')
+            return 'erro', 'Procuração eletrônica cadastrada para o detentor do certificado digital apresentado expirou'
+        if find_img('cpf_diferente.png', conf=0.9):
+            p.hotkey('alt', 'n')
+            return 'erro', 'O CPF informado na declaração como responsável pelo CNPJ é diferente do que consta no cadastro da RFB'
+        if find_img('nao_tem_procuracao.png', conf=0.9):
+            p.hotkey('alt', 'n')
+            return 'erro', 'Não existe procuração eletrônica para o detentor do certificado digital apresentado'
+        if find_img('cnpj_nulo.png', conf=0.9):
+            p.hotkey('alt', 'n')
+            return 'erro', 'O CNPJ do plano privado de Assistência à Saúde consta com situação cadastral BAIXADA ou NULA em data anterior do ano calendário que se refere a DIRF'
+        if find_img('nao_pode_p_juridica.png', conf=0.9):
+            p.hotkey('alt', 'n')
+            return 'erro', 'O declarante consta no cadastro da Receita Federal do Brasil com natureza jurídica impedida de entrega da DIRF como Pessoa Jurídica. A DIRF deve ser apresentada como declarante Pessoa Física'
+        if find_img('cadastro_baixado.png', conf=0.9):
+            p.hotkey('alt', 'n')
+            return 'erro', ('O CNPJ do declarante consta no cadastro da Receita Federal do Brasil com a situação BAIXADA no ano calendário '
+                            'que se refere a DIRF e não é uma declaração de extinção')
+        
+        if find_img('erro_servidor.png', conf=0.9):
+            p.hotkey('alt', 'n')
+            return 'erro_servidor', ''
+        
+    if find_img('imprimir_recibo.png', conf=0.99):
+        click_img('imprimir_recibo.png', conf=0.99)
+    time.sleep(0.2)
+    
+    p.hotkey('alt', 'n')
+    
+    wait_img('servico_impressao.png', conf=0.9)
+    
+    if not find_img('print_pdf.png', conf=0.9):
+        click_position_img('nome_impressora.png', '+', pixels_x=85, conf=0.9)
+    
+    wait_img('seleciona_print_pdf.png', conf=0.9)
+    click_img('seleciona_print_pdf.png', conf=0.9)
+    time.sleep(0.5)
+    
+    click_img('imprimir_recibo_entrega.png', conf=0.9)
+    
+    imprimir_recibo(cnpj, arquivo, nome, pasta_recibos)
+    if find_img('erro_impressora.png', conf=0.9):
+        click_img('erro_impressora.png', conf=0.9)
+        time.sleep(0.2)
+        p.press('enter')
+        while find_img('erro_impressora.png', conf=0.9):
+            time.sleep(1)
+        if find_img('impressao_cancelada.png', conf=0.9):
+            click_img('impressao_cancelada.png', conf=0.9)
+            time.sleep(0.2)
+            p.press('enter')
+            time.sleep(0.2)
+        p.hotkey('alt', 'n')
+        return 'ok', 'Arquivo transmitido, Erro ao salvar o recibo de entrega'
+    
+    return 'ok', 'Arquivo transmitido'
+    
+    
+def imprimir_recibo(cnpj, arquivo, nome, pasta_recibos):
+    wait_img('salvar_como_recibo.png', conf=0.9)
+    # exemplo: cnpj;DAS;01;2021;22-02-2021;Guia do MEI 01-2021
+    pyperclip.copy(f'Recibo de entrega DIRF - {cnpj} - {arquivo.replace(".txt", "")} - {nome.replace("/", "")}.pdf')
+    p.hotkey('ctrl', 'v')
+    time.sleep(0.5)
+    
+    # Selecionar local
+    p.press('tab', presses=6)
+    time.sleep(0.5)
+    p.press('enter')
+    time.sleep(0.5)
+    pyperclip.copy(pasta_recibos)
+    p.hotkey('ctrl', 'v')
+    time.sleep(0.5)
+    p.press('enter')
+    time.sleep(0.5)
+    p.hotkey('alt', 'l')
+    time.sleep(1)
+    print('✔ Arquivo transmitido')
+    time.sleep(5)
+
+
+def deletar_arquivo():
+    p.hotkey('alt', 'd')
+    wait_img('excluir_arquivo.png', conf=0.9)
+    click_img('excluir_arquivo.png', conf=0.9)
+
+    wait_img('tela_excluir.png', conf=0.9)
+    click_img('select.png', conf=0.9)
+    
+    wait_img('ok.png', conf=0.9)
+    p.hotkey('alt', 'o')
+    
+    wait_img('deseja_excluir.png', conf=0.9)
+    p.hotkey('alt', 's')
+
+
 @barra_de_status
 def run(window, event):
     pasta_arquivos_importados = os.path.join(pasta_arquivos, 'Arquivos Importados')
+    pasta_arquivos_nao_importados = os.path.join(pasta_arquivos, 'Arquivos não importados')
+    pasta_arquivos_transmitidos = os.path.join(pasta_arquivos, 'Arquivos Transmitidos')
+    pasta_arquivos_nao_transmitidos = os.path.join(pasta_arquivos, 'Arquivos não transmitidos')
     pasta_arquivos_importados_com_erros_avisos = os.path.join(pasta_arquivos, 'Arquivos importados com erros ou avisos')
     pasta_log = os.path.join(pasta_arquivos, 'Log de erros')
     pasta_relatorios = os.path.join(pasta_arquivos, 'Relatórios de erros e avisos')
-    
-    novo_sem_erro = True
+    pasta_relatorios_gravacao = os.path.join(pasta_arquivos, 'Relatórios de erros ao gravar arquivo')
+    pasta_recibos = os.path.join(pasta_arquivos, 'Recibos de entrega')
+    andamentos = 'Importar Arquivos DIRF'
     empresas = cria_dados(window, planilha_de_dados, pasta_arquivos)
     window['-Mensagens-'].update('Aguardando programa DIRF')
-    andamentos = 'Importar Arquivos DIRF'
     
     total_empresas = empresas[:]
     
@@ -550,11 +742,11 @@ def run(window, event):
         
         window['-Mensagens-'].update(f'{str(count - 1)} de {str(len(total_empresas))} | {str((len(total_empresas)) - count + 1)} Restantes')
         
-        cnpj, arquivo = empresa
+        cnpj, arquivo, nome = empresa
         print('\n')
         print(arquivo)
         while True:
-            resultado = abrir_arquivo(event, arquivo, empresa, pasta_arquivos, pasta_arquivos_importados, pasta_arquivos_importados_com_erros_avisos, pasta_relatorios, pasta_log)
+            resultado = abrir_arquivo(event, cnpj, arquivo, empresa, pasta_arquivos, pasta_arquivos_importados, pasta_arquivos_nao_importados, pasta_arquivos_importados_com_erros_avisos, pasta_relatorios, pasta_log)
             if resultado == 'erro critico':
                 p.hotkey('alt', 'f4')
                 wait_img('confirmar_saida.png', conf=0.9)
@@ -565,33 +757,69 @@ def run(window, event):
                 abrir_dirf(event)
                 
             elif resultado != '':
-                if resultado == 'Arquivo importado com sucesso, Declaração já importada':
-                    novo_sem_erro = True
-                escreve_relatorio_csv(f'{cnpj};{arquivo};{resultado}', nome=andamentos, local=pasta_arquivos)
+                if rotina == 'Importar arquivos':
+                    escreve_relatorio_csv(f'{cnpj};{arquivo};{resultado}', nome=andamentos, local=pasta_arquivos)
                 break
                 
-        if count % 100 == 0:
+        if event == '-encerrar-':
+            return
+        
+        transmissao = ''
+        if rotina == 'Importar e transmitir arquivos':
+            andamentos = 'Transmitir Arquivos DIRF'
+            if not re.compile(r'Arquivo não importado').search(resultado):
+                abrir_dirf(event)
+                while True:
+                    if resultado == 'Arquivo importado com sucesso;Declaração com erros ou avisos, relatório salvo':
+                        situacao, transmissao = transmitir_dirf(event, cnpj, arquivo, empresa, pasta_arquivos_importados_com_erros_avisos, pasta_arquivos_nao_importados, pasta_arquivos_importados_com_erros_avisos, nome, pasta_recibos, pasta_relatorios_gravacao)
+                    else:
+                        situacao, transmissao = transmitir_dirf(event, cnpj, arquivo, empresa, pasta_arquivos_importados, pasta_arquivos_nao_importados, pasta_arquivos_importados_com_erros_avisos, nome, pasta_recibos, pasta_relatorios_gravacao)
+                        
+                    if situacao != 'erro_servidor':
+                        break
+                if resultado == 'Arquivo importado com sucesso;Declaração com erros ou avisos, relatório salvo':
+                    if situacao == 'ok':
+                        move_arquivo_usado(pasta_arquivos_importados_com_erros_avisos, pasta_arquivos_transmitidos, arquivo)
+                    if situacao == 'erro':
+                        move_arquivo_usado(pasta_arquivos_importados_com_erros_avisos, pasta_arquivos_nao_transmitidos, arquivo)
+                elif resultado == 'Arquivo importado com sucesso, Declaração já importada;Declaração com erros ou avisos, relatório salvo':
+                    if situacao == 'ok':
+                        move_arquivo_usado(pasta_arquivos_importados_com_erros_avisos, pasta_arquivos_transmitidos, arquivo)
+                    if situacao == 'erro':
+                        move_arquivo_usado(pasta_arquivos_importados_com_erros_avisos, pasta_arquivos_nao_transmitidos, arquivo)
+                
+                else:
+                    if situacao == 'ok':
+                        move_arquivo_usado(pasta_arquivos_importados, pasta_arquivos_transmitidos, arquivo)
+                    if situacao == 'erro':
+                        move_arquivo_usado(pasta_arquivos_importados, pasta_arquivos_nao_transmitidos, arquivo)
+                    
+                if transmissao == 'Arquivo transmitido, Erro ao salvar o recibo de entrega':
+                    fechar_dirf()
+                    os.startfile('C:\Arquivos de Programas RFB\Dirf2024\pgdDirf.exe')
+                    abrir_dirf(event)
+                    
+                abrir_dirf(event)
+                deletar_arquivo()
+            else:
+                transmissao = ';Não transmitido'
+            abrir_dirf(event)
+            
+        escreve_relatorio_csv(f'{cnpj};{arquivo};{resultado};{transmissao}', nome=andamentos, local=pasta_arquivos)
+        
+        if count % 200 == 0:
             # a cada 200 arquivos, faz um backup
             fechar_dirf()
             window['-Mensagens-'].update('Reiniciando programa...')
             os.startfile('C:\Arquivos de Programas RFB\Dirf2024\pgdDirf.exe')
             abrir_dirf(event)
             
-        if event == '-encerrar-':
-            return
-    
     fechar_dirf()
     os.startfile('C:\Arquivos de Programas RFB\Dirf2024\pgdDirf.exe')
-    
-    if novo_sem_erro:
-        deletar_relatorios = p.confirm(text='Novos arquivos importados sem erros, '
-                                        'deseja verificar se existe relatório de erros e avisos desses arquivos e deleta-los?',
-                                   buttons=['Sim', 'Não'])
-        if deletar_relatorios == 'Sim':
-            deletar_relatorios_antigos(pasta_arquivos_importados, pasta_relatorios)
         
 
 if __name__ == '__main__':
+    rotina = p.confirm(buttons=['Importar arquivos', 'Importar e transmitir arquivos'])
     empresas = None
     while True:
         pasta_arquivos = ask_for_dir()

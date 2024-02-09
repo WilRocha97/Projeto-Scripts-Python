@@ -47,8 +47,7 @@ def imprimir(empresa, andamentos):
 
     cnpj, comp, ano, venc = empresa
     venc = venc.replace('/','-')
-    p.moveTo(647, 468)
-    p.click()
+    _click_img('imprimir.png', conf=0.9)
     _wait_img('salvar_como.png', conf=0.9, timeout=-1)
     # exemplo: cnpj;DAS;01;2021;22-02-2021;Guia do MEI 01-2021
     p.write(cnpj + ';DAS;' + comp + ';' + ano + ';' + venc + ';Guia do MEI ' + comp + '-' + ano)
@@ -77,11 +76,11 @@ def imprimir(empresa, andamentos):
 
 def boleto_mei(empresa, andamentos):
     cnpj, comp, ano, venc = empresa
-    
+
     # espera o site abrir
     while not _wait_img('informe_cnpj.png', conf=0.9, timeout=-1):
         time.sleep(1)
-    
+
     print('>>> inserindo CNPJ')
     # Fazer login com CNPJ
     _click_img('cnpj.png', conf=0.9)
@@ -100,7 +99,7 @@ def boleto_mei(empresa, andamentos):
             print('❌ Não optante')
             p.hotkey('ctrl', 'w')
             return False
-        
+
     _click_img('emitir_guia.png', conf=0.9)
 
     # Selecionar o ano e clicar em ok
@@ -116,14 +115,14 @@ def boleto_mei(empresa, andamentos):
         p.hotkey('ctrl', 'w')
         return False
 
-    if not _find_img('2023.png', conf=0.99):
+    if not _find_img('2024.png', conf=0.99):
         _escreve_relatorio_csv(f'{cnpj};Ano não liberado;{comp};{ano}', nome=andamentos)
         print('❌ Ano não liberado')
         p.hotkey('ctrl', 'w')
         return False
 
     # while not _find_img('ano_de_consulta.png', conf=0.9):
-    _click_img('2023.png', conf=0.99)
+    _click_img('2024.png', conf=0.99)
     time.sleep(1)
     _click_img('ok.png', conf=0.9)
     time.sleep(1)
@@ -150,16 +149,16 @@ def boleto_mei(empresa, andamentos):
     _wait_img('selecione.png', conf=0.9, timeout=-1)
     time.sleep(3)
 
-    if not _find_img('mes' + comp + '.png'):
+    if not _find_img('mes' + comp + '.png', conf=0.9):
         p.press('pgDn')
         time.sleep(5)
-        if not _find_img('mes' + comp + '.png', conf=0.99):
+        if not _find_img('mes' + comp + '.png', conf=0.9):
             _escreve_relatorio_csv(f'{cnpj};Competência não liberada;{comp};{ano}', nome=andamentos)
             print('❌ Competência não liberada')
             p.hotkey('ctrl', 'w')
             return False
 
-    _click_position_img('mes' + comp + '.png', '-', pixels_x=7, conf=0.99)
+    _click_position_img('mes' + comp + '.png', '-', pixels_x=10, conf=0.9)
 
     # Descer a página e clicar em apurar
     time.sleep(1)
@@ -191,20 +190,20 @@ def run(window):
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
         _indice(count, total_empresas, empresa, index, window)
-        
+
         cnpj, comp, ano, venc = empresa
         andamentos = f'Boletos MEI {comp}-{ano}'
-        
+
         _abrir_chrome('http://www8.receita.fazenda.gov.br/SimplesNacional/Aplicacoes/ATSPO/pgmei.app/Identificacao')
         if not boleto_mei(empresa, andamentos):
             continue
-        
+
         if not verificacoes(empresa, andamentos):
             continue
-          
+
         # Salvar a guia
         imprimir(empresa, andamentos)
-        
+
     time.sleep(2)
     p.hotkey('ctrl', 'w')
 
@@ -214,4 +213,3 @@ if __name__ == '__main__':
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is not None:
         run()
-    

@@ -62,6 +62,9 @@ def barra_de_status(func):
         filename_check = 'V:/Setor Robô/Scripts Python/_comum/Assets/check.png'
         im_check = Image.open(filename_check)
         
+        filename_error = 'V:/Setor Robô/Scripts Python/_comum/Assets/error.png'
+        im_error = Image.open(filename_error)
+        
         index = 0
         frames = im.n_frames
         im.seek(index)
@@ -71,10 +74,11 @@ def barra_de_status(func):
         # Layout da janela
         layout = [
             [sg.Button('Iniciar', key='-iniciar-', border_width=0),
-             sg.Text('Rotina automática, não interfira.', key='-titulo-', text_color='#fca103'),
+             sg.Text('', key='-titulo-'),
              sg.Text('', key='-Mensagens-'),
              sg.Image(data=image_to_data(im), key='-Processando-'),
-             sg.Image(data=image_to_data(im_check), key='-Check-', visible=False)],
+             sg.Image(data=image_to_data(im_check), key='-Check-', visible=False),
+             sg.Image(data=image_to_data(im_error), key='-Error-', visible=False)],
         ]
         
         # guarda a janela na variável para manipula-la
@@ -82,25 +86,30 @@ def barra_de_status(func):
         window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(550, 34), margins=(0,0), finalize=True, location=((screen_width // 2) - (550 // 2), 0))
         
         def run_script_thread():
+            # habilita e desabilita os botões conforme necessário
+            window['-titulo-'].update('Rotina automática, não interfira.', text_color='#fca103')
+            window['-iniciar-'].update(disabled=True)
+            window['-Processando-'].update(visible=True)
+            window['-Check-'].update(visible=False)
+            window['-Error-'].update(visible=False)
+
             try:
-                # habilita e desabilita os botões conforme necessário
-                window['-iniciar-'].update(disabled=True)
-                window['-Processando-'].update(visible=True)
-                window['-Check-'].update(visible=False)
-                
                 # Chama a função que executa o script
                 func(window)
-                
-                # habilita e desabilita os botões conforme necessário
-                window['-iniciar-'].update(disabled=False)
-                
-                # apaga qualquer mensagem na interface
-                window['-Mensagens-'].update('')
-                
+            except Exception as e:
+                window['-titulo-'].update('Erro', text_color='#fc0303')
                 window['-Processando-'].update(visible=False)
-                window['-Check-'].update(visible=True)
-            except:
-                pass
+                window['-Check-'].update(visible=False)
+                window['-Error-'].update(visible=True)
+                print(e)
+                return
+
+            # habilita e desabilita os botões conforme necessário
+            window['-iniciar-'].update(disabled=False)
+            # apaga qualquer mensagem na interface
+            window['-Mensagens-'].update('')
+            window['-Processando-'].update(visible=False)
+            window['-Check-'].update(visible=True)
         
         processando = 'não'
         while True:

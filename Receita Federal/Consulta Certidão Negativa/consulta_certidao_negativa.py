@@ -31,7 +31,7 @@ def verificacoes(consulta_tipo, andamento, identificacao, nome):
         _escreve_relatorio_csv('{};{};A certidão deve ser emitida para o {} da matriz'.format(identificacao, nome, consulta_tipo), nome=andamento)
         print(f'❌ A certidão deve ser emitida para o {consulta_tipo} da matriz')
         return False
-    
+
     if _find_img('cpf_invalido.png', conf=0.9):
         _escreve_relatorio_csv('{};{};CPF inválido'.format(identificacao, nome), nome=andamento)
         print(f'❌ CPF inválido')
@@ -41,12 +41,12 @@ def verificacoes(consulta_tipo, andamento, identificacao, nome):
         _escreve_relatorio_csv('{};{};CNPJ suspenso'.format(identificacao, nome), nome=andamento)
         print(f'❌ CNPJ suspenso')
         return False
-    
+
     if _find_img('declaracao_inapta.png', conf=0.9):
         _escreve_relatorio_csv('{};{};CNPJ com situação cadastral declarada inapta pela Secretaria Especial da Receita Federal do Brasil - RFB'.format(identificacao, nome), nome=andamento)
         print(f'❌ Situação cadastral inapta')
         return False
-    
+
     if _find_img('erro_na_consulta.png', conf=0.9):
         p.press('enter')
         time.sleep(2)
@@ -68,24 +68,32 @@ def salvar(consulta_tipo, andamento, identificacao, nome):
                 p.hotkey('ctrl', 'w')
                 return False
             contador += 1
-            
+
+        if contador > 10:
+            if _find_img('botao_consultar_selecionado.png', conf=0.9):
+                _click_img('botao_consultar_selecionado.png', conf=0.9)
+                contador = 0
+
         if _find_img('nova_certidao.png', conf=0.9):
             _click_img('nova_certidao.png', conf=0.9)
-            
+
         situacao = verificacoes(consulta_tipo, andamento, identificacao, nome)
-        
+
         if not situacao:
             p.hotkey('ctrl', 'w')
             return False
-        
+
         if situacao == 'erro':
             return situacao
-        
+
+        if _find_img(f'informe_{consulta_tipo}.png', conf=0.9):
+            p.press('enter')
+
     # escreve o nome do arquivo (.upper() serve para deixar em letra maiúscula)
     time.sleep(1)
     p.write(f'{nome.upper()} - {identificacao} - Certidao')
     time.sleep(0.5)
-    
+
     # Selecionar local
     p.press('tab', presses=6)
     time.sleep(1)
@@ -103,13 +111,13 @@ def salvar(consulta_tipo, andamento, identificacao, nome):
             erro = 'sim'
     p.press('enter')
     time.sleep(1)
-    
+
     p.hotkey('alt', 'l')
     time.sleep(2)
-    
+
     if _find_img('substituir.png', conf=0.9):
         p.hotkey('alt', 's')
-    
+
     time.sleep(3)
     return True
 
@@ -119,16 +127,16 @@ def consulta(consulta_tipo, identificacao):
         link = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PJ/Emitir'
     else:
         link = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PF/Emitir'
-    
+
     # espera o site abrir e recarrega caso demore
     while not _find_img(f'informe_{consulta_tipo}.png', conf=0.9):
         _abrir_chrome(link)
-        
+
         for i in range(60):
             time.sleep(1)
             if _find_img(f'informe_{consulta_tipo}.png', conf=0.9):
                 break
-        
+
     time.sleep(1)
 
     _click_img(f'informe_{consulta_tipo}.png', conf=0.9)
@@ -136,7 +144,7 @@ def consulta(consulta_tipo, identificacao):
 
     p.write(identificacao)
     time.sleep(1)
-    p.press('enter', presses=2, interval=0.2)
+    p.press('enter')
     return True
 
 
@@ -146,30 +154,30 @@ def run(window):
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
-        
+
         _indice(count, total_empresas, empresa, index, window)
-    
+
         identificacao, nome = empresa
         nome = nome.replace('/', '')
-        
+
         # try:
         while True:
             consulta(consulta_tipo, identificacao)
             situacao = salvar(consulta_tipo, andamento, identificacao, nome)
             p.hotkey('ctrl', 'w')
-            
+
             if not situacao:
                 break
-            
+
             elif situacao == 'erro':
                 continue
-                
+
             else:
                 print('✔ Certidão gerada')
                 _escreve_relatorio_csv('{};{};{} gerada'.format(identificacao, nome, andamento), nome=andamento)
                 time.sleep(1)
                 break
-                
+
         """except:
             time.sleep(2)
             p.hotkey('ctrl', 'w')"""

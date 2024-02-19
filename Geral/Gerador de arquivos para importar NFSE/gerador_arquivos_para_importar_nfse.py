@@ -341,7 +341,7 @@ def captura_dados_xml(window_xml, count, numeros_notas, quantidade_notas, arq_na
                     elif compile(r'\d.\d').search(dado):
                         dados_notas.append(dado.replace('.', ','))
                     else:
-                        dados_notas.append(compile(r'{}'.format(str(busca_dados[0]) + str(i) + str(busca_dados[1]))).search(arq).group(2))
+                        dados_notas.append(dado)
                         
                     break
                 except:
@@ -368,30 +368,41 @@ def captura_dados_xml(window_xml, count, numeros_notas, quantidade_notas, arq_na
             dados_notas.insert(2, '26.973.312/0003-37')  # 2
             
         dados_notas.insert(3, 'R. POSTAL SERVICOS CONTABEIS LTDA') #3
-        dados_notas.insert(4, 'NFS-E;NFD') #4
-        dados_notas.insert(5, '') #5
+        dados_notas.insert(4, 'NFS-E;NFD') #4 #5
+        dados_notas.insert(5, '') #6
     
-        dados_notas.insert(7, '0,00') #7
-        dados_notas.insert(8, '0,00') #8
-        dados_notas.insert(9, '0,00') #9
-        
-        dados_notas.insert(14, '0,00') #14
-        dados_notas.insert(15, '0,00') #15
-        dados_notas.insert(16, '2102') #16
-        dados_notas.insert(17, '1933') #17
-        dados_notas.insert(18, 'SP') #18
+        dados_notas.insert(7, '0,00') #8
+        dados_notas.insert(8, '0,00') #9
+
+        for i in range(500):
+            iss_ret = compile(numero_da_nota + r'(\n.+){' + str(i) + '}<VALOR_ISS_RET>\n\s+(.+)\n').search(arq)
+            if iss_ret:
+                iss_ret = iss_ret.group(2)
+                if iss_ret == '0':
+                    dados_notas.insert(9, '0,00')  # 10
+                else:
+                    dados_notas.insert(9, iss_ret)  # 10
+                    print(iss_ret)
+                break
+            
+        dados_notas.insert(14, '0,00') #15
+        dados_notas.insert(15, '0,00') #16
+        dados_notas.insert(16, '2102') #17
+        dados_notas.insert(17, '1933') #18
+        dados_notas.insert(18, 'SP') #19
         
         dados_notas = ';'.join(dados_notas)
         
         classifica_xml(dados_notas_cliente, dados_notas, cnpj_cliente, arq_name, pasta_final)
         quantidade_notas += 1
             
-    except:
+    except Exception as erro:
         alert(text=f'Erro ao analizar XML, nota número: {numero_da_nota}. Download encerrado.\n\n'
                    'Caso queira reiniciar o download, apague os arquivos gerados anteriormente ou selecione um novo local.\n\n'
-                   'O Script não continua uma execução já iniciada.\n\n')
+                   'O Script não continua uma execução já iniciada.\n\n'
+                   'Arquivo Log salvo.\n\n')
         escreve_doc(datetime.now())
-        escreve_doc(f'Erro ao analizar XML, nota número: {numero_da_nota}')
+        escreve_doc(f'Erro ao analizar XML, nota número: {numero_da_nota}\n{erro}')
         return 'Erro'
     
     window_xml['-progressbar-'].update_bar(count, max=int(len(numeros_notas)))
@@ -460,11 +471,12 @@ def run_xml(cidade, window_xml, input_xml, output_dir):
                                             [numero_da_nota + '(\n.+){', '}<TOMADOR_LOGRADOURO>\n\s+(.+)\n']]
                     # lista de regex dos dados da nota
                     busca_dados_notas = [[numero_da_nota + '(\n.+){', '}<DATA_HORA_EMISSAO>\n\s+(\d\d/\d\d/\d\d\d\d)'],  # 0
-                                         [numero_da_nota + '(\n.+){', '}<VALOR_SERVICO>\n\s+(.+)\n'],  # 6
-                                         [numero_da_nota + '(\n.+){', '}<VALOR_IR>\n\s+(.+)\n'],  # 10
-                                         [numero_da_nota + '(\n.+){', '}<VALOR_PIS>\n\s+(.+)\n'],  # 11
-                                         [numero_da_nota + '(\n.+){', '}<VALOR_COFINS>\n\s+(.+)\n'],  # 12
-                                         [numero_da_nota + '(\n.+){', '}<VALOR_CSLL>\n\s+(.+)\n']]  # 13
+                                         [numero_da_nota + '(\n.+){', '}<VALOR_SERVICO>\n\s+(.+)\n'],  # 7
+                                         [numero_da_nota + '(\n.+){', '}<VALOR_IR>\n\s+(.+)\n'],  # 11
+                                         [numero_da_nota + '(\n.+){', '}<VALOR_PIS>\n\s+(.+)\n'],  # 12
+                                         [numero_da_nota + '(\n.+){', '}<VALOR_COFINS>\n\s+(.+)\n'],  # 13
+                                         [numero_da_nota + '(\n.+){', '}<VALOR_CSLL>\n\s+(.+)\n']]  # 14
+                    
                     # captura os dados na nota e cria os arquivos para importar no domínio
                     quantidade_notas = captura_dados_xml(window_xml, count, numeros_notas, quantidade_notas, arq_name, arq, pasta_final, cidade,
                                                          numero_da_nota, cnpj_cliente, regex_tomador_cnpj, busca_dados_clientes, busca_dados_notas)

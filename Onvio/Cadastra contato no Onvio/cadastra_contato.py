@@ -30,6 +30,7 @@ def login(driver):
         time.sleep(1)
     # insere o email e confirma
     driver.find_element(by=By.ID, value='username').send_keys(user[0])
+    time.sleep(1)
     driver.find_element(by=By.XPATH, value='/html/body/div/div/div/div[2]/div/main/section/div/div/div/div[1]/div/form/div[2]/button').click()
     
     # aguarda o campo de senha carregar
@@ -37,7 +38,8 @@ def login(driver):
         time.sleep(1)
     # insere a senha e confirma
     driver.find_element(by=By.ID, value='password').send_keys(user[1])
-    driver.find_element(by=By.XPATH, value='/html/body/div/div/div/div[2]/div/main/section/div/div/div/form/div[3]/button').click()
+    time.sleep(1)
+    driver.find_element(by=By.XPATH, value='/html/body/div/div/div/div[2]/div/main/section/div/div/div/form/div[2]/button').click()
     
     # aguarda o site carregar
     while not _find_by_id('mainView', driver):
@@ -49,24 +51,8 @@ def login(driver):
 def adiciona_cliente(driver, nome_contato, numero):
     print(f'>>> Abrindo o Messenger')
     # abre a home do messenger
-    driver.get('https://onvio.com.br/br-messenger/home')
-    
-    # clica para abrir o messenger
-    while True:
-        try:
-            driver.find_element(by=By.XPATH, value='/html/body/app-root/div[1]/on-header/bm-custom-header/bento-off-canvas-menu/div[5]/div/on-nav/nav/div[2]').click()
-            break
-        except:
-            time.sleep(1)
-    
-    # o messenger abre em outra aba
-    # aguarda dois segundos para abrir uma nova aba, troca o driver para essa nova aba e a fecha, depois volta para a aba inicial
-    # esse procedimento serve para, gerar cookies da janela de contatos do messenger e o script conseguir abri-la diretamente na mesma aba
-    time.sleep(2)
-    driver.switch_to.window(driver.window_handles[1])
-    driver.close()
-    driver.switch_to.window(driver.window_handles[0])
-    time.sleep(1)
+    driver.get('https://onvio.com.br/br-messenger')
+    time.sleep(5)
     
     # abre diretamente na aba de cadastro de contato
     driver.get('https://app.gestta.com.br/messenger-v2/#/chat/contact-list')

@@ -254,7 +254,7 @@ def _salvar_pdf(abriu_janela=False):
             break
         if _find_img('cliente_c_selecionado_2.png', pasta='imgs_c', conf=0.9):
             break
-        _click_img('botao.png', pasta='imgs_c', conf=0.9)
+        _click_img('botao.png', pasta='imgs_c', conf=0.9, timeout=1)
         time.sleep(3)
         
         if _find_img('cliente_c.png', pasta='imgs_c', conf=0.9):

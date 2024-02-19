@@ -290,6 +290,7 @@ def ask_for_dir(title='Abrir pasta'):
     )
     
     return folder if folder else False
+_ask_for_dir = ask_for_dir
 
 
 # Procura pelo indice do primeiro campo da última linha, que deve ser um identificador unico como cpf/cnpj/inscricao, do arquivo de resumo escolhido e o retorna

@@ -250,13 +250,13 @@ def cria_dados(window, planilha_de_dados, pasta_arquivos):
                         except:
                             pass
                         
-                names = arq.split('_')
-                codigo = str(names[1]).replace('.txt', '')
-                arq_name.append((cnpj, codigo, nome))
+                names = arq.split('F')
+                codigo = str(names[1]).replace('.txt', '').replace('_', '')
+                arq_name.append((cnpj, arq, nome))
             
         arq_name = sorted(arq_name)
         for name in arq_name:
-            escreve_relatorio_csv(f'{name[0]};DIRF_{name[1]}.txt;{name[2]}')
+            escreve_relatorio_csv(f'{name[0]};{name[1]};{name[2]}')
             
         dados = open_lista_dados(os.path.join(e_dir, 'dados.csv'))
     else:
@@ -398,11 +398,11 @@ def abrir_arquivo(event, cnpj, arquivo, empresa, pasta_arquivos, pasta_arquivos_
             return f'Arquivo importado com sucesso{auxiliar}{mensagem}, arquivos de log salvos'
         
         p.hotkey('alt', 'f4')
-        time.sleep(1)
+        """time.sleep(3)
         if find_img('nao_importou.png', conf=0.9):
             auxiliar += ';Declaração com erros ou avisos, relatório salvo'
             move_arquivo_usado(pasta_arquivos, pasta_arquivos_nao_importados, arquivo, verifica=pasta_arquivos_importados)
-            return f'Arquivo não importado{auxiliar}'
+            return f'Arquivo não importado{auxiliar}'"""
         
         auxiliar += ';Declaração com erros ou avisos, relatório salvo'
         move_arquivo_usado(pasta_arquivos, pasta_arquivos_importados_com_erros_avisos, arquivo, verifica=pasta_arquivos_importados)
@@ -595,7 +595,11 @@ def transmitir_dirf(event, cnpj, arquivo, empresa, pasta_arquivos_importados, pa
     
     p.hotkey('alt', 'a')
     
-    wait_img('deseja_transmitir.png', conf=0.99)
+    while not find_img('deseja_transmitir.png', conf=0.99):
+        if find_img('ja_existe_recibo.png', conf=0.9):
+            p.hotkey('alt', 'c')
+            return 'erro', 'Já existe recibo de entrega, declaração já transmitida'
+    
     click_img('transmitir_sim.png', conf=0.99)
     
     if find_img('com_certificado.png', conf=0.99):
@@ -614,6 +618,18 @@ def transmitir_dirf(event, cnpj, arquivo, empresa, pasta_arquivos_importados, pa
     wait_img('resultado_transmissao.png', conf=0.9)
     
     while not find_img('transmitido.png', conf=0.99):
+        if find_img('declarante_baixado.png', conf=0.9):
+            p.hotkey('alt', 'n')
+            return 'erro', 'O CNPJ do declarante consta com situação cadastral BAIXADA no cadastro da Receita Federal do Brasil em data anterior ao ano-calendário a que se refere a DIRF'
+        if find_img('inscricao_posterior.png', conf=0.9):
+            p.hotkey('alt', 'n')
+            return 'erro', 'O CNPJ do declarante consta com cadastro da Receita Federal do Brasil com data de inscrição posterior ao ano-calendário a que se refere a DIRF'
+        if find_img('consta_dirf_extincao.png', conf=0.9):
+            p.hotkey('alt', 'n')
+            return 'erro', 'Ano calendário anterior consta DIRF de extinção, transmita uma DIRF retificadora sem marcar extinção'
+        if find_img('impossivel_entregar_dirf.png', conf=0.9):
+            p.hotkey('alt', 'n')
+            return 'erro', 'O declarante consta no cadastro da Receita Federal do Brasil com natureza jurídica impeditiva de entrega de DIRF'
         if find_img('procuracao_cancelada.png', conf=0.9):
             p.hotkey('alt', 'n')
             return 'erro', 'Procuração eletrônica cadastrada para o detentor do certificado digital apresentado foi cancelada'

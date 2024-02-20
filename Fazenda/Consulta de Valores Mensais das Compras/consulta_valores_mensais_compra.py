@@ -52,26 +52,20 @@ def login(usuario, senha):
                 print('>>> Falha na resolução do Captcha, tentando novamente.')
                 s.close()
             else:
-                if re.compile(r'Usuário ou senha inválidos').search(soup):
-                    print('❌ Usuário ou senha inválidos')
-                    s.close()
-                    return False, 'Usuário ou senha inválidos'
+                ocorrencias = [('Usuário ou senha inválidos', False),
+                               ('Não existe estabelecimento associado ao usuário ou trata-se de contribuinte produtor rural', False),
+                               ('As funcionalidades do sistema permanecerão indisponíveis enquanto o perfil estiver incompleto', False),
+                               ('Escolha a empresa com a qual deseja operar o sistema', True),
+                               ('Bem-vindo ao sistema da Nota Fiscal Paulista', True)]
                 
-                if re.compile(r'Não existe estabelecimento associado ao usuário ou trata-se de contribuinte produtor rural').search(soup):
-                    print(f'❌ Não existe estabelecimento associado ao usuário ou trata-se de contribuinte produtor rural')
-                    s.close()
-                    return False, 'Não existe estabelecimento associado ao usuário ou trata-se de contribuinte produtor rural'
-                
-                if re.compile(r'As funcionalidades do sistema permanecerão indisponíveis enquanto o perfil estiver incompleto').search(soup):
-                    print(f'❌ As funcionalidades do sistema permanecerão indisponíveis enquanto o perfil estiver incompleto')
-                    s.close()
-                    return False, 'As funcionalidades do sistema permanecerão indisponíveis enquanto o perfil estiver incompleto'
-                
-                if re.compile(r'Escolha a empresa com a qual deseja operar o sistema').search(soup):
-                    return s, 'ok'
-                
-                elif re.compile(r'Bem-vindo ao sistema da Nota Fiscal Paulista').search(soup):
-                    return s, 'ok'
+                for ocorrencia in ocorrencias:
+                    if re.compile(r'' + ocorrencia[0]).search(soup):
+                        if ocorrencia[1]:
+                            return s, 'ok'
+                        else:
+                            print(f'❌ {ocorrencia[0]}')
+                            s.close()
+                            return False, ocorrencia[0]
                 
                 return False, 'Erro ao logar no usuário'
 

@@ -109,7 +109,7 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
             break
 
     _salvar_pdf()
-    arq_final = mover_relatorio(cod)
+    arq_final = mover_relatorio(cod, nome)
     
     _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Relatório gerado']), nome=andamento)
     print('✔ Relatório gerado')
@@ -120,17 +120,17 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
     return 'ok', arq_final
 
 
-def mover_relatorio(cod):
+def mover_relatorio(cod, nome):
     folder = 'C:\\'
     for arq in os.listdir(folder):
         if arq.endswith('.pdf'):
             print(arq)
             if re.compile(r'Empresa ' + str(cod)).search(arq):
                 os.makedirs('execução/Relatórios', exist_ok=True)
-                final_folder = 'V:\\Setor Robô\\Scripts Python\\Domínio\\Relatórios para DARF DCTF\\execução\\Relatórios'
+                final_folder = 'V:\\Setor Robô\\Scripts Python\\Domínio\\Relatórios Resumo de Impostos\\execução\\Relatórios'
                 arq_final = os.path.join(final_folder, arq)
                 shutil.move(os.path.join(folder, arq), arq_final)
-                # analisa_arquivo(cod, nome, arq_final)
+                analisa_arquivo(cod, nome, arq_final)
 
 
 def analisa_arquivo(cod, nome, arq_final):
@@ -139,135 +139,46 @@ def analisa_arquivo(cod, nome, arq_final):
     total_competencia_lancados = False
     total_competencia_calculados = False
     # print(arq_final)
+    # captura o texto de todas as páginas e salva em uma única variável
     for page in doc:
-        
         texto_pagina = page.get_text('text', flags=1 + 2 + 8)
         texto += texto_pagina
-        
-    texto = texto.replace('1Total competência', 'Total competência')
+    
+    # captura o cnpj da empresa
     cnpj = re.compile(r'\d\d/\d\d\d\d\n(\d\d.\d\d\d.\d\d\d/\d\d\d\d-\d\d)').search(texto)
-    """if re.compile('IESMAR SARAIVA 04541756803').search(texto):
-        print(texto)
-        time.sleep(22)"""
+
     if cnpj:
         cnpj = cnpj.group(1)
         
+        # laço para capturar o valor total dos impostos lançados
         for i in range(1000):
             total_lancados = re.compile(r'RESUMO DOS IMPOSTOS LANÇADOS(\n.+){' + str(i) + '}\n.+otal geral:\n(.+)').search(texto)
             if total_lancados:
                 total_competencia_lancados = total_lancados.group(2)
                 break
         
+        # laço para capturar o valor total dos impostos calculados
         for i in range(1000):
             total_calculados = re.compile(r'RESUMO DOS IMPOSTOS CALCULADOS(\n.+){' + str(i) + '}\n.+otal geral:\n(.+)').search(texto)
             if total_calculados:
                 total_competencia_calculados = total_calculados.group(2)
                 break
-
+        
+        # se encontrar o total dos lançados e NÃO dos calculados
         if total_competencia_lancados and not total_competencia_calculados:
-            # print('Lançados')
-            impostos = re.compile(r'(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n([A-Z]+.+)').findall(texto)
-            for imposto in impostos:
-                imposto = imposto[9].replace('(', '\(').replace(')', '\)')
-                linha = re.compile(r'^[^,]*$\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(' + str(imposto) + ')', re.MULTILINE).search(texto)
-                if linha:
-                    imposto_1 = linha.group(1)
-                    imposto_2 = linha.group(2)
-                    imposto_3 = linha.group(3)
-                    imposto_4 = linha.group(4)
-                    imposto_5 = linha.group(6)
-                    imposto_6 = linha.group(7)
-                    imposto_7 = linha.group(8)
-                    imposto_8 = linha.group(9)
-                    imposto_recolher = linha.group(5)
-                    imposto_nome = linha.group(10)
-                    linha_ = f'{cod};{cnpj};{nome};RESUMO DOS IMPOSTOS LANÇADOS;{imposto_nome};{imposto_1};{imposto_2};{imposto_3};{imposto_4};{imposto_5};{imposto_6};{imposto_7};{imposto_8};{imposto_recolher}'
-                    _escreve_relatorio_csv(f'{linha_};{total_competencia_lancados}', nome='Resumo relatórios')
-                  
+            captura_imposto_lacados(cnpj, cod, nome, texto, total_competencia_lancados)
+        
+        # se encontrar o total dos calculados e NÂO dos lançados
         elif total_competencia_calculados and not total_competencia_lancados:
-            # print('Calculados')
-            impostos = re.compile(r'(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n([A-Z]+.+)').findall(texto)
-            for imposto in impostos:
-                imposto = imposto[3].replace('(', '\(').replace(')', '\)')
-                if impostos:
-                    linha = re.compile(r'^[^,]*$\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(' + str(imposto) + ')', re.MULTILINE).search(texto)
-                    if linha:
-                        imposto_recolher = linha.group(2)
-                        imposto_nome = linha.group(4)
-                        linha_ = f'{cod};{cnpj};{nome};RESUMO DOS IMPOSTOS CALCULADOS;{imposto_nome};{imposto_recolher}'
-                        _escreve_relatorio_csv(f'{linha_};{total_competencia_calculados}', nome='Resumo relatórios')
-                    
-                    linha = re.compile(r'^[^,]*$\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(' + str(imposto) + ')', re.MULTILINE).search(texto)
-                    if linha:
-                        imposto_1 = linha.group(1)
-                        imposto_2 = linha.group(2)
-                        imposto_3 = linha.group(3)
-                        imposto_4 = linha.group(4)
-                        imposto_5 = linha.group(5)
-                        imposto_6 = linha.group(7)
-                        imposto_7 = linha.group(8)
-                        imposto_recolher = linha.group(6)
-                        imposto_nome = linha.group(9)
-                        linha_ = f'{cod};{cnpj};{nome};RESUMO DOS IMPOSTOS CALCULADOS;{imposto_nome};{imposto_1};{imposto_2};{imposto_3};{imposto_4};{imposto_5};{imposto_6};{imposto_7};{imposto_recolher}'
-                        _escreve_relatorio_csv(f'{linha_};{total_competencia_calculados}', nome='Resumo relatórios')
-                        
-                    linha = re.compile(r'^[^,]*$\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(' + str(imposto) + ')', re.MULTILINE).search(texto)
-                    if linha:
-                        imposto_recolher = linha.group(6)
-                        imposto_nome = linha.group(11)
-                        linha_ = f'{cod};{cnpj};{nome};RESUMO DOS IMPOSTOS CALCULADOS;{imposto_nome};{imposto_recolher}'
-                        _escreve_relatorio_csv(f'{linha_};{total_competencia_calculados}', nome='Resumo relatórios')
-  
+            captura_imposto_calculados(cnpj, cod, nome, texto, total_competencia_calculados)
+    
+        # se encontrar os dois
         elif total_competencia_lancados and total_competencia_calculados:
-            # print('Lançados e calculados')
+            # divide o texto em duas partes para que cada bloco de lançados e calculados seja analisado individualmente
             texto_dividido = texto.split('RESUMO DOS IMPOSTOS CALCULADOS')
             
-            impostos = re.compile(r'(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n([A-Z]+.+)').findall(texto_dividido[0])
-            for imposto in impostos:
-                imposto = imposto[9].replace('(', '\(').replace(')', '\)')
-                linha = re.compile(r'^[^,]*$\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(' + str(imposto) + ')', re.MULTILINE).search(texto_dividido[0])
-                if linha:
-                    imposto_1 = linha.group(1)
-                    imposto_2 = linha.group(2)
-                    imposto_3 = linha.group(3)
-                    imposto_4 = linha.group(4)
-                    imposto_5 = linha.group(6)
-                    imposto_6 = linha.group(7)
-                    imposto_7 = linha.group(8)
-                    imposto_8 = linha.group(9)
-                    imposto_recolher = linha.group(5)
-                    imposto_nome = linha.group(10)
-                    linha_ = f'{cod};{cnpj};{nome};RESUMO DOS IMPOSTOS LANÇADOS;{imposto_nome};{imposto_1};{imposto_2};{imposto_3};{imposto_4};{imposto_5};{imposto_6};{imposto_7};{imposto_8};{imposto_recolher}'
-                    _escreve_relatorio_csv(f'{linha_};{total_competencia_lancados}', nome='Resumo relatórios')
-            
-            impostos = re.compile(r'(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n([A-Z]+.+)').findall(texto_dividido[1])
-            for imposto in impostos:
-                imposto = imposto[3].replace('(', '\(').replace(')', '\)')
-                if impostos:
-                    linha = re.compile(r'^[^,]*$\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(' + str(imposto) + ')', re.MULTILINE).search(texto_dividido[1])
-                    if linha:
-                        imposto_1 = linha.group(1)
-                        imposto_2 = linha.group(3)
-                        imposto_recolher = linha.group(2)
-                        imposto_nome = linha.group(4)
-                        linha_ = f'{cod};{cnpj};{nome};RESUMO DOS IMPOSTOS CALCULADOS;{imposto_nome};{imposto_1};{imposto_2};{imposto_recolher}'
-                        _escreve_relatorio_csv(f'{linha_};{total_competencia_calculados}', nome='Resumo relatórios')
-
-                    linha = re.compile(r'^[^,]*$\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(' + str(imposto) + ')', re.MULTILINE).search(texto_dividido[1])
-                    if linha:
-                        imposto_1 = linha.group(1)
-                        imposto_2 = linha.group(2)
-                        imposto_3 = linha.group(3)
-                        imposto_4 = linha.group(4)
-                        imposto_5 = linha.group(5)
-                        imposto_6 = linha.group(7)
-                        imposto_7 = linha.group(8)
-                        imposto_8 = linha.group(9)
-                        imposto_9 = linha.group(10)
-                        imposto_recolher = linha.group(6)
-                        imposto_nome = linha.group(11)
-                        linha_ = f'{cod};{cnpj};{nome};RESUMO DOS IMPOSTOS CALCULADOS;{imposto_nome};{imposto_1};{imposto_2};{imposto_3};{imposto_4};{imposto_5};{imposto_6};{imposto_7};{imposto_8};{imposto_9};{imposto_recolher}'
-                        _escreve_relatorio_csv(f'{linha_};{total_competencia_calculados}', nome='Resumo relatórios')
+            captura_imposto_lacados(cnpj, cod, nome, texto_dividido[0], total_competencia_lancados)
+            captura_imposto_calculados(cnpj, cod, nome, texto_dividido[1], total_competencia_calculados)
 
         else:
             print(texto)
@@ -277,9 +188,66 @@ def analisa_arquivo(cod, nome, arq_final):
     return True
 
 
+def captura_imposto_lacados(cnpj, cod, nome, texto, total_competencia):
+    # captura a lista de impostos
+    impostos = re.compile(r'(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n([A-Z]+.+)').findall(texto)
+    # para cada imposto realiza o processo
+    for imposto in impostos:
+        # formata o texto do regex para caso o nome do imposto contenha "(" ou ")" ele entenda que é um caractere e não agrupamento
+        imposto = imposto[9].replace('(', '\(').replace(')', '\)')
+        linha = re.compile(r'^[^,]*$\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(' + str(imposto) + ')', re.MULTILINE).search(texto)
+        # se encontrar a linha do imposto monta a linha para anotar na planilha
+        if linha:
+            insere_linha(cod, cnpj, nome, total_competencia, resumo_nome='RESUMO DOS IMPOSTOS LANÇADOS', debitos=linha.group(1), creditos=linha.group(2), acrescimos=linha.group(3),
+                         outras_deducoes=linha.group(4), imposto_recolher=linha.group(5), imposto_diferido=linha.group(6), saldo_credor=linha.group(7),
+                         saldo_credor_anterior=linha.group(8), saldo_diferido_anterior=linha.group(9), imposto_nome=linha.group(10))
+
+
+def captura_imposto_calculados(cnpj, cod, nome, texto, total_competencia):
+    # captura a lista de impostos
+    impostos = re.compile(r'(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n([A-Z]+.+)').findall(texto)
+    # para cada imposto realiza o processo
+    for imposto in impostos:
+        # formata o texto do regex para caso o nome do imposto contenha "(" ou ")" ele entenda que é um caractere e não agrupamento
+        imposto = imposto[3].replace('(', '\(').replace(')', '\)')
+        linha = re.compile(r'^[^,]*$\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(' + str(imposto) + ')', re.MULTILINE).search(texto)
+        # se encontrar a linha do imposto monta a linha para anotar na planilha com algumas variações de quantidade de colunas no PDF
+        if linha:
+            insere_linha(cod, cnpj, nome, total_competencia, resumo_nome='RESUMO DOS IMPOSTOS CALCULADOS', imposto_diferido=linha.group(1), imposto_recolher=linha.group(2),
+                         saldo_credor=linha.group(3), imposto_nome=linha.group(4))
+        
+        linha = re.compile(r'^[^,]*$\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(' + str(imposto) + ')', re.MULTILINE).search(texto)
+        if linha:
+            insere_linha(cod, cnpj, nome, total_competencia, resumo_nome='RESUMO DOS IMPOSTOS CALCULADOS', imposto_recolher=linha.group(6), imposto_nome=linha.group(9))
+        
+        linha = re.compile(r'^[^,]*$\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(' + str(imposto) + ')', re.MULTILINE).search(texto)
+        if linha:
+            insere_linha(cod, cnpj, nome, total_competencia, resumo_nome='RESUMO DOS IMPOSTOS CALCULADOS', acrescimos=linha.group(1), outras_deducoes=linha.group(2), saldo_credor_anterior=linha.group(3),
+                         saldo_diferido_anterior=linha.group(4), imposto_diferido=linha.group(5), imposto_recolher=linha.group(6), valor_imposto=linha.group(7),
+                         base_calculo=linha.group(8), aliquota=linha.group(9), saldo_credor=linha.group(10), imposto_nome=linha.group(11))
+
+
+def insere_linha(cod, cnpj, nome, total_competencia, resumo_nome='resumo', imposto_nome='nome', base_calculo='0', aliquota='0', valor_imposto='0', saldo_credor_anterior='0', saldo_diferido_anterior='0',
+                 debitos='0', creditos='0', acrescimos='0', outras_deducoes='0', imposto_recolher='0', imposto_diferido='0', saldo_credor='0'):
+    linha_ = (f'{cod};{cnpj};{nome};{resumo_nome};{imposto_nome};'
+              #f'{base_calculo};'
+              #f'{aliquota};'
+              #f'{valor_imposto};'
+              #f'{saldo_credor_anterior};'
+              #f'{saldo_diferido_anterior};'
+              #f'{debitos};'
+              #f'{creditos};'
+              #f'{acrescimos};'
+              #f'{outras_deducoes};'
+              f'{imposto_recolher};')
+              #f'{imposto_diferido};'
+              #f'{saldo_credor}')
+    _escreve_relatorio_csv(f'{linha_};{total_competencia}', nome='Resumo relatórios')
+
+
 @_time_execution
-# @_barra_de_status
-def run():
+@_barra_de_status
+def run(window):
     if rotina == 'Sim':
         for arq in os.listdir(pasta):
             arquivo = os.path.join(pasta, arq)
@@ -296,7 +264,7 @@ def run():
         total_empresas = empresas[index:]
         for count, empresa in enumerate(empresas[index:], start=1):
             # printa o indice da empresa que está sendo executada
-            _indice(count, total_empresas, empresa, index)
+            _indice(count, total_empresas, empresa, index, window)
     
             while True:
                 if not _login(empresa, andamentos):

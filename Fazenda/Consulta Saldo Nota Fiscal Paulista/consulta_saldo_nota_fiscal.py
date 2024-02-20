@@ -69,7 +69,6 @@ def captura_lista_empresas(driver):
 
 def consulta_saldo(driver, empresas, semestre, ano, andamentos):
     print('>>> Consultando saldo das empresas...')
-    continua = 'não'
     for count, empresa in enumerate(empresas, start=1):
         # printa o indice da empresa que está sendo executada
         _indice(count, empresas)
@@ -132,40 +131,6 @@ def consulta_saldo(driver, empresas, semestre, ano, andamentos):
         
         _escreve_relatorio_csv(f'{cnpj};{nome};{semestre};{ano};{saldo}', nome=andamentos)
         print(f'✔ {saldo}')
-
-
-def create_pdf(driver, nome_arquivo, comp_formatado):
-    # salva o pdf criando ele a partir do código html da página, para que o PDF criado seja editável
-    e_dir_pdf = os.path.join('execução', 'Arquivos ' + comp_formatado)
-    os.makedirs(e_dir_pdf, exist_ok=True)
-    
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-    # Remove atributo href das tags, links e urls que não serão usados
-    for tag in soup.find_all(href=True):
-        tag['href'] = ''
-
-    # Remove tags img e script, não serão usados
-    _ = list(tag.extract() for tag in soup.find_all('img'))
-    _ = list(tag.extract() for tag in soup.find_all('script'))
-    
-    # remove mais algumas coisas específicas
-    soup = str(soup)\
-        .replace('target="_blank">Cidadão SP</a></td>', '')\
-        .replace('target="_blank">saopaulo.sp.gov.br</a></td>', '') \
-        .replace('<a class="botao-sistema" href="">Home</a>', '') \
-        .replace('<a class="botao-sistema" href="">Imprimir</a>', '') \
-        .replace('<a class="botao-sistema" href="">Encerrar</a>', '')\
-        .replace('target="_blank">Ouvidoria</a></td>', '')\
-        .replace('target="_blank">Transparência</a></td>', '')\
-        .replace('href="" target="_blank">SIC</a></td>', '')
-    
-    soup = BeautifulSoup(soup, 'html.parser')
-    
-    with open(os.path.join(e_dir_pdf, nome_arquivo), 'w+b') as pdf:
-        pisa.showLogging()
-        pisa.CreatePDF(str(soup), pdf)
-    
-    return driver, 'Arquivo gerado'
 
     
 @_time_execution

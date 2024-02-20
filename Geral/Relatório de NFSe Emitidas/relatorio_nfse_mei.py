@@ -2,6 +2,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from decimal import Decimal
+from pyautogui import confirm, prompt
 import os, time, re, fitz, shutil
 
 from sys import path
@@ -40,7 +41,7 @@ def login(driver, usuario, senha):
     return driver, 'ok'
 
     
-def consulta_notas(download_folder, driver, cod_dominio, cnpj, nome):
+def consulta_notas(andamentos, periodo, download_folder, driver, cod_dominio, cnpj, nome):
     # verifica se aparece alguma mensagem de alerta no site
     alerta = re.compile(r'<div class=\"alert-warning alert\"><span class=\"icone\"></span>(.+)<a class=\"close\"').search(driver.page_source)
     if alerta:
@@ -71,18 +72,26 @@ def consulta_notas(download_folder, driver, cod_dominio, cnpj, nome):
             print(driver.page_source)
         
         # para cada nota da lista
+        notas_no_periodo = 0
         for link_nota in link_notas:
-            # cria a pasta para salvar as notas
-            os.makedirs(download_folder, exist_ok=True)
-            # guarda a quantidade de notas abertas
-            quantidade_de_notas += 1
-            print(f'\n>>> Abrindo {quantidade_de_notas}° nota')
             # abre a nota
             driver.get('https://www.nfse.gov.br' + link_nota)
             time.sleep(1)
             
             # coleta os dados da nota no site
             dados_do_site, data_emissao, nome_tomador = coleta_dados_da_nota_no_site(driver)
+            periodo_da_nota = re.search(r'\d{2}/(\d{2}/\d{4})', data_emissao).group(1)
+
+            if periodo != '' and periodo != periodo_da_nota:
+                print('>>> Essa nota não corresponde ao período pesquisado\n')
+                continue
+            
+            notas_no_periodo += 1
+            # cria a pasta para salvar as notas
+            os.makedirs(download_folder, exist_ok=True)
+            # guarda a quantidade de notas abertas
+            quantidade_de_notas += 1
+            print(f'\n>>> Abrindo {quantidade_de_notas}° nota')
             
             # verifica se a nota foi cancelada
             nf_cancelada = ' - '
@@ -107,13 +116,16 @@ def consulta_notas(download_folder, driver, cod_dominio, cnpj, nome):
             if nome_tomador != 'O tomador e o intermediário não foram identificados pelo emitente' and nome_tomador != 'Nota fiscal sem tomador, apenas intermediário':
                 dados.append(f'{dados_do_site};{situacao};{dados_pdf}')
             # adiciona na planilha todas as notas
-            _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{dados_do_site};{situacao};{dados_pdf}', nome='Notas')
+            _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{dados_do_site};{situacao};{dados_pdf}', nome=andamentos)
             
             # cria uma lista só com as datas
             if situacao != '2':
                 data_emissao = data_emissao.split('/')
                 dados_para_somar_valores.append((f'{data_emissao[1]}/{data_emissao[2]}', valor_total))
-            
+        
+        if notas_no_periodo < 0:
+            return driver, 'ok'
+        
         paginas += 1
     
     comp_nota_anterior = ''
@@ -136,7 +148,7 @@ def consulta_notas(download_folder, driver, cod_dominio, cnpj, nome):
         valor_total_mes = round(valor_total_mes, 2)
         valor_total_mes = str(valor_total_mes).replace('.', ',')
         # anota na planilha de resumo o andamento da consulta e quantas notas foram baixadas
-        _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{contador} notas encontradas;{comp_nota_anterior};{valor_total_mes}', nome='Resumo')
+        _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{contador} notas encontradas;{comp_nota_anterior};{valor_total_mes}', nome=andamentos)
         
         valor_total_mes = Decimal(float(str(dado[1]).replace('.', '').replace(',', '.')))
         comp_nota_anterior = dado[0]
@@ -145,7 +157,7 @@ def consulta_notas(download_folder, driver, cod_dominio, cnpj, nome):
     valor_total_mes = round(valor_total_mes, 2)
     valor_total_mes = str(valor_total_mes).replace('.', ',')
     # anota na planilha de resumo o andamento da consulta e quantas notas foram baixadas
-    _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{contador} notas encontradas;{comp_nota_anterior};{valor_total_mes}', nome='Resumo')
+    _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{contador} notas encontradas;{comp_nota_anterior};{valor_total_mes}', nome=andamentos)
     
     # para cada nota armazenada na variável, insere na planilha de notas
     for nota in dados:
@@ -234,6 +246,13 @@ def coleta_dados_e_renomeia_arquivo(download_folder, link_pdf, nome, nf_cancelad
     
     print('>>> Analisando PDF')
     # abre o PDF da nota para capturar algumas infos para adicionar na planilha de andamentos e para renomear o arquivo
+    while True:
+        try:
+            with fitz.open(os.path.join(download_folder, nome_arquivo)) as pdf:
+                break
+        except:
+            pass
+        
     with fitz.open(os.path.join(download_folder, nome_arquivo)) as pdf:
         for page in pdf:
             textinho = page.get_text('text', flags=1 + 2 + 8)
@@ -333,6 +352,13 @@ def cria_txt(codigo, cnpj, dados_nota, tipo='NFSe-MEI', encode='latin-1'):
 
 @_time_execution
 def run():
+    andamentos = 'Relatório de NFSe emitidas'
+    periodo = ''
+    todas_as_notas = confirm(text='Baixar todas as notas disponíveis das empresas?', buttons=('Sim', 'Não'))
+    if todas_as_notas == 'Não':
+        while not re.search(r'\d{2}/\d{4}', periodo):
+            periodo = prompt(text='Qual o mês de emissão das notas?', default='00/0000')
+    
     # define e cria a pasta final das notas
     download_folder = "V:\\Setor Robô\\Scripts Python\\Geral\\Relatório de NFSe Emitidas\\Execução\\NFSE"
     
@@ -370,7 +396,7 @@ def run():
             driver, situacao = login(driver, usuario, senha)
             # se fizer o login realiza a consulta
             if situacao == 'ok':
-                driver, resultado = consulta_notas(download_folder, driver, cod_dominio, cnpj, nome)
+                driver, resultado = consulta_notas(andamentos, periodo, download_folder, driver, cod_dominio, cnpj, nome)
                 # se realizar a consulta anota na planilha
                 if resultado != 'ok':
                     print(resultado)
@@ -383,7 +409,7 @@ def run():
     _escreve_header_csv('CÓD. DOMÍNIO;CNPJ;NOME;CNPJ/CPF/NIF TOMADOR;NOME TOMADOR;UF TOMADOR;MUNICÍPIO TOMADOR;ENDEREÇO TOMADOR;NÚMERO DA NOTA;'
                         'SÉRIE DA NOTA;DATA DE EMISSÃO;SITUAÇÃO DA NOTA;ACUMULADOR;CFPS;VALOR DO SERVIÇO;VALOR DO DESCONTOS;VALOR DAS DEDUÇÕES;'
                         'VALOR CONTÁBIL;BASE DE CÁLCULO;ALÍQUOTA ISS;VALOR ISS;RETIDO;VALOR IRRF;VALOR PIS;VALOR COFINS;VALOR CSLL;VALOR CRF;'
-                        'VALOR INSS;CODIGO ITEM;QUANTIDADE;VALOR UNITÁRIO', nome='Notas')
+                        'VALOR INSS;CODIGO ITEM;QUANTIDADE;VALOR UNITÁRIO', nome=andamentos)
     _escreve_header_csv('CÓD. DOMÍNIO;CNPJ;NOME;RESULTADO;COMP. NOTAS;VALOR TOTAL DAS NOTAS POR COMPETÊNCIA', nome='Resumo')
     
 if __name__ == '__main__':

@@ -14,8 +14,8 @@ def escreve_dados(cod, nome):
     f = open(os.path.join('ignore', 'Dados.csv'), 'a', encoding='latin-1')
     f.write(f'{cod};CNPJ;{nome}\n')
     f.close()
-    
-    
+
+
 def open_lista_dados(file, encode='latin-1'):
     # abre a planilha de dados
     try:
@@ -50,16 +50,41 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
     
     print('>>> Buscando relatório')
     p.press('pgup', presses=20)
-    while not _find_img('relacao_empregados.png', conf=0.9):
-        if _find_img('relacao_empregados_2.png', conf=0.9):
+    contador = 0
+    while not _find_img('relacao_empregados.png', conf=0.98):
+        if _find_img('relacao_empregados_2.png', conf=0.98):
+            _click_img('relacao_empregados_2.png', conf=0.98, clicks=2, timeout=1)
             break
+
         p.press('pgdn')
         time.sleep(0.5)
-        
-    _click_img('relacao_empregados.png', conf=0.9, clicks=2, timeout=1)
-    _click_img('relacao_empregados_2.png', conf=0.9, clicks=2, timeout=1)
+        contador += 1
+        if contador > 50:
+            print('Erro ao localizar o relatório, tentendo novamente')
+            p.press('esc', presses=2)
+            return False
+
+    if _find_img('relacao_empregados.png', conf=0.98):
+        _click_img('relacao_empregados.png', conf=0.98, clicks=2, timeout=1)
+    else:
+        _click_img('relacao_empregados_2.png', conf=0.98, clicks=2, timeout=1)
+
+    timer = 0
+    print('>>> Buscando relatorio Veiga')
     # espera aparecer o tipo do relatório que sera usado e depois clica nele
-    _wait_img('relatorio_modelo_veiga.png', conf=0.9)
+    while not _find_img('relatorio_modelo_veiga.png', conf=0.9):
+        time.sleep(1)
+        timer += 1
+        if timer > 5:
+            p.press('pgdn')
+            if _find_img('relacao_empregados.png', conf=0.98):
+                _click_img('relacao_empregados.png', conf=0.98, clicks=2, timeout=1)
+            if _find_img('relacao_empregados_2.png', conf=0.98):
+                _click_img('relacao_empregados_2.png', conf=0.98, clicks=2, timeout=1)
+        if timer > 30:
+            p.press('pgup', presses=20)
+            timer = 0
+            
     _click_img('relatorio_modelo_veiga.png', conf=0.9)
     
     # insere o código da empresa, '*' para selecionar todas
@@ -98,7 +123,8 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
     # executa
     time.sleep(0.5)
     p.hotkey('alt', 'e')
-    
+
+    print('>>> Aguardando gerar o relatório...')
     # enquanto o relatório não é gerado, verifica se aparece a mensagem dizendo que não possuí dados para emitir
     while not _find_img('contrato_experiencia.png', conf=0.9):
         if _find_img('sem_dados.png', conf=0.9):
@@ -120,7 +146,7 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
             p.press('esc', presses=5)
             return 'ok'
             
-        envia_experiencia(comp)
+        # envia_experiencia(comp)
         _escreve_relatorio_csv(';'.join([cod, cnpj,nome, 'Relatório enviado']), nome=andamento)
         print('✔ Relatório enviado')
 
@@ -128,7 +154,7 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
     p.press('esc', presses=5)
     time.sleep(2)
     return 'ok'
-    
+
 
 def pega_empresas_com_exp():
     folder = 'C:\\'

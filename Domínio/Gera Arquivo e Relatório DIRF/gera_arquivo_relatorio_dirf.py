@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-import re
-
 import pyperclip, time, os, shutil, pyautogui as p
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
 
 from sys import path
 path.append(r'..\..\_comum')

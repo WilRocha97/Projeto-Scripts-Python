@@ -128,7 +128,7 @@ def busca_codigo_municipio(municipio):
         # Definir o nome das colunas
         colunas = ['município', 'uf', 'código', 'nome']
         # Localiza a planilha
-        caminho = Path('V:\Setor Robô\Scripts Python\Geral\Lançamentos IRPF\Municípios.csv')
+        caminho = Path('Municípios.csv')
         # Abrir a planilha
         lista = pd.read_csv(caminho, header=None, names=colunas, sep=';', encoding='latin-1')
         # Definir o index da planilha
@@ -365,9 +365,22 @@ def cria_bloco_de_informacoes_veiculos_e_imoveis(ano_base, ano_anterior, caminho
         for linha in df.itertuples():
             cpf = linha[1]
             print(cpf)
+            # Abra o arquivo para leitura
             arquivo_original = os.path.join(caminho_arquivo_original, f'{cpf}-IRPF-A-{ano_base}-{ano_anterior}-ORIGI.DBK')
-            os.makedirs(os.path.join(caminho_arquivo_editados, 'Arquivos'), exist_ok=True)
-            arquivo_final = os.path.join(caminho_arquivo_editados, 'Arquivos', f'{cpf}-IRPF-A-{ano_base}-{ano_anterior}-ORIGI.DBK')
+            try:
+                with open(arquivo_original, 'r') as arquivo:
+                    # Leia o conteúdo do arquivo
+                    arquivo.readlines()
+                arquivo_final = os.path.join(caminho_arquivo_editados, 'Arquivos', f'{cpf}-IRPF-A-{ano_base}-{ano_anterior}-ORIGI.DBK')
+            except:
+                arquivo_original = os.path.join(caminho_arquivo_original, f'{cpf}-IRPF-A-{ano_base}-{ano_anterior}-RETIF.DBK')
+                try:
+                    with open(arquivo_original, 'r') as arquivo:
+                        # Leia o conteúdo do arquivo
+                        arquivo.readlines()
+                    arquivo_final = os.path.join(caminho_arquivo_editados, 'Arquivos', f'{cpf}-IRPF-A-{ano_base}-{ano_anterior}-RETIF.DBK')
+                except:
+                    escreve_relatorio_csv(f'{cpf};;;Arquivo ".BDK" {ano_base}-{ano_anterior} referente ao CPF não encontrado', nome=andamentos, local=caminho_arquivo_editados)
             
             # função para capturar as chaves dos itens no arquivo 'DBK' e gerar uma nova chave inicial original e para capturar o conteudo original
             conteudo_arquivo_original, chave_item = captura_chave_item_existentes(arquivo_original, arquivo_final)
@@ -536,9 +549,21 @@ def run_acoes_fundos(window_acoes_fundos, event, dados_b3, final_folder, caminho
         
         # Abra o arquivo para leitura
         arquivo_original = os.path.join(caminho_arquivo_original, f'{cpf}-IRPF-A-{ano_base}-{ano_anterior}-ORIGI.DBK')
-        os.makedirs(os.path.join(caminho_arquivo_editados, 'Arquivos'), exist_ok=True)
-        arquivo_final = os.path.join(caminho_arquivo_editados, 'Arquivos', f'{cpf}-IRPF-A-{ano_base}-{ano_anterior}-ORIGI.DBK')
-
+        try:
+            with open(arquivo_original, 'r') as arquivo:
+                # Leia o conteúdo do arquivo
+                arquivo.readlines()
+            arquivo_final = os.path.join(caminho_arquivo_editados, 'Arquivos', f'{cpf}-IRPF-A-{ano_base}-{ano_anterior}-ORIGI.DBK')
+        except:
+            arquivo_original = os.path.join(caminho_arquivo_original, f'{cpf}-IRPF-A-{ano_base}-{ano_anterior}-RETIF.DBK')
+            try:
+                with open(arquivo_original, 'r') as arquivo:
+                    # Leia o conteúdo do arquivo
+                    arquivo.readlines()
+                arquivo_final = os.path.join(caminho_arquivo_editados, 'Arquivos', f'{cpf}-IRPF-A-{ano_base}-{ano_anterior}-RETIF.DBK')
+            except:
+                escreve_relatorio_csv(f'{cpf};;;Arquivo ".BDK" {ano_base}-{ano_anterior} referente ao CPF não encontrado', nome=andamentos, local=caminho_arquivo_editados)
+        
         resultado = cria_bloco_de_informacoes_b3(arquivo_original, arquivo_final, final_folder, cpf, ano_base - 1, ano_anterior - 1)
         resultado_planilhas = f'{cpf};Lançamentos com planilhas já baixadas;{ano_base - 1},{ano_anterior - 1}'
             
@@ -688,6 +713,9 @@ if __name__ == '__main__':
                             window_acoes_fundos['-Iniciar-'].update(disabled=True)
                             window_acoes_fundos['-Encerrar-'].update(disabled=False)
                             window_acoes_fundos['-Abrir resultados-'].update(disabled=False)
+                            window_acoes_fundos['-abrir_planilhas-'].update(disabled=False)
+                            window_acoes_fundos['-Abrir_pasta_b3-'].update(disabled=True)
+                            window_acoes_fundos['-Abrir_dados_b3-'].update(disabled=True)
                             # apaga qualquer mensagem na interface
                             window_acoes_fundos['-Mensagens-'].update('')
                             # atualiza a barra de progresso para ela ficar mais visível
@@ -707,6 +735,8 @@ if __name__ == '__main__':
                             window_acoes_fundos['-progressbar-'].update(bar_color='#f0f0f0')
                             window_acoes_fundos['-Progresso_texto-'].update('')
                             window_acoes_fundos['-Mensagens-'].update('')
+                            window_acoes_fundos['-Abrir_pasta_b3-'].update(disabled=False)
+                            window_acoes_fundos['-Abrir_dados_b3-'].update(disabled=False)
 
                         while True:
                             # captura o evento e os valores armazenados na interface
@@ -761,6 +791,7 @@ if __name__ == '__main__':
                             window_veiculos_imoveis['-Iniciar-'].update(disabled=True)
                             window_veiculos_imoveis['-Encerrar-'].update(disabled=False)
                             window_veiculos_imoveis['-Abrir resultados-'].update(disabled=False)
+                            window_veiculos_imoveis['-abrir_planilhas-'].update(disabled=False)
                             # apaga qualquer mensagem na interface
                             window_veiculos_imoveis['-Mensagens-'].update('')
                             # atualiza a barra de progresso para ela ficar mais visível

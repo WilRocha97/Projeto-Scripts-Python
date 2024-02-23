@@ -230,18 +230,18 @@ def captura_imposto_calculados(cnpj, cod, nome, texto, total_competencia):
 def insere_linha(cod, cnpj, nome, total_competencia, resumo_nome='resumo', imposto_nome='nome', base_calculo='0', aliquota='0', valor_imposto='0', saldo_credor_anterior='0', saldo_diferido_anterior='0',
                  debitos='0', creditos='0', acrescimos='0', outras_deducoes='0', imposto_recolher='0', imposto_diferido='0', saldo_credor='0'):
     linha_ = (f'{cod};{cnpj};{nome};{resumo_nome};{imposto_nome};'
-              #f'{base_calculo};'
-              #f'{aliquota};'
-              #f'{valor_imposto};'
-              #f'{saldo_credor_anterior};'
-              #f'{saldo_diferido_anterior};'
-              #f'{debitos};'
-              #f'{creditos};'
-              #f'{acrescimos};'
-              #f'{outras_deducoes};'
-              f'{imposto_recolher};')
-              #f'{imposto_diferido};'
-              #f'{saldo_credor}')
+              f'{base_calculo};'
+              f'{aliquota};'
+              f'{valor_imposto};'
+              f'{saldo_credor_anterior};'
+              f'{saldo_diferido_anterior};'
+              f'{debitos};'
+              f'{creditos};'
+              f'{acrescimos};'
+              f'{outras_deducoes};'
+              f'{imposto_recolher};'
+              f'{imposto_diferido};'
+              f'{saldo_credor}')
     _escreve_relatorio_csv(f'{linha_};{total_competencia}', nome='Resumo relatórios')
 
 

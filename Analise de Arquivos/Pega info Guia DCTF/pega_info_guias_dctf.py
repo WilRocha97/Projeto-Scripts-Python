@@ -17,6 +17,7 @@ def analiza():
         # Abrir o pdf
         arq = os.path.join(documentos, arq_nome)
         with fitz.open(arq) as pdf:
+            tem_imposto = False
             textinho = ''
             # Para cada página do pdf, se for a segunda página o script ignora
             for count, page in enumerate(pdf):
@@ -65,6 +66,10 @@ def analiza():
                     
                     print(f'{cnpj} - {valor}')
                     _escreve_relatorio_csv(f"{cnpj};{imposto_capturado};{valor}")
+                    tem_imposto = True
+            
+            if not tem_imposto:
+                _escreve_relatorio_csv(f"{cnpj};Não consta 1708 ou 5952;{valor}")
 
 
 if __name__ == '__main__':

@@ -627,6 +627,9 @@ def transmitir_dirf(event, cnpj, arquivo, empresa, pasta_arquivos_importados, pa
         if find_img('consta_dirf_extincao.png', conf=0.9):
             p.hotkey('alt', 'n')
             return 'erro', 'Ano calendário anterior consta DIRF de extinção, transmita uma DIRF retificadora sem marcar extinção'
+        if find_img('ja_entregue.png', conf=0.9):
+            p.hotkey('alt', 'n')
+            return 'erro', 'Já foi entregue declaração original para o CNPJ'
         if find_img('impossivel_entregar_dirf.png', conf=0.9):
             p.hotkey('alt', 'n')
             return 'erro', 'O declarante consta no cadastro da Receita Federal do Brasil com natureza jurídica impeditiva de entrega de DIRF'
@@ -805,11 +808,17 @@ def run(window, event):
                         move_arquivo_usado(pasta_arquivos_importados_com_erros_avisos, pasta_arquivos_nao_transmitidos, arquivo)
                 
                 else:
-                    if situacao == 'ok':
-                        move_arquivo_usado(pasta_arquivos_importados, pasta_arquivos_transmitidos, arquivo)
-                    if situacao == 'erro':
-                        move_arquivo_usado(pasta_arquivos_importados, pasta_arquivos_nao_transmitidos, arquivo)
-                    
+                    try:
+                        if situacao == 'ok':
+                            move_arquivo_usado(pasta_arquivos_importados, pasta_arquivos_transmitidos, arquivo)
+                        if situacao == 'erro':
+                            move_arquivo_usado(pasta_arquivos_importados, pasta_arquivos_nao_transmitidos, arquivo)
+                    except:
+                        if situacao == 'ok':
+                            move_arquivo_usado(pasta_arquivos_importados_com_erros_avisos, pasta_arquivos_transmitidos, arquivo)
+                        if situacao == 'erro':
+                            move_arquivo_usado(pasta_arquivos_importados_com_erros_avisos, pasta_arquivos_nao_transmitidos, arquivo)
+                            
                 if transmissao == 'Arquivo transmitido, Erro ao salvar o recibo de entrega':
                     fechar_dirf()
                     os.startfile('C:\Arquivos de Programas RFB\Dirf2024\pgdDirf.exe')

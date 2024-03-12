@@ -215,7 +215,10 @@ def run(window, pasta_inicial, pasta_final):
                     for page in pdf:
                         texto_pagina = page.get_text('text', flags=1 + 2 + 8)
                         nome_declarante = re.compile(r'Nome do declarante\n.+\n(.+)').search(texto_pagina).group(1)
-                        break
+                        if nome_declarante:
+                            break
+                        else:
+                            print(texto_pagina)
                         
                 # cria a capa
                 nome_do_arquivo = os.path.join(pasta_inicial, subpasta, f'Capa E-book {nome_declarante}.pdf')
@@ -236,26 +239,37 @@ def run(window, pasta_inicial, pasta_final):
                 lista_arquivos.append(2)
                 continue
             if re.compile(r'INFORME').search(arquivo.upper()):
-                shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
-                lista_arquivos.append(contador)
-                contador += 1
-                continue
+                with fitz.open(os.path.join(pasta_inicial, subpasta, arquivo)) as pdf:
+                    texto_arquivo = ''
+                    for page in pdf:
+                        texto_pagina = page.get_text('text', flags=1 + 2 + 8)
+                        texto_arquivo += texto_pagina
+                    
+                    informe_empresa = re.compile(r'COMPROVANTE DE RENDIMENTOS PAGOS E DE IMPOSTO SOBRE A RENDA RETIDO NA FONTE').search(texto_arquivo.upper())
+                    if not informe_empresa:
+                        informe_empresa = re.compile(r'Comprovante de Rendimentos Pagos e de\nImposto sobre a Renda Retido na Fonte').search(texto_arquivo)
+                        
+                    if informe_empresa:
+                        shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        lista_arquivos.append(contador)
+                        contador += 1
         
-        count = 0
-        while not _find_img('pessoal.png', conf=0.9):
-            print('oizzzz')
-            
-            if _find_img('pessoal1.png', conf=0.9):
-                print('break')
-                break
-                
-            if _find_img('nao_existe.png', conf=0.9):
-                return driver, 'Não Existe Pastas', 'ok'
-    
-            time.sleep(1)
-            count += 1
-            if count > 10:
-                return driver, 'Cliente não cadastrado Onvio', 'ok'
+        for arquivo in nomes_arquivos:
+            if re.compile(r'INFORME').search(arquivo.upper()):
+                with fitz.open(os.path.join(pasta_inicial, subpasta, arquivo)) as pdf:
+                    texto_arquivo = ''
+                    for page in pdf:
+                        texto_pagina = page.get_text('text', flags=1 + 2 + 8)
+                        texto_arquivo += texto_pagina
+                    
+                    informe_empresa = re.compile(r'COMPROVANTE DE RENDIMENTOS PAGOS E DE IMPOSTO SOBRE A RENDA RETIDO NA FONTE').search(texto_arquivo.upper())
+                    if not informe_empresa:
+                        informe_empresa = re.compile(r'Comprovante de Rendimentos Pagos e de\nImposto sobre a Renda Retido na Fonte').search(texto_arquivo)
+                    
+                    if not informe_empresa:
+                        shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        lista_arquivos.append(contador)
+                        contador += 1
         
         for arquivo in nomes_arquivos:
             if re.compile(r'Capa E-book').search(arquivo):
@@ -282,9 +296,14 @@ def run(window, pasta_inicial, pasta_final):
         
         # cria o e-book
         unificado_pdf = os.path.join(pasta_final, f'E-BOOK DIRPF - {nome_declarante}.pdf')
-        pdf_merger.write(unificado_pdf)
-        pdf_merger.close()
-        
+        while True:
+            try:
+                pdf_merger.write(unificado_pdf)
+                pdf_merger.close()
+                break
+            except:
+                p.alert('Atualização de e-book falhou.\nCaso exista algum e-book aberto, por gentileza feche para que ele seja atualizado.')
+            
         window['-progressbar-'].update_bar(count, max=int(len(subpasta_arquivos.items())))
         window['-Progresso_texto-'].update(str(round(float(count) / int(len(subpasta_arquivos.items())) * 100, 1)) + '%')
         window.refresh()

@@ -241,7 +241,7 @@ def cria_dados(window, planilha_de_dados, pasta_arquivos):
                 with open(os.path.join(pasta_arquivos, arq), 'r', encoding="latin-1") as arquivo:
                     # Leia o conteúdo do arquivo
                     conteudo = arquivo.read()
-                    for tipo in [r'DECPJ\|(\d\d\d\d\d\d\d\d\d\d\d\d\d\d)\|(.+)\|\d\|', r'DECPF\|(\d\d\d\d\d\d\d\d\d\d\d)\|(.+)\|\d\|']:
+                    for tipo in [r'DECPJ\|(\d\d\d\d\d\d\d\d\d\d\d\d\d\d)\|(.+)\|\d\|', r'DECPF\|(\d\d\d\d\d\d\d\d\d\d\d)\|(.+)(\|N){5}']:
                         try:
                             info = re.compile(tipo).search(conteudo)
                             cnpj = info.group(1)
@@ -250,8 +250,6 @@ def cria_dados(window, planilha_de_dados, pasta_arquivos):
                         except:
                             pass
                         
-                names = arq.split('F')
-                codigo = str(names[1]).replace('.txt', '').replace('_', '')
                 arq_name.append((cnpj, arq, nome))
             
         arq_name = sorted(arq_name)
@@ -556,7 +554,7 @@ def fechar_dirf():
         time.sleep(1)
 
 
-def transmitir_dirf(event, cnpj, arquivo, empresa, pasta_arquivos_importados, pasta_arquivos_nao_importados, pasta_arquivos_importados_com_erros_avisos, nome, pasta_recibos, pasta_relatorios_gravacao):
+def transmitir_dirf(event, certificado, cnpj, arquivo, empresa, pasta_arquivos_importados, pasta_arquivos_nao_importados, pasta_arquivos_importados_com_erros_avisos, nome, pasta_recibos, pasta_relatorios_gravacao):
     print('>>> Trasmitindo arquivo')
     p.hotkey('ctrl', 'g')
     timer = 0
@@ -596,24 +594,31 @@ def transmitir_dirf(event, cnpj, arquivo, empresa, pasta_arquivos_importados, pa
     p.hotkey('alt', 'a')
     
     while not find_img('deseja_transmitir.png', conf=0.99):
+        if find_img('regravar.png', conf=0.9):
+            p.hotkey('alt', 's')
         if find_img('ja_existe_recibo.png', conf=0.9):
             p.hotkey('alt', 'c')
             return 'erro', 'Já existe recibo de entrega, declaração já transmitida'
     
     click_img('transmitir_sim.png', conf=0.99)
     
-    if find_img('com_certificado.png', conf=0.99):
-        click_img('com_certificado.png', conf=0.99)
+    if certificado == 'Sim':
+        if find_img('com_certificado.png', conf=0.99):
+            click_img('com_certificado.png', conf=0.99)
+    else:
+        if find_img('sem_certificado.png', conf=0.99):
+            click_img('sem_certificado.png', conf=0.99)
     time.sleep(0.2)
     
     p.hotkey('alt', 'a')
     
-    wait_img('rpem_contabil.png', conf=0.9)
-    click_img('rpem_contabil.png', conf=0.9)
-    time.sleep(0.5)
-    
-    wait_img('assinar.png', conf=0.9)
-    p.hotkey('alt', 'a')
+    if certificado == 'Sim':
+        wait_img('rpem_contabil.png', conf=0.9)
+        click_img('rpem_contabil.png', conf=0.9)
+        time.sleep(0.5)
+        
+        wait_img('assinar.png', conf=0.9)
+        p.hotkey('alt', 'a')
     
     wait_img('resultado_transmissao.png', conf=0.9)
     
@@ -790,9 +795,9 @@ def run(window, event):
                 abrir_dirf(event)
                 while True:
                     if resultado == 'Arquivo importado com sucesso;Declaração com erros ou avisos, relatório salvo':
-                        situacao, transmissao = transmitir_dirf(event, cnpj, arquivo, empresa, pasta_arquivos_importados_com_erros_avisos, pasta_arquivos_nao_importados, pasta_arquivos_importados_com_erros_avisos, nome, pasta_recibos, pasta_relatorios_gravacao)
+                        situacao, transmissao = transmitir_dirf(event, certificado, cnpj, arquivo, empresa, pasta_arquivos_importados_com_erros_avisos, pasta_arquivos_nao_importados, pasta_arquivos_importados_com_erros_avisos, nome, pasta_recibos, pasta_relatorios_gravacao)
                     else:
-                        situacao, transmissao = transmitir_dirf(event, cnpj, arquivo, empresa, pasta_arquivos_importados, pasta_arquivos_nao_importados, pasta_arquivos_importados_com_erros_avisos, nome, pasta_recibos, pasta_relatorios_gravacao)
+                        situacao, transmissao = transmitir_dirf(event, certificado, cnpj, arquivo, empresa, pasta_arquivos_importados, pasta_arquivos_nao_importados, pasta_arquivos_importados_com_erros_avisos, nome, pasta_recibos, pasta_relatorios_gravacao)
                         
                     if situacao != 'erro_servidor':
                         break
@@ -845,6 +850,11 @@ def run(window, event):
 
 if __name__ == '__main__':
     rotina = p.confirm(buttons=['Importar arquivos', 'Importar e transmitir arquivos'])
+    if rotina == 'Importar e transmitir arquivos':
+        certificado = p.confirm(text='Transmitir com Certificado Digital?', buttons=['Sim', 'Não'])
+    else:
+        certificado = 'Sim'
+    
     empresas = None
     while True:
         pasta_arquivos = ask_for_dir()

@@ -172,6 +172,8 @@ def arquivos_dirf(cod, ano):
                 pyperclip.copy(caminho)
                 pyperclip.copy(caminho)
                 p.hotkey('ctrl', 'v')
+                time.sleep(0.2)
+                _click_img('arquivo.png', conf=0.9)
                 break
             except:
                 pass

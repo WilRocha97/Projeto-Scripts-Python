@@ -25,7 +25,7 @@ user = user.split('/')
 
 def _login(empresa, andamentos):
     try:
-        cod, cnpj, nome, regime = empresa
+        cod, cnpj, nome, regime, movimento = empresa
     except:
         cod, cnpj, nome = empresa
         

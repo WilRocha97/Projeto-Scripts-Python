@@ -4,6 +4,7 @@ from xhtml2pdf import pisa
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
+from pyautogui import alert
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -182,13 +183,26 @@ def run():
                 try:
                     # cookies, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil)
                     driver, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil, retorna_driver=True, options=options)
+                    if driver == 'erro':
+                        break
                     break
                 except:
                     print('❗ Erro ao logar na empresa, tentando novamente')
                     contador += 1
                 
                 time.sleep(1)
-        
+            
+            # se der erro no login
+            if driver == 'erro':
+                # se for contador exibe um alerta e para a execução
+                if perfil == 'contador':
+                    alert(f'Contador!: {sid}')
+                    return
+                # se for contribuinte so ano na planilha
+                else:
+                    _escreve_relatorio_csv(f"{cnpj};{ie};{sid.replace('❗ ', '').replace('❌ ', '').replace('✔ ', '')}", nome=f'Consulta Envio de GIA - {comp_formatado}')
+                    continue
+                    
         driver, resultado = consulta_gia(ie, comp, driver, sid)
         
         # se a consulta retornar um ok, cria o PDF e captura os dados

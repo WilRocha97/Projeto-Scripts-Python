@@ -21,6 +21,7 @@ def verifica_debitos(pagina):
         soup = BeautifulSoup(pagina.content, 'html.parser')
         # debito = soup.find('span', attrs={'id': 'consultaDebitoForm:dataTable:tb'})
         soup = soup.prettify()
+        # print(soup)
         request_verification = re.compile(r'(consultaDebitoForm:dataTable:tb)').search(soup).group(1)
         return request_verification
     except:
@@ -145,14 +146,15 @@ def inicia_sessao():
     # executa um comando JS para inserir o token do captcha no campo oculto
     driver.execute_script("document.getElementById('g-recaptcha-response').innerText='" + token + "'")
     time.sleep(1)
-    
+
+    nome_botao_consulta = re.compile(r'type=\"submit\" name=\"(consultaDebitoForm:j_id\d+)\" value=\"Consultar\"').search(driver.page_source).group(1)
     # executa um comando JS para clicar no botão de consultar
-    driver.execute_script("document.getElementsByName('consultaDebitoForm:j_id102')[0].click()")
+    driver.execute_script("document.getElementsByName('" + nome_botao_consulta + "')[0].click()")
     time.sleep(1)
-    return driver
+    return driver, nome_botao_consulta
 
 
-def consulta_debito(s, empresa):
+def consulta_debito(s, nome_botao_consulta, empresa):
     cnpj, empresa = empresa
     url = 'https://www.dividaativa.pge.sp.gov.br/sc/pages/consultas/consultarDebito.jsf'
     # str_cnpj = f"{cnpj[0:2]}.{cnpj[2:5]}.{cnpj[5:8]}/{cnpj[8:12]}-{cnpj[12:]}"
@@ -195,7 +197,7 @@ def consulta_debito(s, empresa):
         'consultaDebitoForm:decTxtTipoConsulta:cnpj': cnpj,
         'consultaDebitoForm:decTxtTipoConsulta:tiposDebitosCnpj': 0,
         'g-recaptcha-response': token,
-        'consultaDebitoForm:j_id104': 'Consultar',
+        nome_botao_consulta: 'Consultar',
         'consultaDebitoForm:modalSelecionarDebitoOpenedState': '',
         'consultaDebitoForm:modalDadosCartorioOpenedState': '',
         'javax.faces.ViewState': viewstate
@@ -264,7 +266,7 @@ def run():
         return False
     
     # inicia uma sessão com webdriver para gerar cookies no site e garantir que as requisições funcionem depois
-    driver = inicia_sessao()
+    driver, nome_botao_consulta = inicia_sessao()
     # armazena os cookies gerados pelo webdriver
     cookies = driver.get_cookies()
     driver.quit()
@@ -284,7 +286,7 @@ def run():
             # enquanto a consulta não conseguir ser realizada e tenta de novo
             while True:
                 try:
-                    consulta_debito(s, empresa)
+                    consulta_debito(s, nome_botao_consulta, empresa)
                     break
                 except:
                     pass

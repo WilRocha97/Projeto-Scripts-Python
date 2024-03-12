@@ -38,6 +38,13 @@ def verificacoes(empresa, andamentos):
         print('❕ Não há DAS a ser emitido')
         p.hotkey('ctrl', 'w')
         return False
+
+    if _find_img('ja_consta.png', conf=0.9):
+        _escreve_relatorio_csv(f'{cnpj};Já consta pagamento;{comp};{ano}', nome=andamentos)
+        print('❗ Já consta pagamento')
+        p.hotkey('ctrl', 'w')
+        return False
+
     return True
 
 
@@ -92,13 +99,18 @@ def boleto_mei(empresa, andamentos):
 
     print('>>> Aguardando tela para emissão da guia')
     # Emitir guia de pagamento DAS
+    timer = 0
     while not _find_img('emitir_guia.png', conf=0.9):
         time.sleep(1)
+        timer += 1
         if _find_img('nao_optante_3.png', conf=0.95):
             _escreve_relatorio_csv(f'{cnpj};Não optante;{comp};{ano}', nome=andamentos)
             print('❌ Não optante')
             p.hotkey('ctrl', 'w')
             return False
+
+        if timer > 60:
+            return 'erro'
 
     _click_img('emitir_guia.png', conf=0.9)
 
@@ -173,12 +185,6 @@ def boleto_mei(empresa, andamentos):
         p.hotkey('ctrl', 'w')
         return False
 
-    if _find_img('ja_consta.png', conf=0.9):
-        _escreve_relatorio_csv(f'{cnpj};Já consta pagamento;{comp};{ano}', nome=andamentos)
-        print('❗ Já consta pagamento')
-        p.hotkey('ctrl', 'w')
-        return False
-
     _wait_img('voltar.png', conf=0.9, timeout=-1)
     return True
 
@@ -194,10 +200,14 @@ def run(window):
         cnpj, comp, ano, venc = empresa
         andamentos = f'Boletos MEI {comp}-{ano}'
 
-        _abrir_chrome('http://www8.receita.fazenda.gov.br/SimplesNacional/Aplicacoes/ATSPO/pgmei.app/Identificacao')
-        if not boleto_mei(empresa, andamentos):
-            continue
+        while True:
+            _abrir_chrome('http://www8.receita.fazenda.gov.br/SimplesNacional/Aplicacoes/ATSPO/pgmei.app/Identificacao')
+            resultado = boleto_mei(empresa, andamentos)
 
+            if resultado != 'erro':
+                break
+        if not resultado:
+            continue
         if not verificacoes(empresa, andamentos):
             continue
 

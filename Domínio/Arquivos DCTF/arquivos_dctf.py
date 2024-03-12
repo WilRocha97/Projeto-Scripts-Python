@@ -9,8 +9,8 @@ from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir,
 from dominio_comum import _login_web, _abrir_modulo, _login
 
 
-def arquivos_darf_dctf(empresa, periodo, andamento):
-    cod, cnpj, nome, regime = empresa
+def arquivos_dctf(empresa, periodo, andamento):
+    cod, cnpj, nome, regime, movimento = empresa
     nome_arquivo = 'M:\DCTF_{}.RFB'.format(cod)
     
     # aguarda a tela do domínio
@@ -146,6 +146,11 @@ def arquivos_darf_dctf(empresa, periodo, andamento):
         p.click(413, 541)
         time.sleep(1)
     
+    if movimento == 'Sem movimento':
+        if not p.locateOnScreen(r'imgs/pj_inativa_marcado.png'):
+            p.click(412, 601)
+            time.sleep(1)
+    
     # sem alteração do regime
     p.click(1215, 547)
     time.sleep(0.5)
@@ -241,7 +246,7 @@ def mudar_regime(regime_certo):
 def mover_arquivo(nome_arquivo):
     nome_arquivo = nome_arquivo.replace('M:\DCTF', 'DCTF')
     os.makedirs('execução/Arquivos', exist_ok=True)
-    final_folder = 'V:\\Setor Robô\\Scripts Python\\Domínio\\Arquivos DARF DCTF\\execução\\Arquivos'
+    final_folder = 'V:\\Setor Robô\\Scripts Python\\Domínio\\Arquivos DCTF\\execução\\Arquivos'
     folder = 'C:\\'
     shutil.move(os.path.join(folder, nome_arquivo), os.path.join(final_folder, nome_arquivo))
 
@@ -261,7 +266,7 @@ def run(window):
             if not _login(empresa, andamentos):
                 break
             else:
-                resultado, nome_arquivo = arquivos_darf_dctf(empresa, periodo, andamentos)
+                resultado, nome_arquivo = arquivos_dctf(empresa, periodo, andamentos)
                 if resultado == 'arquivo gerado':
                     mover_arquivo(nome_arquivo)
                     break
@@ -278,6 +283,7 @@ def run(window):
     
 
 if __name__ == '__main__':
+    p.mouseInfo()
     periodo = p.prompt(text='Qual o período do arquivo', title='Script incrível', default='00/0000')
     empresas = _open_lista_dados()
     andamentos = 'Arquivos para DARF DCTF'

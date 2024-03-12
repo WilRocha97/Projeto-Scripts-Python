@@ -68,15 +68,15 @@ def login(options, cnpj, insc_muni):
                     or situacao == 'Consta(m) pendência(s) para emissão de certidão por meio da internet. Dirija-se à Av. União dos Ferroviários, 1760 - ' \
                                    'Centro - Jundiaí de segunda a sexta-feiras das 9h:00 às 17h:00 e aos sábados das 9h:00 às 13h:00.':
                 situacao_print = f'❗ {situacao}'
-                driver.quit()
+                driver.close()
                 return situacao, situacao_print
             if situacao == 'Confirme que você não é um robô':
                 situacao_print = '❌ Erro ao logar na empresa'
-                driver.quit()
+                driver.close()
                 return 'Erro ao logar na empresa', situacao_print
             if situacao == 'EIX000: (-107) ISAM error:  record is locked.':
                 situacao_print = '❌ Erro no site'
-                driver.quit()
+                driver.close()
                 return 'Erro no site', situacao_print
         time.sleep(1)
     
@@ -126,8 +126,15 @@ def run(window):
 
         cnpj, insc_muni, nome = empresa
 
+        contador = 0
         while True:
             situacao, situacao_print = login(options, cnpj, insc_muni)
+            if situacao == 'Erro ao logar na empresa':
+                contador += 1
+                if contador >= 5:
+                    break
+                continue
+
             if situacao != 'Erro no site':
                 break
                 

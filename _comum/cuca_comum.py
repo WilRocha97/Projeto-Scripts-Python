@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
+import re
 from datetime import datetime
+
+import pygetwindow
+
 from comum_comum import _escreve_relatorio_csv
 import pyautogui as p
 import time, sys
@@ -121,9 +125,9 @@ def escolher(qual_cuca):
 
 def _login(empresa, log, qual_cuca, execucao='cuca', competencia=str(datetime.now().month), ano=str(datetime.now().year)):
     try:
-        cod, nome, cnpj = empresa
+        cod, cnpj, nome, mes, ano = empresa
     except:
-        cod, nome, cnpj = '0000', 'EMPRESA', '00.000.000/0000-00'
+        cod, cnpj, nome = '0000', '00.000.000/0000-00', 'EMPRESA'
     # Loga em uma empresa
     cuca = {'cuca': ['o', 'j', '(SP)'], 'dpcuca': ['g', 'p', 'DPCUCA']}
 
@@ -185,9 +189,9 @@ def _login(empresa, log, qual_cuca, execucao='cuca', competencia=str(datetime.no
 
 def _verificacoes(qual_cuca, competencia, execucao='cuca', empresa='N'):
     try:
-        cod, nome, cnpj = empresa
+        cod, cnpj, nome, mes, ano = empresa
     except:
-        cod, nome, cnpj = '0000', 'EMPRESA', '00.000.000/0000-00'
+        cod, cnpj, nome = '0000', '00.000.000/0000-00', 'EMPRESA'
     # Tratar as mensagens aleatórias que aparecer
     if _loc_img('CodContabeis.png'):
         clicar('AplicarCodContabeis.png')

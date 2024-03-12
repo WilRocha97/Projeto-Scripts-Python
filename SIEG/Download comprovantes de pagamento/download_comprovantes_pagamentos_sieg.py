@@ -46,7 +46,7 @@ def sieg_iris(driver):
 
 def procura_empresa(execucao, tipo, competencia, empresa, driver, options):
     cnpj, nome = empresa
-    _click_img('comprovantes.png', conf=0.9)
+    
     # espera a barra de pesquisa, se não aparecer em 1 minuto, recarrega a página
     timer = 0
     while not _find_by_id('select2-ddlCompanyIris-container', driver):
@@ -60,7 +60,7 @@ def procura_empresa(execucao, tipo, competencia, empresa, driver, options):
             driver = login_sieg(driver)
             driver = sieg_iris(driver)
             timer = 0
-    
+
     time.sleep(5)
     print('>>> Pesquisando empresa')
     # clica para abrir a barra de pesquisa
@@ -69,6 +69,11 @@ def procura_empresa(execucao, tipo, competencia, empresa, driver, options):
         # Encontre um elemento que esteja fora do modal e clique nele
         elemento_fora_modal = driver.find_element(by=By.XPATH, value='/html/body/form/div[5]/div[3]/div/div/div[2]/div[2]/div[1]/input')
         ActionChains(driver).move_to_element(elemento_fora_modal).click().perform()
+        
+    # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
+    while not _find_by_path('/html/body/form/div[5]/div[3]/div[1]/div/div[3]/div/table/tbody/tr[1]/td/div/span', driver):
+        time.sleep(1)
+        _click_img('comprovantes.png', conf=0.9)
         
     # clica para abrir a barra de pesquisa
     driver.find_element(by=By.ID, value='select2-ddlCompanyIris-container').click()
@@ -155,10 +160,10 @@ def procura_empresa(execucao, tipo, competencia, empresa, driver, options):
             time.sleep(1)
         
         # tenta ir para a próxima página, se não conseguir sai do while e anota os resultados na planilha
-        if re.compile(r'tablePayments_next').search(driver.page_source):
+        try:
             driver.find_element(by=By.ID, value='tablePayments_next').click()
             pagina += 1
-        else:
+        except:
             break
 
         # se clicar no botão para a próxima página aguarda ela carregar.
@@ -248,29 +253,30 @@ def click(driver, comprovante):
     
     return True
 
-@_time_execution
-@_barra_de_status
-def run(window):
+# @_time_execution
+# @_barra_de_status
+def run():
     # iniciar o driver do chome
     status, driver = _initialize_chrome(options)
     driver.set_page_load_timeout(30)
     driver = login_sieg(driver)
-    
+    driver = sieg_iris(driver)
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
         
-        _indice(count, total_empresas, empresa, index, window)
+        _indice(count, total_empresas, empresa, index)
 
         while True:
-            try:
-                driver = sieg_iris(driver)
-                driver = procura_empresa(execucao, tipo, competencia, empresa, driver, options)
-                break
-            except:
-                driver.close()
-                status, driver = _initialize_chrome(options)
-                driver = login_sieg(driver)
+            #try:
+            time.sleep(2)
+            driver.refresh()
+            driver = procura_empresa(execucao, tipo, competencia, empresa, driver, options)
+            break
+        """except:
+            driver.close()
+            status, driver = _initialize_chrome(options)
+            driver = login_sieg(driver)"""
 
     driver.close()
     

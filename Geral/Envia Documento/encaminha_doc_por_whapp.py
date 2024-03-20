@@ -72,7 +72,7 @@ def captura_dados_email(driver):
     if _find_img('anexos.png', conf=0.9):
         for arq in os.listdir(pasta_anexos):
             os.remove(os.path.join(pasta_anexos, arq))
-            
+
         driver.find_element(by=By.XPATH, value='/html/body/div[2]/div/div/div[2]/div/div/div/div/div[2]/div/div/div[2]/div/div[3]/div[3]/message-header/div[3]/div/div/a').click()
         _wait_img('baixar_anexo.png', conf=0.9)
         _click_position_img('baixar_anexo.png', '+', pixels_y=50, conf=0.9)
@@ -289,14 +289,18 @@ def enviar_sem_anexo(numero, link_mensagem, titulo, vencimento):
 
     time.sleep(1)
     p.press('enter')
-    time.sleep(2)
+    time.sleep(3)
     
-    while p.locateOnScreen(r'imgs/aguardando.png', confidence=0.99):
+    while _find_img('anexar.png'):
+        p.hotkey('ctrl', 'w')
         time.sleep(1)
+        if _find_img('sair_do_site.png', conf=0.9):
+            p.press('right')
+            p.press('enter')
+        time.sleep(3)
+        
     
-    p.hotkey('ctrl', 'w')
     time.sleep(1)
-    
     return 'ok'
  
     
@@ -360,11 +364,12 @@ def enviar_anexo(numero, anexo, corpo_email):
         
     time.sleep(1)
     p.press('enter')
-    time.sleep(2)
+    time.sleep(3)
     
     while p.locateOnScreen(r'imgs/aguardando.png'):
         time.sleep(1)
-        
+    
+    time.sleep(1)
     p.hotkey('ctrl', 'w')
     time.sleep(1)
     
@@ -511,7 +516,7 @@ def run(window):
             if nao_envia:
                 time.sleep(1)
                 driver = mover_email(driver, 'nao_enviados')
-                _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo}', nome=nome_planilha, local=e_dir)
+                _escreve_relatorio_csv(f'{cnpj_limpo};x;x;{titulo}', nome=nome_planilha + ' erros', local=e_dir)
                 print(f'{titulo}\n')
             
             # se não encontrar o número da planilha

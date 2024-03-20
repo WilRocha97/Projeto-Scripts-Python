@@ -29,10 +29,13 @@ _focus = focus
 # Procura pela imagem img que atenda ao nível de correspondência conf
 # Retorna uma tupla com os valores (x, y, altura, largura) caso ache a img
 # Retorna None caso não ache a img
-def find_img(img, pasta='imgs', conf=1.0):
+def find_img(img, pasta='imgs', conf=1):
     try:
         path = os.path.join(pasta, img)
-        return a.locateOnScreen(path, confidence=conf)
+        if conf != 1:
+            return a.locateOnScreen(path, confidence=conf)
+        else:
+            return a.locateOnScreen(path)
     except:
         return False
 _find_img = find_img

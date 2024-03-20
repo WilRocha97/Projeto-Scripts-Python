@@ -256,7 +256,7 @@ def run():
                 contador = 0
                 while True:
                     try:
-                        driver, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil, retorna_driver=True, options=options)
+                        driver, sid = _new_session_fazenda_driver(usuario, senha, perfil, retorna_driver=True, options=options)
                         break
                     except:
                         print('❗ Erro ao logar na empresa, tentando novamente')

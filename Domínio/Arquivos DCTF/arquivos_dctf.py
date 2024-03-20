@@ -72,41 +72,41 @@ def arquivos_dctf(empresa, periodo, andamento):
             time.sleep(1)
             p.press('esc', presses=5)
             return 'ok', nome_arquivo
-        
+
         time.sleep(2)
-    
-    if p.locateOnScreen(r'imgs/declarante_nao_contribui_irpj.png'):
+
+    if _find_img('declarante_nao_contribui_irpj.png'):
         regime = 'Declarante não é contribuinte do IRPJ'
     else:
         # configura o regime, forma de tributação
         if regime == 'Lucro Real':
-            if not p.locateOnScreen(r'imgs/real_estimativa.png'):
+            if not _find_img('real_estimativa.png'):
                 p.click(1215, 192)
                 time.sleep(0.5)
                 _click_img('seleciona_real_estimativa.png', conf=0.99)
                 p.press('enter')
 
         if regime == 'Lucro Presumido':
-            if not p.locateOnScreen(r'imgs/presumido.png'):
+            if not _find_img('presumido.png'):
                 p.click(1215, 192)
                 time.sleep(0.5)
                 _click_img('seleciona_presumido.png', conf=0.99)
                 p.press('enter')
                 
         if regime == 'Imunes':
-            if not p.locateOnScreen(r'imgs/imune.png'):
+            if not _find_img('imune.png'):
                 p.click(1215, 192)
                 time.sleep(0.5)
                 _click_img('seleciona_imune.png', conf=0.99)
                 p.press('enter')
             
         if regime == 'Isentas':
-            if not p.locateOnScreen(r'imgs/isenta.png'):
+            if not _find_img('isenta.png'):
                 p.click(1215, 192)
                 time.sleep(0.5)
                 _click_img('seleciona_isenta.png', conf=0.99)
                 p.press('enter')
-            
+
         if regime == 'Simples Nacional':
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, regime, 'Empresa Simples Nacional não gera arquivo.']), nome=andamento)
             print('❗ Empresa Simples Nacional não gera arquivo.')
@@ -124,11 +124,11 @@ def arquivos_dctf(empresa, periodo, andamento):
     
     # levantou balancete/balanço de suspensão e redução
     if regime == 'Lucro Real':
-        if not p.locateOnScreen(r'imgs/levantou_marcado.png'):
+        if not _find_img('levantou_marcado.png'):
             p.click(414, 421)
             time.sleep(0.5)
     else:
-        if p.locateOnScreen(r'imgs/levantou_marcado.png'):
+        if _find_img('levantou_marcado.png'):
             p.click(414, 421)
             time.sleep(0.5)
         
@@ -142,21 +142,27 @@ def arquivos_dctf(empresa, periodo, andamento):
     time.sleep(1)
     
     # criterio de reconhecimento das variações monetárias dos direitos de crédito e das obrigações do contribuinte, em função da taxa de câmbio
-    if not p.locateOnScreen(r'imgs/criterio_marcado.png'):
+    if not _find_img('criterio_marcado.png'):
         p.click(413, 541)
         time.sleep(1)
     
     if movimento == 'Sem movimento':
-        if not p.locateOnScreen(r'imgs/pj_inativa_marcado.png'):
+        if not _find_img('pj_inativa_marcado.png'):
             p.click(412, 601)
             time.sleep(1)
     
-    # sem alteração do regime
+    # sem alteração do regime ou não se aplica se for primeiro janeiro
     p.click(1215, 547)
     time.sleep(0.5)
-    if _find_img('sem_alteracao.png', conf=0.99):
-        _click_img('sem_alteracao.png', conf=0.99)
-        time.sleep(1)
+    
+    if periodo[:2] == '01':
+        if _find_img('nao_se_aplica.png', conf=0.99):
+            _click_img('nao_se_aplica.png', conf=0.99)
+            time.sleep(1)
+    else:
+        if _find_img('sem_alteracao.png', conf=0.99):
+            _click_img('sem_alteracao.png', conf=0.99)
+            time.sleep(1)
     
     # ok
     p.hotkey('alt', 'o')
@@ -218,14 +224,14 @@ def mudar_regime(regime_certo):
             break
     
     if regime_certo == 'Imunes':
-        if not p.locateOnScreen(r'imgs/imune.png'):
+        if not _find_img('imune.png'):
             p.click(1215, 192)
             time.sleep(0.5)
             _click_img('seleciona_imune.png', conf=0.99)
             p.press('enter')
     
     if regime_certo == 'Isentas':
-        if not p.locateOnScreen(r'imgs/isenta.png'):
+        if not _find_img('isenta.png'):
             p.click(1215, 192)
             time.sleep(0.5)
             _click_img('seleciona_isenta.png', conf=0.99)
@@ -259,7 +265,7 @@ def run(window):
     
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        # printa o indice da empresa que está sendo executada
+        # printa o indice da empresa q2ue está sendo executada
         _indice(count, total_empresas, empresa, index, window)
         
         while True:
@@ -283,7 +289,6 @@ def run(window):
     
 
 if __name__ == '__main__':
-    p.mouseInfo()
     periodo = p.prompt(text='Qual o período do arquivo', title='Script incrível', default='00/0000')
     empresas = _open_lista_dados()
     andamentos = 'Arquivos para DARF DCTF'

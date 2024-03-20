@@ -181,8 +181,8 @@ def run():
             # loga no site da secretaria da fazenda com web driver e salva os cookies do site e a id da sessão
             while True:
                 try:
-                    # cookies, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil)
-                    driver, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil, retorna_driver=True, options=options)
+                    # cookies, sid = _new_session_fazenda_driver(usuario, senha, perfil)
+                    driver, sid = _new_session_fazenda_driver(usuario, senha, perfil, retorna_driver=True, options=options)
                     if driver == 'erro':
                         break
                     break

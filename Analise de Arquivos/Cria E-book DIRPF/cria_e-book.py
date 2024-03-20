@@ -16,16 +16,15 @@ from reportlab.lib import colors
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
-local_log='Cria E-book DIRPF\Log'
 # Carregar a fonte TrueType (substitua 'sua_fonte.ttf' pelo caminho da sua fonte)
-pdfmetrics.registerFont(TTFont('Fonte', 'V:\Setor Robô\Scripts Python\Analise de Arquivos\Cria E-book DIRPF\Assets\Montserrat-SemiBold.ttf'))
+pdfmetrics.registerFont(TTFont('Fonte', 'Assets\Montserrat-SemiBold.ttf'))
 
 
 def chave_numerica(elemento):
     return int(elemento)
 
 
-def escreve_doc(texto, local=local_log, nome='Log', encode='latin-1'):
+def escreve_doc(texto, local='Log', nome='Log', encode='latin-1'):
     os.makedirs(local, exist_ok=True)
     for arq in os.listdir(local):
         os.remove(arq)
@@ -370,13 +369,13 @@ if __name__ == '__main__':
         # atualiza a barra de progresso para ela ficar mais visível
         window['-progressbar-'].update(bar_color=('#fca400', '#ffe0a6'))
         
-        #try:
-        # Chama a função que executa o script
-        run(window, pasta_inicial, pasta_final)
-        """# Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
+        try:
+            # Chama a função que executa o script
+            run(window, pasta_inicial, pasta_final)
+            # Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
         except Exception as erro:
             escreve_doc(erro)
-            window['Log do sistema'].update(disabled=False)"""
+            window['Log do sistema'].update(disabled=False)
         
         window['-progressbar-'].update_bar(0)
         window['-progressbar-'].update(bar_color='#f0f0f0')

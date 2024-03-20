@@ -124,7 +124,7 @@ def new_session_fazenda(ni, user, pwd, tipo):
 _new_session_fazenda = new_session_fazenda
 
 
-def new_session_fazenda_driver(cnpj, user, pwd, perfil, retorna_driver=False, options='padrão'):
+def new_session_fazenda_driver(user, pwd, perfil, retorna_driver=False, options='padrão'):
     url_home = "https://www3.fazenda.sp.gov.br/CAWEB/Account/Login.aspx"
     _site_key = '6LesbbcZAAAAADrEtLsDUDO512eIVMtXNU_mVmUr'
 
@@ -220,8 +220,6 @@ def new_session_fazenda_driver(cnpj, user, pwd, perfil, retorna_driver=False, op
     driver.quit()
     
     return cookies, sid
-
-
 _new_session_fazenda_driver = new_session_fazenda_driver
 
 

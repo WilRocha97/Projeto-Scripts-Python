@@ -12,40 +12,20 @@ from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir,
 
 
 def verificacoes(consulta_tipo, andamento, identificacao, nome):
-    if _find_img('inscricao_cancelada.png', conf=0.9):
-        _escreve_relatorio_csv('{};{};inscrição cancelada de ofício pela Secretaria Especial da Receita Federal do Brasil - RFB'.format(identificacao, nome), nome=andamento)
-        print('❌ inscrição cancelada de ofício pela Secretaria Especial da Receita Federal do Brasil - RFB')
-        return False
-
-    if _find_img('nao_foi_possivel.png', conf=0.9):
-        print('❌ Não foi possível concluir a consulta')
-        return 'erro'
-
-    if _find_img('info_insuficiente.png', conf=0.9):
-        _escreve_relatorio_csv('{};{};As informações disponíveis na Secretaria da Receita Federal do Brasil - RFB sobre o contribuinte '
-                               'são insuficientes para a emissão de certidão por meio da Internet.'.format(identificacao, nome), nome=andamento)
-        print('❌ Informações insuficientes para a emissão de certidão online')
-        return False
-
-    if _find_img('matriz.png', conf=0.9):
-        _escreve_relatorio_csv('{};{};A certidão deve ser emitida para o {} da matriz'.format(identificacao, nome, consulta_tipo), nome=andamento)
-        print(f'❌ A certidão deve ser emitida para o {consulta_tipo} da matriz')
-        return False
-
-    if _find_img('cpf_invalido.png', conf=0.9):
-        _escreve_relatorio_csv('{};{};CPF inválido'.format(identificacao, nome), nome=andamento)
-        print(f'❌ CPF inválido')
-        return False
-
-    if _find_img('cnpj_suspenso.png', conf=0.9):
-        _escreve_relatorio_csv('{};{};CNPJ suspenso'.format(identificacao, nome), nome=andamento)
-        print(f'❌ CNPJ suspenso')
-        return False
-
-    if _find_img('declaracao_inapta.png', conf=0.9):
-        _escreve_relatorio_csv('{};{};CNPJ com situação cadastral declarada inapta pela Secretaria Especial da Receita Federal do Brasil - RFB'.format(identificacao, nome), nome=andamento)
-        print(f'❌ Situação cadastral inapta')
-        return False
+    alertas = [('inscricao_cancelada.png', 'inscrição cancelada de ofício pela Secretaria Especial da Receita Federal do Brasil - RFB', False),
+               ('nao_foi_possivel.png', 'Não foi possível concluir a consulta', 'erro'),
+               ('info_insuficiente.png', 'As informações disponíveis na Secretaria da Receita Federal do Brasil - RFB sobre o contribuinte são insuficientes para a emissão de certidão por meio da Internet.', False),
+               ('matriz.png', f'A certidão deve ser emitida para o {consulta_tipo} da matriz', False),
+               ('cpf_invalido.png', 'CPF inválido', False),
+               ('cnpj_suspenso.png', 'CNPJ suspenso', False),
+               ('declaracao_inapta.png', 'CNPJ com situação cadastral declarada inapta pela Secretaria Especial da Receita Federal do Brasil - RFB', False)]
+    
+    for alerta in alertas:
+        if _find_img(alerta[0], conf=0.9):
+            if alerta[2] != 'erro':
+                _escreve_relatorio_csv(f'{identificacao};{nome};{alerta[1]}', nome=andamento)
+            print(f'❌ {alerta[1]}')
+            return alerta[2]
 
     if _find_img('erro_na_consulta.png', conf=0.9):
         p.press('enter')
@@ -58,21 +38,21 @@ def salvar(consulta_tipo, andamento, identificacao, nome):
     # espera abrir a tela de salvar o arquivo
     contador = 0
     while not _find_img('salvar_como.png', conf=0.9):
-        time.sleep(1)
+        if _find_img('servico_indisponivel.png', conf= 0.9):
+            return 'erro'
         if _find_img('em_processamento.png', conf=0.9) or _find_img('erro_captcha.png', conf=0.9):
             print('>>> Tentando novamente')
             consulta(consulta_tipo, identificacao)
-            if contador >= 4:
+            if contador >= 5:
                 _escreve_relatorio_csv('{};{};Consulta em processamento, volte daqui alguns minutos.'.format(identificacao, nome), nome=andamento)
                 print(f'❗ Consulta em processamento, volte daqui alguns minutos.')
                 p.hotkey('ctrl', 'w')
                 return False
             contador += 1
 
-        if contador > 10:
-            if _find_img('botao_consultar_selecionado.png', conf=0.9):
-                _click_img('botao_consultar_selecionado.png', conf=0.9)
-                contador = 0
+        if _find_img('botao_consultar_selecionado.png', conf=0.9):
+            _click_img('botao_consultar_selecionado.png', conf=0.9)
+            contador = 0
 
         if _find_img('nova_certidao.png', conf=0.9):
             _click_img('nova_certidao.png', conf=0.9)
@@ -88,7 +68,9 @@ def salvar(consulta_tipo, andamento, identificacao, nome):
 
         if _find_img(f'informe_{consulta_tipo}.png', conf=0.9):
             p.press('enter')
-
+        
+        time.sleep(1)
+        
     # escreve o nome do arquivo (.upper() serve para deixar em letra maiúscula)
     time.sleep(1)
     p.write(f'{nome.upper()} - {identificacao} - Certidao')

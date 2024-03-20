@@ -147,15 +147,15 @@ def abrir_chrome(url, tela_inicial_site=False, fechar_janela=True, outra_janela=
         time.sleep(0.5)
         os.startfile(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
         if outra_janela:
-            while _find_img(outra_janela, conf=0.9):
+            while _find_img(outra_janela, pasta='imgs_google', conf=0.9):
                 time.sleep(1)
         
-        while not _find_img('google.png', conf=0.9):
+        while not _find_img('google.png', pasta='imgs_google', conf=0.9):
             if anti_travamento:
-                if _find_img('chrome_travado.png', conf=0.9):
-                    _click_img('chrome_travado.png', conf=0.9)
+                if _find_img('chrome_travado.png', pasta='imgs_google', conf=0.9):
+                    _click_img('chrome_travado.png', pasta='imgs_google', conf=0.9)
         
-        _click_img('google.png', conf=0.9)
+        _click_img('google.png', pasta='imgs_google', conf=0.9)
         time.sleep(1)
         p.hotkey('alt', 'space', 'x')
         p.hotkey('alt', 'space', 'x')
@@ -164,8 +164,8 @@ def abrir_chrome(url, tela_inicial_site=False, fechar_janela=True, outra_janela=
         p.hotkey('alt', 'space', 'x')
         
         time.sleep(1)
-        if _find_img('restaurar_pagina.png', conf=0.9):
-            _click_img('restaurar_pagina.png', conf=0.9)
+        if _find_img('restaurar_pagina.png', pasta='imgs_google', conf=0.9):
+            _click_img('restaurar_pagina.png', pasta='imgs_google', conf=0.9)
             time.sleep(0.5)
             p.press('esc')
             time.sleep(0.5)
@@ -174,8 +174,8 @@ def abrir_chrome(url, tela_inicial_site=False, fechar_janela=True, outra_janela=
         p.hotkey('win', 'm')
     
     if fechar_janela:
-        if _find_img('chrome_aberto.png', conf=0.99):
-            _click_img('chrome_aberto.png', conf=0.99, timeout=1)
+        if _find_img('chrome_aberto.png', pasta='imgs_google', conf=0.99):
+            _click_img('chrome_aberto.png', pasta='imgs_google', conf=0.99, timeout=1)
         else:
             abrir_nova_janela()
             
@@ -184,7 +184,7 @@ def abrir_chrome(url, tela_inicial_site=False, fechar_janela=True, outra_janela=
 
     if tela_inicial_site:
         timer = 0
-        while not _find_img(tela_inicial_site, conf=0.9):
+        while not _find_img(tela_inicial_site, pasta='imgs_google', conf=0.9):
             print('>>> Aguardando o site carregar...')
             if timer == 0:
                 for i in range(4):
@@ -224,3 +224,22 @@ def abrir_chrome(url, tela_inicial_site=False, fechar_janela=True, outra_janela=
         p.press('enter')
 
 _abrir_chrome = abrir_chrome
+
+
+def acessar_site_chrome(url):
+    print('>>> Acessando Gov.br')
+    for i in range(4):
+        p.click(1000, 51)
+        time.sleep(0.5)
+        p.hotkey('ctrl', 'a')
+        time.sleep(0.5)
+        p.press('delete')
+        time.sleep(0.2)
+        pyperclip.copy(url)
+        pyperclip.copy(url)
+        p.hotkey('ctrl', 'v')
+    
+    time.sleep(1)
+    p.press('enter')
+    
+_acessar_site_chrome = acessar_site_chrome

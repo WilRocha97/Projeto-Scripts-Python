@@ -402,3 +402,12 @@ def remove_espacos(text):
     text = text[0:-1]
     return text
 _remove_espacos = remove_espacos
+
+
+# gera um número aleatório de 10 dígitos que não contem na lista
+def generate_random_number(lista_controle):
+    while True:
+        controle = str(random.randint(10**9, 10**10 - 1))
+        if controle not in lista_controle:
+            lista_controle.append(controle)
+            return controle, lista_controle

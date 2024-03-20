@@ -180,6 +180,7 @@ def run():
             # se o usuario anterior for diferente e existir uma sessão aberta, a sessão é fechada
             if s:
                 s.close()
+            
             # abre uma nova sessão
             with Session() as s:
                 
@@ -192,7 +193,7 @@ def run():
                         sid = 'Erro ao logar na empresa'
                         break
                     try:
-                        cookies, sid = _new_session_fazenda_driver(cnpj, usuario, senha, perfil)
+                        cookies, sid = _new_session_fazenda_driver(usuario, senha, perfil)
                         erro = 'N'
                     except:
                         print('❗ Erro ao logar na empresa, tentando novamente')
@@ -206,7 +207,7 @@ def run():
                     usuario_anterior = 'padrão'
                     s.close()
                     _escreve_relatorio_csv(texto)
-                    print(f'❗ {sid}\n', end='')
+                    #print(f'❗ {sid}\n', end='')
                     continue
                 
                 # adiciona os cookies do login da sessão por request no web driver

@@ -210,7 +210,9 @@ def run():
             nome_arquivo = f'{cnpj} - Entrega de GIA {comp_formatado}.pdf'
             driver, resultado = create_pdf(driver, nome_arquivo, comp_formatado)
             driver, resultado = captura_dados(driver)
-            
+        else:
+            _escreve_relatorio_csv(f'{cnpj};{ie};{usuario};{senha};{perfil}', nome=f'Próximos dados', local='ignore')
+        
         # escreve na planilha de andamentos o resultado da execução atual
         try:
             _escreve_relatorio_csv(f"{cnpj};{ie};{resultado.replace('❗ ', '').replace('❌ ', '').replace('✔ ', '')}",

@@ -14,23 +14,17 @@ from pyautogui_comum import _find_img, _click_img, _wait_img, _click_position_im
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start, _barra_de_status
 
 
-def analisa_informe(arquivo):
-    texto_arquivo = ''
-    with fitz.open(arquivo) as pdf:
-        for page in pdf:
-            texto_pagina = page.get_text('text', flags=1 + 2 + 8)
-            texto_arquivo += texto_pagina
-
-    ano_calendario = re.compile(r'Ano-Calendário (\d{4})').search(texto_arquivo).group(1)
-    shutil.move(arquivo, arquivo.replace('Informe de rendimento IR INSS', f'Informe de rendimento IR INSS {ano_calendario}'))
-
-
 def login(cpf, senha):
     # aguarda o site carregar
     print('>>> Aguardando o site carregar')
+    p.moveTo(5, 5)
     while not _find_img('botao_gov.png', conf=0.95):
+        if _find_img('sair_fgts.png', conf=0.95):
+            _click_img('sair_fgts.png', conf=0.95)
+
         if _find_img('sair.png', conf=0.95):
             _click_img('sair.png', conf=0.95)
+
         if _find_img('campo_cpf_selecionado.png', conf=0.95):
             break
         
@@ -38,14 +32,18 @@ def login(cpf, senha):
             p.hotkey('ctrl', 'w')
             time.sleep(1)
             p.hotkey('ctrl', 'w')
-            _abrir_chrome('https://meu.inss.gov.br/#/login')
+            _abrir_chrome('https://meu.inss.gov.br/#/login', iniciar_com_icone=True)
             return 'recomeçar'
         
         time.sleep(1)
 
     # aguarda o campo do cpf
+    
     while not _find_img('campo_cpf_selecionado.png', conf=0.95):
+        if _find_img('sair.png', conf=0.95):
+            _click_img('sair.png', conf=0.95)
         # clica no botão do gov.br
+        p.moveTo(5, 5)
         _click_img('botao_gov.png', conf=0.95, timeout=1)
         if _find_img('cadastro_incompleto.png', conf=0.95):
             print('>>> Fechando login anterior')
@@ -92,7 +90,7 @@ def login(cpf, senha):
             p.hotkey('ctrl', 'w')
             time.sleep(1)
             p.hotkey('ctrl', 'w')
-            _abrir_chrome('https://meu.inss.gov.br/#/login')
+            _abrir_chrome('https://meu.inss.gov.br/#/login', iniciar_com_icone=True)
             return 'recomeçar'
         
         time.sleep(1)
@@ -108,33 +106,51 @@ def login(cpf, senha):
     timer = 0
     # aguarda o campo da senha
     while not _find_img('campo_senha_selecionado.png', conf=0.95):
+        if _find_img('campo_senha.png', conf=0.9):
+            # clica no campo da senha
+            _click_img('campo_senha.png', conf=0.9)
+
+        if _find_img('cadastro_divergente_2.png', conf=0.9):
+            p.hotkey('ctrl', 'w')
+            return 'Foi encontrado uma divergência no cadastro e não será possível realizar o login, caso já tenha sido resolvida junto a RFB, tente novamente mais tarde (ERL0001200)'
+
+        if _find_img('cpf_invalido.png', conf=0.9):
+            p.hotkey('ctrl', 'w')
+            return 'CPF informado inválido'
+
+        if _find_img('confirmacao_de_info_2.png', conf=0.95):
+            p.hotkey('ctrl', 'w')
+            return 'É necessária confirmação de dados cadastrais'
+
+        if _find_img('captcha.png', conf=0.95):
+            p.hotkey('ctrl', 'w')
+            time.sleep(1)
+            p.hotkey('ctrl', 'w')
+            _abrir_chrome('https://meu.inss.gov.br/#/login', iniciar_com_icone=True)
+            return 'recomeçar'
+
         if _find_img('erro_403.png', conf=0.95):
             p.hotkey('ctrl', 'w')
             _acessar_site_chrome('https://meu.inss.gov.br/#/login')
             return 'recomeçar'
 
-        if _find_img('cadastro_divergente_2.png', conf=0.9):
-            return 'Foi encontrado uma divergência no cadastro e não será possível realizar o login, caso já tenha sido resolvida junto a RFB, tente novamente mais tarde (ERL0001200)'
-
-        if _find_img('cpf_invalido.png', conf=0.9):
-            return 'CPF informado inválido'
-
-        if _find_img('campo_senha.png', conf=0.9):
-            # clica no campo da senha
-            _click_img('campo_senha.png', conf=0.9)
-
-        """if _find_img('captcha.png', conf=0.95):
+        if _find_img('sistema_indisponivel.png', conf=0.9):
             p.hotkey('ctrl', 'w')
-            time.sleep(1)
-            p.hotkey('ctrl', 'w')
-            _abrir_chrome('https://meu.inss.gov.br/#/login')
-            return 'recomeçar'"""
-        
+            _acessar_site_chrome('https://meu.inss.gov.br/#/login')
+            return 'recomeçar'
+
         if _find_img('site_morreu.png', conf=0.95):
             p.hotkey('ctrl', 'w')
             time.sleep(1)
             p.hotkey('ctrl', 'w')
-            _abrir_chrome('https://meu.inss.gov.br/#/login')
+            _abrir_chrome('https://meu.inss.gov.br/#/login', iniciar_com_icone=True)
+            return 'recomeçar'
+
+        if _find_img('erro_gov.png', conf=0.95):
+            p.hotkey('ctrl', 'w')
+            time.sleep(1)
+            p.hotkey('ctrl', 'w')
+            _abrir_chrome('https://meu.inss.gov.br/#/login', iniciar_com_icone=True)
             return 'recomeçar'
 
         time.sleep(1)
@@ -180,7 +196,14 @@ def login(cpf, senha):
             p.press('enter')
             _acessar_site_chrome('https://meu.inss.gov.br/#/login')
             return 'recomeçar'
-
+        
+        if _find_img('pagina_sem_resposta.png', conf=0.95):
+            p.press('enter')
+            time.sleep(1)
+            p.hotkey('ctrl', 'w')
+            _acessar_site_chrome('https://meu.inss.gov.br/#/login')
+            return 'recomeçar'
+        
         if _find_img('autorizacao.png', conf=0.95):
             _click_img('autorizacao_sim.png', conf=0.95)
 
@@ -201,21 +224,25 @@ def login(cpf, senha):
         if _find_img('usuario_senha_invalido.png', conf=0.95):
             return 'Usuário e/ou senha inválidos'
 
+        if _find_img('cpf_nao_encontrado.png', conf=0.95):
+            return 'O CPF informado não foi localizado na base de dados do INSS (CNIS)'
+
         if _find_img('captcha.png', conf=0.95):
             p.hotkey('ctrl', 'w')
             time.sleep(1)
             p.hotkey('ctrl', 'w')
-            _abrir_chrome('https://meu.inss.gov.br/#/login')
+            _abrir_chrome('https://meu.inss.gov.br/#/login', iniciar_com_icone=True)
             return 'recomeçar'
         
         if _find_img('site_morreu.png', conf=0.95):
             p.hotkey('ctrl', 'w')
             time.sleep(1)
             p.hotkey('ctrl', 'w')
-            _abrir_chrome('https://meu.inss.gov.br/#/login')
+            _abrir_chrome('https://meu.inss.gov.br/#/login', iniciar_com_icone=True)
             return 'recomeçar'
 
         time.sleep(1)
+        p.moveTo(5, 5)
         if _find_img('botao_gov.png', conf=0.95):
             # clica no botão do gov.br
             _click_img('botao_gov.png', conf=0.95)
@@ -245,6 +272,8 @@ def busca_informe(ano):
     print('>>> Aguardando o informe')
     # aguarda o extrato aparecer
     while not _find_img('numero_beneficio.png', conf=0.9):
+        if _find_img('cadastro_inativo.png', conf=0.9):
+            return False, 'Cadastro inativo'
         if _find_img('nao_possui_informe.png', conf=0.9):
             return False, 'Não foi encontrado benefício para consulta'
         if _find_img('cadastro_divergente.png', conf=0.9):
@@ -259,6 +288,49 @@ def busca_informe(ano):
     informes = p.locateAllOnScreen(os.path.join('imgs', 'extrato_ir_disponivel.png'), confidence=0.9)
 
     return True, informes
+
+
+def abre_informe(cpf, nome, beneficios):
+    contador_informes = 0
+    erro_informe = False
+    possui_erro = ''
+    for informe in beneficios:
+        print('>>> Abrindo o informe')
+        # aguarda o informe carregar
+        timer = 0
+        while not _find_img('informe.png', conf=0.9):
+            p.click(informe)
+            if _find_img('nao_encontrou_informe.png', conf=0.9):
+                return 'Não foi encontrado extrato de IR para os dados informados'
+            if timer > 5:
+                if _find_img('erro_informe.png', conf=0.95):
+                    erro_informe = True
+                    possui_erro = ', foi encontrado benefício que não gerou informe'
+                    break
+            time.sleep(1)
+            timer += 1
+
+        if not erro_informe:
+            # salva o pdf
+            contador_informes += 1
+            salva_informe(cpf, nome, contador_informes)
+            
+
+        # volta para a página dos informes
+        p.hotkey('alt', 'left')
+        while not _find_img('extrato_ir_disponivel.png', conf=0.9):
+            time.sleep(1)
+
+        erro_informe = False
+
+    if contador_informes == 1:
+        resultado = f'Extrato IR INSS baixado com sucesso{possui_erro};{contador_informes} Informe encontrado'
+    elif contador_informes > 1:
+        resultado = f'Extrato IR INSS baixado com sucesso{possui_erro};{contador_informes} Informes encontrados'
+    elif contador_informes < 1:
+        resultado = f'Foi encontrado benefício que não gerou informe'
+
+    return resultado
 
 
 def salva_informe(cpf, nome, contador_informes):
@@ -305,57 +377,24 @@ def salva_informe(cpf, nome, contador_informes):
     return
 
 
-def abre_informe(cpf, nome, beneficios):
-    contador_informes = 0
-    erro_informe = False
-    possui_erro = ''
-    for informe in beneficios:
-        print('>>> Abrindo o informe')
-        # aguarda o informe carregar
-        timer = 0
-        while not _find_img('informe.png', conf=0.9):
-            p.click(informe)
-            if _find_img('nao_encontrou_informe.png', conf=0.9):
-                return 'Não foi encontrado extrato de IR para os dados informados'
-            if timer > 5:
-                if _find_img('erro_informe.png', conf=0.95):
-                    erro_informe = True
-                    possui_erro = ', foi encontrado benefício que não gerou informe'
-                    break
-            time.sleep(1)
-            timer += 1
+def analisa_informe(arquivo):
+    texto_arquivo = ''
+    with fitz.open(arquivo) as pdf:
+        for page in pdf:
+            texto_pagina = page.get_text('text', flags=1 + 2 + 8)
+            texto_arquivo += texto_pagina
 
-        if not erro_informe:
-            # salva o pdf
-            contador_informes += 1
-            salva_informe(cpf, nome, contador_informes)
-            
-
-        # volta para a página dos informes
-        p.hotkey('alt', 'left')
-        while not _find_img('extrato_ir_disponivel.png', conf=0.9):
-            time.sleep(1)
-
-        erro_informe = False
-
-    if contador_informes == 1:
-        resultado = f'Extrato IR INSS baixado com sucesso{possui_erro};{contador_informes} Informe encontrado'
-    elif contador_informes > 1:
-        resultado = f'Extrato IR INSS baixado com sucesso{possui_erro};{contador_informes} Informes encontrados'
-
-    if erro_informe:
-        return 'Não foi gerado informe referênte ao benefício encontrado'
-    else:
-        return resultado
+    ano_calendario = re.compile(r'Ano-Calendário (\d{4})').search(texto_arquivo).group(1)
+    shutil.move(arquivo, arquivo.replace('Informe de rendimento IR INSS', f'Informe de rendimento IR INSS {ano_calendario}'))
 
 
-#@_time_execution
-#@_barra_de_status
-def run():
+@_time_execution
+@_barra_de_status
+def run(window):
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index)
+        _indice(count, total_empresas, empresa, index, window)
 
         try:
             cpf, nome, senha, ano = empresa
@@ -365,7 +404,7 @@ def run():
 
         andamentos = f'Informes INSS'
 
-        _abrir_chrome('https://meu.inss.gov.br/#/login')
+        _abrir_chrome('https://meu.inss.gov.br/#/login', iniciar_com_icone=True)
         # faz login no cpf
         while True:
             resultado = login(cpf, senha)

@@ -27,7 +27,7 @@ def chave_numerica(elemento):
 def escreve_doc(texto, local='Log', nome='Log', encode='latin-1'):
     os.makedirs(local, exist_ok=True)
     for arq in os.listdir(local):
-        os.remove(arq)
+        os.remove(os.path.join(local, arq))
     
     try:
         f = open(os.path.join(local, f"{nome}.txt"), 'a', encoding=encode)
@@ -140,9 +140,221 @@ def create_pdf(output_path, image_path, text):
     pdf_canvas.save()
     
 
+def analisa_subpastas(caminho_subpasta, nome_subpasta, subpasta_arquivos):
+    # para cada arquivo na subpasta
+    for arquivo in os.listdir(caminho_subpasta):
+        if arquivo.endswith('.pdf'):
+            # verifica se o arquivo tem senha, se tiver tira a senha dele
+            try:
+                with fitz.open(os.path.join(caminho_subpasta, arquivo)) as pdf:
+                    arquivo_sem_senha = pdf
+            except:
+                try:
+                    password = re.compile(r'Senha.(\w+)').search(arquivo).group(1)
+                    decryption(os.path.join(caminho_subpasta, arquivo), os.path.join(caminho_subpasta, arquivo), password)
+                except:
+                    # se tiver senha, mas a senha não for informada no nome do arquivo, pula para próxima subpasta
+                    alert(f'Não é possível criar E-Book de {nome_subpasta}.\n'
+                          f'Existe PDF protegido sem a senha informada no nome do arquivo.\n'
+                          f'Arquivo "{arquivo}" protegido encontrado em: {os.path.join(caminho_subpasta, arquivo)}'
+                          f'Para que o processo automatizado mescle PDF protegido, a senha deve ser informada no nome do arquivo, por exemplo:\n'
+                          f'Senha 1234567.pdf\n')
+                    break
+            
+            # se a subpasta já consta no dicionário, adiciona mais um pdf
+            if nome_subpasta in subpasta_arquivos:
+                subpasta_arquivos[nome_subpasta].append(arquivo)
+            # se não cria uma nova subpasta dentro do dicionário já adicionando o pdf
+            else:
+                subpasta_arquivos[nome_subpasta] = [arquivo]
+    
+    return True, subpasta_arquivos
+
+
+def analisa_documentos(pasta_inicial):
+    arquivos = []
+    # para cada arquivo na subpasta
+    for arquivo in os.listdir(pasta_inicial):
+        print(arquivo)
+        if arquivo.endswith('.pdf'):
+            # verifica se o arquivo tem senha, se tiver tira a senha dele
+            try:
+                with fitz.open(os.path.join(pasta_inicial, arquivo)) as pdf:
+                    arquivo_sem_senha = pdf
+            except:
+                try:
+                    password = re.compile(r'Senha.(\w+)').search(arquivo).group(1)
+                    decryption(os.path.join(caminho_subpasta, arquivo), os.path.join(caminho_subpasta, arquivo), password)
+                except:
+                    # se tiver senha, mas a senha não for informada no nome do arquivo, pula para próxima subpasta
+                    alert(f'Não é possível criar E-Book de {nome_subpasta}.\n'
+                          f'Existe PDF protegido sem a senha informada no nome do arquivo.\n'
+                          f'Arquivo "{arquivo}" protegido encontrado em: {os.path.join(caminho_subpasta, arquivo)}'
+                          f'Para que o processo automatizado mescle PDF protegido, a senha deve ser informada no nome do arquivo, por exemplo:\n'
+                          f'Senha 1234567.pdf\n')
+                    break
+            
+            arquivos.append(arquivo)
+
+    return False, arquivos
+
+
+def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
+    contador = 3
+    lista_arquivos = []
+    # cria uma cópia numerada dos PDFs
+    for arquivo in nomes_arquivos:
+        if not subpasta:
+            abre_pdf = os.path.join(pasta_inicial, arquivo)
+        else:
+            abre_pdf = os.path.join(pasta_inicial, subpasta, arquivo)
+            
+        if re.compile(r'imagem-declaracao').search(arquivo):
+            # busca o nome do declarante
+            with fitz.open(abre_pdf) as pdf:
+                for page in pdf:
+                    texto_pagina = page.get_text('text', flags=1 + 2 + 8)
+                    try:
+                        nome_declarante = re.compile(r'Nome do declarante\n.+\n(.+)').search(texto_pagina).group(1)
+                        break
+                    except:
+                        try:
+                            nome_declarante = re.compile(r'Nomedodeclarante\n.+\n(.+)').search(texto_pagina).group(1)
+                            break
+                        except:
+                            print(texto_pagina)
+            
+            # cria a capa
+            if not subpasta:
+                nome_do_arquivo = os.path.join(pasta_inicial, f'Capa E-book {nome_declarante}.pdf')
+            else:
+                nome_do_arquivo = os.path.join(pasta_inicial, subpasta, f'Capa E-book {nome_declarante}.pdf')
+            
+            caminho_da_imagem = "Assets\DIRPF_capa.png"
+            create_pdf(nome_do_arquivo, caminho_da_imagem, nome_declarante)
+            
+            # adiciona o arquivo da capa na lista da subpasta
+            nomes_arquivos.append(f'Capa E-book {nome_declarante}.pdf')
+            
+            if not subpasta:
+                shutil.copy(os.path.join(pasta_inicial, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
+            else:
+                shutil.copy(os.path.join(pasta_inicial, subpasta, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
+                
+            lista_arquivos.append(0)
+            
+            if not subpasta:
+                shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '1.pdf'))
+            else:
+                shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '1.pdf'))
+                
+            lista_arquivos.append(1)
+            continue
+        
+        if re.compile(r'imagem-declaracao').search(arquivo):
+            if not subpasta:
+                shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
+            else:
+                shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
+                
+            lista_arquivos.append(2)
+            continue
+        if re.compile(r'INFORME').search(arquivo.upper()):
+
+            with fitz.open(abre_pdf) as pdf:
+                texto_arquivo = ''
+                for page in pdf:
+                    texto_pagina = page.get_text('text', flags=1 + 2 + 8)
+                    texto_arquivo += texto_pagina
+                
+                informe_empresa = re.compile(r'COMPROVANTE DE RENDIMENTOS PAGOS E DE IMPOSTO SOBRE A RENDA RETIDO NA FONTE').search(texto_arquivo.upper())
+                if not informe_empresa:
+                    informe_empresa = re.compile(r'Comprovante de Rendimentos Pagos e de\nImposto sobre a Renda Retido na Fonte').search(texto_arquivo)
+                
+                if informe_empresa:
+                    if not subpasta:
+                        shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                    else:
+                        shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        
+                    lista_arquivos.append(contador)
+                    contador += 1
+    
+    for arquivo in nomes_arquivos:
+        if not subpasta:
+            abre_pdf = os.path.join(pasta_inicial, arquivo)
+        else:
+            abre_pdf = os.path.join(pasta_inicial, subpasta, arquivo)
+            
+        if re.compile(r'INFORME').search(arquivo.upper()):
+            with fitz.open(abre_pdf) as pdf:
+                texto_arquivo = ''
+                for page in pdf:
+                    texto_pagina = page.get_text('text', flags=1 + 2 + 8)
+                    texto_arquivo += texto_pagina
+                
+                informe_empresa = re.compile(r'COMPROVANTE DE RENDIMENTOS PAGOS E DE IMPOSTO SOBRE A RENDA RETIDO NA FONTE').search(texto_arquivo.upper())
+                if not informe_empresa:
+                    informe_empresa = re.compile(r'Comprovante de Rendimentos Pagos e de\nImposto sobre a Renda Retido na Fonte').search(texto_arquivo)
+                
+                if not informe_empresa:
+                    if not subpasta:
+                        shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                    else:
+                        shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        
+                    lista_arquivos.append(contador)
+                    contador += 1
+    
+    for arquivo in nomes_arquivos:
+        if re.compile(r'Capa E-book').search(arquivo):
+            continue
+        if re.compile(r'imagem-recibo').search(arquivo):
+            continue
+        if re.compile(r'imagem-declaracao').search(arquivo):
+            continue
+        if re.compile(r'INFORME').search(arquivo.upper()):
+            continue
+        else:
+            if not subpasta:
+                shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+            else:
+                shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                
+            lista_arquivos.append(contador)
+            contador += 1
+        
+    # ordena a lista de arquivos
+    lista_arquivos = sorted(lista_arquivos, key=chave_numerica)
+    
+    # mescla os arquivos
+    pdf_merger = PyPDF2.PdfMerger()
+    for count, arquivo in enumerate(lista_arquivos, start=1):
+        caminho_completo = os.path.join('Arquivos para mesclar', f'{arquivo}.pdf')
+        pdf_merger.append(caminho_completo)
+        
+        window['-progressbar-'].update_bar(count, max=int(len(lista_arquivos)))
+        window['-Progresso_texto-'].update(str(round(float(count) / int(len(lista_arquivos)) * 100, 1)) + '%')
+        window.refresh()
+        
+    pdf_merger.append(os.path.join('Assets', 'AGRADECIMENTO POR ESCOLHER A VEIGA & POSTAL - IPRF TIMBRADO.pdf'))
+    # cria o e-book
+    unificado_pdf = os.path.join(pasta_final, f'E-BOOK DIRPF - {nome_declarante}.pdf')
+    while True:
+        try:
+            pdf_merger.write(unificado_pdf)
+            pdf_merger.close()
+            break
+        except:
+            p.alert('Atualização de e-book falhou.\nCaso exista algum e-book aberto, por gentileza feche para que ele seja atualizado.')
+
+
 def run(window, pasta_inicial, pasta_final):
     # inicia o dicionário
+    arquivos = None
+    nomes_arquivos = None
     subpasta_arquivos = {}
+    nome_subpasta = True
 
     window['-Mensagens-'].update(f'Analisando arquivos...')
     # itera sobre todas as subpastas dentro da pasta mestre
@@ -152,40 +364,22 @@ def run(window, pasta_inicial, pasta_final):
         # Verifica se é uma pasta
         if os.path.isdir(caminho_subpasta):
             print(f"Entrando na subpasta: {nome_subpasta}")
+            nome_subpasta, subpasta_arquivos = analisa_subpastas(caminho_subpasta, nome_subpasta, subpasta_arquivos)
+        
+        else:
+            if caminho_subpasta.endswith('.pdf'):
+                nome_subpasta, arquivos = analisa_documentos(pasta_inicial)
+            else:
+                continue
+            break
             
-            # para cada arquivo na subpasta
-            for arquivo in os.listdir(caminho_subpasta):
-                # verifica se o arquivo tem senha, se tiver tira a senha dele
-                try:
-                    with fitz.open(os.path.join(caminho_subpasta, arquivo)) as pdf:
-                        arquivo_sem_senha = pdf
-                except:
-                    try:
-                        password = re.compile(r'Senha.(\w+)').search(arquivo).group(1)
-                        decryption(os.path.join(caminho_subpasta, arquivo), os.path.join(caminho_subpasta, arquivo), password)
-                    except:
-                        # se tiver senha, mas a senha não for informada no nome do arquivo, pula para próxima subpasta
-                        alert(f'Não é possível criar E-Book de {nome_subpasta}.\n'
-                                f'Existe PDF protegido sem a senha informada no nome do arquivo.\n'
-                                f'Arquivo protegido encontrado: {os.path.join(caminho_subpasta, arquivo)}'
-                                f'Para que o processo automatizado mescle PDF protegido, a senha deve ser informada no nome do arquivo, por exemplo:\n'
-                                f'Senha 1234567.pdf\n')
-                        break
-                
-                # se a subpasta já consta no dicionário, adiciona mais um pdf
-                if nome_subpasta in subpasta_arquivos:
-                    subpasta_arquivos[nome_subpasta].append(arquivo)
-                # se não cria uma nova subpasta dentro do dicionário já adicionando o pdf
-                else:
-                    subpasta_arquivos[nome_subpasta] = [arquivo]
-                    
         window['-progressbar-'].update_bar(count, max=int(len(os.listdir(pasta_inicial))))
         window['-Progresso_texto-'].update(str(round(float(count) / int(len(os.listdir(pasta_inicial))) * 100, 1)) + '%')
+        window.refresh()
+        
         if event == '-encerrar-' or event == sg.WIN_CLOSED:
             print('ENCERRAR')
             return
-            
-        window.refresh()
      
     # ---------------------------------------------------------------------------------------------------------------------------------------------------------------
     
@@ -198,114 +392,13 @@ def run(window, pasta_inicial, pasta_final):
     window['-progressbar-'].update_bar(0)
     window['-Progresso_texto-'].update('')
     
-    # para cada subpasta
-    for count, (subpasta, nomes_arquivos) in enumerate(subpasta_arquivos.items(), start=1):
+    print(nome_subpasta)
+    if not nome_subpasta:
         if event == '-encerrar-' or event == sg.WIN_CLOSED:
             print('ENCERRAR')
             return
         
-        contador = 3
-        lista_arquivos = []
-        # cria uma cópia numerada dos PDFs
-        for arquivo in nomes_arquivos:
-            if re.compile(r'imagem-recibo').search(arquivo):
-                # busca o nome do declarante
-                with fitz.open(os.path.join(pasta_inicial, subpasta, arquivo)) as pdf:
-                    for page in pdf:
-                        texto_pagina = page.get_text('text', flags=1 + 2 + 8)
-                        nome_declarante = re.compile(r'Nome do declarante\n.+\n(.+)').search(texto_pagina).group(1)
-                        if nome_declarante:
-                            break
-                        else:
-                            print(texto_pagina)
-                        
-                # cria a capa
-                nome_do_arquivo = os.path.join(pasta_inicial, subpasta, f'Capa E-book {nome_declarante}.pdf')
-                caminho_da_imagem = "Assets\DIRPF_capa.png"
-                create_pdf(nome_do_arquivo, caminho_da_imagem, nome_declarante)
-                
-                # adiciona o arquivo da capa na lista da subpasta
-                nomes_arquivos.append(f'Capa E-book {nome_declarante}.pdf')
-                shutil.copy(os.path.join(pasta_inicial, subpasta, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
-                lista_arquivos.append(0)
-                
-                shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '1.pdf'))
-                lista_arquivos.append(1)
-                continue
-                
-            if re.compile(r'imagem-declaracao').search(arquivo):
-                shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
-                lista_arquivos.append(2)
-                continue
-            if re.compile(r'INFORME').search(arquivo.upper()):
-                with fitz.open(os.path.join(pasta_inicial, subpasta, arquivo)) as pdf:
-                    texto_arquivo = ''
-                    for page in pdf:
-                        texto_pagina = page.get_text('text', flags=1 + 2 + 8)
-                        texto_arquivo += texto_pagina
-                    
-                    informe_empresa = re.compile(r'COMPROVANTE DE RENDIMENTOS PAGOS E DE IMPOSTO SOBRE A RENDA RETIDO NA FONTE').search(texto_arquivo.upper())
-                    if not informe_empresa:
-                        informe_empresa = re.compile(r'Comprovante de Rendimentos Pagos e de\nImposto sobre a Renda Retido na Fonte').search(texto_arquivo)
-                        
-                    if informe_empresa:
-                        shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
-                        lista_arquivos.append(contador)
-                        contador += 1
-        
-        for arquivo in nomes_arquivos:
-            if re.compile(r'INFORME').search(arquivo.upper()):
-                with fitz.open(os.path.join(pasta_inicial, subpasta, arquivo)) as pdf:
-                    texto_arquivo = ''
-                    for page in pdf:
-                        texto_pagina = page.get_text('text', flags=1 + 2 + 8)
-                        texto_arquivo += texto_pagina
-                    
-                    informe_empresa = re.compile(r'COMPROVANTE DE RENDIMENTOS PAGOS E DE IMPOSTO SOBRE A RENDA RETIDO NA FONTE').search(texto_arquivo.upper())
-                    if not informe_empresa:
-                        informe_empresa = re.compile(r'Comprovante de Rendimentos Pagos e de\nImposto sobre a Renda Retido na Fonte').search(texto_arquivo)
-                    
-                    if not informe_empresa:
-                        shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
-                        lista_arquivos.append(contador)
-                        contador += 1
-        
-        for arquivo in nomes_arquivos:
-            if re.compile(r'Capa E-book').search(arquivo):
-                continue
-            if re.compile(r'imagem-recibo').search(arquivo):
-                continue
-            if re.compile(r'imagem-declaracao').search(arquivo):
-                continue
-            if re.compile(r'INFORME').search(arquivo.upper()):
-                continue
-            else:
-                shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
-                lista_arquivos.append(contador)
-                contador += 1
-                
-        # ordena a lista de arquivos
-        lista_arquivos = sorted(lista_arquivos, key=chave_numerica)
-        
-        # mescla os arquivos
-        pdf_merger = PyPDF2.PdfMerger()
-        for arquivo in lista_arquivos:
-            caminho_completo = os.path.join('Arquivos para mesclar', f'{arquivo}.pdf')
-            pdf_merger.append(caminho_completo)
-        
-        # cria o e-book
-        unificado_pdf = os.path.join(pasta_final, f'E-BOOK DIRPF - {nome_declarante}.pdf')
-        while True:
-            try:
-                pdf_merger.write(unificado_pdf)
-                pdf_merger.close()
-                break
-            except:
-                p.alert('Atualização de e-book falhou.\nCaso exista algum e-book aberto, por gentileza feche para que ele seja atualizado.')
-            
-        window['-progressbar-'].update_bar(count, max=int(len(subpasta_arquivos.items())))
-        window['-Progresso_texto-'].update(str(round(float(count) / int(len(subpasta_arquivos.items())) * 100, 1)) + '%')
-        window.refresh()
+        cria_ebook(window, False, arquivos, pasta_final)
         
         # limpa a pasta de cópias de arquivos
         for arquivo in os.listdir('Arquivos para mesclar'):
@@ -314,7 +407,28 @@ def run(window, pasta_inicial, pasta_final):
         if event == '-encerrar-' or event == sg.WIN_CLOSED:
             print('ENCERRAR')
             return
-                    
+            
+    else:
+        # para cada subpasta
+        for count, (subpasta, nomes_arquivos) in enumerate(subpasta_arquivos.items(), start=1):
+            if event == '-encerrar-' or event == sg.WIN_CLOSED:
+                print('ENCERRAR')
+                return
+            
+            cria_ebook(window, subpasta, nomes_arquivos, pasta_final)
+            
+            window['-progressbar-'].update_bar(count, max=int(len(subpasta_arquivos.items())))
+            window['-Progresso_texto-'].update(str(round(float(count) / int(len(subpasta_arquivos.items())) * 100, 1)) + '%')
+            window.refresh()
+            
+            # limpa a pasta de cópias de arquivos
+            for arquivo in os.listdir('Arquivos para mesclar'):
+                os.remove(os.path.join('Arquivos para mesclar', arquivo))
+            
+            if event == '-encerrar-' or event == sg.WIN_CLOSED:
+                print('ENCERRAR')
+                return
+            
     alert(text='PDFs unificados com sucesso.')
     
 
@@ -336,7 +450,7 @@ if __name__ == '__main__':
     layout = [
         [sg.Button('Ajuda', border_width=0), sg.Button('Log do sistema', border_width=0, disabled=True)],
         [sg.Text('')],
-        [sg.Text('Selecione a pasta que contenha as subpastas dos declarantes com os arquivos PDF para analisar:')],
+        [sg.Text('Selecione a pasta que contenha os arquivos PDF para analisar:')],
         [sg.FolderBrowse('Pesquisar', key='-abrir_pdf-'), sg.InputText(key='-output_dir-', size=80, disabled=True)],
         [sg.Text('Selecione a pasta para salvar os e-books:')],
         [sg.FolderBrowse('Pesquisar', key='-abrir_pdf_final-'), sg.InputText(key='-output_dir-', size=80, disabled=True)],
@@ -357,7 +471,11 @@ if __name__ == '__main__':
         if not pasta_final:
             alert(text=f'Por favor informe um diretório para salvar os arquivos unificados.')
             return
-            
+        
+        if len(os.listdir(pasta_inicial)) < 1:
+            alert(text=f'Nenhum arquivo PDF encontrado na pasta selecionada.')
+            return
+        
         # habilita e desabilita os botões conforme necessário
         window['-abrir_pdf-'].update(disabled=True)
         window['-abrir_pdf_final-'].update(disabled=True)

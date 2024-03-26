@@ -380,19 +380,19 @@ def mover_email(driver, pasta=''):
     # Volte para o contexto padrão (página principal)
     driver.switch_to.default_content()
     # clica no menu
-    _click_img('menu_email.png', conf=0.9, clicks=2)
+    _click_img('menu_email.png', conf=0.95, timeout=1)
     
     # espera o menu abrir e clica na opção de mover
-    _wait_img('mover_email.png', conf=0.9)
+    _wait_img('mover_email.png', conf=0.9, timeout=-1)
     time.sleep(0.5)
     _click_img('mover_email.png', conf=0.9, clicks=2)
     
     # aguarda a tela para selecionar e depois clica para abrir a lista de caixas
-    _wait_img('tela_mover_email.png', conf=0.9)
+    _wait_img('tela_mover_email.png', conf=0.9, timeout=-1)
     time.sleep(0.5)
     _click_img('tela_mover_email.png', conf=0.9)
     time.sleep(0.5)
-    _wait_img('lista_caixas_email.png', conf=0.9)
+    _wait_img('lista_caixas_email.png', conf=0.9, timeout=-1)
     time.sleep(1)
     _click_img('lista_caixas_email.png', conf=0.9)
     

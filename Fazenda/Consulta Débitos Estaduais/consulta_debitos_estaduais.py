@@ -153,6 +153,7 @@ def consulta_deb_estaduais(cnpj, s, s_id):
     
     return situacao
 
+
 @_time_execution
 def run():
     # função para abrir a lista de dados
@@ -238,6 +239,7 @@ def run():
     # escreve o cabeçalho na planilha de andamentos
     _escreve_header_csv('cnpj;situacao')
     return True
+
 
 if __name__ == '__main__':
     run()

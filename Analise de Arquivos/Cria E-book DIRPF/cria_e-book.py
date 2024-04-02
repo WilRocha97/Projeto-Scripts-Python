@@ -1,18 +1,13 @@
 # -*- coding: utf-8 -*-
-import shutil
+import shutil, io, fitz, PyPDF2, re, os, atexit, sys, PySimpleGUI as sg
 import time
-import fitz, re, os, atexit, sys, PySimpleGUI as sg
-from threading import Thread
-from functools import wraps
-import PyPDF2
-from tkinter.filedialog import askopenfilename, askdirectory, Tk
-from datetime import datetime
-from pathlib import Path
-from pyautogui import alert
 
-from reportlab.lib.pagesizes import letter
+from PIL import Image
+from threading import Thread
+from pyautogui import alert
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
+from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
@@ -68,18 +63,6 @@ def escreve_relatorio_csv(texto, local, nome='Relatório', encode='latin-1'):
     f.close()
 
 
-def ask_for_dir():
-    root = Tk()
-    root.withdraw()
-    root.wm_attributes('-topmost', 1)
-    
-    folder = askdirectory(
-        title='Selecione onde salvar a planilha',
-    )
-    
-    return folder if folder else False
-
-
 def decryption(input_name,output_name,password):
     pdfFile = open(input_name, "rb")
     reader = PyPDF2.PdfReader(pdfFile)
@@ -112,7 +95,7 @@ def quebra_de_linha(frase, caracteres_por_linha=30):
     return linhas
 
 
-def create_pdf(output_path, image_path, text):
+def create_pdf(output_path, image_path, text, text_2):
     text = quebra_de_linha(text, caracteres_por_linha=17)
     
     # Abre o arquivo PDF para gravação
@@ -135,6 +118,19 @@ def create_pdf(output_path, image_path, text):
     
         # Desenha o texto no canvas
         pdf_canvas.drawText(text_object)
+    
+    # adiciona o segundo texto
+    # Define as configurações de texto
+    text_object = pdf_canvas.beginText(x=44, y=296, )
+    
+    text_object.setFont("Fonte", 15)
+    text_object.setFillColor(colors.black)
+    
+    # Adiciona o texto personalizável
+    text_object.textLine(text_2.upper())
+    
+    # Desenha o texto no canvas
+    pdf_canvas.drawText(text_object)
     
     # Fecha o arquivo PDF
     pdf_canvas.save()
@@ -175,7 +171,7 @@ def analisa_documentos(pasta_inicial):
     arquivos = []
     # para cada arquivo na subpasta
     for arquivo in os.listdir(pasta_inicial):
-        print(arquivo)
+        # print(arquivo)
         if arquivo.endswith('.pdf'):
             # verifica se o arquivo tem senha, se tiver tira a senha dele
             try:
@@ -200,6 +196,19 @@ def analisa_documentos(pasta_inicial):
 
 
 def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
+    achou = 'não'
+    for arquivo in nomes_arquivos:
+        if re.compile(r'imagem-recibo').search(arquivo):
+            achou = 'sim'
+    
+    if achou == 'não':
+        if not subpasta:
+            alert(text=f'Não foi encontrado recibo de entrega DIRPF')
+            return
+        else:
+            alert(text=f'Não foi encontrado recibo de entrega DIRPF na pasta {subpasta}')
+            return
+        
     contador = 3
     lista_arquivos = []
     # cria uma cópia numerada dos PDFs
@@ -209,21 +218,33 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
         else:
             abre_pdf = os.path.join(pasta_inicial, subpasta, arquivo)
             
-        if re.compile(r'imagem-declaracao').search(arquivo):
+        if re.compile(r'imagem-recibo').search(arquivo):
             # busca o nome do declarante
             with fitz.open(abre_pdf) as pdf:
                 for page in pdf:
                     texto_pagina = page.get_text('text', flags=1 + 2 + 8)
+                    # print(texto_pagina)
+                    # time.sleep(33)
                     try:
                         nome_declarante = re.compile(r'Nome do declarante\n.+\n(.+)').search(texto_pagina).group(1)
+                        
+                        pagar_restituir = re.compile(r'(.+,\d+)\nIMPOSTO A RESTITUIR').search(texto_pagina).group(1)
+                        if pagar_restituir == '0,00':
+                            pagar_restituir = re.compile(r'IMPOSTO A PAGAR(\n.+){2}\n(.+,\d\d)').search(texto_pagina).group(2)
+                            if pagar_restituir == '0,00':
+                                pagar_restituir = ''
+                            else:
+                                pagar_restituir = f'Saldo a pagar: R${pagar_restituir}'
+                        else:
+                            pagar_restituir = f'Saldo a restituir: R${pagar_restituir}'
+                            
                         break
                     except:
-                        try:
-                            nome_declarante = re.compile(r'Nomedodeclarante\n.+\n(.+)').search(texto_pagina).group(1)
-                            break
-                        except:
-                            print(texto_pagina)
-            
+                        alert(text=f'Não foi possível encontrar o nome do declarante no recibo de entrega do IRPF:\n'
+                                   f'{abre_pdf}\n'
+                                   f'Verifique a forma que o PDF foi salvo e tente novamente.')
+                        return
+                    
             # cria a capa
             if not subpasta:
                 nome_do_arquivo = os.path.join(pasta_inicial, f'Capa E-book {nome_declarante}.pdf')
@@ -231,7 +252,7 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
                 nome_do_arquivo = os.path.join(pasta_inicial, subpasta, f'Capa E-book {nome_declarante}.pdf')
             
             caminho_da_imagem = "Assets\DIRPF_capa.png"
-            create_pdf(nome_do_arquivo, caminho_da_imagem, nome_declarante)
+            create_pdf(nome_do_arquivo, caminho_da_imagem, nome_declarante, pagar_restituir)
             
             # adiciona o arquivo da capa na lista da subpasta
             nomes_arquivos.append(f'Capa E-book {nome_declarante}.pdf')
@@ -333,9 +354,10 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
         caminho_completo = os.path.join('Arquivos para mesclar', f'{arquivo}.pdf')
         pdf_merger.append(caminho_completo)
         
-        window['-progressbar-'].update_bar(count, max=int(len(lista_arquivos)))
-        window['-Progresso_texto-'].update(str(round(float(count) / int(len(lista_arquivos)) * 100, 1)) + '%')
-        window.refresh()
+        if not subpasta:
+            window['-progressbar-'].update_bar(count, max=int(len(lista_arquivos)))
+            window['-Progresso_texto-'].update(str(round(float(count) / int(len(lista_arquivos)) * 100, 1)) + '%')
+            window.refresh()
         
     pdf_merger.append(os.path.join('Assets', 'AGRADECIMENTO POR ESCOLHER A VEIGA & POSTAL - IPRF TIMBRADO.pdf'))
     # cria o e-book
@@ -346,7 +368,48 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
             pdf_merger.close()
             break
         except:
-            p.alert('Atualização de e-book falhou.\nCaso exista algum e-book aberto, por gentileza feche para que ele seja atualizado.')
+            alert('Atualização de e-book falhou.\nCaso exista algum e-book aberto, por gentileza feche para que ele seja atualizado.')
+    
+    coloca_marca_dagua(unificado_pdf)
+    
+
+def coloca_marca_dagua(unificado_pdf):
+    # Abre o arquivo de entrada PDF
+    with open(unificado_pdf, 'rb') as input_file:
+        input_pdf_reader = PyPDF2.PdfReader(input_file)
+        output_pdf_writer = PyPDF2.PdfWriter()
+        
+        # Carrega a imagem da marca d'água
+        watermark = ImageReader('Assets/Logo_VP.png')
+        
+        # Loop através de cada página do PDF de entrada
+        for page_number in range(len(input_pdf_reader.pages)):
+            # Ignora a primeira e a última página
+            if page_number == 0 or page_number == len(input_pdf_reader.pages) - 1:
+                input_page = input_pdf_reader.pages[page_number]
+                output_pdf_writer.add_page(input_page)
+                continue
+            
+            input_page = input_pdf_reader.pages[page_number]
+            width = input_page.mediabox.upper_right[0] - input_page.mediabox.lower_left[0]
+            height = input_page.mediabox.upper_right[1] - input_page.mediabox.lower_left[1]
+            
+            tamanho = (float(width), float(height))
+            # Adiciona a marca d'água em todas as outras páginas
+            packet = io.BytesIO()
+            # print(tamanho)
+            can = canvas.Canvas(packet, pagesize=tamanho)
+            can.drawImage(watermark, tamanho[0] - 130, 30, width=95, height=25, mask='auto')
+            can.save()
+            
+            packet.seek(0)
+            overlay = PyPDF2.PdfReader(packet)
+            input_page.merge_page(overlay.pages[0])
+            output_pdf_writer.add_page(input_page)
+        
+        # Salva o PDF resultante
+        with open(unificado_pdf, 'wb') as output_file:
+            output_pdf_writer.write(output_file)
 
 
 def run(window, pasta_inicial, pasta_final):
@@ -387,10 +450,10 @@ def run(window, pasta_inicial, pasta_final):
     # limpa a pasta de cópias de arquivos
     for arquivo in os.listdir('Arquivos para mesclar'):
         os.remove(os.path.join('Arquivos para mesclar', arquivo))
-        
-    window['-Mensagens-'].update(f'Criando arquivos...')
+    
     window['-progressbar-'].update_bar(0)
     window['-Progresso_texto-'].update('')
+    window['-Mensagens-'].update(f'Criando arquivos...')
     
     print(nome_subpasta)
     if not nome_subpasta:
@@ -407,7 +470,7 @@ def run(window, pasta_inicial, pasta_final):
         if event == '-encerrar-' or event == sg.WIN_CLOSED:
             print('ENCERRAR')
             return
-            
+        
     else:
         # para cada subpasta
         for count, (subpasta, nomes_arquivos) in enumerate(subpasta_arquivos.items(), start=1):
@@ -487,13 +550,14 @@ if __name__ == '__main__':
         # atualiza a barra de progresso para ela ficar mais visível
         window['-progressbar-'].update(bar_color=('#fca400', '#ffe0a6'))
         
-        try:
-            # Chama a função que executa o script
-            run(window, pasta_inicial, pasta_final)
-            # Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
-        except Exception as erro:
+        #try:
+        # Chama a função que executa o script
+        run(window, pasta_inicial, pasta_final)
+        # Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
+        """except Exception as erro:
             escreve_doc(erro)
             window['Log do sistema'].update(disabled=False)
+            alert(text='Erro detectado, clique no botão "Log do sistema" para acessar o arquivo de erros e contate o desenvolvedor')"""
         
         window['-progressbar-'].update_bar(0)
         window['-progressbar-'].update(bar_color='#f0f0f0')
@@ -521,7 +585,7 @@ if __name__ == '__main__':
             break
         
         elif event == 'Log do sistema':
-            os.startfile(os.path.join(local_log, 'Log.txt'))
+            os.startfile('Log')
         
         elif event == 'Ajuda':
             os.startfile('Manual do usuário - Cria E-book DIRPF.pdf')

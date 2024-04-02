@@ -87,9 +87,13 @@ _click_img = click_img
 
 
 def click_position_img(img, operacao, pixels_x=0, pixels_y=0, pasta='imgs', conf=1.0, clicks=1):
-    img = os.path.join(pasta, img)
-    a.moveTo(a.locateCenterOnScreen(img, confidence=conf))
-    local_mouse = a.position()
+    if img.endswith('.png'):
+        img = os.path.join(pasta, img)
+        a.moveTo(a.locateCenterOnScreen(img, confidence=conf))
+        local_mouse = a.position()
+    else:
+        local_mouse = img
+        
     if operacao == '+':
         a.click(int(local_mouse[0] + int(pixels_x)), int(local_mouse[1] + int(pixels_y)), clicks=clicks)
         return True

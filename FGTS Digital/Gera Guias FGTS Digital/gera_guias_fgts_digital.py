@@ -4,13 +4,13 @@ import fitz
 import re
 import shutil
 import pyperclip
-
+import PyPDF2
 from sys import path
 
 path.append(r'..\..\_comum')
 from chrome_comum import _abrir_chrome, _acessar_site_chrome
 from pyautogui_comum import _find_img, _click_img, _wait_img, _click_position_img, _click_position_img, _get_comp
-from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start, _barra_de_status
+from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, _escreve_header_csv, e_dir, _open_lista_dados, _where_to_start, _barra_de_status
 
 
 def seleciona_certificado():
@@ -181,7 +181,7 @@ def salva_guia(cnpj, nome):
 
     # aguarda a tela de salvar do navegador abrir
     _wait_img('salvar_como.png', conf=0.9, timeout=-1)
-    # exemplo: cnpj;DAS;01;2021;22-02-2021;Guia do MEI 01-2021
+
     pyperclip.copy(arquivo_nome)
     p.hotkey('ctrl', 'v')
     time.sleep(0.5)
@@ -203,21 +203,30 @@ def salva_guia(cnpj, nome):
     time.sleep(1)
     print('✔ Guia GFD gerada')
     time.sleep(5)
-    analisa_guia(os.path.join(caminho, arquivo_nome + '.pdf'))
+    analisa_guia(cnpj, os.path.join(caminho, arquivo_nome + '.pdf'))
 
     return 'Guia gerada com sucesso'
 
 
-def analisa_guia(guia):
+def analisa_guia(cnpj, guia):
     texto_arquivo = ''
     with fitz.open(guia) as pdf:
         for page in pdf:
             texto_pagina = page.get_text('text', flags=1 + 2 + 8)
             texto_arquivo += texto_pagina
     
+    #print(texto_arquivo)
+    cpf_cnpj_guia = re.compile(r'CPF/CNPJ do Empregador\n(.+)').search(texto_arquivo).group(1)
+    nome_guia = re.compile(r'Nome/Razão Social do Empregador\n(.+)').search(texto_arquivo).group(1)
+    identificador = re.compile(r'Identificador\n(.+)').search(texto_arquivo).group(1)
+    tag = re.compile(r'Tag\n(.+)').search(texto_arquivo).group(1)
+    valor_recolher = re.compile(r'Valor a recolher\n(\d+,\d+)').search(texto_arquivo).group(1)
+    
     vencimento = re.compile(r'Pagar este documento até\n.+\n(\d\d/\d\d/\d\d\d\d)').search(texto_arquivo).group(1)
-    vencimento = vencimento.replace('/', '-')
-    shutil.move(guia, guia.replace('Vencimento-', f'Vencimento-{vencimento}'))
+    vencimento_sem_barra = vencimento.replace('/', '-')
+    
+    _escreve_relatorio_csv(f'{cnpj};{cpf_cnpj_guia};{nome_guia};{identificador};{tag};{valor_recolher};{vencimento}', nome='Resumo Guias')
+    shutil.move(guia, guia.replace('Vencimento-', f'Vencimento-{vencimento_sem_barra}'))
 
 
 @_time_execution
@@ -232,7 +241,6 @@ def run(window):
             break
             
     for count, empresa in enumerate(empresas[index:], start=1):
-        comeco = datetime.now()
         # printa o indice da empresa que está sendo executada
         _indice(count, total_empresas, empresa, index, window)
         
@@ -255,7 +263,8 @@ def run(window):
         
     time.sleep(2)
     p.hotkey('ctrl', 'w')
-
+    _escreve_header_csv('CNPJ;CPF/CNPJ GUIA;NOME;IDENTIFICADOR;TAG;VALOR;VENCIMENTO', nome='Resumo Guias')
+    
 
 if __name__ == '__main__':
     empresas = _open_lista_dados()
@@ -264,3 +273,4 @@ if __name__ == '__main__':
     
     if index is not None:
         run()
+    

@@ -191,15 +191,16 @@ def abrir_chrome(url, tela_inicial_site=False, fechar_janela=True, outra_janela=
         while not _find_img(tela_inicial_site, pasta='imgs_google', conf=0.9):
             print('>>> Aguardando o site carregar...')
             if timer == 0:
-                for i in range(4):
+                for i in range(3):
                     p.click(1000, 51)
-                    time.sleep(0.5)
+                    time.sleep(0.1)
                     p.hotkey('ctrl', 'a')
-                    time.sleep(0.5)
+                    time.sleep(0.1)
                     p.press('delete')
-                    time.sleep(0.2)
+                    time.sleep(0.1)
                     pyperclip.copy(url)
-                    time.sleep(0.2)
+                    pyperclip.copy(url)
+                    time.sleep(0.1)
                     p.hotkey('ctrl', 'v')
             
                 time.sleep(1)
@@ -212,13 +213,13 @@ def abrir_chrome(url, tela_inicial_site=False, fechar_janela=True, outra_janela=
                 timer = 0
 
     else:
-        for i in range(4):
+        for i in range(3):
             p.click(1000, 51)
-            time.sleep(0.5)
+            time.sleep(0.1)
             p.hotkey('ctrl', 'a')
-            time.sleep(0.5)
+            time.sleep(0.1)
             p.press('delete')
-            time.sleep(0.2)
+            time.sleep(0.1)
             pyperclip.copy(url)
             pyperclip.copy(url)
             p.hotkey('ctrl', 'v')
@@ -231,14 +232,13 @@ _abrir_chrome = abrir_chrome
 
 
 def acessar_site_chrome(url):
-    print('>>> Acessando Gov.br')
-    for i in range(4):
+    for i in range(3):
         p.click(1000, 51)
-        time.sleep(0.5)
+        time.sleep(0.1)
         p.hotkey('ctrl', 'a')
-        time.sleep(0.5)
+        time.sleep(0.1)
         p.press('delete')
-        time.sleep(0.2)
+        time.sleep(0.1)
         pyperclip.copy(url)
         pyperclip.copy(url)
         p.hotkey('ctrl', 'v')

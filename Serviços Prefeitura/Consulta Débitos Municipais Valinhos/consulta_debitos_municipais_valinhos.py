@@ -80,20 +80,7 @@ def login(driver, cnpj, insc_muni, nome):
 
     while not _find_by_id('captchaimg', driver):
         time.sleep(1)
-    element = driver.find_element(by=By.ID, value='captchaimg')
-    location = element.location
-    size = element.size
-    driver.save_screenshot('ignore\captcha\pagina.png')
-    x = location['x']
-    y = location['y']
-    w = size['width']
-    h = size['height']
-    width = x + w
-    height = y + h
-    time.sleep(2)
-    im = Image.open(r'ignore\captcha\pagina.png')
-    im = im.crop((int(x), int(y), int(width), int(height)))
-    im.save(r'ignore\captcha\captcha.png')
+
     time.sleep(1)
     captcha = _solve_text_captcha(driver, 'captchaimg')
 

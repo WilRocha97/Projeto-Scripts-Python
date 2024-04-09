@@ -196,19 +196,38 @@ def download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
     
     # caso exista algum arquivo com problema, tenta de novo o mesmo arquivo
     for arquivo in os.listdir(download_folder):
-        if re.compile(r'.tmp').search(arquivo):
-            os.remove(os.path.join(download_folder, arquivo))
-            return driver, contador, 'ok', True
-        
-        while re.compile(r'crdownload').search(arquivo):
-            print('>>> Aguardando download...')
-            time.sleep(5)
-            for arq in os.listdir(download_folder):
-                arquivo = arq
-                if re.compile(r'crdownload').search(arquivo):
+
+        if re.compile(r'\.tmp').search(arquivo):
+            timer = 0
+            while True:
+                print('>>> Aguardando download...')
+                time.sleep(1)
+                for arq in os.listdir(download_folder):
+                    arquivo = arq
+
+                if not re.compile(r'\.tmp').search(arquivo):
+                    break
+                timer += 1
+                if timer > 5:
                     os.remove(os.path.join(download_folder, arquivo))
                     return driver, contador, 'ok', True
-            
+
+
+        elif re.compile(r'crdownload').search(arquivo):
+            timer = 0
+            while True:
+                print('>>> Aguardando download...')
+                time.sleep(1)
+                for arq in os.listdir(download_folder):
+                    arquivo = arq
+
+                if not re.compile(r'crdownload').search(arquivo):
+                    break
+                timer += 1
+                if timer > 5:
+                    os.remove(os.path.join(download_folder, arquivo))
+                    return driver, contador, 'ok', True
+
             
         else:
             if tipo == 'Consulta anual':
@@ -227,15 +246,23 @@ def download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
             
             while not os.path.isfile(os.path.join(final_folder, novo_arquivo)):
                 print('>>> Movendo arquivo')
-                shutil.move(os.path.join(download_folder, arquivo), os.path.join(final_folder, novo_arquivo))
-                time.sleep(2)
-                
+                try:
+                    shutil.move(os.path.join(download_folder, arquivo), os.path.join(final_folder, novo_arquivo))
+                    time.sleep(2)
+                except:
+                    pass
+
             print(f'✔ {novo_arquivo}')
             contador += 1
             
             for arquivo in os.listdir(download_folder):
-                os.remove(os.path.join(download_folder, arquivo))
-                
+                while True:
+                    try:
+                        os.remove(os.path.join(download_folder, arquivo))
+                        break
+                    except:
+                        pass
+
     return driver, contador, 'ok', False
 
 
@@ -252,6 +279,7 @@ def click(driver, comprovante):
             return False
     
     return True
+
 
 # @_time_execution
 # @_barra_de_status

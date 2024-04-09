@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import shutil, io, fitz, PyPDF2, re, os, atexit, sys, PySimpleGUI as sg
+import shutil, io, fitz, PyPDF2, re, os, sys, PySimpleGUI as sg
 import time
 
 from PIL import Image
@@ -13,7 +13,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 
 # Carregar a fonte TrueType (substitua 'sua_fonte.ttf' pelo caminho da sua fonte)
 pdfmetrics.registerFont(TTFont('Fonte', 'Assets\Montserrat-SemiBold.ttf'))
-
+pdfmetrics.registerFont(TTFont('Tabela', 'Assets\JetBrainsMono-VariableFont_wght.ttf'))
 
 def chave_numerica(elemento):
     return int(elemento)
@@ -31,24 +31,6 @@ def escreve_doc(texto, local='Log', nome='Log', encode='latin-1'):
     
     f.write(str(texto))
     f.close()
-
-
-def create_lock_file(lock_file_path):
-    try:
-        # Tente criar o arquivo de trava
-        with open(lock_file_path, 'x') as lock_file:
-            lock_file.write(str(os.getpid()))
-        return True
-    except FileExistsError:
-        # O arquivo de trava já existe, indicando que outra instância está em execução
-        return False
-
-
-def remove_lock_file(lock_file_path):
-    try:
-        os.remove(lock_file_path)
-    except FileNotFoundError:
-        pass
 
 
 def escreve_relatorio_csv(texto, local, nome='Relatório', encode='latin-1'):
@@ -136,6 +118,61 @@ def create_pdf(output_path, image_path, text, text_2):
     pdf_canvas.save()
     
 
+def cria_pagina_resumo(infos_resumo, output_path):
+    # c.rect(x, y, width, height, fill=1)  #draw rectangle
+    
+    infos_resumo = sorted(infos_resumo)
+    # Abre o arquivo PDF para gravação
+    pdf_canvas = canvas.Canvas(output_path, pagesize=(707, 1007))
+    
+    altura_linha = 910
+    """pdf_canvas.setFillColorRGB(255, 100, 0)
+    pdf_canvas.rect(0, altura_linha-35, 707, 70, fill=1, stroke=0)"""
+    
+    for info in infos_resumo:
+        try:
+            infos = info[1].upper().split(':')
+            
+            tamanho = 85 - len(info[1])
+            info = f"{infos[0]} {'.' * tamanho}{infos[1]}"
+            print(info)
+            # Define as configurações de texto
+            text_object = pdf_canvas.beginText(x=100, y=altura_linha, )
+            altura_linha = (altura_linha - 35)
+            text_object.setFont("Tabela", 10)
+            text_object.setFillColor(colors.black)
+            # Adiciona o texto personalizável
+            text_object.textLine(info)
+            # Desenha o texto no canvas
+            pdf_canvas.drawText(text_object)
+        except:
+            info = info[1]
+            text = quebra_de_linha(info, caracteres_por_linha=36)
+            for titulo in text:
+                # Define as configurações de texto
+                text_object = pdf_canvas.beginText(x=100, y=altura_linha, )
+                altura_linha = (altura_linha - 17)
+                text_object.setFont("Fonte", 15)
+                text_object.setFillColor(colors.black)
+                # Adiciona o texto personalizável
+                text_object.textLine(titulo.upper())
+                # Desenha o texto no canvas
+                pdf_canvas.drawText(text_object)
+                
+            # Define as configurações de texto
+            text_object = pdf_canvas.beginText(x=100, y=altura_linha, )
+            altura_linha = (altura_linha - 35)
+            text_object.setFont("Fonte", 10)
+            text_object.setFillColor(colors.black)
+            # Adiciona o texto personalizável
+            text_object.textLine(' ')
+            # Desenha o texto no canvas
+            pdf_canvas.drawText(text_object)
+            
+    # Fecha o arquivo PDF
+    pdf_canvas.save()
+    
+    
 def analisa_subpastas(caminho_subpasta, nome_subpasta, subpasta_arquivos):
     # para cada arquivo na subpasta
     for arquivo in os.listdir(caminho_subpasta):
@@ -196,6 +233,7 @@ def analisa_documentos(pasta_inicial):
 
 
 def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
+    window['-Mensagens-'].update(f'Criando arquivos...')
     achou = 'não'
     for arquivo in nomes_arquivos:
         if re.compile(r'imagem-recibo').search(arquivo):
@@ -204,46 +242,63 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
     if achou == 'não':
         if not subpasta:
             alert(text=f'Não foi encontrado recibo de entrega DIRPF')
-            return
+            return False
         else:
             alert(text=f'Não foi encontrado recibo de entrega DIRPF na pasta {subpasta}')
-            return
+            return False
         
-    contador = 3
+    contador = 4
     lista_arquivos = []
+    infos_resumo = []
     # cria uma cópia numerada dos PDFs
     for arquivo in nomes_arquivos:
         if not subpasta:
             abre_pdf = os.path.join(pasta_inicial, arquivo)
         else:
             abre_pdf = os.path.join(pasta_inicial, subpasta, arquivo)
-            
+    
         if re.compile(r'imagem-recibo').search(arquivo):
             # busca o nome do declarante
             with fitz.open(abre_pdf) as pdf:
+                conteudo_recibo = ''
                 for page in pdf:
                     texto_pagina = page.get_text('text', flags=1 + 2 + 8)
-                    # print(texto_pagina)
-                    # time.sleep(33)
-                    try:
-                        nome_declarante = re.compile(r'Nome do declarante\n.+\n(.+)').search(texto_pagina).group(1)
-                        
-                        pagar_restituir = re.compile(r'(.+,\d+)\nIMPOSTO A RESTITUIR').search(texto_pagina).group(1)
+                    conteudo_recibo += texto_pagina
+                
+                # print(conteudo_recibo)
+                # time.sleep(30)
+                
+                try:
+                    titulo_resumo = re.compile('(DECLARAÇÃO DE AJUSTE ANUAL - .+)').search(conteudo_recibo).group(1)
+                    infos_resumo.append((0, f'RESUMO DA {titulo_resumo.replace(" - ", " ")}'))
+                    infos_resumo.append((1, ''))
+                    
+                    total_rendimentos_tributaveis = re.compile('(.+,\d+)\nTOTAL RENDIMENTOS TRIBUTÁVEIS').search(conteudo_recibo).group(1)
+                    infos_resumo.append((2, f'Total dos rendimentos tributáveis no ano: R${total_rendimentos_tributaveis}'))
+                    
+                    imposto_devido = re.compile('(.+,\d+)\nIMPOSTO DEVIDO').search(conteudo_recibo).group(1)
+                    infos_resumo.append((3, f'Imposto devido no ano: R${imposto_devido}'))
+                    
+                    nome_declarante = re.compile(r'Nome do declarante\n.+\n(.+)').search(conteudo_recibo).group(1)
+                    
+                    pagar_restituir = re.compile(r'(.+,\d+)\nIMPOSTO A RESTITUIR').search(conteudo_recibo).group(1)
+                    if pagar_restituir == '0,00':
+                        pagar_restituir = re.compile(r'IMPOSTO A PAGAR(\n.+){2}\n(.+,\d\d)').search(conteudo_recibo).group(2)
                         if pagar_restituir == '0,00':
-                            pagar_restituir = re.compile(r'IMPOSTO A PAGAR(\n.+){2}\n(.+,\d\d)').search(texto_pagina).group(2)
-                            if pagar_restituir == '0,00':
-                                pagar_restituir = ''
-                            else:
-                                pagar_restituir = f'Saldo a pagar: R${pagar_restituir}'
+                            pagar_restituir = ''
                         else:
-                            pagar_restituir = f'Saldo a restituir: R${pagar_restituir}'
-                            
-                        break
-                    except:
-                        alert(text=f'Não foi possível encontrar o nome do declarante no recibo de entrega do IRPF:\n'
-                                   f'{abre_pdf}\n'
-                                   f'Verifique a forma que o PDF foi salvo e tente novamente.')
-                        return
+                            pagar_restituir = f'Saldo a pagar: R$ {pagar_restituir}'
+                            infos_resumo.append((4, f'Imposto a restituir: R$ 0,00'))
+                            infos_resumo.append((5, pagar_restituir.replace('Saldo a pagar', 'Imposto a pagar')))
+                    else:
+                        pagar_restituir = f'Saldo a restituir: R$ {pagar_restituir}'
+                        infos_resumo.append((4, pagar_restituir.replace('Saldo a restituir', 'Imposto a restituir')))
+                        infos_resumo.append((5, f'Imposto a pagar: R$ 0,00'))
+                except:
+                    alert(text=f'Não foi possível encontrar o nome do declarante no recibo de entrega do IRPF:\n'
+                               f'{abre_pdf}\n'
+                               f'Verifique a forma que o PDF foi salvo e tente novamente.')
+                    return False
                     
             # cria a capa
             if not subpasta:
@@ -253,7 +308,6 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
             
             caminho_da_imagem = "Assets\DIRPF_capa.png"
             create_pdf(nome_do_arquivo, caminho_da_imagem, nome_declarante, pagar_restituir)
-            
             # adiciona o arquivo da capa na lista da subpasta
             nomes_arquivos.append(f'Capa E-book {nome_declarante}.pdf')
             
@@ -265,21 +319,50 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
             lista_arquivos.append(0)
             
             if not subpasta:
-                shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '1.pdf'))
-            else:
-                shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '1.pdf'))
-                
-            lista_arquivos.append(1)
-            continue
-        
-        if re.compile(r'imagem-declaracao').search(arquivo):
-            if not subpasta:
                 shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
             else:
                 shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
                 
             lista_arquivos.append(2)
             continue
+        
+        if re.compile(r'imagem-declaracao').search(arquivo):
+            # busca o nome do declarante
+            with fitz.open(abre_pdf) as pdf:
+                conteudo_declaracao = ''
+                for page in pdf:
+                    texto_pagina = page.get_text('text', flags=1 + 2 + 8)
+                    conteudo_declaracao += texto_pagina
+                
+                # print(conteudo_declaracao)
+                # time.sleep(30)
+
+                aliquota_efetiva = re.compile('(.+,\d+)\n.+\nAliquota efetiva \(%\)\nBase de cálculo do imposto').search(conteudo_declaracao)
+                if not aliquota_efetiva:
+                    aliquota_efetiva = re.compile('(.+,\d+)\nAliquota efetiva \(%\)\nTipo de Conta').search(conteudo_declaracao)
+                    if not aliquota_efetiva:
+                        try:
+                            alert(text=f'Não foi encontrada a Aliquota efetiva (%) na declaração do declarante: {nome_declarante}.\n'
+                                        'Provável erro de layout da página, a informação não será incluída no resumo localizado na página 1')
+                        except:
+                            alert(text=f'Não foi possível encontrar o nome do declarante no recibo de entrega do IRPF:\n'
+                                       f'Verifique a forma que o PDF foi salvo e tente novamente.')
+                            return False
+                    else:
+                        aliquota_efetiva = aliquota_efetiva.group(1)
+                        infos_resumo.append((6, f'Aliquota efetiva no ano em percentual (%): {aliquota_efetiva}'))
+                else:
+                    aliquota_efetiva = aliquota_efetiva.group(1)
+                    infos_resumo.append((6, f'Aliquota efetiva no ano em percentual (%): {aliquota_efetiva}'))
+                    
+            if not subpasta:
+                shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '3.pdf'))
+            else:
+                shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '3.pdf'))
+                
+            lista_arquivos.append(3)
+            continue
+        
         if re.compile(r'INFORME').search(arquivo.upper()):
 
             with fitz.open(abre_pdf) as pdf:
@@ -300,6 +383,9 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
                         
                     lista_arquivos.append(contador)
                     contador += 1
+    
+    cria_pagina_resumo(infos_resumo, 'Arquivos para mesclar\\1.pdf')
+    lista_arquivos.append(1)
     
     for arquivo in nomes_arquivos:
         if not subpasta:
@@ -369,8 +455,10 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
             break
         except:
             alert('Atualização de e-book falhou.\nCaso exista algum e-book aberto, por gentileza feche para que ele seja atualizado.')
-    
+            
+    window['-Mensagens-'].update(f'Finalizando, aguarde...')
     coloca_marca_dagua(unificado_pdf)
+    return True
     
 
 def coloca_marca_dagua(unificado_pdf):
@@ -418,10 +506,9 @@ def run(window, pasta_inicial, pasta_final):
     nomes_arquivos = None
     subpasta_arquivos = {}
     nome_subpasta = True
-
-    window['-Mensagens-'].update(f'Analisando arquivos...')
     # itera sobre todas as subpastas dentro da pasta mestre
     for count, nome_subpasta in enumerate(os.listdir(pasta_inicial), start=1):
+        window['-Mensagens-'].update(f'Analisando arquivos...')
         caminho_subpasta = os.path.join(pasta_inicial, nome_subpasta)
         
         # Verifica se é uma pasta
@@ -448,12 +535,12 @@ def run(window, pasta_inicial, pasta_final):
     
     os.makedirs('Arquivos para mesclar', exist_ok=True)
     # limpa a pasta de cópias de arquivos
+    resultado = False
     for arquivo in os.listdir('Arquivos para mesclar'):
         os.remove(os.path.join('Arquivos para mesclar', arquivo))
     
     window['-progressbar-'].update_bar(0)
     window['-Progresso_texto-'].update('')
-    window['-Mensagens-'].update(f'Criando arquivos...')
     
     print(nome_subpasta)
     if not nome_subpasta:
@@ -461,7 +548,7 @@ def run(window, pasta_inicial, pasta_final):
             print('ENCERRAR')
             return
         
-        cria_ebook(window, False, arquivos, pasta_final)
+        resultado = cria_ebook(window, False, arquivos, pasta_final)
         
         # limpa a pasta de cópias de arquivos
         for arquivo in os.listdir('Arquivos para mesclar'):
@@ -478,7 +565,7 @@ def run(window, pasta_inicial, pasta_final):
                 print('ENCERRAR')
                 return
             
-            cria_ebook(window, subpasta, nomes_arquivos, pasta_final)
+            resultado = cria_ebook(window, subpasta, nomes_arquivos, pasta_final)
             
             window['-progressbar-'].update_bar(count, max=int(len(subpasta_arquivos.items())))
             window['-Progresso_texto-'].update(str(round(float(count) / int(len(subpasta_arquivos.items())) * 100, 1)) + '%')
@@ -491,24 +578,15 @@ def run(window, pasta_inicial, pasta_final):
             if event == '-encerrar-' or event == sg.WIN_CLOSED:
                 print('ENCERRAR')
                 return
-            
-    alert(text='PDFs unificados com sucesso.')
+    
+    if resultado:
+        alert(text='PDFs unificados com sucesso.')
+    
     
 
 # Define o ícone global da aplicação
 sg.set_global_icon('Assets/auto-flash.ico')
 if __name__ == '__main__':
-    # Especifique o caminho para o arquivo de trava
-    lock_file_path = 'integra_contador.lock'
-    
-    # Verifique se outra instância está em execução
-    if not create_lock_file(lock_file_path):
-        alert(text="Outra instância já está em execução.")
-        sys.exit(1)
-    
-    # Defina uma função para remover o arquivo de trava ao final da execução
-    atexit.register(remove_lock_file, lock_file_path)
-    
     sg.theme('GrayGrayGray')  # Define o tema do PySimpleGUI
     layout = [
         [sg.Button('Ajuda', border_width=0), sg.Button('Log do sistema', border_width=0, disabled=True)],
@@ -550,14 +628,14 @@ if __name__ == '__main__':
         # atualiza a barra de progresso para ela ficar mais visível
         window['-progressbar-'].update(bar_color=('#fca400', '#ffe0a6'))
         
-        #try:
-        # Chama a função que executa o script
-        run(window, pasta_inicial, pasta_final)
-        # Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
-        """except Exception as erro:
+        try:
+            # Chama a função que executa o script
+            run(window, pasta_inicial, pasta_final)
+            # Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
+        except Exception as erro:
             escreve_doc(erro)
             window['Log do sistema'].update(disabled=False)
-            alert(text='Erro detectado, clique no botão "Log do sistema" para acessar o arquivo de erros e contate o desenvolvedor')"""
+            alert(text='Erro detectado, clique no botão "Log do sistema" para acessar o arquivo de erros e contate o desenvolvedor')
         
         window['-progressbar-'].update_bar(0)
         window['-progressbar-'].update(bar_color='#f0f0f0')

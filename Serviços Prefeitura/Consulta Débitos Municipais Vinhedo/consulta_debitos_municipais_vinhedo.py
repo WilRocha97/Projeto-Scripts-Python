@@ -92,17 +92,17 @@ def salvar_guia(cnpj):
         time.sleep(1)
         
     # se não estiver selecionado para salvar como PDF, seleciona para salvar como PDF
-    imagens = ['print_to_pdf.png', 'print_to_pdf_2.png', 'print_to_pdf_3.png']
+    imagens = ['print_to_pdf.png', 'print_to_pdf_2.png', 'print_to_pdf_3.png', 'print_to_pdf_4.png']
     for img in imagens:
         if _find_img(img, conf=0.9) or _find_img(img, conf=0.9):
             _click_img(img, conf=0.9)
             # aguarda aparecer a opção de salvar como PDF e clica nela
-            _wait_img('salvar_como_pdf.png', conf=0.9)
-            _click_img('salvar_como_pdf.png', conf=0.9)
+            _wait_img('salvar_como_pdf2.png', conf=0.9)
+            _click_img('salvar_como_pdf2.png', conf=0.9)
     
     # aguarda aparecer o botão de salvar e clica nele
-    _wait_img('botao_salvar.png', conf=0.9)
-    _click_img('botao_salvar.png', conf=0.9)
+    _wait_img('botao_salvar2.png', conf=0.9)
+    _click_img('botao_salvar2.png', conf=0.9)
     
     while not _find_img('salvar_como.png', conf=0.9):
         time.sleep(1)

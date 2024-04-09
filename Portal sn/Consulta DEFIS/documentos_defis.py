@@ -68,7 +68,7 @@ def login(cnpj, cpf, senha):
             time.sleep(30)
             if _find_img('bem_vindo.png', conf=0.9):
                 break
-            return 'Recomeçar'
+            return 'recomeçar'
         _click_img('continuar.png', conf=0.9)
         if timer > 10:
             return 'recomeçar'
@@ -99,7 +99,7 @@ def login(cnpj, cpf, senha):
                 if _find_img('codigo_acesso_invalido.png', conf=0.9):
                     return 'Código de acesso inválido'
                 if _find_img('campos_obrigatorios.png', conf=0.9):
-                    return 'Recomeçar'
+                    return 'recomeçar'
         time.sleep(1)
         timer += 1
 
@@ -112,6 +112,7 @@ def login(cnpj, cpf, senha):
 
 
 def busca_defis(cnpj, nome, ano):
+    ocorrencia = ''
     print('>>> Buscando a defis')
     # acessa o site do pgdas-defis
     _acessar_site_chrome('https://www8.receita.fazenda.gov.br/SimplesNacional/Aplicacoes/ATSPO/defis.app/Captcha.aspx')
@@ -121,6 +122,12 @@ def busca_defis(cnpj, nome, ano):
         time.sleep(1)
 
     while True:
+        if _find_img('mudar_senha.png', conf=0.9):
+            _click_img('mudar_senha.png', conf=0.9)
+            time.sleep(0.5)
+            p.press('enter')
+            ocorrencia = ', Gerenciador de senhas do Google recomenda mudar a senha o quanto antes'
+            time.sleep(0.5)
         # clica para resolver o captcha
         _click_img('captcha.png', conf=0.9)
         time.sleep(0.5)
@@ -167,6 +174,12 @@ def busca_defis(cnpj, nome, ano):
             return f'Ainda não efetuou a DEFIS do ano {ano}'
         if _find_img('nao_tem_defis_5.png', conf=0.9):
             return f'Ainda não efetuou a DEFIS do ano {ano}'
+        if _find_img('nao_tem_defis_6.png', conf=0.9):
+            return f'Ainda não efetuou a DEFIS do ano {ano}'
+        if _find_img('nao_tem_defis_7.png', conf=0.9):
+            return f'Ainda não efetuou a DEFIS do ano {ano}'
+        if _find_img('nao_tem_defis_8.png', conf=0.9):
+            return f'Ainda não efetuou a DEFIS do ano {ano}'
 
         time.sleep(1)
 
@@ -189,7 +202,7 @@ def busca_defis(cnpj, nome, ano):
     else:
         return f'Não foi encontrado DEFIS referente a {ano}'
 
-    return 'Documentos DEFIS salvos'
+    return f'Documentos DEFIS salvos{ocorrencia}'
 
 
 def salva_documento(documento, cnpj, nome, ano):

@@ -331,12 +331,13 @@ _where_to_start = where_to_start
 # Abre uma janela de seleção de arquivos e abre o arquivo selecionado
 # Retorna List de Tuple das linhas dividas por ';' do arquivo caso sucesso
 # Retorna None caso nenhum selecionado ou erro ao ler arquivo
-def open_lista_dados(i_dir='ignore', encode='latin-1'):
+def open_lista_dados(i_dir='ignore', encode='latin-1', file=False):
     ftypes = [('Plain text files', '*.txt *.csv')]
-
-    file = ask_for_file(filetypes=ftypes, initialdir=i_dir)
+    
     if not file:
-        return False
+        file = ask_for_file(filetypes=ftypes, initialdir=i_dir)
+        if not file:
+            return False
 
     try:
         with open(file, 'r', encoding=encode) as f:

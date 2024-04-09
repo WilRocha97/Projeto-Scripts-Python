@@ -117,18 +117,26 @@ def salvar_pdf(driver, pasta_analise):
     _wait_img('tela_imprimir.png', conf=0.9)
     
     print('>>> Salvando PDF')
-    imagens = ['print_to_pdf.png', 'print_to_pdf_2.png']
+    imagens = ['print_to_pdf.png', 'print_to_pdf_2.png', 'print_to_pdf_3.png']
     for img in imagens:
         # se não estiver selecionado para salvar como PDF, seleciona para salvar como PDF
         if _find_img(img, conf=0.9) or _find_img(img, conf=0.9):
-            _click_img(img, conf=0.9)
+            print('>>> Trocando destino da impressão')
+            _click_img(img, conf=0.9, timeout=1)
             # aguarda aparecer a opção de salvar como PDF e clica nela
-            _wait_img('salvar_como_pdf.png', conf=0.9)
-            _click_img('salvar_como_pdf.png', conf=0.9)
+            while not _find_img('salvar_como_pdf.png', conf=0.9):
+                if _find_img('salvar_como_pdf_2.png', conf=0.9):
+                    break
+            _click_img('salvar_como_pdf.png', conf=0.9, timeout=1)
+            _click_img('salvar_como_pdf_2.png', conf=0.9, timeout=1)
     
+    print('>>> Aguardando botão para salvar')
     # aguarda aparecer o botão de salvar e clica nele
-    _wait_img('botao_salvar.png', conf=0.9)
-    _click_img('botao_salvar.png', conf=0.9)
+    while not _find_img('botao_salvar.png', conf=0.9):
+        if _find_img('botao_salvar_2.png', conf=0.9):
+            break
+    _click_img('botao_salvar.png', conf=0.9, timeout=1)
+    _click_img('botao_salvar_2.png', conf=0.9, timeout=1)
     
     print('>>> Salvando relatório')
     while not _find_img('salvar_como.png', conf=0.9):
@@ -245,6 +253,10 @@ def verifica_mensagem(pasta_analise, pasta_final, modulo):
 
 @_time_execution
 def run():
+    pasta_download = 'V:\Setor Robô\Scripts Python\SIEG\Download Mensagens Importantes\ignore\Mensagens'
+    for arq in os.listdir(pasta_download):
+        os.remove(os.path.join(pasta_download, arq))
+        
     modulo = p.confirm(title='Script incrível', buttons=('Termo(s) de Exclusão do Simples Nacional', 'Termo(s) de Intimação', 'Renomear arquivo'))
     pasta_analise = r'V:\Setor Robô\Scripts Python\SIEG\Download Mensagens Importantes\ignore\Mensagens'
     pasta_final = os.path.join(r'V:\Setor Robô\Scripts Python\SIEG\Download Mensagens Importantes\execução', modulo)

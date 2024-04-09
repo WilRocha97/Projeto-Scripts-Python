@@ -109,6 +109,9 @@ def boleto_mei(empresa, andamentos):
             p.hotkey('ctrl', 'w')
             return False
 
+        if _find_img('erro_gerar_doc.png', conf=0.95):
+            return 'erro'
+
         if timer > 60:
             return 'erro'
 

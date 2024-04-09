@@ -11,7 +11,7 @@ from chrome_comum import _initialize_chrome, _send_input_xpath
 from pyautogui_comum import _find_img, _click_img
 
 
-imagens = "V:\\Setor Robô\\Scripts Python\\_comum\\imgs_dominio"
+imagens = "V:\\Setor Robô\\Scripts Python\\_comum\\imgs_comum_dominio"
 
 dados = "V:\\Setor Robô\\Scripts Python\\_comum\\Dados Domínio.txt"
 f = open(dados, 'r', encoding='utf-8')
@@ -163,23 +163,15 @@ def _login_web(usuario=user[0], senha=user[1]):
         _send_input_xpath('/html/body/app-root/app-login/div/div/fieldset/div/div/section/form/label[2]/span[2]/input', senha, driver)
         driver.find_element(by=By.ID, value='enterButton').click()
         
-        caminho = os.path.join('abrir_app.png')
-        caminho2 = os.path.join('abrir_app_2.png')
-        caminho3 = os.path.join('abrir_app_3.png')
-
+        abrir_apps = ['abrir_app.png', 'abrir_app_2.png', 'abrir_app_3.png', 'abrir_app_4.png']
+        
         print('>>> Aguardando modulos')
         while not _find_img('modulos.png', pasta='imgs_c', conf=0.9):
             sleep(1)
-            
-            if _find_img(caminho2, pasta='imgs_c', conf=0.9):
-                _click_img(caminho2, pasta='imgs_c', conf=0.9)
-            
-            if _find_img(caminho3, pasta='imgs_c', conf=0.9):
-                _click_img(caminho3, pasta='imgs_c', conf=0.9)
-        
-            if _find_img(caminho, pasta='imgs_c', conf=0.9):
-                _click_img(caminho, pasta='imgs_c', conf=0.9)
-            
+            for abrir_app in abrir_apps:
+                if _find_img(abrir_app, pasta='imgs_c', conf=0.9):
+                    _click_img(abrir_app, pasta='imgs_c', conf=0.9)
+
         driver.quit()
         return True
     else:
@@ -202,7 +194,9 @@ def _abrir_modulo(modulo, usuario=user[2], senha=user[3]):
         modulo_nome = 'Folha'
     elif modulo == 'conexoes':
         modulo_nome = 'Conexões'
-        
+    elif modulo == 'lalur':
+        modulo_nome = 'Lalur'
+    
     print(f'>>> Abrindo modulo {modulo_nome}\n')
     while not _find_img('modulos.png', pasta='imgs_c', conf=0.9):
         sleep(1)

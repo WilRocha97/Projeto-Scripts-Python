@@ -12,7 +12,6 @@ path.append(r'..\..\_comum')
 from chrome_comum import _abrir_chrome, _acessar_site_chrome
 from pyautogui_comum import _find_img, _click_img, _wait_img, _click_position_img, _click_position_img, _get_comp
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, _escreve_header_csv, e_dir, _open_lista_dados, _where_to_start, _barra_de_status
-from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf
 
 
 def seleciona_certificado():
@@ -165,18 +164,18 @@ def busca_guia(comp):
     p.press('enter')
     time.sleep(0.5)
     
+    
     # clica em pesquisar
     _click_img('pesquisar.png', conf=0.95, clicks=3)
     
     return 'Empresa ok'
 
 
-def salva_guia(codigo_dominio, cnpj, nome):
+def salva_guia(codigo_dominio, cnpj, nome, caminho, caminho_final):
     alerta = ''
     os.makedirs('execução\Guias', exist_ok=True)
     print('>>> Baixando Informe')
-    caminho = 'V:\Setor Robô\Scripts Python\FGTS Digital\Gera Guias FGTS Digital 2\execução\Guias'
-
+    
     arquivo_nome = f'GFD - {comp.replace("/", "-")} - Vencimento- - {cnpj} - {nome.replace("/", "")}'
 
     # desce a tela até achar o botão de download
@@ -189,11 +188,11 @@ def salva_guia(codigo_dominio, cnpj, nome):
     _click_img('emitir_guia.png', conf=0.9)
 
     # aguarda a tela de salvar do navegador abrir
-    while not _find_img('salvar_como.png', conf=0.9):
+    while not _find_img('salvar_como.png', conf=0.9, timeout=-1):
         if _find_img('conflito.png', conf=0.9):
             alerta = ' Um ou mais débitos do agrupamento já compõem guia gerada anteriormente, ainda não paga e não vencida, e que continua válida mesmo após emissão de nova guia'
             _click_img('confirmar_alerta.png')
-
+            
     pyperclip.copy(arquivo_nome)
     p.hotkey('ctrl', 'v')
     time.sleep(0.5)
@@ -215,14 +214,14 @@ def salva_guia(codigo_dominio, cnpj, nome):
     time.sleep(1)
     print('✔ Guia GFD gerada')
     time.sleep(5)
-    analisa_guia(codigo_dominio, cnpj, os.path.join(caminho, arquivo_nome + '.pdf'))
+    analisa_guia(codigo_dominio, cnpj, arquivo_nome + '.pdf', caminho, caminho_final)
     
     return 'Guia gerada com sucesso' + alerta
 
 
-def analisa_guia(codigo_dominio, cnpj, guia, comparativo=False):
+def analisa_guia(codigo_dominio, cnpj, guia, caminho, caminho_final):
     texto_arquivo = ''
-    with fitz.open(guia) as pdf:
+    with fitz.open(os.path.join(caminho, guia)) as pdf:
         for page in pdf:
             texto_pagina = page.get_text('text', flags=1 + 2 + 8)
             texto_arquivo += texto_pagina
@@ -241,120 +240,36 @@ def analisa_guia(codigo_dominio, cnpj, guia, comparativo=False):
     except:
         print(texto_arquivo)
         p.alert('ERRO')
-    if not comparativo:
-        _escreve_relatorio_csv(f'{codigo_dominio}{cnpj};{cpf_cnpj_guia};{nome_guia};{identificador};{tag};{valor_recolher};{vencimento}', nome='Resumo Guias')
-        shutil.move(guia, guia.replace('Vencimento-', f'Vencimento-{vencimento_sem_barra}'))
-    else:
-        return f'{cpf_cnpj_guia};{nome_guia};{identificador};{tag};{vencimento};{valor_recolher}', valor_recolher
+        return False, ''
     
+    _escreve_relatorio_csv(f'{codigo_dominio};{cnpj};{cpf_cnpj_guia};{nome_guia};{identificador};{tag};{valor_recolher};{vencimento}', nome='Resumo Guias')
+    shutil.move(os.path.join(caminho, guia), os.path.join(caminho, guia.replace('Vencimento-', f'Vencimento-{vencimento_sem_barra}')))
+    add_text_to_pdf(guia, caminho, caminho_final, cnpj)
 
-def relatorio_demonstrativo_fgts(periodo):
-    _wait_img('relatorios.png', conf=0.9, timeout=-1)
-    # Relatórios
-    p.hotkey('alt', 'r')
-    time.sleep(0.5)
-    # eSocial
-    p.press('l')
-    # Demonstrativos de FGTS Folha e FGTS eSocial
-    time.sleep(0.5)
-    p.press('s')
 
-    while not _find_img('demonstrativo_fgts.png', conf=0.9):
-        time.sleep(1)
-    
-    p.write(periodo)
-    time.sleep(0.2)
-    p.press('tab')
-    time.sleep(0.2)
-    p.write(periodo)
-    time.sleep(0.2)
-    
-    p.hotkey('alt', 'o')
-    
-    while not _find_img('demonstrativo_fgts_gerado.png', conf=0.8):
-        time.sleep(1)
-    
-    return True
-    
-    
-def analisa_relatorio(codigo_dominio, cnpj, nome, comp, arq_final):
-    doc = fitz.open(arq_final, filetype="pdf")
-    texto = ''
-    # captura o texto de todas as páginas e salva em uma única variável
-    for page in doc:
-        texto_pagina = page.get_text('text', flags=1 + 2 + 8)
-        texto += texto_pagina
-    
-    valor_base_sistema = re.compile(r'(.+,\d\d)\nBase sistema:').search(texto).group(1)
-    valor_sistema = re.compile(r'(.+,\d\d)\n.+\n.+\nValor sistema:').search(texto).group(1)
-    valor_base_esocial = re.compile(r'(.+,\d\d)\n.+\nBase eSocial:').search(texto).group(1)
-    valor_esocial = re.compile(r'(.+,\d\d)\n.+\nValor eSocial:').search(texto).group(1)
-    
-    if vai_comparar == 'Não':
-        if str(valor_sistema) == str(valor_esocial) and str(valor_base_esocial) == str(valor_base_sistema):
-            conferencia = 'OK'
-        else:
-            conferencia = 'Valores não conferem'
-        _escreve_relatorio_csv(f'{codigo_dominio};{cnpj};{nome};{comp};{valor_sistema};{valor_esocial};{valor_base_sistema};{valor_base_esocial};{conferencia}', nome='Relatório FGTS Domínio')
 
-    else:
-        info_guias = 'Guia não encontrada na pasta;x;x;x;x;x'
-        valor_recolher = 0
-        
-        lista_guias = os.path.join('execução', 'Guias')
-        for arq in os.listdir(lista_guias):
-            if cnpj in arq:
-                guia = os.path.join(lista_guias, arq)
-                info_guias, valor_recolher = analisa_guia(codigo_dominio, cnpj, guia, comparativo=True)
-                break
-                
-        if str(valor_recolher) == str(valor_sistema) and str(valor_recolher) == str(valor_esocial) and str(valor_sistema) == str(valor_esocial) and str(valor_base_esocial) == str(valor_base_sistema):
-            conferencia = 'OK'
-        else:
-            conferencia = 'Valores não conferem'
-        _escreve_relatorio_csv(f'{codigo_dominio};{cnpj};{nome};{comp};{info_guias};{valor_sistema};{valor_esocial};{valor_base_sistema};{valor_base_esocial};{conferencia}', nome='Comparativo Guias x Relatório Domínio')
+def add_text_to_pdf(guia, caminho, caminho_final, text):
+    x_text = 46  # Posição x do texto na página
+    y_text = 830  # Posição y do texto na página
     
-
-@_time_execution
-@_barra_de_status
-def run_relatorio_dominio(window):
-    andamentos = 'Relatórios FGTS'
-    _login_web()
-    _abrir_modulo('folha')
+    # Abrir o PDF de entrada
+    pdf_document = fitz.open(os.path.join(caminho, guia))
     
-    total_empresas = empresas_relatorio[0:]
-    for count, empresa in enumerate(empresas_relatorio[0:], start=1):
-        # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, 0, window)
-        try:
-            codigo_dominio, cnpj, nome = empresa
-        except:
-            cnpj, nome = empresa
-            p.alert(text='Coluna com os códigos do Domínio não encontrada.')
-            return
-        
-        if _login(empresa, andamentos):
-            resultado = relatorio_demonstrativo_fgts(comp)
+    # Selecionar a página desejada
+    page = pdf_document[0]
     
-            if resultado:
-                _salvar_pdf()
-                print('✔ Relatório gerado')
-                arq_final = os.path.join('V:\Setor Robô\Scripts Python\FGTS Digital\Gera Guias FGTS Digital 2\execução\Relatórios', f'FGTS Folha eSocial {comp.replace("/", "-")} - {codigo_dominio} - {cnpj} - {nome}.pdf')
-                shutil.move(os.path.join('c:\\', 'Demonstrativo de FGTS Folha e FGTS eSocial.pdf'), arq_final)
-                analisa_relatorio(codigo_dominio, cnpj, nome, comp, arq_final)
-
-                p.press('esc', presses=4)
-                time.sleep(2)
+    # Adicionar texto na página
+    page.insert_text((x_text, y_text), text, fontsize=12, overlay=True)
     
-    if vai_comparar == 'Não':
-        _escreve_header_csv('CÓD. DOM.;CNPJ;NOME;COMP. RELATÓRIO;VALOR SISTEMA;VALOR ESOCIAL;BASE SISTEMA;BASE ESOCIAL;CONFERÊNCIA DE VALORES', nome='Relatório FGTS Domínio')
-    else:
-        _escreve_header_csv('CÓD. DOM.;CNPJ;NOME;COMP. RELATÓRIO;CPF/CNPJ GUIA;NOME GUIA;IDENTIFICADOR;TAG;VENCIMENTO;VALOR GUIA;VALOR SISTEMA;VALOR ESOCIAL;BASE SISTEMA;BASE ESOCIAL;CONFERÊNCIA DE VALORES', nome='Comparativo Guias x Relatório Domínio')
+    # Salvar o PDF modificado
+    pdf_document.save(os.path.join(caminho_final, guia))
 
 
 @_time_execution
 @_barra_de_status
-def run_download_guias(window):
+def run(window):
+    caminho = 'V:\Setor Robô\Scripts Python\FGTS Digital\Gera Guias FGTS Digital\execução\Guias'
+    caminho_final = 'V:\Setor Robô\Scripts Python\FGTS Digital\Gera Guias FGTS Digital\execução\Guias CNPJ completo'
     tem_guia = False
     andamentos = f'Guias FGTS Digital'
     total_empresas = empresas[index:]
@@ -369,18 +284,18 @@ def run_download_guias(window):
         _indice(count, total_empresas, empresa, index, window)
         
         codigo_dominio, cnpj, nome = empresa
-        
+
         resultado, mensagem = login(cnpj)
         
         if not resultado:
             _escreve_relatorio_csv(f'{codigo_dominio};{cnpj};{nome};{mensagem}', nome=andamentos)
             continue
-                
+            
         resultado = busca_guia(comp)
         
         if resultado == 'Empresa ok':
             # Salvar a guia
-            resultado = salva_guia(codigo_dominio, cnpj, nome)
+            resultado = salva_guia(codigo_dominio, cnpj, nome, caminho, caminho_final)
             _escreve_relatorio_csv(f'{codigo_dominio};{cnpj};{nome}', nome='dados_relatorio', local='ignore')
             tem_guia = True
 
@@ -398,41 +313,19 @@ def run_download_guias(window):
 
     time.sleep(2)
     p.hotkey('ctrl', 'w')
-    _escreve_header_csv('CNPJ;CPF/CNPJ GUIA;NOME;IDENTIFICADOR;TAG;VALOR;VENCIMENTO', nome='Resumo Guias')
+    _escreve_header_csv('CÓD;CNPJ;CPF/CNPJ GUIA;NOME;IDENTIFICADOR;TAG;VALOR;VENCIMENTO', nome='Resumo Guias')
     
     return tem_guia
 
 
 if __name__ == '__main__':
+    local = 'V:\Setor Robô\Scripts Python\FGTS Digital\Gera Guias FGTS Digital\execução\Guias'
+    local_final = 'V:\Setor Robô\Scripts Python\FGTS Digital\Gera Guias FGTS Digital\execução\Guias Atualizadas'
+    
     comp = _get_comp(printable='mm/aaaa', strptime='%m/%Y')
-    rotina = p.confirm(text='Qual rotina irá executar?', buttons=['Guias FGTS Digital', 'Relatórios FGTS Domínio Folha', 'Rotina Completa'])
 
-    if rotina == 'Rotina Completa':
-        tem_guia = False
-        empresas = _open_lista_dados()
-        index = _where_to_start(tuple(i[0] for i in empresas))
-        
-        if index is not None:
-            tem_guia = run_download_guias()
-        
-        if tem_guia:
-            try:
-                os.remove('ignore\\dados_relatorio.csv')
-            except:
-                pass
-            
-        empresas_relatorio = _open_lista_dados(file='ignore\\dados_relatorio.csv')
-        run_relatorio_dominio()
+    empresas = _open_lista_dados()
+    index = _where_to_start(tuple(i[0] for i in empresas))
     
-    elif rotina == 'Guias FGTS Digital':
-        empresas = _open_lista_dados()
-        index = _where_to_start(tuple(i[0] for i in empresas))
-        
-        if index is not None:
-            tem_guia = run_download_guias()
-    
-    elif rotina == 'Relatórios FGTS Domínio Folha':
-        vai_comparar = p.confirm(text='Deseja compara com guias de FGTS Digital já baixadas?', buttons=['Sim', 'Não'])
-        empresas_relatorio = _open_lista_dados(file='ignore\\dados_relatorio.csv')
-        run_relatorio_dominio()
-        
+    if index is not None:
+        tem_guia = run()

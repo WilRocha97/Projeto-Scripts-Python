@@ -12,6 +12,7 @@ from PIL import Image
 import PySimpleGUI as sg
 import os
 import re
+import traceback
 import tempfile
 import contextlib
 import OpenSSL.crypto
@@ -74,6 +75,7 @@ def barra_de_status(func):
         # Layout da janela
         layout = [
             [sg.Button('Iniciar', key='-iniciar-', border_width=0),
+             sg.Button('Fechar', key='-fechar-', border_width=0, visible=False),
              sg.Text('', key='-titulo-'),
              sg.Text('', key='-Mensagens-'),
              sg.Image(data=image_to_data(im), key='-Processando-'),
@@ -83,12 +85,13 @@ def barra_de_status(func):
         
         # guarda a janela na variável para manipula-la
         screen_width, screen_height = sg.Window.get_screen_size()
-        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(550, 34), margins=(0,0), finalize=True, location=((screen_width // 2) - (550 // 2), 0))
+        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(535, 34), margins=(0,0), finalize=True, location=((screen_width // 2) - (535 // 2), 0))
         
         def run_script_thread():
             # habilita e desabilita os botões conforme necessário
             window['-titulo-'].update('Rotina automática, não interfira.', text_color='#fca103')
-            window['-iniciar-'].update(disabled=True)
+            window['-iniciar-'].update(visible=False)
+            window['-fechar-'].update(visible=False)
             window['-Processando-'].update(visible=True)
             window['-Check-'].update(visible=False)
             window['-Error-'].update(visible=False)
@@ -97,18 +100,33 @@ def barra_de_status(func):
                 # Chama a função que executa o script
                 func(window)
             except Exception as e:
-                window['-titulo-'].update('Erro', text_color='#fc0303')
+                # Obtém a pilha de chamadas de volta como uma string
+                traceback_str = traceback.format_exc()
+                
+                window['-titulo-'].update(visible=False)
+                window['-iniciar-'].update(visible=False)
                 window['-Processando-'].update(visible=False)
-                window['-Check-'].update(visible=False)
+                
+                window['-fechar-'].update(visible=True)
+                window['-titulo-'].update('Erro', text_color='#fc0303')
+                window['-titulo-'].update(visible=True)
                 window['-Error-'].update(visible=True)
-                print(e)
+                
+                alert(f'Traceback: {traceback_str}\n\n'
+                      f'Erro: {e}')
+                print(f'Traceback: {traceback_str}\n\n'
+                      f'Erro: {e}')
                 return
 
             # habilita e desabilita os botões conforme necessário
-            window['-iniciar-'].update(disabled=False)
-            # apaga qualquer mensagem na interface
-            window['-Mensagens-'].update('')
+            window['-titulo-'].update(visible=False)
             window['-Processando-'].update(visible=False)
+            window['-Mensagens-'].update('')
+            
+            window['-iniciar-'].update(visible=True)
+            window['-fechar-'].update(visible=True)
+            window['-titulo-'].update('Execução finalizada')
+            window['-titulo-'].update(visible=True)
             window['-Check-'].update(visible=True)
         
         processando = 'não'
@@ -118,7 +136,9 @@ def barra_de_status(func):
             
             if event == sg.WIN_CLOSED:
                 break
-            
+            elif event == '-fechar-':
+                break
+                
             elif event == '-iniciar-':
                 # Cria uma nova thread para executar o script
                 Thread(target=run_script_thread).start()

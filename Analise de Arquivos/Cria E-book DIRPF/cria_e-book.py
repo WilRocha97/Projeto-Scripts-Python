@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-import shutil, io, fitz, PyPDF2, re, os, sys, PySimpleGUI as sg
-import time
-
+import time, shutil, io, fitz, PyPDF2, re, os, sys, traceback, PySimpleGUI as sg
 from PIL import Image
 from threading import Thread
-from pyautogui import alert
+from pyautogui import alert, confirm
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from reportlab.lib.utils import ImageReader
@@ -14,6 +12,39 @@ from reportlab.pdfbase.ttfonts import TTFont
 # Carregar a fonte TrueType (substitua 'sua_fonte.ttf' pelo caminho da sua fonte)
 pdfmetrics.registerFont(TTFont('Fonte', 'Assets\Montserrat-SemiBold.ttf'))
 pdfmetrics.registerFont(TTFont('Tabela', 'Assets\JetBrainsMono-VariableFont_wght.ttf'))
+
+def data_modificacao_arquivo(nome_arquivo):
+    # Obter o tempo de modificação do arquivo
+    tempo_modificacao = os.path.getmtime(nome_arquivo)
+    return tempo_modificacao
+
+
+# Caminho dos dois arquivos que você deseja comparar
+caminho_arquivo1 = 'C:\Program Files (x86)\Automações\Cria E-book DIRPF\cria_e-book.exe'
+caminho_arquivo2 = 'T:\ROBÔ\_Executáveis\Cria E-book\Cria E-book DIRPF.exe'
+data_modificacao1 = 0
+data_modificacao2 = 0
+try:
+    # Obter a data de modificação de cada arquivo
+    data_modificacao1 = data_modificacao_arquivo(caminho_arquivo1)
+    data_modificacao2 = data_modificacao_arquivo(caminho_arquivo2)
+    
+    data_modificacao1 = int(str(data_modificacao1)[:7])
+    data_modificacao2 = int(str(data_modificacao2)[:7])
+    
+    print(data_modificacao1)
+    print(data_modificacao2)
+except:
+    pass
+    
+    
+# Comparar as datas de modificação
+if data_modificacao1 < data_modificacao2:
+    atualizar = confirm(text='Existe uma nova versão do programa, deseja atualizar agora?', buttons=('Sim', 'Não'))
+    if atualizar == 'Sim':
+        os.startfile(caminho_arquivo2)
+        sys.exit()
+
 
 def chave_numerica(elemento):
     return int(elemento)
@@ -123,7 +154,7 @@ def cria_pagina_resumo(infos_resumo, output_path):
     
     infos_resumo = sorted(infos_resumo)
     # Abre o arquivo PDF para gravação
-    pdf_canvas = canvas.Canvas(output_path, pagesize=(707, 1007))
+    pdf_canvas = canvas.Canvas(output_pat, pagesize=(707, 1007))
     
     altura_linha = 910
     """pdf_canvas.setFillColorRGB(255, 100, 0)
@@ -133,7 +164,7 @@ def cria_pagina_resumo(infos_resumo, output_path):
         try:
             infos = info[1].upper().split(':')
             
-            tamanho = 85 - len(info[1])
+            tamanho = 84 - len(info[1])
             info = f"{infos[0]} {'.' * tamanho}{infos[1]}"
             print(info)
             # Define as configurações de texto
@@ -151,7 +182,7 @@ def cria_pagina_resumo(infos_resumo, output_path):
             for titulo in text:
                 # Define as configurações de texto
                 text_object = pdf_canvas.beginText(x=100, y=altura_linha, )
-                altura_linha = (altura_linha - 17)
+                altura_linha = (altura_linha - 20)
                 text_object.setFont("Fonte", 15)
                 text_object.setFillColor(colors.black)
                 # Adiciona o texto personalizável
@@ -274,10 +305,10 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
                     infos_resumo.append((1, ''))
                     
                     total_rendimentos_tributaveis = re.compile('(.+,\d+)\nTOTAL RENDIMENTOS TRIBUTÁVEIS').search(conteudo_recibo).group(1)
-                    infos_resumo.append((2, f'Total dos rendimentos tributáveis no ano: R${total_rendimentos_tributaveis}'))
+                    infos_resumo.append((2, f'Total dos rendimentos tributáveis no ano: R$ {total_rendimentos_tributaveis}'))
                     
                     imposto_devido = re.compile('(.+,\d+)\nIMPOSTO DEVIDO').search(conteudo_recibo).group(1)
-                    infos_resumo.append((3, f'Imposto devido no ano: R${imposto_devido}'))
+                    infos_resumo.append((3, f'Imposto devido no ano: R$ {imposto_devido}'))
                     
                     nome_declarante = re.compile(r'Nome do declarante\n.+\n(.+)').search(conteudo_recibo).group(1)
                     
@@ -344,6 +375,7 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
                         try:
                             alert(text=f'Não foi encontrada a Aliquota efetiva (%) na declaração do declarante: {nome_declarante}.\n'
                                         'Provável erro de layout da página, a informação não será incluída no resumo localizado na página 1')
+                            return False
                         except:
                             alert(text=f'Não foi possível encontrar o nome do declarante no recibo de entrega do IRPF:\n'
                                        f'Verifique a forma que o PDF foi salvo e tente novamente.')
@@ -455,6 +487,7 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
             break
         except:
             alert('Atualização de e-book falhou.\nCaso exista algum e-book aberto, por gentileza feche para que ele seja atualizado.')
+            return False
             
     window['-Mensagens-'].update(f'Finalizando, aguarde...')
     coloca_marca_dagua(unificado_pdf)
@@ -612,7 +645,6 @@ if __name__ == '__main__':
         if not pasta_final:
             alert(text=f'Por favor informe um diretório para salvar os arquivos unificados.')
             return
-        
         if len(os.listdir(pasta_inicial)) < 1:
             alert(text=f'Nenhum arquivo PDF encontrado na pasta selecionada.')
             return
@@ -633,7 +665,10 @@ if __name__ == '__main__':
             run(window, pasta_inicial, pasta_final)
             # Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
         except Exception as erro:
-            escreve_doc(erro)
+            # Obtém a pilha de chamadas de volta como uma string
+            traceback_str = traceback.format_exc()
+            escreve_doc(f'Traceback: {traceback_str}\n\n'
+                        f'Erro: {erro}')
             window['Log do sistema'].update(disabled=False)
             alert(text='Erro detectado, clique no botão "Log do sistema" para acessar o arquivo de erros e contate o desenvolvedor')
         

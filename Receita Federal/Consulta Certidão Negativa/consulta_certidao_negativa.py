@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-import pyautogui as p
-import time
-import os
-import pyperclip
+import time, os, pyperclip, re, fitz, shutil, pyautogui as p
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -34,7 +31,7 @@ def verificacoes(consulta_tipo, andamento, identificacao, nome):
     return True
 
 
-def salvar(consulta_tipo, andamento, identificacao, nome):
+def salvar(consulta_tipo, andamento, identificacao, nome, pasta_download, nome_certidao):
     # espera abrir a tela de salvar o arquivo
     contador = 0
     while not _find_img('salvar_como.png', conf=0.9):
@@ -73,7 +70,16 @@ def salvar(consulta_tipo, andamento, identificacao, nome):
         
     # escreve o nome do arquivo (.upper() serve para deixar em letra maiúscula)
     time.sleep(1)
-    p.write(f'{nome.upper()} - {identificacao} - Certidao')
+
+    while True:
+        try:
+            pyperclip.copy(nome_certidao)
+            p.hotkey('ctrl', 'v')
+            time.sleep(1)
+            break
+        except:
+            print('Erro no clipboard...')
+            
     time.sleep(0.5)
 
     # Selecionar local
@@ -81,16 +87,16 @@ def salvar(consulta_tipo, andamento, identificacao, nome):
     time.sleep(1)
     p.press('enter')
     time.sleep(1)
-    erro = 'sim'
-    while erro == 'sim':
+ 
+    while True:
         try:
-            pyperclip.copy('V:\Setor Robô\Scripts Python\Receita Federal\Consulta Certidão Negativa\execução\Certidões ' + consulta_tipo)
+            pyperclip.copy(pasta_download)
             p.hotkey('ctrl', 'v')
             time.sleep(1)
-            erro = 'não'
+            break
         except:
             print('Erro no clipboard...')
-            erro = 'sim'
+
     p.press('enter')
     time.sleep(1)
 
@@ -130,9 +136,32 @@ def consulta(consulta_tipo, identificacao):
     return True
 
 
+def analisa_nome_certidao(pasta_download, nome_certidao):
+    arq = os.path.join(pasta_download, nome_certidao)
+    doc = fitz.open(arq, filetype="pdf")
+    
+    texto_arquivo = ''
+    for page in doc:
+        texto = page.get_text('text', flags=1 + 2 + 8)
+        texto_arquivo += texto
+    
+    nome = re.compile(r'Nome: (.+)').search(texto_arquivo).group(1)
+    nome = nome.replace('/', '')
+    tem_pendencias = re.compile(r'não constam pendências em seu nome').search(texto_arquivo)
+    
+    doc.close()
+    
+    if not tem_pendencias:
+        pasta_pendencias = pasta_download + ' com pendências'
+        os.makedirs(pasta_pendencias, exist_ok=True)
+        shutil.move(arq, os.path.join(pasta_pendencias, nome_certidao.replace('.pdf', f' - {nome}.pdf')))
+    else:
+        shutil.move(arq, os.path.join(pasta_download, nome_certidao.replace('.pdf', f' - {nome}.pdf')))
+
 @_time_execution
 @_barra_de_status
 def run(window):
+    pasta_download = 'V:\Setor Robô\Scripts Python\Receita Federal\Consulta Certidão Negativa\execução\Certidões ' + consulta_tipo
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
@@ -141,11 +170,12 @@ def run(window):
 
         identificacao, nome = empresa
         nome = nome.replace('/', '')
-
+        
+        nome_certidao = f'Certidão Negativa - {identificacao}.pdf'
         # try:
         while True:
             consulta(consulta_tipo, identificacao)
-            situacao = salvar(consulta_tipo, andamento, identificacao, nome)
+            situacao = salvar(consulta_tipo, andamento, identificacao, nome, pasta_download, nome_certidao)
             p.hotkey('ctrl', 'w')
 
             if not situacao:
@@ -155,6 +185,7 @@ def run(window):
                 continue
 
             else:
+                analisa_nome_certidao(pasta_download, nome_certidao)
                 print('✔ Certidão gerada')
                 _escreve_relatorio_csv('{};{};{} gerada'.format(identificacao, nome, andamento), nome=andamento)
                 time.sleep(1)

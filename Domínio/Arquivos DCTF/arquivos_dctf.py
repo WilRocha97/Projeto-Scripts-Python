@@ -10,7 +10,13 @@ from dominio_comum import _login_web, _abrir_modulo, _login
 
 
 def arquivos_dctf(empresa, periodo, andamento):
-    cod, cnpj, nome, regime, movimento = empresa
+    try:
+        cod, cnpj, nome, regime, movimento = empresa
+    except:
+        cod, cnpj, nome, regime = empresa
+        movimento = False
+
+
     nome_arquivo = 'M:\DCTF_{}.RFB'.format(cod)
     
     # aguarda a tela do domínio

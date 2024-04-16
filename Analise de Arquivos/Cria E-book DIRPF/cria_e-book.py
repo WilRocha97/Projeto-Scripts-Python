@@ -8,10 +8,14 @@ from reportlab.lib import colors
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+
 
 # Carregar a fonte TrueType (substitua 'sua_fonte.ttf' pelo caminho da sua fonte)
-pdfmetrics.registerFont(TTFont('Fonte', 'Assets\Montserrat-SemiBold.ttf'))
-pdfmetrics.registerFont(TTFont('Tabela', 'Assets\JetBrainsMono-VariableFont_wght.ttf'))
+pdfmetrics.registerFont(TTFont('Fonte', 'Assets\HankenGrotesk-SemiBold.ttf'))
+tamanho_da_pagina = (672,950)
+
 
 def data_modificacao_arquivo(nome_arquivo):
     # Obter o tempo de modificação do arquivo
@@ -24,6 +28,7 @@ caminho_arquivo1 = 'C:\Program Files (x86)\Automações\Cria E-book DIRPF\cria_e
 caminho_arquivo2 = 'T:\ROBÔ\_Executáveis\Cria E-book\Cria E-book DIRPF.exe'
 data_modificacao1 = 0
 data_modificacao2 = 0
+
 try:
     # Obter a data de modificação de cada arquivo
     data_modificacao1 = data_modificacao_arquivo(caminho_arquivo1)
@@ -37,14 +42,21 @@ try:
 except:
     pass
     
-    
 # Comparar as datas de modificação
 if data_modificacao1 < data_modificacao2:
-    atualizar = confirm(text='Existe uma nova versão do programa, deseja atualizar agora?', buttons=('Sim', 'Não'))
+    while True:
+        atualizar = confirm(text='Existe uma nova versão do programa, deseja atualizar agora?', buttons=('Novidades da atualização', 'Sim', 'Não'))
+        if atualizar == 'Novidades da atualização':
+            os.startfile('Sobre.pdf')
+        if atualizar == 'Sim':
+            break
+        elif atualizar == 'Não':
+            break
+    
     if atualizar == 'Sim':
         os.startfile(caminho_arquivo2)
         sys.exit()
-
+        
 
 def chave_numerica(elemento):
     return int(elemento)
@@ -108,14 +120,14 @@ def quebra_de_linha(frase, caracteres_por_linha=30):
     return linhas
 
 
-def create_pdf(output_path, image_path, text, text_2):
-    text = quebra_de_linha(text, caracteres_por_linha=17)
+def cria_capa(output_path, image_path, text, text_2):
+    text = quebra_de_linha(text, caracteres_por_linha=20)
     
     # Abre o arquivo PDF para gravação
-    pdf_canvas = canvas.Canvas(output_path, pagesize=(707,1007))
+    pdf_canvas = canvas.Canvas(output_path, pagesize=tamanho_da_pagina)
 
     # Adiciona a imagem à posição desejada
-    pdf_canvas.drawInlineImage(image_path, 0, 0, width=707, height=1007)
+    pdf_canvas.drawInlineImage(image_path, 0, 0, width=tamanho_da_pagina[0], height=tamanho_da_pagina[1])
     
     altura_linha = 401
     for linha in text:
@@ -151,57 +163,59 @@ def create_pdf(output_path, image_path, text, text_2):
 
 def cria_pagina_resumo(infos_resumo, output_path):
     # c.rect(x, y, width, height, fill=1)  #draw rectangle
-    
     infos_resumo = sorted(infos_resumo)
-    # Abre o arquivo PDF para gravação
-    pdf_canvas = canvas.Canvas(output_pat, pagesize=(707, 1007))
-    
-    altura_linha = 910
-    """pdf_canvas.setFillColorRGB(255, 100, 0)
-    pdf_canvas.rect(0, altura_linha-35, 707, 70, fill=1, stroke=0)"""
-    
+    data_list = []
+    title_data = ['SEM TITULO']
     for info in infos_resumo:
-        try:
-            infos = info[1].upper().split(':')
-            
-            tamanho = 84 - len(info[1])
-            info = f"{infos[0]} {'.' * tamanho}{infos[1]}"
+        if info[0] == 0:
+            text = info[1].upper().split('-')
+            title_data = [[text[0]], [text[1]]]
+            print(text)
+        else:
             print(info)
-            # Define as configurações de texto
-            text_object = pdf_canvas.beginText(x=100, y=altura_linha, )
-            altura_linha = (altura_linha - 35)
-            text_object.setFont("Tabela", 10)
-            text_object.setFillColor(colors.black)
-            # Adiciona o texto personalizável
-            text_object.textLine(info)
-            # Desenha o texto no canvas
-            pdf_canvas.drawText(text_object)
-        except:
-            info = info[1]
-            text = quebra_de_linha(info, caracteres_por_linha=36)
-            for titulo in text:
-                # Define as configurações de texto
-                text_object = pdf_canvas.beginText(x=100, y=altura_linha, )
-                altura_linha = (altura_linha - 20)
-                text_object.setFont("Fonte", 15)
-                text_object.setFillColor(colors.black)
-                # Adiciona o texto personalizável
-                text_object.textLine(titulo.upper())
-                # Desenha o texto no canvas
-                pdf_canvas.drawText(text_object)
-                
-            # Define as configurações de texto
-            text_object = pdf_canvas.beginText(x=100, y=altura_linha, )
-            altura_linha = (altura_linha - 35)
-            text_object.setFont("Fonte", 10)
-            text_object.setFillColor(colors.black)
-            # Adiciona o texto personalizável
-            text_object.textLine(' ')
-            # Desenha o texto no canvas
-            pdf_canvas.drawText(text_object)
-            
-    # Fecha o arquivo PDF
-    pdf_canvas.save()
+            data_list.append((info[1].upper(), info[2]))
+    
+    # Criação do documento PDF
+    pdf_right_aligned = SimpleDocTemplate(output_path, pagesize=tamanho_da_pagina)
+    tabela = []
+
+    # Estilo para o título da tabela
+    title_style_left_aligned = TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, -1), 'Fonte'),
+        ('FONTSIZE', (0, 0), (-1, -1), 15),  # Mesmo tamanho de fonte para ambas as linhas
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
+    ])
+    
+    title_table_left_aligned = Table(title_data, colWidths=[575])  # Ajuste da largura para alinhamento à esquerda
+    title_table_left_aligned.setStyle(title_style_left_aligned)
+    tabela.append(title_table_left_aligned)
+    
+    # Adicionar espaço
+    tabela.append(Table([['']], colWidths=[None], rowHeights=[20]))
+    
+    # Estilo para a tabela com valores alinhados à direita
+    right_align_style = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+        ('ALIGN', (-1, 0), (-1, -1), 'RIGHT'),
+        ('FONTNAME', (0, 0), (-1, -1), 'Fonte'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+        ('TOPPADDING', (0, 0), (-1, -1), 20),
+        ('LINEBELOW', (0, 0), (-1, -1), 0.5, colors.black),  # Linha fina abaixo de cada item
+    ])
+    
+    # Definindo a tabela com alinhamento à direita
+    right_aligned_table = Table(data_list, colWidths=[325, 250])
+    right_aligned_table.setStyle(right_align_style)
+    
+    # Adicionar a tabela aos elementos do documento
+    tabela.append(right_aligned_table)
+    
+    # Construir o PDF com os elementos
+    pdf_right_aligned.build(tabela)
     
     
 def analisa_subpastas(caminho_subpasta, nome_subpasta, subpasta_arquivos):
@@ -218,9 +232,9 @@ def analisa_subpastas(caminho_subpasta, nome_subpasta, subpasta_arquivos):
                     decryption(os.path.join(caminho_subpasta, arquivo), os.path.join(caminho_subpasta, arquivo), password)
                 except:
                     # se tiver senha, mas a senha não for informada no nome do arquivo, pula para próxima subpasta
-                    alert(f'Não é possível criar E-Book de {nome_subpasta}.\n'
-                          f'Existe PDF protegido sem a senha informada no nome do arquivo.\n'
-                          f'Arquivo "{arquivo}" protegido encontrado em: {os.path.join(caminho_subpasta, arquivo)}'
+                    alert(f'Não é possível criar E-Book de {nome_subpasta}.\n\n'
+                          f'Existe PDF protegido sem a senha informada no nome do arquivo.\n\n'
+                          f'Arquivo "{arquivo}" protegido encontrado em: {os.path.join(caminho_subpasta, arquivo)}\n\n'
                           f'Para que o processo automatizado mescle PDF protegido, a senha deve ser informada no nome do arquivo, por exemplo:\n'
                           f'Senha 1234567.pdf\n')
                     break
@@ -279,7 +293,10 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
             return False
         
     contador = 4
+
+    # lista para os arquivos que serão mesclados
     lista_arquivos = []
+    # lista para a página de resumo
     infos_resumo = []
     # cria uma cópia numerada dos PDFs
     for arquivo in nomes_arquivos:
@@ -300,34 +317,43 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
                 # time.sleep(30)
                 
                 try:
+                    # captura o titulo para a página de resumo
                     titulo_resumo = re.compile('(DECLARAÇÃO DE AJUSTE ANUAL - .+)').search(conteudo_recibo).group(1)
-                    infos_resumo.append((0, f'RESUMO DA {titulo_resumo.replace(" - ", " ")}'))
-                    infos_resumo.append((1, ''))
+                    infos_resumo.append((0, f'RESUMO DA {titulo_resumo.replace(" - ", "-")}'))
                     
+                    # adiciona na lista da página de resumo o total dos rendimentos tributáveis
                     total_rendimentos_tributaveis = re.compile('(.+,\d+)\nTOTAL RENDIMENTOS TRIBUTÁVEIS').search(conteudo_recibo).group(1)
-                    infos_resumo.append((2, f'Total dos rendimentos tributáveis no ano: R$ {total_rendimentos_tributaveis}'))
-                    
+                    infos_resumo.append((2, 'Total dos rendimentos tributáveis no ano', f'R$ {total_rendimentos_tributaveis}'))
+                    # adiciona na lista da página de resumo o imposto devido
                     imposto_devido = re.compile('(.+,\d+)\nIMPOSTO DEVIDO').search(conteudo_recibo).group(1)
-                    infos_resumo.append((3, f'Imposto devido no ano: R$ {imposto_devido}'))
+                    infos_resumo.append((3, 'Imposto devido no ano', f'R$ {imposto_devido}'))
                     
+                    # captura o nome do declarante
                     nome_declarante = re.compile(r'Nome do declarante\n.+\n(.+)').search(conteudo_recibo).group(1)
+                    print(f'\n{nome_declarante}')
                     
+                    # adiciona na lista da página de resumo o imposto a restituir e o imposto a pagar
+                    # se tiver a restituir adiciona na variável 'pagar_restituir' para escrever na capa com o nome
+                    # se tiver a pagar adiciona na variável 'pagar_restituir' para escrever na capa com o nome
+                    # a variável 'pagar_restituir' terá apenas uma das duas informações
                     pagar_restituir = re.compile(r'(.+,\d+)\nIMPOSTO A RESTITUIR').search(conteudo_recibo).group(1)
                     if pagar_restituir == '0,00':
                         pagar_restituir = re.compile(r'IMPOSTO A PAGAR(\n.+){2}\n(.+,\d\d)').search(conteudo_recibo).group(2)
                         if pagar_restituir == '0,00':
                             pagar_restituir = ''
+                            infos_resumo.append((4, 'Imposto a restituir', 'R$ 0,00'))
+                            infos_resumo.append((5, 'Imposto a pagar', 'R$ 0,00'))
                         else:
+                            infos_resumo.append((4, 'Imposto a restituir', 'R$ 0,00'))
+                            infos_resumo.append((5, 'Imposto a pagar', f'R$ {pagar_restituir}'))
                             pagar_restituir = f'Saldo a pagar: R$ {pagar_restituir}'
-                            infos_resumo.append((4, f'Imposto a restituir: R$ 0,00'))
-                            infos_resumo.append((5, pagar_restituir.replace('Saldo a pagar', 'Imposto a pagar')))
                     else:
+                        infos_resumo.append((4, 'Imposto a restituir', f'R$ {pagar_restituir}'))
+                        infos_resumo.append((5, 'Imposto a pagar', 'R$ 0,00'))
                         pagar_restituir = f'Saldo a restituir: R$ {pagar_restituir}'
-                        infos_resumo.append((4, pagar_restituir.replace('Saldo a restituir', 'Imposto a restituir')))
-                        infos_resumo.append((5, f'Imposto a pagar: R$ 0,00'))
                 except:
-                    alert(text=f'Não foi possível encontrar o nome do declarante no recibo de entrega do IRPF:\n'
-                               f'{abre_pdf}\n'
+                    alert(text=f'Não foi possível encontrar o nome do declarante no recibo de entrega do IRPF:\n\n'
+                               f'{abre_pdf}\n\n'
                                f'Verifique a forma que o PDF foi salvo e tente novamente.')
                     return False
                     
@@ -338,27 +364,29 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
                 nome_do_arquivo = os.path.join(pasta_inicial, subpasta, f'Capa E-book {nome_declarante}.pdf')
             
             caminho_da_imagem = "Assets\DIRPF_capa.png"
-            create_pdf(nome_do_arquivo, caminho_da_imagem, nome_declarante, pagar_restituir)
+            cria_capa(nome_do_arquivo, caminho_da_imagem, nome_declarante, pagar_restituir)
             # adiciona o arquivo da capa na lista da subpasta
             nomes_arquivos.append(f'Capa E-book {nome_declarante}.pdf')
             
+            # cria uma cópia númerada da capa
             if not subpasta:
                 shutil.copy(os.path.join(pasta_inicial, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
             else:
                 shutil.copy(os.path.join(pasta_inicial, subpasta, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
-                
+            
+            # adiciona a capa na lista de arquivos para mesclar
             lista_arquivos.append(0)
             
+            # cria uma cópia númerada do recibo
             if not subpasta:
                 shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
             else:
                 shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
-                
+            # adiciona o recibo na lista de arquivos para mesclar
             lista_arquivos.append(2)
             continue
         
         if re.compile(r'imagem-declaracao').search(arquivo):
-            # busca o nome do declarante
             with fitz.open(abre_pdf) as pdf:
                 conteudo_declaracao = ''
                 for page in pdf:
@@ -367,36 +395,34 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
                 
                 # print(conteudo_declaracao)
                 # time.sleep(30)
-
-                aliquota_efetiva = re.compile('(.+,\d+)\n.+\nAliquota efetiva \(%\)\nBase de cálculo do imposto').search(conteudo_declaracao)
-                if not aliquota_efetiva:
-                    aliquota_efetiva = re.compile('(.+,\d+)\nAliquota efetiva \(%\)\nTipo de Conta').search(conteudo_declaracao)
-                    if not aliquota_efetiva:
-                        try:
-                            alert(text=f'Não foi encontrada a Aliquota efetiva (%) na declaração do declarante: {nome_declarante}.\n'
-                                        'Provável erro de layout da página, a informação não será incluída no resumo localizado na página 1')
-                            return False
-                        except:
-                            alert(text=f'Não foi possível encontrar o nome do declarante no recibo de entrega do IRPF:\n'
-                                       f'Verifique a forma que o PDF foi salvo e tente novamente.')
-                            return False
-                    else:
+                
+                # adiciona na lista da página de resumo a aliquota efetiva
+                # existem duas variantes da informação no PDF, dependendo do tipo de declaração escolhida, OPÇÃO PELAS DEDUÇÕES LEGAIS ou OPÇÃO PELO DESCONTO SIMPLIFICADO
+                regex_aliquotas = [r'(.+,\d+)\n.+\nAliquota efetiva \(%\)\nBase de cálculo do imposto',
+                                   r'(.+,\d+)\nAliquota efetiva \(%\)\nTipo de Conta',
+                                   r'(.+,\d+)\nAliquota efetiva \(%\)\nPágina \d']
+                for regex_a in regex_aliquotas:
+                    aliquota_efetiva = re.compile(regex_a).search(conteudo_declaracao)
+                    if aliquota_efetiva:
                         aliquota_efetiva = aliquota_efetiva.group(1)
-                        infos_resumo.append((6, f'Aliquota efetiva no ano em percentual (%): {aliquota_efetiva}'))
-                else:
-                    aliquota_efetiva = aliquota_efetiva.group(1)
-                    infos_resumo.append((6, f'Aliquota efetiva no ano em percentual (%): {aliquota_efetiva}'))
-                    
+                        infos_resumo.append((6, f'Aliquota efetiva no ano em percentual (%)', aliquota_efetiva))
+                        break
+                if not aliquota_efetiva:
+                    alert(text=f'Não foi encontrada a Aliquota efetiva (%) no arquivo: {arquivo}.\n\n'
+                               'Provável erro de layout da página.\n\n'
+                               'A informação não será inserida na página de resumo, verifique a forma que o PDF foi salvo e tente novamente.')
+            
+            # cria uma cópia númerada da declaração
             if not subpasta:
                 shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '3.pdf'))
             else:
                 shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '3.pdf'))
-                
+            # adiciona a declaração na lista de arquivos para mesclar
             lista_arquivos.append(3)
             continue
         
+        # Adiciona os Informes de rendimento da empresa depois da declaração
         if re.compile(r'INFORME').search(arquivo.upper()):
-
             with fitz.open(abre_pdf) as pdf:
                 texto_arquivo = ''
                 for page in pdf:
@@ -416,9 +442,11 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
                     lista_arquivos.append(contador)
                     contador += 1
     
+    # cria a página de resumo
     cria_pagina_resumo(infos_resumo, 'Arquivos para mesclar\\1.pdf')
     lista_arquivos.append(1)
     
+    # percorre os arquivos novamente, mas dessa vês adiciona informes de banco e outros
     for arquivo in nomes_arquivos:
         if not subpasta:
             abre_pdf = os.path.join(pasta_inicial, arquivo)
@@ -445,6 +473,7 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
                     lista_arquivos.append(contador)
                     contador += 1
     
+    # percorre os arquivos novamente, adicionando os outros documentos
     for arquivo in nomes_arquivos:
         if re.compile(r'Capa E-book').search(arquivo):
             continue
@@ -486,7 +515,8 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
             pdf_merger.close()
             break
         except:
-            alert('Atualização de e-book falhou.\nCaso exista algum e-book aberto, por gentileza feche para que ele seja atualizado.')
+            pdf_merger.close()
+            alert('Atualização de e-book falhou.\n\nCaso exista algum e-book aberto, por gentileza feche para que ele seja atualizado.')
             return False
             
     window['-Mensagens-'].update(f'Finalizando, aguarde...')
@@ -570,6 +600,7 @@ def run(window, pasta_inicial, pasta_final):
     # limpa a pasta de cópias de arquivos
     resultado = False
     for arquivo in os.listdir('Arquivos para mesclar'):
+        print('Limpando pasta de apoio')
         os.remove(os.path.join('Arquivos para mesclar', arquivo))
     
     window['-progressbar-'].update_bar(0)
@@ -582,10 +613,12 @@ def run(window, pasta_inicial, pasta_final):
             return
         
         resultado = cria_ebook(window, False, arquivos, pasta_final)
-        
+        if not resultado:
+            return
         # limpa a pasta de cópias de arquivos
         for arquivo in os.listdir('Arquivos para mesclar'):
             os.remove(os.path.join('Arquivos para mesclar', arquivo))
+
         
         if event == '-encerrar-' or event == sg.WIN_CLOSED:
             print('ENCERRAR')
@@ -599,7 +632,8 @@ def run(window, pasta_inicial, pasta_final):
                 return
             
             resultado = cria_ebook(window, subpasta, nomes_arquivos, pasta_final)
-            
+            if not resultado:
+                return
             window['-progressbar-'].update_bar(count, max=int(len(subpasta_arquivos.items())))
             window['-Progresso_texto-'].update(str(round(float(count) / int(len(subpasta_arquivos.items())) * 100, 1)) + '%')
             window.refresh()
@@ -622,7 +656,7 @@ sg.set_global_icon('Assets/auto-flash.ico')
 if __name__ == '__main__':
     sg.theme('GrayGrayGray')  # Define o tema do PySimpleGUI
     layout = [
-        [sg.Button('Ajuda', border_width=0), sg.Button('Log do sistema', border_width=0, disabled=True)],
+        [sg.Button('Ajuda', border_width=0), sg.Button('Sobre', border_width=0), sg.Button('Log do sistema', border_width=0, disabled=True)],
         [sg.Text('')],
         [sg.Text('Selecione a pasta que contenha os arquivos PDF para analisar:')],
         [sg.FolderBrowse('Pesquisar', key='-abrir_pdf-'), sg.InputText(key='-output_dir-', size=80, disabled=True)],
@@ -633,7 +667,7 @@ if __name__ == '__main__':
         [sg.Text(size=6, text='', key='-Progresso_texto-'), sg.ProgressBar(max_value=0, orientation='h', size=(54, 5), key='-progressbar-', bar_color='#f0f0f0')],
         [sg.Button('Iniciar', key='-iniciar-', border_width=0), sg.Button('Encerrar', key='-encerrar-', disabled=True, border_width=0), sg.Button('Abrir resultados', key='-abrir_resultados-', disabled=True, border_width=0)],
     ]
-    
+
     # guarda a janela na variável para manipula-la
     window = sg.Window('Cria E-book DIRPF', layout)
     
@@ -703,6 +737,9 @@ if __name__ == '__main__':
         elif event == 'Ajuda':
             os.startfile('Manual do usuário - Cria E-book DIRPF.pdf')
         
+        elif event == 'Sobre':
+            os.startfile('Sobre.pdf')
+        
         elif event == '-iniciar-':
             # Cria uma nova thread para executar o script
             script_thread = Thread(target=run_script_thread)
@@ -712,6 +749,4 @@ if __name__ == '__main__':
             os.startfile(pasta_final)
     
     window.close()
-    
-    
     

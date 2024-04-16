@@ -92,9 +92,9 @@ def barra_de_status(func):
             window['-titulo-'].update('Rotina automática, não interfira.', text_color='#fca103')
             window['-iniciar-'].update(visible=False)
             window['-fechar-'].update(visible=False)
-            window['-Processando-'].update(visible=True)
             window['-Check-'].update(visible=False)
             window['-Error-'].update(visible=False)
+            window['-Processando-'].update(visible=True)
 
             try:
                 # Chama a função que executa o script
@@ -276,11 +276,17 @@ _escreve_relatorio_csv = escreve_relatorio_csv
 def escreve_header_csv(texto, nome='resumo', local=e_dir, encode='latin-1'):
     os.makedirs(local, exist_ok=True)
     
-    with open(os.path.join(local, f"{nome}.csv"), 'r', encoding=encode) as f:
-        conteudo = f.read()
-
-    with open(os.path.join(local, f"{nome}.csv"), 'w', encoding=encode) as f:
-        f.write(texto + '\n' + conteudo)
+    try:
+        with open(os.path.join(local, f"{nome}.csv"), 'r', encoding=encode) as f:
+            conteudo = f.read()
+        with open(os.path.join(local, f"{nome}.csv"), 'w', encoding=encode) as f:
+            f.write(texto + '\n' + conteudo)
+    except:
+        with open(os.path.join(local, f"{nome} - auxiliar.csv"), 'r', encoding=encode) as f:
+            conteudo = f.read()
+        with open(os.path.join(local, f"{nome} - auxiliar.csv"), 'w', encoding=encode) as f:
+            f.write(texto + '\n' + conteudo)
+    
 _escreve_header_csv = escreve_header_csv
 
 
@@ -363,7 +369,7 @@ def open_lista_dados(i_dir='ignore', encode='latin-1', file=False):
         with open(file, 'r', encoding=encode) as f:
             dados = f.readlines()
     except Exception as e:
-        alert(title='Mensagem erro', text=f'Não pode abrir arquivo\n{str(e)}')
+        alert(title='Mensagem erro', text=f'Não pode abrir arquivo\n{i_dir}\n{str(e)}')
         return False
 
     print('>>> usando dados de ' + file.split('/')[-1])

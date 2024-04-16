@@ -117,7 +117,7 @@ def salvar_pdf(driver, pasta_analise):
     _wait_img('tela_imprimir.png', conf=0.9)
     
     print('>>> Salvando PDF')
-    imagens = ['print_to_pdf.png', 'print_to_pdf_2.png', 'print_to_pdf_3.png']
+    imagens = ['print_to_pdf.png', 'print_to_pdf_2.png', 'print_to_pdf_3.png', 'print_to_pdf_4.png']
     for img in imagens:
         # se não estiver selecionado para salvar como PDF, seleciona para salvar como PDF
         if _find_img(img, conf=0.9) or _find_img(img, conf=0.9):

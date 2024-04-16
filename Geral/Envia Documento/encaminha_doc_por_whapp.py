@@ -259,7 +259,8 @@ def enviar_sem_anexo(numero, link_mensagem, titulo, vencimento):
                 f"veigaepostal@veigaepostal.com.br\n"
                 f"(19)3829-8959")
     
-    _abrir_chrome('https://web.whatsapp.com/', tela_inicial_site='nova_conversa.png', fechar_janela=False, outra_janela='email.png')
+    #_abrir_chrome('https://web.whatsapp.com/', tela_inicial_site='nova_conversa.png', fechar_janela=False, outra_janela='email.png')
+        
     _click_img('nova_conversa.png', conf=0.9)
     time.sleep(1)
     p.write(numero)
@@ -267,8 +268,8 @@ def enviar_sem_anexo(numero, link_mensagem, titulo, vencimento):
 
     if _find_img('sem_contato.png', conf=0.9):
         time.sleep(1)
-        p.hotkey('ctrl', 'w')
-        time.sleep(1)
+        """p.hotkey('ctrl', 'w')
+        time.sleep(1)"""
         return 'Nenhum contato encontrado'
 
     while _find_img('procurando_numero.png', conf=0.9):
@@ -289,15 +290,15 @@ def enviar_sem_anexo(numero, link_mensagem, titulo, vencimento):
 
     time.sleep(1)
     p.press('enter')
-    time.sleep(3)
+    # time.sleep(3)
     
-    while _find_img('anexar.png'):
+    """while _find_img('anexar.png'):
         p.hotkey('ctrl', 'w')
         time.sleep(1)
         if _find_img('sair_do_site.png', conf=0.9):
             p.press('right')
             p.press('enter')
-        time.sleep(3)
+        time.sleep(3)"""
         
     
     time.sleep(1)
@@ -312,8 +313,8 @@ def enviar_anexo(numero, anexo, corpo_email):
                 f"veigaepostal@veigaepostal.com.br\n"
                 f"(19)3829-8959")
     
-    _abrir_chrome('https://web.whatsapp.com/', tela_inicial_site='nova_conversa.png', fechar_janela=False, outra_janela='email.png')
-
+    # _abrir_chrome('https://web.whatsapp.com/', tela_inicial_site='nova_conversa.png', fechar_janela=False, outra_janela='email.png')
+    
     _click_img('nova_conversa.png', conf=0.9)
     time.sleep(1)
     p.write(numero)
@@ -321,8 +322,8 @@ def enviar_anexo(numero, anexo, corpo_email):
 
     if _find_img('sem_contato.png', conf=0.9):
         time.sleep(1)
-        p.hotkey('ctrl', 'w')
-        time.sleep(1)
+        """p.hotkey('ctrl', 'w')
+        time.sleep(1)"""
         return 'Nenhum contato encontrado'
 
     while _find_img('procurando_numero.png', conf=0.9):
@@ -364,14 +365,15 @@ def enviar_anexo(numero, anexo, corpo_email):
         
     time.sleep(1)
     p.press('enter')
-    time.sleep(3)
+    #time.sleep(3)
     
-    while p.locateOnScreen(r'imgs/aguardando.png'):
+    """while _find_img('anexar.png'):
+        p.hotkey('ctrl', 'w')
         time.sleep(1)
-    
-    time.sleep(1)
-    p.hotkey('ctrl', 'w')
-    time.sleep(1)
+        if _find_img('sair_do_site.png', conf=0.9):
+            p.press('right')
+            p.press('enter')
+        time.sleep(3)"""
     
     return 'ok'
 
@@ -432,6 +434,8 @@ def mover_email(driver, pasta=''):
 @_barra_de_status
 def run(window):
     print('>>> Aguardando documentos...')
+    # abre o whatsapp e o email antes de começar a rotina, o email abre depois para que o robô utilise 'alt + tab' para alternar entre as telas
+    _abrir_chrome('https://web.whatsapp.com/', tela_inicial_site='nova_conversa.png', fechar_janela=False, outra_janela='email.png')
     
     # opções para fazer com que o chrome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
@@ -539,8 +543,22 @@ def run(window):
             # se tiver como enviar e encontrar o número na planilha
             else:
                 resultado = ''
+                # alterna entre a tela do e-mail e do whatsapp usando 'alt + tab'
+                while not _find_img('nova_conversa.png', conf=0.9):
+                    with p.hold('alt'):
+                        p.press('tab')
+                        
+                    time.sleep(1)
+                    
                 for contato in cnpjs_iguais:
                     resultado = envia(resultado, contato, titulo, vencimento, link_mensagem, corpo_email, nome_planilha)
+                
+                while not _find_img('menu_email.png', conf=0.95):
+                    with p.hold('alt'):
+                        p.press('tab')
+                        
+                    time.sleep(1)
+                    
                 # se der erro ao enviar
                 if resultado == 'erro':
                     time.sleep(1)

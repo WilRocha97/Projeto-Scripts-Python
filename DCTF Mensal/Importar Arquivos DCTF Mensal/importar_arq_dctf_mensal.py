@@ -21,7 +21,7 @@ def barra_de_status(func):
                                       'PROGRESS': ('#ffffff', '#ffffff'),
                                       'BORDER': 0,
                                       'SLIDER_DEPTH': 0,
-                                      'PROGRESS_DEPTH': 0, }
+                                      'PROGRESS_DEPTH': 0}
     
     @wraps(func)
     def wrapper():
@@ -38,11 +38,14 @@ def barra_de_status(func):
                 data = output.getvalue()
             return data
         
-        filename = 'Assets/processando.gif'
+        filename = 'V:/Setor Robô/Scripts Python/_comum/Assets/processando.gif'
         im = Image.open(filename)
         
-        filename_check = 'Assets/check.png'
+        filename_check = 'V:/Setor Robô/Scripts Python/_comum/Assets/check.png'
         im_check = Image.open(filename_check)
+        
+        filename_error = 'V:/Setor Robô/Scripts Python/_comum/Assets/error.png'
+        im_error = Image.open(filename_error)
         
         index = 0
         frames = im.n_frames
@@ -53,36 +56,59 @@ def barra_de_status(func):
         # Layout da janela
         layout = [
             [sg.Button('Iniciar', key='-iniciar-', border_width=0),
-             sg.Button('Encerrar', key='-encerrar-', border_width=0),
-             sg.Text('', key='-titulo-', text_color='#fca103'),
+             sg.Button('Fechar', key='-fechar-', border_width=0, visible=False),
+             sg.Text('', key='-titulo-'),
              sg.Text('', key='-Mensagens-'),
              sg.Image(data=image_to_data(im), key='-Processando-'),
-             sg.Image(data=image_to_data(im_check), key='-Check-', visible=False)],
+             sg.Image(data=image_to_data(im_check), key='-Check-', visible=False),
+             sg.Image(data=image_to_data(im_error), key='-Error-', visible=False)],
         ]
         
         # guarda a janela na variável para manipula-la
         screen_width, screen_height = sg.Window.get_screen_size()
-        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, size=(600, 35), margins=(0,0), element_justification='center', finalize=True, location=((screen_width // 2) - (600 // 2), 0))
-    
+        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(535, 34), margins=(0, 0), finalize=True, location=((screen_width // 2) - (535 // 2), 0))
+        
         def run_script_thread():
             # habilita e desabilita os botões conforme necessário
-            window['-iniciar-'].update(disabled=True)
+            window['-titulo-'].update('Rotina automática, não interfira.', text_color='#fca103')
+            window['-iniciar-'].update(visible=False)
+            window['-fechar-'].update(visible=False)
+            window['-Check-'].update(visible=False)
+            window['-Error-'].update(visible=False)
+            window['-Processando-'].update(visible=True)
             
             try:
                 # Chama a função que executa o script
-                func(window, event)
-            except Exception as erro:
-                print(erro)
+                func(window)
+            except Exception as e:
+                # Obtém a pilha de chamadas de volta como uma string
+                traceback_str = traceback.format_exc()
                 
-            # habilita e desabilita os botões conforme necessário
-            window['-iniciar-'].update(disabled=False)
+                window['-titulo-'].update(visible=False)
+                window['-iniciar-'].update(visible=False)
+                window['-Processando-'].update(visible=False)
+                
+                window['-fechar-'].update(visible=True)
+                window['-titulo-'].update('Erro', text_color='#fc0303')
+                window['-titulo-'].update(visible=True)
+                window['-Error-'].update(visible=True)
+                
+                alert(f'Traceback: {traceback_str}\n\n'
+                      f'Erro: {e}')
+                print(f'Traceback: {traceback_str}\n\n'
+                      f'Erro: {e}')
+                return
             
-            # apaga qualquer mensagem na interface
+            # habilita e desabilita os botões conforme necessário
+            window['-titulo-'].update(visible=False)
+            window['-Processando-'].update(visible=False)
             window['-Mensagens-'].update('')
             
-            window['-Processando-'].update(visible=False)
+            window['-iniciar-'].update(visible=True)
+            window['-fechar-'].update(visible=True)
+            window['-titulo-'].update('Execução finalizada')
+            window['-titulo-'].update(visible=True)
             window['-Check-'].update(visible=True)
-            
         
         processando = 'não'
         while True:
@@ -91,10 +117,9 @@ def barra_de_status(func):
             
             if event == sg.WIN_CLOSED:
                 break
-            
-            elif event == '-encerrar-':
+            elif event == '-fechar-':
                 break
-                
+            
             elif event == '-iniciar-':
                 # Cria uma nova thread para executar o script
                 Thread(target=run_script_thread).start()
@@ -104,7 +129,7 @@ def barra_de_status(func):
                 index = (index + 1) % frames
                 im.seek(index)
                 window['-Processando-'].update(data=image_to_data(im))
-                
+        
         window.close()
     
     return wrapper

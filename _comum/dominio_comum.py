@@ -27,7 +27,10 @@ def _login(empresa, andamentos):
     try:
         cod, cnpj, nome, regime, movimento = empresa
     except:
-        cod, cnpj, nome = empresa
+        try:
+            cod, cnpj, nome, regime = empresa
+        except:
+            cod, cnpj, nome = empresa
         
     # espera a tela inicial do domínio
     while not _find_img('inicial.png', pasta='imgs_c', conf=0.9):

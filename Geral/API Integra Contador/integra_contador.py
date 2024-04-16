@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import requests_pkcs12, atexit, re, os, requests, time, base64, json, io, chardet, OpenSSL.crypto, contextlib, tempfile, pyautogui as p, PySimpleGUI as sg
+import traceback, requests_pkcs12, atexit, re, os, requests, time, base64, json, io, chardet, OpenSSL.crypto, contextlib, tempfile, pyautogui as p, PySimpleGUI as sg
 from threading import Thread
 from pathlib import Path
 from functools import wraps
@@ -379,7 +379,7 @@ if __name__ == '__main__':
         [sg.Text('Selecione um arquivo Excel com os dados dos clientes:')],
         [sg.FileBrowse('Pesquisar', key='-abrir1-', file_types=(('Planilhas Excel', '*.csv'),)), sg.InputText(key='-input_excel-', size=80, disabled=True)],
         [sg.Text('Selecione um diretório para salvar os resultados (Servidor "Comum T:" é o padrão):')],
-        [sg.FolderBrowse('Pesquisar', key='-abrir2-'), sg.InputText(default_text='T:/ROBO/DCTF-WEB',key='-output_dir-', size=80, disabled=True)],
+        [sg.FolderBrowse('Pesquisar', key='-abrir2-'), sg.InputText(default_text='T:/ROBÔ/DCTF-WEB',key='-output_dir-', size=80, disabled=True)],
         [sg.Text('')],
         [sg.Text('', key='-Mensagens-')],
         [sg.Text(size=6, text='', key='-Progresso_texto-'), sg.ProgressBar(max_value=0, orientation='h', size=(54, 5), key='-progressbar-', bar_color='#f0f0f0')],
@@ -452,6 +452,8 @@ if __name__ == '__main__':
             run(window, cnpj_contratante, usuario_b64, senha, categoria, competencia, input_certificado, input_excel, output_dir)
         # Qualquer erro o script exibe um alerta e salva gera o arquivo log de erro
         except Exception as erro:
+            traceback_str = traceback.format_exc()
+            
             time.sleep(1)
             if str(erro) == 'Invalid password or PKCS12 data':
                 p.alert(text=f'Senha do certificado digital inválida.')
@@ -459,12 +461,14 @@ if __name__ == '__main__':
                 window['Log do sistema'].update(disabled=False)
                 p.alert(text=f'Erro de conexão com o serviço.\n\n'
                              f'Mais detalhes no arquivo "Log.txt" em "Log do sistema"\n')
-                escreve_doc(erro, local=output_dir)
+                escreve_doc(f'Traceback: {traceback_str}\n\n'
+                            f'Erro: {erro}', local=output_dir)
             else:
                 window['Log do sistema'].update(disabled=False)
-                p.alert(text=f"Erro :'(\n\n"
-                           f'Abra o pasta de "Log do sistema" e envie o arquivo "Log.txt" para o desenvolvedor.\n')
-                escreve_doc(erro, local=output_dir)
+                p.alert(text='Erro detectado, clique no botão "Log do sistema" para acessar o arquivo de erros e contate o desenvolvedor')
+                escreve_doc(erro, )
+                escreve_doc(f'Traceback: {traceback_str}\n\n'
+                            f'Erro: {erro}', local=output_dir)
         
         # habilita e desabilita os botões conforme necessário
         window['-input_cnpj_contratante-'].update(disabled=False)

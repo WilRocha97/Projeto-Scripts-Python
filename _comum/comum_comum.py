@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from tkinter.filedialog import askopenfilename, askdirectory, Tk
-from datetime import datetime
+from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
 from requests import Session
 from functools import wraps
@@ -10,6 +10,7 @@ from threading import Thread
 from io import BytesIO
 from PIL import Image
 import PySimpleGUI as sg
+import time
 import os
 import re
 import traceback
@@ -85,7 +86,7 @@ def barra_de_status(func):
         
         # guarda a janela na variável para manipula-la
         screen_width, screen_height = sg.Window.get_screen_size()
-        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(535, 34), margins=(0,0), finalize=True, location=((screen_width // 2) - (535 // 2), 0))
+        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(710, 34), margins=(0,0), finalize=True, location=((screen_width // 2) - (710 // 2), 0))
         
         def run_script_thread():
             # habilita e desabilita os botões conforme necessário
@@ -394,10 +395,43 @@ _download_file = download_file
 # Recebe o indice da empresa atual da consulta e a quantidade total de empresas
 # Se não for a primeira empresa printa quantas faltam e pula 2 linhas
 # Printa o indice da empresa atual mais as infos da mesma
-def indice(count, total_empresas, empresa='', index=0, window=False):
-    
+def indice(count, total_empresas, empresa='', index=0, window=False, tempos=False, tempo_execucao=0):
+    tempo_estimado_texto = ''
+    tempo_estimado = ''
     if window:
-        window['-Mensagens-'].update(f'{str((count + index) - 1)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index) + 1)} Restantes')
+        if tempos:
+            tempo_inicial = datetime.now()
+            
+            tempos.append(tempo_inicial)
+            tempo_execucao_atual = int(tempos[1].timestamp()) - int(tempos[0].timestamp())
+            
+            tempo_estimado = int(int(tempo_execucao_atual) + int(tempo_execucao)) / 2
+            
+            tempo_total_segundos = int((len(total_empresas) + index) - (count + index) + 1) * int(tempo_estimado)
+            
+            # Converter o tempo total para um objeto timedelta
+            tempo_total = timedelta(seconds=tempo_total_segundos)
+            
+            # Extrair dias, horas e minutos do timedelta
+            dias = tempo_total.days
+            horas = tempo_total.seconds // 3600
+            minutos = (tempo_total.seconds % 3600) // 60
+            
+            # Retorna o tempo no formato "dias:horas:minutos:segundos"
+            tempo_estimado_texto =  f" | Tempo estimado: {dias} dias {horas} horas {minutos} minutos"
+            tempos.pop(0)
+            
+        while True:
+            try:
+                window['-Mensagens-'].update(f'{str((count + index) - 1)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index) + 1)} Restantes{tempo_estimado_texto}')
+                break
+            except:
+                try:
+                    window['-Mensagens-'].update('Buguei...')
+                except:
+                    pass
+                print('>>> Erro ao atualizar a interface, tentando novamente...')
+                pass
 
     if count > 1:
         print(f'[ {len(total_empresas) - (count - 1)} Restantes ]\n\n')
@@ -407,6 +441,7 @@ def indice(count, total_empresas, empresa='', index=0, window=False):
     empresa = str(empresa).replace("('", '[ ').replace("')", ' ]').replace("',)", " ]").replace(',)', ' ]').replace("', '", ' - ')
             
     print(f'{indice_dados} - {empresa}')
+    return tempos, tempo_estimado
 _indice = indice
 
 

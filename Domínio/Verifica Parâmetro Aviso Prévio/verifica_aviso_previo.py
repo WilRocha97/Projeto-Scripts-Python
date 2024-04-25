@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import datetime
+
 import pyperclip, time, os, shutil, pyautogui as p
 
 from sys import path
@@ -98,10 +100,12 @@ def run(window):
     _login_web()
     _abrir_modulo('folha')
     
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = 0
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index, window)
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, window, tempos, tempo_execucao)
     
         if not _login(empresa, andamentos):
             continue
@@ -116,3 +120,6 @@ if __name__ == '__main__':
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is not None:
         run()
+    
+    data_atual = datetime.datetime.now().strftime('%d-%m-%Y')
+    shutil.move(os.path.join('execução', andamentos + '.csv'), os.path.join('execução', andamentos + f' {data_atual}.csv'))

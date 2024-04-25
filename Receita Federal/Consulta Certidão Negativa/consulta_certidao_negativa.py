@@ -31,7 +31,7 @@ def verificacoes(consulta_tipo, andamento, identificacao, nome):
     return True
 
 
-def salvar(consulta_tipo, andamento, identificacao, nome, pasta_download, nome_certidao):
+def salvar(consulta_tipo, pasta, andamento, identificacao, nome, pasta_download, nome_certidao):
     # espera abrir a tela de salvar o arquivo
     contador = 0
     while not _find_img('salvar_como.png', conf=0.9):
@@ -40,6 +40,9 @@ def salvar(consulta_tipo, andamento, identificacao, nome, pasta_download, nome_c
         if _find_img('em_processamento.png', conf=0.9) or _find_img('erro_captcha.png', conf=0.9):
             print('>>> Tentando novamente')
             consulta(consulta_tipo, identificacao)
+            if _find_img('site_morreu.png', conf=0.9):
+                print('>>> Site morreu, tentando novamente')
+                consulta(consulta_tipo, identificacao)
             if contador >= 5:
                 _escreve_relatorio_csv('{};{};Consulta em processamento, volte daqui alguns minutos.'.format(identificacao, nome), nome=andamento)
                 print(f'❗ Consulta em processamento, volte daqui alguns minutos.')
@@ -87,7 +90,8 @@ def salvar(consulta_tipo, andamento, identificacao, nome, pasta_download, nome_c
     time.sleep(1)
     p.press('enter')
     time.sleep(1)
- 
+
+    os.makedirs(r'{}\{}'.format(e_dir, pasta), exist_ok=True)
     while True:
         try:
             pyperclip.copy(pasta_download)
@@ -121,6 +125,8 @@ def consulta(consulta_tipo, identificacao):
         _abrir_chrome(link)
 
         for i in range(60):
+            if _find_img('site_morreu.png', conf=0.9):
+                break
             time.sleep(1)
             if _find_img(f'informe_{consulta_tipo}.png', conf=0.9):
                 break
@@ -155,18 +161,23 @@ def analisa_nome_certidao(pasta_download, nome_certidao):
         pasta_pendencias = pasta_download + ' com pendências'
         os.makedirs(pasta_pendencias, exist_ok=True)
         shutil.move(arq, os.path.join(pasta_pendencias, nome_certidao.replace('.pdf', f' - {nome}.pdf')))
+        return 'com pendência'
     else:
         shutil.move(arq, os.path.join(pasta_download, nome_certidao.replace('.pdf', f' - {nome}.pdf')))
+        return ''
+    
 
 @_time_execution
 @_barra_de_status
 def run(window):
     pasta_download = 'V:\Setor Robô\Scripts Python\Receita Federal\Consulta Certidão Negativa\execução\Certidões ' + consulta_tipo
+    
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = 0
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
-
-        _indice(count, total_empresas, empresa, index, window)
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, window, tempos, tempo_execucao)
 
         identificacao, nome = empresa
         nome = nome.replace('/', '')
@@ -175,7 +186,7 @@ def run(window):
         # try:
         while True:
             consulta(consulta_tipo, identificacao)
-            situacao = salvar(consulta_tipo, andamento, identificacao, nome, pasta_download, nome_certidao)
+            situacao = salvar(consulta_tipo, pasta, andamento, identificacao, nome, pasta_download, nome_certidao)
             p.hotkey('ctrl', 'w')
 
             if not situacao:
@@ -185,9 +196,9 @@ def run(window):
                 continue
 
             else:
-                analisa_nome_certidao(pasta_download, nome_certidao)
+                resultado = analisa_nome_certidao(pasta_download, nome_certidao)
                 print('✔ Certidão gerada')
-                _escreve_relatorio_csv('{};{};{} gerada'.format(identificacao, nome, andamento), nome=andamento)
+                _escreve_relatorio_csv('{};{};{} gerada {}'.format(identificacao, nome, andamento, resultado), nome=andamento)
                 time.sleep(1)
                 break
 
@@ -201,7 +212,6 @@ def run(window):
 if __name__ == '__main__':
     consulta_tipo = p.confirm(text='Qual o tipo da consulta?', buttons=('CNPJ', 'CPF'))
     pasta = f'Certidões {consulta_tipo}'
-    os.makedirs(r'{}\{}'.format(e_dir, pasta), exist_ok=True)
     andamento = f'Certidão Negativa {consulta_tipo}'
 
     empresas = _open_lista_dados()

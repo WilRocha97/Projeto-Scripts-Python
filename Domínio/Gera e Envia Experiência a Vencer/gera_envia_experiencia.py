@@ -28,7 +28,6 @@ def open_lista_dados(file, encode='latin-1'):
     print('>>> usando dados de ' + file.split('/')[-1])
     return list(map(lambda x: tuple(x.replace('\n', '').split(';')), dados))
 
-
 def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
     # espera o botão de relatórios do domínio aparecer na tela
     _wait_img('relatorios.png', conf=0.9, timeout=-1)
@@ -275,11 +274,13 @@ def run(window):
         # abre o Domínio Web e o módulo, no caso será o módulo Folha
         _login_web()
         _abrir_modulo('folha')
-        
+    
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = 0
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index, window)
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, window, tempos, tempo_execucao)
         
         while True:
             # abre a empresa no domínio

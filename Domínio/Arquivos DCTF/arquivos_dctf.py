@@ -269,10 +269,12 @@ def run(window):
     _login_web()
     _abrir_modulo('escrita_fiscal')
     
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = 0
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        # printa o indice da empresa q2ue está sendo executada
-        _indice(count, total_empresas, empresa, index, window)
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, window, tempos, tempo_execucao)
         
         while True:
             if not _login(empresa, andamentos):

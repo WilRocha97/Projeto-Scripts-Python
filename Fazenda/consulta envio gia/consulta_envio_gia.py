@@ -94,7 +94,7 @@ def create_pdf(driver, nome_arquivo, comp_formatado):
     return driver, 'Arquivo gerado'
 
 
-def consulta_gia(ie, comp, driver, sid):
+def consulta_gia(ie, nome, comp, driver, sid):
     print(f'>>> Consultando entrega da GIA')
     comp = comp.split('/')
     mes = comp[0]
@@ -137,16 +137,16 @@ def consulta_gia(ie, comp, driver, sid):
             if not resultado:
                 return driver, 'ok'
             
-    return driver, resultado.group(1)
+    return driver, f'{nome};{resultado.group(1)}'
         
     
 @_time_execution
 def run():
     # opções para fazer com que o chrome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
-    # options.add_argument('--headless')
-    # options.add_argument('--window-size=1920,1080')
-    options.add_argument("--start-maximized")
+    options.add_argument('--headless')
+    options.add_argument('--window-size=1920,1080')
+    # options.add_argument("--start-maximized")
     
     comp = _get_comp(printable='mm/yyyy', strptime='%m/%Y')
     comp_formatado = comp.replace("/", "-")
@@ -166,7 +166,7 @@ def run():
     driver = False
     
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, ie, usuario, senha, perfil = empresa
+        cnpj, nome, ie, usuario, senha, perfil = empresa
         
         # printa o índice da empresa que está sendo executada
         _indice(count, total_empresas, empresa, index)
@@ -203,7 +203,7 @@ def run():
                     _escreve_relatorio_csv(f"{cnpj};{ie};{sid.replace('❗ ', '').replace('❌ ', '').replace('✔ ', '')}", nome=f'Consulta Envio de GIA - {comp_formatado}')
                     continue
                     
-        driver, resultado = consulta_gia(ie, comp, driver, sid)
+        driver, resultado = consulta_gia(ie, nome, comp, driver, sid)
         
         # se a consulta retornar um ok, cria o PDF e captura os dados
         if resultado == 'ok':
@@ -211,7 +211,7 @@ def run():
             driver, resultado = create_pdf(driver, nome_arquivo, comp_formatado)
             driver, resultado = captura_dados(driver)
         else:
-            _escreve_relatorio_csv(f'{cnpj};{ie};{usuario};{senha};{perfil}', nome=f'Próximos dados', local='ignore')
+            _escreve_relatorio_csv(f'{cnpj};{nome};{ie};{usuario};{senha};{perfil}', nome=f'Próximos dados', local='ignore')
         
         # escreve na planilha de andamentos o resultado da execução atual
         try:

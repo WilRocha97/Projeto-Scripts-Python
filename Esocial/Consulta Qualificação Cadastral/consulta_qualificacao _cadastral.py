@@ -62,17 +62,14 @@ def login(driver, nome, cpf, pis, data_nasc):
         if erro:
             print(f'❌ {erro.group(1)}')
             return driver, erro.group(1)
-        
         time.sleep(1)
         timer += 1
         # se passar 60 segundos e não aparecer a tabela, retorna um erro
         if timer > 60:
             print('❌ O site demorou muito para responder, tentando novamente')
             return driver, 'erro'
-
     # clica em validar a consulta
     driver.find_element(by=By.ID, value='formValidacao2:botaoValidar2').click()
-    
     timer = 0
     # tira um print da tela com e recorta apenas a imagem do captcha para enviar para a api
     while not _find_by_id('captcha_challenge', driver):
@@ -111,7 +108,6 @@ def login(driver, nome, cpf, pis, data_nasc):
         if timer > 60:
             print('❌ O site demorou muito para responder, tentando novamente')
             return driver, 'erro'
-
     return driver, 'ok'
 
 
@@ -149,7 +145,6 @@ def verifica_dados(cpf, nome, cod_empresa, cod_empregado, pis, data_nasc):
             print(f'❌ {info[1]} não informado')
             _escreve_relatorio_csv(f'{cpf};{nome};{cod_empresa};{cod_empregado};{pis};{data_nasc};{info[1]} não informado', nome='Consulta Qualificação Cadastral')
             return False
-
     return True
 
 

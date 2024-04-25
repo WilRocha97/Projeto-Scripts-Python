@@ -4,7 +4,7 @@ from sys import path
 
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
-from comum_comum import _ask_for_dir, _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start, _barra_de_status
+from comum_comum import _ask_for_dir, _indice, _time_execution, _escreve_relatorio_csv, _escreve_header_csv, e_dir, _open_lista_dados, _where_to_start, _barra_de_status
 from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf
 
 
@@ -48,7 +48,7 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
         p.press('esc')
         time.sleep(1)
         return 'ok', ''
-    
+
     p.write(periodo)
     time.sleep(0.5)
 
@@ -109,7 +109,7 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
             break
 
     _salvar_pdf()
-    arq_final = mover_relatorio(cod, nome)
+    arq_final = mover_relatorio(cod, nome, periodo)
     
     _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Relatório gerado']), nome=andamento)
     print('✔ Relatório gerado')
@@ -120,20 +120,20 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
     return 'ok', arq_final
 
 
-def mover_relatorio(cod, nome):
+def mover_relatorio(cod, nome, periodo):
     folder = 'C:\\'
     for arq in os.listdir(folder):
         if arq.endswith('.pdf'):
             print(arq)
             if re.compile(r'Empresa ' + str(cod)).search(arq):
-                os.makedirs('execução/Relatórios', exist_ok=True)
-                final_folder = 'V:\\Setor Robô\\Scripts Python\\Domínio\\Relatórios Resumo de Impostos\\execução\\Relatórios'
+                os.makedirs(f'execução/Relatórios {periodo.replace("/", "-")}', exist_ok=True)
+                final_folder = 'V:\\Setor Robô\\Scripts Python\\Domínio\\Relatórios Resumo de Impostos\\execução\\Relatórios ' + periodo.replace('/', '-')
                 arq_final = os.path.join(final_folder, arq)
                 shutil.move(os.path.join(folder, arq), arq_final)
-                analisa_arquivo(cod, nome, arq_final)
+                analisa_arquivo(cod, nome, periodo, arq_final)
 
 
-def analisa_arquivo(cod, nome, arq_final):
+def analisa_arquivo(cod, nome, periodo, arq_final):
     doc = fitz.open(arq_final, filetype="pdf")
     texto = ''
     total_competencia_lancados = False
@@ -166,19 +166,19 @@ def analisa_arquivo(cod, nome, arq_final):
         
         # se encontrar o total dos lançados e NÃO dos calculados
         if total_competencia_lancados and not total_competencia_calculados:
-            captura_imposto_lacados(cnpj, cod, nome, texto, total_competencia_lancados)
+            captura_imposto_lacados(cnpj, cod, nome, periodo, texto, total_competencia_lancados)
         
         # se encontrar o total dos calculados e NÂO dos lançados
         elif total_competencia_calculados and not total_competencia_lancados:
-            captura_imposto_calculados(cnpj, cod, nome, texto, total_competencia_calculados)
+            captura_imposto_calculados(cnpj, cod, nome, periodo, texto, total_competencia_calculados)
     
         # se encontrar os dois
         elif total_competencia_lancados and total_competencia_calculados:
             # divide o texto em duas partes para que cada bloco de lançados e calculados seja analisado individualmente
             texto_dividido = texto.split('RESUMO DOS IMPOSTOS CALCULADOS')
             
-            captura_imposto_lacados(cnpj, cod, nome, texto_dividido[0], total_competencia_lancados)
-            captura_imposto_calculados(cnpj, cod, nome, texto_dividido[1], total_competencia_calculados)
+            captura_imposto_lacados(cnpj, cod, nome, periodo, texto_dividido[0], total_competencia_lancados)
+            captura_imposto_calculados(cnpj, cod, nome, periodo, texto_dividido[1], total_competencia_calculados)
 
         else:
             print(texto)
@@ -188,7 +188,7 @@ def analisa_arquivo(cod, nome, arq_final):
     return True
 
 
-def captura_imposto_lacados(cnpj, cod, nome, texto, total_competencia):
+def captura_imposto_lacados(cnpj, cod, nome, periodo, texto, total_competencia):
     # captura a lista de impostos
     impostos = re.compile(r'(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n([A-Z]+.+)').findall(texto)
     # para cada imposto realiza o processo
@@ -198,12 +198,12 @@ def captura_imposto_lacados(cnpj, cod, nome, texto, total_competencia):
         linha = re.compile(r'^[^,]*$\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(' + str(imposto) + ')', re.MULTILINE).search(texto)
         # se encontrar a linha do imposto monta a linha para anotar na planilha
         if linha:
-            insere_linha(cod, cnpj, nome, total_competencia, resumo_nome='RESUMO DOS IMPOSTOS LANÇADOS', debitos=linha.group(1), creditos=linha.group(2), acrescimos=linha.group(3),
+            insere_linha(cod, cnpj, nome, periodo, total_competencia, resumo_nome='RESUMO DOS IMPOSTOS LANÇADOS', debitos=linha.group(1), creditos=linha.group(2), acrescimos=linha.group(3),
                          outras_deducoes=linha.group(4), imposto_recolher=linha.group(5), imposto_diferido=linha.group(6), saldo_credor=linha.group(7),
                          saldo_credor_anterior=linha.group(8), saldo_diferido_anterior=linha.group(9), imposto_nome=linha.group(10))
 
 
-def captura_imposto_calculados(cnpj, cod, nome, texto, total_competencia):
+def captura_imposto_calculados(cnpj, cod, nome, periodo, texto, total_competencia):
     # captura a lista de impostos
     impostos = re.compile(r'(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n([A-Z]+.+)').findall(texto)
     # para cada imposto realiza o processo
@@ -213,21 +213,21 @@ def captura_imposto_calculados(cnpj, cod, nome, texto, total_competencia):
         linha = re.compile(r'^[^,]*$\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(' + str(imposto) + ')', re.MULTILINE).search(texto)
         # se encontrar a linha do imposto monta a linha para anotar na planilha com algumas variações de quantidade de colunas no PDF
         if linha:
-            insere_linha(cod, cnpj, nome, total_competencia, resumo_nome='RESUMO DOS IMPOSTOS CALCULADOS', imposto_diferido=linha.group(1), imposto_recolher=linha.group(2),
+            insere_linha(cod, cnpj, nome, periodo, total_competencia, resumo_nome='RESUMO DOS IMPOSTOS CALCULADOS', imposto_diferido=linha.group(1), imposto_recolher=linha.group(2),
                          saldo_credor=linha.group(3), imposto_nome=linha.group(4))
         
         linha = re.compile(r'^[^,]*$\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(' + str(imposto) + ')', re.MULTILINE).search(texto)
         if linha:
-            insere_linha(cod, cnpj, nome, total_competencia, resumo_nome='RESUMO DOS IMPOSTOS CALCULADOS', imposto_recolher=linha.group(6), imposto_nome=linha.group(9))
+            insere_linha(cod, cnpj, nome, periodo, total_competencia, resumo_nome='RESUMO DOS IMPOSTOS CALCULADOS', imposto_recolher=linha.group(6), imposto_nome=linha.group(9))
         
         linha = re.compile(r'^[^,]*$\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(.+,\d+)\n(' + str(imposto) + ')', re.MULTILINE).search(texto)
         if linha:
-            insere_linha(cod, cnpj, nome, total_competencia, resumo_nome='RESUMO DOS IMPOSTOS CALCULADOS', acrescimos=linha.group(1), outras_deducoes=linha.group(2), saldo_credor_anterior=linha.group(3),
+            insere_linha(cod, cnpj, nome, periodo, total_competencia, resumo_nome='RESUMO DOS IMPOSTOS CALCULADOS', acrescimos=linha.group(1), outras_deducoes=linha.group(2), saldo_credor_anterior=linha.group(3),
                          saldo_diferido_anterior=linha.group(4), imposto_diferido=linha.group(5), imposto_recolher=linha.group(6), valor_imposto=linha.group(7),
                          base_calculo=linha.group(8), aliquota=linha.group(9), saldo_credor=linha.group(10), imposto_nome=linha.group(11))
 
 
-def insere_linha(cod, cnpj, nome, total_competencia, resumo_nome='resumo', imposto_nome='nome', base_calculo='0', aliquota='0', valor_imposto='0', saldo_credor_anterior='0', saldo_diferido_anterior='0',
+def insere_linha(cod, cnpj, nome, periodo, total_competencia, resumo_nome='resumo', imposto_nome='nome', base_calculo='0', aliquota='0', valor_imposto='0', saldo_credor_anterior='0', saldo_diferido_anterior='0',
                  debitos='0', creditos='0', acrescimos='0', outras_deducoes='0', imposto_recolher='0', imposto_diferido='0', saldo_credor='0'):
     linha_ = (f'{cod};{cnpj};{nome};{resumo_nome};{imposto_nome};'
               f'{base_calculo};'
@@ -242,7 +242,7 @@ def insere_linha(cod, cnpj, nome, total_competencia, resumo_nome='resumo', impos
               f'{imposto_recolher};'
               f'{imposto_diferido};'
               f'{saldo_credor}')
-    _escreve_relatorio_csv(f'{linha_};{total_competencia}', nome='Resumo relatórios')
+    _escreve_relatorio_csv(f'{linha_};{total_competencia}', nome=f'Resumo relatórios {periodo.replace("/", "-")}')
 
 
 @_time_execution
@@ -255,23 +255,25 @@ def run(window):
             cod = arq_name.group(1)
             nome = arq_name.group(2)
             
-            analisa_arquivo(cod, nome, arquivo)
-            
+            analisa_arquivo(cod, nome, arquivo, window)
+
     else:
         _login_web()
         _abrir_modulo('escrita_fiscal')
         
+        tempos = [datetime.datetime.now()]
+        tempo_execucao = 0
         total_empresas = empresas[index:]
         for count, empresa in enumerate(empresas[index:], start=1):
             # printa o indice da empresa que está sendo executada
-            _indice(count, total_empresas, empresa, index, window)
+            tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, window, tempos, tempo_execucao)
     
             while True:
                 if not _login(empresa, andamentos):
                     break
                 else:
                     resultado, arq_final = relatorio_darf_dctf(empresa, periodo, andamentos)
-                    
+
                     if resultado == 'dominio fechou':
                         _login_web()
                         _abrir_modulo('escrita_fiscal')
@@ -281,7 +283,10 @@ def run(window):
                     
                     if resultado == 'ok':
                         break
-
+    
+    _escreve_header_csv('COD;CNPJ;NOME;RESUMO;IMPOSTO;BASE CALCULO;ALIQUOTA;VALOR IMPOSTO;SALDO CREDOR ANTERIOR;SALDO DEFERIDO ANTERIOR;DÉBITOS;CRÉDITOS;ACRESCIMOS;'
+                        'OUTRAS DEDUÇÕES;IMPOSTO RECOLHER;IMPOSTO DEFERIDO;SALDO CREDOR;TOTAL', nome=f'Resumo relatórios {periodo.replace("/", "-")}')
+    
 
 if __name__ == '__main__':
     rotina = p.confirm(text='Gerar resumo dos relatórios já salvos?', buttons=('Sim', 'Não'))
@@ -291,7 +296,7 @@ if __name__ == '__main__':
     else:
         periodo = p.prompt(text='Qual o período do relatório', title='Script incrível', default='00/0000')
         empresas = _open_lista_dados()
-        andamentos = 'Relatórios Resumo de Impostos'
+        andamentos = f'Relatórios Resumo de Impostos {periodo.replace("/", "-")}'
     
         index = _where_to_start(tuple(i[0] for i in empresas))
         if index is not None:

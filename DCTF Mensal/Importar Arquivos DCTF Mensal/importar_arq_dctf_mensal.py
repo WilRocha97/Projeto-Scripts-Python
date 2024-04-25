@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import re, pyperclip, shutil, time, os, pyautogui as p, PySimpleGUI as sg
+import traceback, re, pyperclip, shutil, time, os, pyautogui as p, PySimpleGUI as sg
 from tkinter.filedialog import askopenfilename, askdirectory, Tk
 from threading import Thread
 from pathlib import Path
@@ -79,7 +79,7 @@ def barra_de_status(func):
             
             try:
                 # Chama a função que executa o script
-                func(window)
+                func(window, event)
             except Exception as e:
                 # Obtém a pilha de chamadas de volta como uma string
                 traceback_str = traceback.format_exc()
@@ -93,7 +93,7 @@ def barra_de_status(func):
                 window['-titulo-'].update(visible=True)
                 window['-Error-'].update(visible=True)
                 
-                alert(f'Traceback: {traceback_str}\n\n'
+                p.alert(f'Traceback: {traceback_str}\n\n'
                       f'Erro: {e}')
                 print(f'Traceback: {traceback_str}\n\n'
                       f'Erro: {e}')

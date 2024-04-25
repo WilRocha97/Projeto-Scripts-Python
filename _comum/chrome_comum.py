@@ -198,10 +198,14 @@ def abrir_chrome(url, tela_inicial_site=False, fechar_janela=True, outra_janela=
                     time.sleep(0.1)
                     p.press('delete')
                     time.sleep(0.1)
-                    pyperclip.copy(url)
-                    pyperclip.copy(url)
-                    time.sleep(0.1)
-                    p.hotkey('ctrl', 'v')
+                    while True:
+                        try:
+                            pyperclip.copy(url)
+                            pyperclip.copy(url)
+                            p.hotkey('ctrl', 'v')
+                            break
+                        except:
+                            pass
             
                 time.sleep(1)
                 p.press('enter')
@@ -220,10 +224,16 @@ def abrir_chrome(url, tela_inicial_site=False, fechar_janela=True, outra_janela=
             time.sleep(0.1)
             p.press('delete')
             time.sleep(0.1)
-            pyperclip.copy(url)
-            pyperclip.copy(url)
-            p.hotkey('ctrl', 'v')
-        
+
+            while True:
+                try:
+                    pyperclip.copy(url)
+                    pyperclip.copy(url)
+                    p.hotkey('ctrl', 'v')
+                    break
+                except:
+                    pass
+
         time.sleep(1)
         p.press('enter')
         p.press('enter')
@@ -239,9 +249,14 @@ def acessar_site_chrome(url):
         time.sleep(0.1)
         p.press('delete')
         time.sleep(0.1)
-        pyperclip.copy(url)
-        pyperclip.copy(url)
-        p.hotkey('ctrl', 'v')
+        while True:
+            try:
+                pyperclip.copy(url)
+                pyperclip.copy(url)
+                p.hotkey('ctrl', 'v')
+                break
+            except:
+                pass
     
     time.sleep(1)
     p.press('enter')

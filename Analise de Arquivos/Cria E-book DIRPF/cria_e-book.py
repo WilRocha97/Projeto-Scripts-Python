@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import time, shutil, io, fitz, PyPDF2, re, os, sys, traceback, PySimpleGUI as sg
+import warnings, time, shutil, io, fitz, PyPDF2, re, os, sys, traceback, PySimpleGUI as sg
 from PIL import Image
 from threading import Thread
 from pyautogui import alert, confirm
@@ -10,7 +10,6 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-
 
 # Carregar a fonte TrueType (substitua 'sua_fonte.ttf' pelo caminho da sua fonte)
 pdfmetrics.registerFont(TTFont('Fonte', 'Assets\HankenGrotesk-SemiBold.ttf'))
@@ -90,7 +89,7 @@ def escreve_relatorio_csv(texto, local, nome='Relatório', encode='latin-1'):
 
 def decryption(input_name,output_name,password):
     pdfFile = open(input_name, "rb")
-    reader = PyPDF2.PdfReader(pdfFile)
+    reader = PyPDF2.PdfReader(pdfFile, strict=False)
     writer = PyPDF2.PdfWriter()
     if reader.is_encrypted:
         reader.decrypt(password)
@@ -222,13 +221,15 @@ def analisa_subpastas(caminho_subpasta, nome_subpasta, subpasta_arquivos):
     # para cada arquivo na subpasta
     for arquivo in os.listdir(caminho_subpasta):
         if arquivo.endswith('.pdf'):
+            print(arquivo)
             # verifica se o arquivo tem senha, se tiver tira a senha dele
             try:
                 with fitz.open(os.path.join(caminho_subpasta, arquivo)) as pdf:
-                    arquivo_sem_senha = pdf
+                    for page in pdf:
+                        break
             except:
                 try:
-                    password = re.compile(r'Senha.(\w+)').search(arquivo).group(1)
+                    password = re.compile(r'SENHA.(\w+)').search(arquivo.upper()).group(1)
                     decryption(os.path.join(caminho_subpasta, arquivo), os.path.join(caminho_subpasta, arquivo), password)
                 except:
                     # se tiver senha, mas a senha não for informada no nome do arquivo, pula para próxima subpasta
@@ -253,21 +254,22 @@ def analisa_documentos(pasta_inicial):
     arquivos = []
     # para cada arquivo na subpasta
     for arquivo in os.listdir(pasta_inicial):
-        # print(arquivo)
         if arquivo.endswith('.pdf'):
             # verifica se o arquivo tem senha, se tiver tira a senha dele
             try:
                 with fitz.open(os.path.join(pasta_inicial, arquivo)) as pdf:
-                    arquivo_sem_senha = pdf
+                    for page in pdf:
+                        break
             except:
                 try:
-                    password = re.compile(r'Senha.(\w+)').search(arquivo).group(1)
-                    decryption(os.path.join(caminho_subpasta, arquivo), os.path.join(caminho_subpasta, arquivo), password)
+                    print(arquivo)
+                    password = re.compile(r'SENHA.(\w+)').search(arquivo.upper()).group(1)
+                    decryption(os.path.join(pasta_inicial, arquivo), os.path.join(pasta_inicial, arquivo), password)
                 except:
                     # se tiver senha, mas a senha não for informada no nome do arquivo, pula para próxima subpasta
-                    alert(f'Não é possível criar E-Book de {nome_subpasta}.\n'
+                    alert(f'Não é possível criar E-Book de {pasta_inicial}.\n'
                           f'Existe PDF protegido sem a senha informada no nome do arquivo.\n'
-                          f'Arquivo "{arquivo}" protegido encontrado em: {os.path.join(caminho_subpasta, arquivo)}'
+                          f'Arquivo "{arquivo}" protegido encontrado em: {os.path.join(pasta_inicial, arquivo)}'
                           f'Para que o processo automatizado mescle PDF protegido, a senha deve ser informada no nome do arquivo, por exemplo:\n'
                           f'Senha 1234567.pdf\n')
                     break
@@ -277,13 +279,34 @@ def analisa_documentos(pasta_inicial):
     return False, arquivos
 
 
+def remove_metadata(input_pdf, output_pdf):
+    with open(input_pdf, 'rb') as input_file:
+        pdf_reader = PyPDF2.PdfReader(input_file, strict=False)
+        pdf_writer = PyPDF2.PdfWriter()
+        
+        for page in pdf_reader.pages:
+            pdf_writer.add_page(page)
+            
+        # Add the metadata
+        pdf_writer.add_metadata(
+            {
+                "/Author": "Dev",
+                "/Producer": "Cria_ebook",
+            }
+        )
+        
+    # Cria um novo arquivo PDF sem metadados
+    with open(output_pdf, 'wb') as output_file:
+        pdf_writer.write(output_file)
+        
+
 def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
     window['-Mensagens-'].update(f'Criando arquivos...')
     achou = 'não'
     for arquivo in nomes_arquivos:
         if re.compile(r'imagem-recibo').search(arquivo):
             achou = 'sim'
-    
+        
     if achou == 'não':
         if not subpasta:
             alert(text=f'Não foi encontrado recibo de entrega DIRPF')
@@ -299,6 +322,7 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
     # lista para a página de resumo
     infos_resumo = []
     # cria uma cópia numerada dos PDFs
+    
     for arquivo in nomes_arquivos:
         if not subpasta:
             abre_pdf = os.path.join(pasta_inicial, arquivo)
@@ -370,18 +394,22 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
             
             # cria uma cópia númerada da capa
             if not subpasta:
-                shutil.copy(os.path.join(pasta_inicial, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
+                # shutil.copy(os.path.join(pasta_inicial, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
+                remove_metadata(os.path.join(pasta_inicial, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
             else:
-                shutil.copy(os.path.join(pasta_inicial, subpasta, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
+                # shutil.copy(os.path.join(pasta_inicial, subpasta, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
+                remove_metadata(os.path.join(pasta_inicial, subpasta, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
             
             # adiciona a capa na lista de arquivos para mesclar
             lista_arquivos.append(0)
             
             # cria uma cópia númerada do recibo
             if not subpasta:
-                shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
+                # shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
+                remove_metadata(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
             else:
-                shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
+                # shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
+                remove_metadata(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
             # adiciona o recibo na lista de arquivos para mesclar
             lista_arquivos.append(2)
             continue
@@ -414,9 +442,11 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
             
             # cria uma cópia númerada da declaração
             if not subpasta:
-                shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '3.pdf'))
+                # shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '3.pdf'))
+                remove_metadata(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '3.pdf'))
             else:
-                shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '3.pdf'))
+                # shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '3.pdf'))
+                remove_metadata(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '3.pdf'))
             # adiciona a declaração na lista de arquivos para mesclar
             lista_arquivos.append(3)
             continue
@@ -435,9 +465,11 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
                 
                 if informe_empresa:
                     if not subpasta:
-                        shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        # shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        remove_metadata(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
                     else:
-                        shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        # shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        remove_metadata(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
                         
                     lista_arquivos.append(contador)
                     contador += 1
@@ -466,15 +498,27 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
                 
                 if not informe_empresa:
                     if not subpasta:
-                        shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        # shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        remove_metadata(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
                     else:
-                        shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        # shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        remove_metadata(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
                         
                     lista_arquivos.append(contador)
                     contador += 1
     
     # percorre os arquivos novamente, adicionando os outros documentos
     for arquivo in nomes_arquivos:
+        print(f'\n{arquivo}')
+        with open(os.path.join(pasta_inicial, arquivo), 'rb') as pdf_file:
+            pdf_reader = PyPDF2.PdfReader(pdf_file, strict=False)
+            # Verifica se o PDF possui metadados
+            meta = pdf_reader.metadata
+        
+        if meta:
+            for value in meta.items():
+                print(value)
+            
         if re.compile(r'Capa E-book').search(arquivo):
             continue
         if re.compile(r'imagem-recibo').search(arquivo):
@@ -484,11 +528,14 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
         if re.compile(r'INFORME').search(arquivo.upper()):
             continue
         else:
+            
             if not subpasta:
-                shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                # shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                remove_metadata(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
             else:
-                shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
-                
+                # shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                remove_metadata(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+            
             lista_arquivos.append(contador)
             contador += 1
         
@@ -496,7 +543,8 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
     lista_arquivos = sorted(lista_arquivos, key=chave_numerica)
     
     # mescla os arquivos
-    pdf_merger = PyPDF2.PdfMerger()
+    pdf_merger = PyPDF2.PdfMerger(strict=False)
+    
     for count, arquivo in enumerate(lista_arquivos, start=1):
         caminho_completo = os.path.join('Arquivos para mesclar', f'{arquivo}.pdf')
         pdf_merger.append(caminho_completo)
@@ -527,7 +575,7 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
 def coloca_marca_dagua(unificado_pdf):
     # Abre o arquivo de entrada PDF
     with open(unificado_pdf, 'rb') as input_file:
-        input_pdf_reader = PyPDF2.PdfReader(input_file)
+        input_pdf_reader = PyPDF2.PdfReader(input_file, strict=False)
         output_pdf_writer = PyPDF2.PdfWriter()
         
         # Carrega a imagem da marca d'água
@@ -554,7 +602,7 @@ def coloca_marca_dagua(unificado_pdf):
             can.save()
             
             packet.seek(0)
-            overlay = PyPDF2.PdfReader(packet)
+            overlay = PyPDF2.PdfReader(packet, strict=False)
             input_page.merge_page(overlay.pages[0])
             output_pdf_writer.add_page(input_page)
         
@@ -705,7 +753,7 @@ if __name__ == '__main__':
                         f'Erro: {erro}')
             window['Log do sistema'].update(disabled=False)
             alert(text='Erro detectado, clique no botão "Log do sistema" para acessar o arquivo de erros e contate o desenvolvedor')
-        
+            
         window['-progressbar-'].update_bar(0)
         window['-progressbar-'].update(bar_color='#f0f0f0')
         window['-Progresso_texto-'].update('')

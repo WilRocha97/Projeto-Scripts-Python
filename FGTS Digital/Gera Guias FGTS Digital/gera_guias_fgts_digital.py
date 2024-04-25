@@ -272,16 +272,18 @@ def run(window):
     caminho_final = 'V:\Setor Robô\Scripts Python\FGTS Digital\Gera Guias FGTS Digital\execução\Guias CNPJ completo'
     tem_guia = False
     andamentos = f'Guias FGTS Digital'
-    total_empresas = empresas[index:]
     while True:
         _abrir_chrome('https://fgtsdigital.sistema.gov.br/portal/login')
         resultados = seleciona_certificado()
         if resultados != 'recomeçar':
             break
-            
+    
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = 0
+    total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index, window)
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, window, tempos, tempo_execucao)
         
         codigo_dominio, cnpj, nome = empresa
 
@@ -313,6 +315,8 @@ def run(window):
 
     time.sleep(2)
     p.hotkey('ctrl', 'w')
+    
+    _escreve_header_csv('CÓD. DOMÍNIO;CNPJ;NOME;SITUAÇÃO', nome=andamentos)
     _escreve_header_csv('CÓD;CNPJ;CPF/CNPJ GUIA;NOME;IDENTIFICADOR;TAG;VALOR;VENCIMENTO', nome='Resumo Guias')
     
     return tem_guia

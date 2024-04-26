@@ -3,9 +3,9 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from PIL import Image
-import os, time, re
 from pyautogui import press, hotkey
 from pyperclip import copy
+import datetime, os, time, re
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -145,7 +145,7 @@ def salvar_guia(cnpj):
 @_barra_de_status
 def run(window):
     tempos = [datetime.datetime.now()]
-    tempo_execucao = 0
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada

@@ -1,9 +1,4 @@
-import datetime
-
-import pyautogui as p
-import time
-import os
-import pyperclip
+import datetime, time, os, pyperclip, pyautogui as p
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -215,7 +210,7 @@ def salvar_pdf(arquivo, data_final):
 @_barra_de_status
 def run(window):
     tempos = [datetime.datetime.now()]
-    tempo_execucao = 0
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada

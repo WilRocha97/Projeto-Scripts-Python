@@ -6,8 +6,7 @@ from selenium import webdriver
 from twocaptcha import TwoCaptcha
 from selenium.webdriver.common.by import By
 from PIL import Image
-from time import sleep
-import os, sys
+import os, sys, time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
@@ -35,7 +34,11 @@ def solve_recaptcha(data):
     result = solver.recaptcha(sitekey=data['sitekey'], url=data['url'])
     
     print('>>> Captcha resolvido')
-    return str(result['code'])
+    try:
+        return str(result['code'])
+    except:
+        print(result)
+        
 _solve_recaptcha = solve_recaptcha
 
 
@@ -50,7 +53,11 @@ def solve_recaptcha_v3(data):
     result = solver.recaptcha(sitekey=data['sitekey'], url=data['url'], version='v3', action='test')
     
     print('>>> Captcha resolvido')
-    return str(result['code'])
+    try:
+        return str(result['code'])
+    except:
+        print(result)
+        
 _solve_recaptcha_v3 = solve_recaptcha_v3
 
 
@@ -65,7 +72,11 @@ def solve_hcaptcha(data):
     result = solver.hcaptcha(sitekey=data['sitekey'], url=data['url'])
     
     print('>>> Captcha resolvido')
-    return str(result['token'])
+    try:
+        return str(result['token'])
+    except:
+        print(result)
+        
 _solve_hcaptcha = solve_hcaptcha
 
 
@@ -101,7 +112,11 @@ def solve_text_captcha(driver, captcha_element, element_type='id'):
     result = solver.normal(os.path.join('ignore', 'captcha', 'captcha.png'))
     
     print('>>> Captcha resolvido')
-    return str(result['text'])
+    try:
+        return str(result['code'])
+    except:
+        print(result)
+        
 _solve_text_captcha = solve_text_captcha
 
 
@@ -259,7 +274,7 @@ _solve_text_captcha = solve_text_captcha"""
             return g_response
         else:
             if solver.error_code == 'ERROR_NO_SLOT_AVAILABLE':
-                sleep(5)
+                time.sleep(5)
                 response = 'ERROR_NO_SLOT_AVAILABLE'
             else:
                 print(solver.error_code)

@@ -9,14 +9,7 @@ from pyautogui import alert, confirm
 from threading import Thread
 from io import BytesIO
 from PIL import Image
-import PySimpleGUI as sg
-import time
-import os
-import re
-import traceback
-import tempfile
-import contextlib
-import OpenSSL.crypto
+import time, os, re, traceback, tempfile, contextlib, OpenSSL.crypto, PySimpleGUI as sg
 
 # variáveis globais
 e_dir = Path('execução')
@@ -86,7 +79,7 @@ def barra_de_status(func):
         
         # guarda a janela na variável para manipula-la
         screen_width, screen_height = sg.Window.get_screen_size()
-        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(710, 34), margins=(0,0), finalize=True, location=((screen_width // 2) - (710 // 2), 0))
+        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(720, 34), margins=(0,0), finalize=True, location=((screen_width // 2) - (720 // 2), 0))
         
         def run_script_thread():
             # habilita e desabilita os botões conforme necessário
@@ -395,9 +388,9 @@ _download_file = download_file
 # Recebe o indice da empresa atual da consulta e a quantidade total de empresas
 # Se não for a primeira empresa printa quantas faltam e pula 2 linhas
 # Printa o indice da empresa atual mais as infos da mesma
-def indice(count, total_empresas, empresa='', index=0, window=False, tempos=False, tempo_execucao=0):
+def indice(count, total_empresas, empresa='', index=0, window=False, tempos=False, tempo_execucao=None):
     tempo_estimado_texto = ''
-    tempo_estimado = ''
+    tempo_estimado = 0
     if window:
         if tempos:
             tempo_inicial = datetime.now()
@@ -405,10 +398,13 @@ def indice(count, total_empresas, empresa='', index=0, window=False, tempos=Fals
             tempos.append(tempo_inicial)
             tempo_execucao_atual = int(tempos[1].timestamp()) - int(tempos[0].timestamp())
             
-            tempo_estimado = int(int(tempo_execucao_atual) + int(tempo_execucao)) / 2
+            tempo_execucao.append(tempo_execucao_atual)
+            for t in tempo_execucao:
+                tempo_estimado = tempo_estimado + t
+            tempo_estimado = int(tempo_estimado) / int(len(tempo_execucao))
             
             tempo_total_segundos = int((len(total_empresas) + index) - (count + index) + 1) * int(tempo_estimado)
-            
+            tempo_estimado = tempo_execucao
             # Converter o tempo total para um objeto timedelta
             tempo_total = timedelta(seconds=tempo_total_segundos)
             

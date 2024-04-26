@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import time, os, pyperclip, re, fitz, shutil, pyautogui as p
+import datetime, time, os, pyperclip, re, fitz, shutil, pyautogui as p
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -49,7 +49,11 @@ def salvar(consulta_tipo, pasta, andamento, identificacao, nome, pasta_download,
                 p.hotkey('ctrl', 'w')
                 return False
             contador += 1
-
+            
+        if _find_img('cnpj_vazio.png', conf=0.99):
+            p.write(identificacao)
+            time.sleep(1)
+            
         if _find_img('botao_consultar_selecionado.png', conf=0.9):
             _click_img('botao_consultar_selecionado.png', conf=0.9)
             contador = 0
@@ -65,7 +69,11 @@ def salvar(consulta_tipo, pasta, andamento, identificacao, nome, pasta_download,
 
         if situacao == 'erro':
             return situacao
-
+        
+        if _find_img('cnpj_vazio.png', conf=0.99):
+            p.write(identificacao)
+            time.sleep(1)
+            
         if _find_img(f'informe_{consulta_tipo}.png', conf=0.9):
             p.press('enter')
         
@@ -119,11 +127,15 @@ def consulta(consulta_tipo, identificacao):
         link = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PJ/Emitir'
     else:
         link = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PF/Emitir'
-
+    
+    if not _find_img('receita_logo.png', conf=0.9):
+        _abrir_chrome(link)
+    
     # espera o site abrir e recarrega caso demore
     while not _find_img(f'informe_{consulta_tipo}.png', conf=0.9):
-        _abrir_chrome(link)
-
+        if _find_img('nova_certidao.png', conf=0.9):
+            _click_img('nova_certidao.png', conf=0.9)
+        
         for i in range(60):
             if _find_img('site_morreu.png', conf=0.9):
                 break
@@ -173,7 +185,7 @@ def run(window):
     pasta_download = 'V:\Setor Robô\Scripts Python\Receita Federal\Consulta Certidão Negativa\execução\Certidões ' + consulta_tipo
     
     tempos = [datetime.datetime.now()]
-    tempo_execucao = 0
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada

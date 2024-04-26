@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-import os
-import time, shutil, pyautogui as p
+import datetime, os, time, shutil, pyautogui as p
 from sys import path
 
 path.append(r'..\..\_comum')
@@ -270,7 +269,7 @@ def run(window):
     _abrir_modulo('escrita_fiscal')
     
     tempos = [datetime.datetime.now()]
-    tempo_execucao = 0
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada

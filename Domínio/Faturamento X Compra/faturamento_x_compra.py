@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import fitz, re, shutil, pyperclip, time, os, pyautogui as p
+import datetime, fitz, re, shutil, pyperclip, time, os, pyautogui as p
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from sys import path
@@ -188,7 +188,7 @@ def run(window):
     _abrir_modulo('escrita_fiscal')
     
     tempos = [datetime.datetime.now()]
-    tempo_execucao = 0
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada

@@ -1,11 +1,4 @@
-import time
-import os
-import pyautogui as p
-import PIL.ImagePalette
-import fitz
-import re
-import shutil
-import pyperclip
+import time, os, PIL.ImagePalette, fitz, re, shutil,  pyperclip, pyautogui as p
 from sys import path
 
 path.append(r'..\..\_comum')
@@ -279,7 +272,7 @@ def run(window):
             break
     
     tempos = [datetime.datetime.now()]
-    tempo_execucao = 0
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada

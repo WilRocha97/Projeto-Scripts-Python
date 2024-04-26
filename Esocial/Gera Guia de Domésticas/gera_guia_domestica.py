@@ -1,4 +1,5 @@
 import time
+import datetime
 import os
 import pyautogui as p
 import PIL.ImagePalette
@@ -259,7 +260,7 @@ def run(window):
     analisa_guia('', '', 'DAE 04-2024 - Vencimento-20-05-2024 - 02502409802 - LENITA BUCHALLA BAGARELLI', r'\\vpsrv03\Arq_Robo\Esocial\Guias eSocial Domésticas\2024\Ref. 04-2024\Guias')
     
     tempos = [datetime.datetime.now()]
-    tempo_execucao = 0
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada

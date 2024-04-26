@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import shutil, fitz, re, time, os, pyautogui as p, datetime as date_time, pyperclip as clip
+import datetime, shutil, fitz, re, time, os, pyautogui as p, datetime as date_time, pyperclip as clip
 from datetime import datetime
 
 from sys import path
@@ -276,7 +276,7 @@ def run(window):
         _abrir_modulo('folha')
     
     tempos = [datetime.datetime.now()]
-    tempo_execucao = 0
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada

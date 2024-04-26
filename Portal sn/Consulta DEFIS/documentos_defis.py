@@ -1,8 +1,4 @@
-import pyautogui as p
-import time
-import os
-import pyperclip
-import random
+import datetime, time, os, pyperclip, random, pyautogui as p
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -239,10 +235,12 @@ def salva_documento(documento, cnpj, nome, ano):
 @_time_execution
 @_barra_de_status
 def run(window):
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index, window)
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, window, tempos, tempo_execucao)
 
         cnpj, cpf, senha, nome = empresa
 

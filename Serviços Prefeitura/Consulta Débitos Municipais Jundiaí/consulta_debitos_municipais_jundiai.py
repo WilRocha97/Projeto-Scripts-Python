@@ -3,7 +3,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from PIL import Image
-import os, time, re, shutil
+import datetime, os, time, re, shutil
 
 from sys import path
 
@@ -118,7 +118,7 @@ def login(options, cnpj, insc_muni):
 @_barra_de_status
 def run(window):
     tempos = [datetime.datetime.now()]
-    tempo_execucao = 0
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada

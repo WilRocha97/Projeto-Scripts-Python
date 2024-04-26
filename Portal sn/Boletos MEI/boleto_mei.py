@@ -1,7 +1,4 @@
-import pyautogui as p, PySimpleGUI as sg
-import time
-import os
-import pyperclip
+import datetime, time, os, pyperclip, pyautogui as p, PySimpleGUI as sg
 from threading import Thread
 
 from sys import path
@@ -196,7 +193,7 @@ def boleto_mei(empresa, andamentos):
 @_barra_de_status
 def run(window):
     tempos = [datetime.datetime.now()]
-    tempo_execucao = 0
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada

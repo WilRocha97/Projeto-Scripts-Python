@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import time, re, os
+import datetime
 from selenium import webdriver
 from PIL import Image
 from selenium.webdriver.common.by import By
@@ -165,10 +166,13 @@ def run():
     if index is None:
         return False
     
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        # configurar o indice para localizar em qual empresa está
-        _indice(count, total_empresas, empresa, index)
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         cpf, nome, cod_empresa, cod_empregado, pis, data_nasc = empresa
         
         # verifica se não tem nenhum dado faltando

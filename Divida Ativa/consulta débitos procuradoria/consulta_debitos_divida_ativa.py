@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-import time
-import re
-import time, re, os
+import datetime, time, re, os
 from bs4 import BeautifulSoup
 from requests import Session
 from xhtml2pdf import pisa
@@ -13,15 +11,14 @@ path.append(r'..\..\_comum')
 from captcha_comum import _solve_recaptcha
 from chrome_comum import _initialize_chrome
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
-import os
 
 
 def verifica_debitos(pagina):
+    soup = BeautifulSoup(pagina.content, 'html.parser')
+    # debito = soup.find('span', attrs={'id': 'consultaDebitoForm:dataTable:tb'})
+    soup = soup.prettify()
+    # print(soup)
     try:
-        soup = BeautifulSoup(pagina.content, 'html.parser')
-        # debito = soup.find('span', attrs={'id': 'consultaDebitoForm:dataTable:tb'})
-        soup = soup.prettify()
-        # print(soup)
         request_verification = re.compile(r'(consultaDebitoForm:dataTable:tb)').search(soup).group(1)
         return request_verification
     except:
@@ -191,6 +188,7 @@ def consulta_debito(s, nome_botao_consulta, empresa):
     s.post(url, info)
     
     # Consulta o cnpj
+    print('>>> Buscando débitos')
     info = {
         'consultaDebitoForm': 'consultaDebitoForm',
         'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa': 'CNPJ',
@@ -278,10 +276,12 @@ def run():
             s.cookies.set(cookie['name'], cookie['value'])
         
         # cria o indice para cada empresa da lista de dados
+        tempos = [datetime.datetime.now()]
+        tempo_execucao = []
         total_empresas = empresas[index:]
         for count, empresa in enumerate(empresas[index:], start=1):
             # printa o indice da empresa que está sendo executada
-            _indice(count, total_empresas, empresa, index)
+            tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
             
             # enquanto a consulta não conseguir ser realizada e tenta de novo
             while True:

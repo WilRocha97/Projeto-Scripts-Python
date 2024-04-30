@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-import fitz, re, shutil, time, os, pyautogui as p
-from datetime import datetime
+import datetime, fitz, re, shutil, time, os, pyautogui as p
 from dateutil.relativedelta import relativedelta
 from sys import path
 
@@ -154,10 +153,12 @@ def run(window):
     _login_web()
     _abrir_modulo('escrita_fiscal')
     
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index, window)
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, window, tempos, tempo_execucao)
 
         if not _login(empresa, andamentos):
             continue

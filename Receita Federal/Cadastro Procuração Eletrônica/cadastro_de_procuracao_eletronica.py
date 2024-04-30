@@ -5,11 +5,10 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 from xhtml2pdf import pisa
-from datetime import date
 from time import sleep
 from sys import path
 from PIL import Image
-import os, sys
+import datetime, os, sys
 
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     print('>>> running in a PyInstaller bundle')
@@ -130,8 +129,8 @@ def consulta_proc(tipo, dados, driver):
     _send_input('codigoAcesso', 'Veiga123', driver)
     _send_input('codigoAcessoRepeticao', 'Veiga123', driver)
 
-    data_i = date.today()
-    data_f = date(data_i.year + 5, data_i.month, data_i.day - 1)
+    data_i = datetime.date.today()
+    data_f = datetime.date(data_i.year + 5, data_i.month, data_i.day - 1)
     _send_input('dataVigenciaInicio', data_i.strftime('%d/%m/%Y'), driver)
     _send_input('dataVigenciaFim', data_f.strftime('%d/%m/%Y'), driver)
 
@@ -203,11 +202,13 @@ def run():
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     options.add_argument('--window-size=1920,1080')
-
+    
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-
-        _indice(count, total_empresas, empresa, index)
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
 
         status, situacao = valida_dados(empresa)
         if status:

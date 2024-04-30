@@ -62,12 +62,15 @@ def run():
     if index is None:
         return False
     
-    # para cada linha da lista executa
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         cod_ae, cnpj, nome, matricula = empresa
-        # printa o indice da lista
-        _indice(count, total_empresas, empresa, index)
+
         if not consulta(ref, nome_planilha, cod_ae, cnpj, nome, matricula):
             _escreve_relatorio_csv(f'{cod_ae};{nome};{cnpj};{matricula};Não encontrou fatura paga referente a {ref}', nome=nome_planilha)
             print(f'❌ Não encontrou fatura paga referente a {ref}')

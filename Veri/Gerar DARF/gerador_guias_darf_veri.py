@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-import os, time, shutil, re, fitz
+import datetime, os, time, shutil, re, fitz
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -173,13 +173,15 @@ def run():
         "download.directory_upgrade": True,
         "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
     })
-
+    
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         cnpj, nome = empresa
-
-        # configurar o indice para localizar em qual empresa está
-        _indice(count, total_empresas, empresa, index)
 
         resultado = 'Erro'
         count = 0

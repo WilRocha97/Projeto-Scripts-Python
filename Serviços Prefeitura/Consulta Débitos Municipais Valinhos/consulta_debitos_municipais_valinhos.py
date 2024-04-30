@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # from selenium.common.exceptions import NoSuchElementException
-import os, time, re
+import datetime, os, time, re
 from bs4 import BeautifulSoup
 from xhtml2pdf import pisa
 from selenium import webdriver
@@ -157,6 +157,7 @@ def consulta(driver, cnpj, insc_muni, nome):
     return driver, True
 
 
+@_time_execution
 def run():
     empresas = _open_lista_dados()
 
@@ -167,11 +168,13 @@ def run():
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
     options.add_argument('--window-size=1920,1080')
-
+    
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index)
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
         
         cnpj, insc_muni, nome = empresa
         

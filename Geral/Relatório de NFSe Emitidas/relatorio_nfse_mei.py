@@ -381,13 +381,14 @@ def run():
         "plugins.always_open_pdf_externally": True  # não irá abrir o PDF no navegador
     })
     
-    # cria o indice para cada empresa da lista de dados
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
-    
     for count, empresa in enumerate(empresas[index:], start=1):
-        cod_dominio, cnpj, nome, usuario, senha = empresa
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index)
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
+        cod_dominio, cnpj, nome, usuario, senha = empresa
         
         while True:
             status, driver = _initialize_chrome(options)

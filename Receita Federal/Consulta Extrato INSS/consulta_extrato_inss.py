@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from PIL import Image
 from pyautogui import prompt
 from pathlib import Path
-import os, time, re
+import datetime, os, time, re
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -141,14 +140,15 @@ def consulta():
     options.add_argument('--headless')
     options.add_argument('--window-size=1920,1080')
     # options.add_argument("--start-maximized")
-
+    
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
-
-    # para cada empresa da lista de dados
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         cnpj, senha, nome = empresa
-
-        _indice(count, total_empresas, empresa, index)
 
         # faz 3 tentativas, se não der certo anota o erro na planilha
         x = 'Erro'

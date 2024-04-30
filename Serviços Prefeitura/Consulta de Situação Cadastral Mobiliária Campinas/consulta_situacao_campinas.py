@@ -60,7 +60,6 @@ def login(driver, cnpj):
     print('>>> Cadastro encontrado')
     return driver, 'ok', ''
 
-
 def create_pdf(driver, download_folder, cnpj):
     print('>>> Criando PDF do comprovante')
     # pega a inscrição cadastral
@@ -79,7 +78,6 @@ def create_pdf(driver, download_folder, cnpj):
             pisa.CreatePDF(str(s), pdf)
     
     return driver, '✔ Comprovante salvo', nome_arquivo
-
 
 def coleta_dados_comprovante(download_folder, nome_arquivo):
     print('>>> Analisando PDF')
@@ -104,7 +102,6 @@ def coleta_dados_comprovante(download_folder, nome_arquivo):
                     
     return dados_arquivo
 
-
 @_time_execution
 def run():
     download_folder = "V:\\Setor Robô\\Scripts Python\\Serviços Prefeitura\\Consulta de Situação Cadastral Mobiliária Campinas\\execução\\Comprovantes"
@@ -123,15 +120,15 @@ def run():
     options.add_argument('--window-size=1920,1080')
     # options.add_argument("--start-maximized")
     
-    # cria o indice para cada empresa da lista de dados
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
-    
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, nome = empresa
-        
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index)
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
         
+        cnpj, nome = empresa
+
         resultado_consulta = ''
         while True:
             status, driver = _initialize_chrome(options)

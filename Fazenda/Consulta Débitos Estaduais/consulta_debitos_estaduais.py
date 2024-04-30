@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import time, re
+import datetime
 from requests.exceptions import ConnectionError
 from bs4 import BeautifulSoup
 from sys import path
@@ -164,17 +165,18 @@ def run():
     if index is None:
         return False
     
-    # cria o indice para cada empresa da lista de dados
-    total_empresas = empresas[index:]
     # inicia a variável que verifica se o usuário da execução anterior é igual ao atual
     usuario_anterior = 'padrão'
     s = False
     
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
+    total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, usuario, senha, perfil = empresa
-        
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index)
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
+        cnpj, usuario, senha, perfil = empresa
         
         # verifica se o usuario anterior é o mesmo para não fazer login de novo com o mesmo usuário
         if usuario_anterior != usuario:

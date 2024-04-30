@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from pyautogui import prompt, confirm
-import os, time, re, csv, shutil, fitz
+import datetime, os, time, re, csv, shutil, fitz
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -289,11 +289,13 @@ def run():
     driver.set_page_load_timeout(30)
     driver = login_sieg(driver)
     driver = sieg_iris(driver)
+    
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
-        
-        _indice(count, total_empresas, empresa, index)
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
 
         while True:
             #try:

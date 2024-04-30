@@ -1,4 +1,4 @@
-import time, re, os, pyautogui as p
+import datetime, time, re, os, pyautogui as p
 from xhtml2pdf import pisa
 from requests import Session
 from bs4 import BeautifulSoup
@@ -49,20 +49,20 @@ def run():
     if index is None:
         return False
     
-    # cria o indice para cada empresa da lista de dados
-    total_empresas = empresas[index:]
-    
     # opções para fazer com que o chome trabalhe em segundo plano (opcional)
     options = webdriver.ChromeOptions()
     # options.add_argument('--headless')
     # options.add_argument('--window-size=1920,1080')
     options.add_argument("--start-maximized")
     
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
+    total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, nome= empresa
-        
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index)
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
+        cnpj, nome= empresa
         
         status, driver = _initialize_chrome(options)
         

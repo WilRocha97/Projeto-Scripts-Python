@@ -2,7 +2,7 @@
 from bs4 import BeautifulSoup
 from sys import path
 from selenium import webdriver
-import time, re
+import datetime, time, re
 
 path.append(r'..\..\_comum')
 from comum_comum import _indice, _escreve_relatorio_csv, _time_execution, _open_lista_dados, _where_to_start
@@ -20,11 +20,14 @@ def find_by_id(html_id, driver):
 
 
 def consultar(empresas, index):
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         info, data = empresa
-
-        _indice(count, total_empresas, empresa, index)
 
         # não usa as custom options porque o site não carrega com elas
         status, driver = _initialize_chrome()

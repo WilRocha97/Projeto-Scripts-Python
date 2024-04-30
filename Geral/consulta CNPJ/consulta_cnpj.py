@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # from json.decoder import JSONDecodeError
-from sys import path
-import requests, time, sys
+import datetime, requests, time, sys
 
+from sys import path
 path.append(r'..\..\_comum')
 from comum_comum import _indice, _escreve_relatorio_csv, _escreve_header_csv, _time_execution, _open_lista_dados, _where_to_start
 
@@ -20,11 +20,16 @@ def run():
         return False
 
     url = "https://www.receitaws.com.br/v1/cnpj/"
-
+    
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         cnpj, numero = empresa
-        _indice(count, total_empresas, empresa, index)
+        
         lista_dados = []
         atividades = ''
         socios = ''

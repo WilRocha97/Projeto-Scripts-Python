@@ -1,6 +1,5 @@
 from sys import path
-import pyautogui as p
-import time
+import datetime, time, pyautogui as p
 
 path.append(r'..\..\_comum')
 from comum_comum import _indice, _escreve_relatorio_csv, _time_execution, _open_lista_dados, _where_to_start
@@ -71,12 +70,15 @@ def importar_dirf():
     p.hotkey('win', 'm')
     time.sleep(0.5)
     p.getWindowsWithTitle('Dirf')[0].maximize()
-
+    
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         cod, cnpj, nome, arquivo = empresa
-
-        _indice(count, total_empresas, empresa, index)
 
         clicar(r'imagens\TelaInicial.png')
 

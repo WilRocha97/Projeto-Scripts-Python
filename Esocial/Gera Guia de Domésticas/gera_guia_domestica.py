@@ -1,12 +1,4 @@
-import time
-import datetime
-import os
-import pyautogui as p
-import PIL.ImagePalette
-import fitz
-import re
-import shutil
-import pyperclip
+import time, datetime, os, PIL.ImagePalette, fitz, re, shutil, pyperclip, pyautogui as p
 from sys import path
 
 path.append(r'..\..\_comum')

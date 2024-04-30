@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 from bs4 import BeautifulSoup
 from dateutil.relativedelta import *
-from datetime import datetime, date
 from requests import Session
 from pyautogui import prompt
-import fitz, os, re, time
+import datetime, fitz, os, re, time
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -190,13 +189,14 @@ def run():
         final = os.path.join('Execução', 'Ref. ' + data_inicio[0] + '-' + data_inicio[1] + ' até ' + data_final[0] + '-' + data_final[1])
     else:
         final = os.path.join('Execução', 'Ref. ' + data_inicio[0] + '-' + data_inicio[1])
-        
-    # cria o indice para cada empresa da lista de dados
+    
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
-
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index)
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         try:
             consulta_xml(execucao, final, empresa, data_inicio, data_final)
         except Exception as e:

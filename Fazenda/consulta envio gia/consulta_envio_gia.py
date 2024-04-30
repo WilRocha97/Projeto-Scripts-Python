@@ -1,4 +1,4 @@
-import time, re, os
+import datetime, time, re, os
 from bs4 import BeautifulSoup
 from xhtml2pdf import pisa
 from selenium import webdriver
@@ -157,19 +157,20 @@ def run():
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:
         return False
-    
-    # cria o índice para cada empresa da lista de dados
-    total_empresas = empresas[index:]
+
     # inicia a variável que verifica se o usuário da execução anterior é igual ao atual
     usuario_anterior = 'padrão'
     sid = ''
     driver = False
     
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
+    total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, nome, ie, usuario, senha, perfil = empresa
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
         
-        # printa o índice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index)
+        cnpj, nome, ie, usuario, senha, perfil = empresa
         
         # verifica se o usuario anterior é o mesmo para não fazer login de novo com o mesmo usuário
         if usuario_anterior != usuario:

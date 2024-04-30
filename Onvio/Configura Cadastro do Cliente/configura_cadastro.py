@@ -2,7 +2,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from pyautogui import confirm
-import os, time, re
+import datetime, os, time, re
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -216,11 +216,13 @@ def run():
     
     # fazer login no Onvio
     login_onvio(driver)
-
+    
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        # configurar o indice para localizar em qual empresa está
-        _indice(count, total_empresas, empresa, index)
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
         
         erro = 'erro'
         while erro == 'erro':

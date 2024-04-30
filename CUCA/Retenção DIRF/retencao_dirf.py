@@ -87,8 +87,13 @@ def gerar_dirf():
 
 
 def consulta_retencao(index, empresas, andamentos):
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         cod, cnpj, nome = empresa
 
         _hora_limite = datetime.now().replace(hour=17, minute=25, second=0, microsecond=0)
@@ -96,8 +101,6 @@ def consulta_retencao(index, empresas, andamentos):
         if _horario(_hora_limite, 'DPCUCA'):
             _iniciar('dpcuca')
             p.getWindowsWithTitle('DPCUCA')[0].maximize()
-
-        _indice(count, total_empresas, empresa, index)
 
         _inicial('CUCA')
 

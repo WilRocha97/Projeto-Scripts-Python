@@ -49,15 +49,18 @@ def verificacoes(empresa, execucao):
 
 
 def implantacao(empresas, execucao, index):
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         _hora_limite = datetime.now().replace(hour=17, minute=25, second=0, microsecond=0)
         # Verificar horário
         if _horario(_hora_limite, 'CUCA'):
             _iniciar('cuca')
             p.getWindowsWithTitle('(SP)')[0].maximize()
-
-        _indice(count, total_empresas, empresa, index)
 
         cod, cnpj, valor, comp, ano = empresa
 

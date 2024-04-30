@@ -2,7 +2,7 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from pyautogui import prompt
-import os, time, re, csv, shutil
+import datetime, os, time, re, csv, shutil
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -278,11 +278,13 @@ def run():
         status, driver = _initialize_chrome(options)
         driver = login_sieg(driver)
         
+        tempos = [datetime.datetime.now()]
+        tempo_execucao = []
         total_empresas = empresas[index:]
         for count, empresa in enumerate(empresas[index:], start=1):
-    
-            # configurar o indice para localizar em qual empresa está
-            _indice(count, total_empresas, empresa, index)
+            # printa o indice da empresa que está sendo executada
+            tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+            
             while True:
                 try:
                     driver = sieg_iris(driver)

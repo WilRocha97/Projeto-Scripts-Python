@@ -614,9 +614,14 @@ def relatorio_dpcuca(index, empresas, relatorio, andamentos):
             return False
         _inicial('dpcuca')
         return 'OK'
-
+    
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         cod, cnpj, nome, mes, ano = empresa
 
         '''# Verificar horário
@@ -624,8 +629,6 @@ def relatorio_dpcuca(index, empresas, relatorio, andamentos):
         if _horario(_hora_limite, 'DPCUCA'):
             _iniciar('dpcuca')
             getWindowsWithTitle('DPCUCA')[0].maximize()'''
-
-        _indice(count, total_empresas, empresa, index)
 
         _inicial('dpcuca')
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os, time, shutil, re, fitz
+import datetime, os, time, shutil, re, fitz
 from bs4 import BeautifulSoup
 from requests import Session
 from selenium import webdriver
@@ -127,15 +127,16 @@ def run():
         "download.directory_upgrade": True,
         "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
     })
-
-    total_empresas = empresas[index:]
     
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
+    total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, cpf, cod, nome = empresa
-        
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index)
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
         
+        cnpj, cpf, cod, nome = empresa
+
         # limpa a pasta de download
         for file in os.listdir(download_folder):
             os.remove(os.path.join(download_folder, file))

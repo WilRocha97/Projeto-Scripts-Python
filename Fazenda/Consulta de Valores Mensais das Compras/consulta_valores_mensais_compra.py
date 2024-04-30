@@ -1,4 +1,4 @@
-import time, re, os, pyautogui as p
+import datetime, time, re, os, pyautogui as p
 from xhtml2pdf import pisa
 from requests import Session
 from bs4 import BeautifulSoup
@@ -184,12 +184,15 @@ def run():
     index = _where_to_start(tuple(i[0] for i in empresas))
     if index is None:
         return
-        
+    
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, nome, usuario, senha = empresa
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index)
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
+        cnpj, nome, usuario, senha = empresa
         
         s, situacao = login(usuario, senha)
         

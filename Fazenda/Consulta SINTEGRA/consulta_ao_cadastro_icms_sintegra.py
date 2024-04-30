@@ -132,13 +132,14 @@ def run():
         "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
     })
     
-    # cria o indice para cada empresa da lista de dados
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
-    
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, nome = empresa
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index)
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
+        cnpj, nome = empresa
         
         while True:
             status, driver = _initialize_chrome(options)

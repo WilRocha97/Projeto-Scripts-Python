@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-import pyautogui as p
-import time
+import datetime, time, pyautogui as p
 from sys import path
 
 path.append(r'..\..\_comum')
@@ -159,11 +158,13 @@ def run():
 
     time.sleep(0.5)
     p.getWindowsWithTitle('Dirf')[0].maximize()
-
+    
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-
-        _indice(count, total_empresas, empresa, index)
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
 
         if not transmitir(empresa, ):
             continue

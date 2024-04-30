@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-import datetime, shutil, fitz, re, time, os, pyautogui as p, datetime as date_time, pyperclip as clip
-from datetime import datetime
+import datetime, shutil, fitz, re, time, os, pyautogui as p, pyperclip as clip
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -83,9 +82,9 @@ def gera_arquivo(comp, andamento, cod='*', cnpj='', nome=''):
         if timer > 30:
             p.press('pgup', presses=20)
             timer = 0
-            
+
     _click_img('relatorio_modelo_veiga.png', conf=0.9)
-    
+
     # insere o código da empresa, '*' para selecionar todas
     time.sleep(1)
     p.press('tab')
@@ -256,10 +255,10 @@ def envia_experiencia(comp):
 
 def define_data():
     # Obter a data atual
-    hoje = date_time.date.today()
+    hoje = datetime.date.today()
 
     # Subtrair 90 dias da data atual
-    data_subtraida = hoje - date_time.timedelta(days=90)
+    data_subtraida = hoje - datetime.timedelta(days=90)
 
     hoje = hoje.strftime('%d/%m/%Y')
     data_subtraida = data_subtraida.strftime('%d/%m/%Y')
@@ -295,9 +294,9 @@ def run(window):
 
 if __name__ == '__main__':
     # define o nome da planilha de andamentos
-    dia = datetime.now().day
-    mes = datetime.now().month
-    ano = datetime.now().year
+    dia = datetime.datetime.now().day
+    mes = datetime.datetime.now().month
+    ano = datetime.datetime.now().year
     
     comp = f'{dia}-{mes}-{ano}'
     empresas = ''

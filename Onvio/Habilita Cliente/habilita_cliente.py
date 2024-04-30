@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from pyautogui import confirm
 from bs4 import BeautifulSoup
-import os, time, re
+import datetime, os, time, re
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -42,7 +42,7 @@ def login_onvio(driver):
     print('>>> Acessando o site...')
     time.sleep(1)
 
-    dados = "V:\\Setor Robô\\Scripts Python\\Onvio\\Dados.txt"
+    dados = "V:\\Setor Robô\\Scripts Python\\Onvio\\Dados Onvio.txt"
     f = open(dados, 'r', encoding='utf-8')
     user = f.read()
     user = user.split('/')
@@ -201,12 +201,15 @@ def run():
     
     # fazer login no Onvio
     driver = login_onvio(driver)
-
+    
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         numero, cnpj = empresa
-        # configurar o indice para localizar em qual empresa está
-        _indice(count, total_empresas, empresa, index)
         
         erro = 'erro'
         tentativas = 1

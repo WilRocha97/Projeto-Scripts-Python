@@ -1,20 +1,20 @@
-import os, time
-import shutil
-import fitz
-import re
+import datetime, os, time, shutil, fitz, re
 from sys import path
 path.append(r'..\..\_comum')
-from comum_comum import ask_for_dir
-from comum_comum import _indice, _escreve_relatorio_csv, _open_lista_dados, _where_to_start
+from comum_comum import _time_execution, _indice, _escreve_relatorio_csv, _open_lista_dados, _where_to_start, ask_for_dir
 
 
+@_time_execution
 def run():
     pasta_dos_arquivos = ask_for_dir()
     
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index)
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         indice, caminho, arquivo = empresa
         print(caminho)
         

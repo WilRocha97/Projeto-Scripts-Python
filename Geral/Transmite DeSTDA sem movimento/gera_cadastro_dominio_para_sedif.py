@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-import pyperclip, time, os, pyautogui as p
-from datetime import datetime
+import datetime, pyperclip, time, os, pyautogui as p
 from dateutil.relativedelta import relativedelta
 from sys import path
 
@@ -150,9 +149,12 @@ def run():
     if index is None:
         return False
     
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        _indice(count, total_empresas, empresa, index)
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
         
         if not _login(empresa, andamentos):
             continue

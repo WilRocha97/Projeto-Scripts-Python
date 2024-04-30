@@ -75,11 +75,14 @@ def adicionar(andamentos, empresa):
 
 
 def entrar_na_empresa(index, empresas, andamentos, usuario):
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         cod, cnpj, nome, mes, ano, cod_socio, nome_socio, data, valor = empresa
-
-        _indice(count, total_empresas, empresa, index)
 
         # CNPJ com os separadores para poder verificar a empresa no cuca
         if not _verificar_empresa(cnpj, andamentos, texto='falso', qual_cuca='dpcuca'):

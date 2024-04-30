@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
-import time
 from requests import Session
 from bs4 import BeautifulSoup
-import sys
-import pyautogui as p
-import re, os
+import datetime, sys, time, re, os, pyautogui as p
 
 sys.path.append(r'..\..\_comum')
 from comum_comum import _indice, _escreve_relatorio_csv, _time_execution, _open_lista_dados, _where_to_start
@@ -93,15 +90,15 @@ def run():
     if index is None:
         return False
     
-    # cria o indice para cada empresa da lista de dados
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
-    
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         cnpj, senha, nome = empresa
         nome = nome.replace('/', ' ')
-        
-        # printa o indice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index)
         
         # faz login no SIGISSWEB
         execucao, documento, s = login(cnpj, senha)

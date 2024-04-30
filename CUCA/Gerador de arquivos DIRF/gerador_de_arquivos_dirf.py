@@ -11,8 +11,13 @@ from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir,
 
 
 def gerar_dirf(index, empresas):
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         cod, cnpj, nome, mes, ano = empresa
         
         # Verificar horário
@@ -20,9 +25,7 @@ def gerar_dirf(index, empresas):
         if _horario(_hora_limite, 'DPCUCA'):
             _iniciar('DPCUCA')
             p.getWindowsWithTitle('DPCUCA')[0].maximize()
-        
-        _indice(count, total_empresas, empresa, index)
-        
+
         _inicial('dpcuca')
 
         # Verificações de login

@@ -79,7 +79,7 @@ def barra_de_status(func):
         
         # guarda a janela na variável para manipula-la
         screen_width, screen_height = sg.Window.get_screen_size()
-        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(720, 34), margins=(0,0), finalize=True, location=((screen_width // 2) - (720 // 2), 0))
+        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(740, 34), margins=(0,0), finalize=True, location=((screen_width // 2) - (740 // 2), 0))
         
         def run_script_thread():
             # habilita e desabilita os botões conforme necessário
@@ -100,6 +100,7 @@ def barra_de_status(func):
                 window['-titulo-'].update(visible=False)
                 window['-iniciar-'].update(visible=False)
                 window['-Processando-'].update(visible=False)
+                window['-Mensagens-'].update(visible=False)
                 
                 window['-fechar-'].update(visible=True)
                 window['-titulo-'].update('Erro', text_color='#fc0303')
@@ -391,32 +392,32 @@ _download_file = download_file
 def indice(count, total_empresas, empresa='', index=0, window=False, tempos=False, tempo_execucao=None):
     tempo_estimado_texto = ''
     tempo_estimado = 0
+    if tempos:
+        tempo_inicial = datetime.now()
+        
+        tempos.append(tempo_inicial)
+        tempo_execucao_atual = int(tempos[1].timestamp()) - int(tempos[0].timestamp())
+        
+        tempo_execucao.append(tempo_execucao_atual)
+        for t in tempo_execucao:
+            tempo_estimado = tempo_estimado + t
+        tempo_estimado = int(tempo_estimado) / int(len(tempo_execucao))
+        
+        tempo_total_segundos = int((len(total_empresas) + index) - (count + index) + 1) * int(tempo_estimado)
+        tempo_estimado = tempo_execucao
+        # Converter o tempo total para um objeto timedelta
+        tempo_total = timedelta(seconds=tempo_total_segundos)
+        
+        # Extrair dias, horas e minutos do timedelta
+        dias = tempo_total.days
+        horas = tempo_total.seconds // 3600
+        minutos = (tempo_total.seconds % 3600) // 60
+        
+        # Retorna o tempo no formato "dias:horas:minutos:segundos"
+        tempo_estimado_texto = f" | Tempo estimado: {dias} dias {horas} horas {minutos} minutos"
+        tempos.pop(0)
+        
     if window:
-        if tempos:
-            tempo_inicial = datetime.now()
-            
-            tempos.append(tempo_inicial)
-            tempo_execucao_atual = int(tempos[1].timestamp()) - int(tempos[0].timestamp())
-            
-            tempo_execucao.append(tempo_execucao_atual)
-            for t in tempo_execucao:
-                tempo_estimado = tempo_estimado + t
-            tempo_estimado = int(tempo_estimado) / int(len(tempo_execucao))
-            
-            tempo_total_segundos = int((len(total_empresas) + index) - (count + index) + 1) * int(tempo_estimado)
-            tempo_estimado = tempo_execucao
-            # Converter o tempo total para um objeto timedelta
-            tempo_total = timedelta(seconds=tempo_total_segundos)
-            
-            # Extrair dias, horas e minutos do timedelta
-            dias = tempo_total.days
-            horas = tempo_total.seconds // 3600
-            minutos = (tempo_total.seconds % 3600) // 60
-            
-            # Retorna o tempo no formato "dias:horas:minutos:segundos"
-            tempo_estimado_texto =  f" | Tempo estimado: {dias} dias {horas} horas {minutos} minutos"
-            tempos.pop(0)
-            
         while True:
             try:
                 window['-Mensagens-'].update(f'{str((count + index) - 1)} de {str(len(total_empresas) + index)} | {str((len(total_empresas) + index) - (count + index) + 1)} Restantes{tempo_estimado_texto}')
@@ -430,7 +431,7 @@ def indice(count, total_empresas, empresa='', index=0, window=False, tempos=Fals
                 pass
 
     if count > 1:
-        print(f'[ {len(total_empresas) - (count - 1)} Restantes ]\n\n')
+        print(f'[ {len(total_empresas) - (count - 1)} Restantes ] {tempo_estimado_texto}\n\n')
     # Cria um indice para saber qual linha dos dados está
     indice_dados = f'[ {str(count + index)} de {str(len(total_empresas) + index)} ]'
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os, time
+import datetime, os, time
 from sys import path
 
 path.append(r'modulos')
@@ -23,12 +23,14 @@ def run():
     if index is None:
         return False
     
-    # para cada linha da lista procura a função correspondente ao sindicato
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         cod_sindicato, cnpj, valor_boleto, valor_recolhido, valor_remuneracao, data_referencia, usuario, senha, funcionarios, responsavel, email = empresa
-        # printa o indice da lista
-        _indice(count, total_empresas, empresa, index)
         
         # dicionário de funções, onde cada arquivo referente a execução de um sindicato está vinculado a um número que é o código do sindicato
         sindicatos = {

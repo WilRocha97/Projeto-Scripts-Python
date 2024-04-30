@@ -1,4 +1,4 @@
-import time, re, os
+import datetime, time, re, os
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -127,18 +127,18 @@ def run():
     if index is None:
         return False
     
-    # cria o índice para cada empresa da lista de dados
-    total_empresas = empresas[index:]
-    
     status, driver = _initialize_chrome(options)
     # faz o login uma vez
     driver = login(driver)
     
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
+    total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-        cnpj, razao, nome, numero = empresa
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
         
-        # printa o índice da empresa que está sendo executada
-        _indice(count, total_empresas, empresa, index)
+        cnpj, razao, nome, numero = empresa
         
         nome_contato = nome + ' - ' + razao
         driver = adiciona_cliente(driver, nome_contato, numero)

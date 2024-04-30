@@ -39,15 +39,18 @@ def login(empresa, qual_cuca, log, competencia, ano, execucao):
 
 
 def transferir_info(index, empresas, competencia, ano, execucao):
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         _hora_limite = datetime.now().replace(hour=17, minute=25, second=0, microsecond=0)
         # Verifica horário
         if _horario(_hora_limite, 'DPCUCA'):
             abrir_os_dois(usuario)
             p.getWindowsWithTitle('DPCUCA')[0].maximize()
-
-        _indice(count, total_empresas, empresa, index)
 
         cod, cnpj, nome = empresa
 

@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from tkinter import *
 from ttk import Combobox
-import time, pyperclip, pyautogui as p
+import datetime, time, pyperclip, pyautogui as p
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -12,7 +11,7 @@ from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir,
 
 
 def calcula_dia(mes_final):
-    date = datetime.now().replace(month=int(mes_final)) + relativedelta(day=31)
+    date = datetime.datetime.now().replace(month=int(mes_final)) + relativedelta(day=31)
     dia = date.day
     return dia
 
@@ -23,7 +22,7 @@ def configura_automatico(sped):
     if sped == 'SPED Contribuições':
         consulta = 'Consulta SPED Contribuições'
 
-        mes = datetime.now().month
+        mes = datetime.datetime.now().month
         if mes == 1:
             mes = 11
         elif mes == 2:
@@ -31,7 +30,7 @@ def configura_automatico(sped):
         else:
             mes -= 2
 
-        ano_consulta = datetime.now().strftime('%Y')
+        ano_consulta = datetime.datetime.now().strftime('%Y')
 
         if mes >= 11:
             ano_consulta = int(ano_consulta) - 1
@@ -45,14 +44,14 @@ def configura_automatico(sped):
 
     elif sped == 'SPED Fiscal':
         consulta = 'Consulta SPED fiscal'
-        mes = datetime.now().month
+        mes = datetime.datetime.now().month
 
         if mes == 1:
             mes = 12
         else:
             mes -= 1
 
-        ano_consulta = datetime.now().strftime('%Y')
+        ano_consulta = datetime.datetime.now().strftime('%Y')
 
         if mes == 12:
             ano_consulta = int(ano_consulta) - 1
@@ -67,14 +66,14 @@ def configura_automatico(sped):
 
     elif sped == 'SPED ECF':
         consulta = 'Consulta SPED ECF'
-        ano_consulta = datetime.now().strftime('%Y')
+        ano_consulta = datetime.datetime.now().strftime('%Y')
         mes = '01'
-        mes_final = datetime.now().strftime('%m')
-        dia = datetime.now().strftime('%d')
+        mes_final = datetime.datetime.now().strftime('%m')
+        dia = datetime.datetime.now().strftime('%d')
     
     elif sped == 'SPED ECD':
         consulta = 'Consulta SPED ECD'
-        ano_consulta = int(datetime.now().strftime('%Y')) - 1
+        ano_consulta = int(datetime.datetime.now().strftime('%Y')) - 1
         mes = '01'
         mes_final = '12'
         dia = '31'
@@ -99,9 +98,9 @@ def configura_manual(sped):
         consulta = 'Consulta SPED ECF'
         ano_consulta = p.prompt(title='Script incrível', text='Qual o período de entrega?', default='0000')
         mes = '01'
-        if str(datetime.now().year) == ano_consulta:
-            mes_final = datetime.now().strftime('%m')
-            dia = datetime.now().strftime('%d')
+        if str(datetime.datetime.now().year) == ano_consulta:
+            mes_final = datetime.datetime.now().strftime('%m')
+            dia = datetime.datetime.now().strftime('%d')
         else:
             mes_final = '12'
             dia = calcula_dia(mes_final)
@@ -322,11 +321,13 @@ def configurar_ecd():
 
 def consulta_sped(empresas, index, consulta, sped, ano_consulta, mes, mes_final, dia):
     p.hotkey('win', 'm')
-
+    
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
-
-        _indice(count, total_empresas, empresa, index)
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
 
         if not _find_img('Pesquisa.png', conf=0.9):
             if not _find_img('Icone.png', conf=0.9):

@@ -184,22 +184,25 @@ def folha_ponto(execucao, cod, nome):
     return True
 
 
-def consultar(emp, index, execucao):
+def consultar(empresas, index, execucao):
     mes_ponto, mes_ferias, ano_ponto, ano_ferias = competencia()
 
     # Abrir o DPCUCA
     p.hotkey('win', 'm')
     _iniciar('DPCUCA')
-
-    total_empresas = emp[index:]
-    for count, empresa in enumerate(emp[index:], start=1):
+    
+    tempos = [datetime.datetime.now()]
+    tempo_execucao = []
+    total_empresas = empresas[index:]
+    for count, empresa in enumerate(empresas[index:], start=1):
+        # printa o indice da empresa que está sendo executada
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        
         _hora_limite = datetime.now().replace(hour=17, minute=25, second=0, microsecond=0)
         # Verificar horário
         if _horario(_hora_limite, 'DPCUCA'):
             _iniciar('DPCUCA')
             p.getWindowsWithTitle('DPCUCA PLUS |')[0].maximize()
-
-        _indice(count, total_empresas, empresa, index)
 
         cod, cpf, nome = empresa
 

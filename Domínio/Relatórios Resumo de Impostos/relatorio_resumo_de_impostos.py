@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import fitz, re, shutil, time, os, pyautogui as p
+import datetime, fitz, re, shutil, time, os, pyautogui as p
 from sys import path
 
 path.append(r'..\..\_comum')
@@ -262,13 +262,16 @@ def run(window):
         _abrir_modulo('escrita_fiscal')
         
         tempos = [datetime.datetime.now()]
-        tempo_execucao = 0
+        tempo_execucao = []
         total_empresas = empresas[index:]
         for count, empresa in enumerate(empresas[index:], start=1):
             # printa o indice da empresa que está sendo executada
             tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, window, tempos, tempo_execucao)
     
             while True:
+                if not _find_img('inicial.png', pasta='imgs_c', conf=0.9):
+                    _login_web()
+                    _abrir_modulo('escrita_fiscal')
                 if not _login(empresa, andamentos):
                     break
                 else:

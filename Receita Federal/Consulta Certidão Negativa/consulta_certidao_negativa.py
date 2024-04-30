@@ -14,6 +14,7 @@ def verificacoes(consulta_tipo, andamento, identificacao, nome):
                ('info_insuficiente.png', 'As informações disponíveis na Secretaria da Receita Federal do Brasil - RFB sobre o contribuinte são insuficientes para a emissão de certidão por meio da Internet.', False),
                ('matriz.png', f'A certidão deve ser emitida para o {consulta_tipo} da matriz', False),
                ('cpf_invalido.png', 'CPF inválido', False),
+               ('cnpj_invalido.png', 'CNPJ inválido', False),
                ('cnpj_suspenso.png', 'CNPJ suspenso', False),
                ('declaracao_inapta.png', 'CNPJ com situação cadastral declarada inapta pela Secretaria Especial da Receita Federal do Brasil - RFB', False)]
     
@@ -34,13 +35,30 @@ def verificacoes(consulta_tipo, andamento, identificacao, nome):
 def salvar(consulta_tipo, pasta, andamento, identificacao, nome, pasta_download, nome_certidao):
     # espera abrir a tela de salvar o arquivo
     contador = 0
+    print('>>> Aguardando consulta')
     while not _find_img('salvar_como.png', conf=0.9):
+        situacao = verificacoes(consulta_tipo, andamento, identificacao, nome)
+        if not situacao:
+            p.hotkey('ctrl', 'w')
+            return False
+
+        if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9):
+            print('>>> Site morreu, tentando novamente')
+            consulta(consulta_tipo, identificacao)
+
+        if situacao == 'erro':
+            return situacao
+
         if _find_img('servico_indisponivel.png', conf= 0.9):
             return 'erro'
+
+        if _find_img('identificacao_nao_informada.png', conf=0.95):
+            _click_img('identificacao_nao_informada_ok.png', conf=0.95)
+
         if _find_img('em_processamento.png', conf=0.9) or _find_img('erro_captcha.png', conf=0.9):
             print('>>> Tentando novamente')
             consulta(consulta_tipo, identificacao)
-            if _find_img('site_morreu.png', conf=0.9):
+            if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9):
                 print('>>> Site morreu, tentando novamente')
                 consulta(consulta_tipo, identificacao)
             if contador >= 5:
@@ -49,34 +67,30 @@ def salvar(consulta_tipo, pasta, andamento, identificacao, nome, pasta_download,
                 p.hotkey('ctrl', 'w')
                 return False
             contador += 1
-            
+
+        if _find_img('nova_consulta.png', conf=0.9):
+            _click_img('nova_consulta.png', conf=0.9)
+
         if _find_img('cnpj_vazio.png', conf=0.99):
             p.write(identificacao)
             time.sleep(1)
+            
+        if _find_img('nova_certidao.png', conf=0.9):
+            _click_img('nova_certidao.png', conf=0.9)
+
+        if _find_img(f'informe_{consulta_tipo}.png', conf=0.9) or _find_img(f'informe_{consulta_tipo}_2.png', conf=0.9):
+            _click_img(f'informe_{consulta_tipo}.png', conf=0.9, timeout=1)
+            _click_img(f'informe_{consulta_tipo}_2.png', conf=0.9, timeout=1)
+
+        if _find_img('cnpj_vazio.png', conf=0.99):
+            p.write(identificacao)
+            time.sleep(1)
+            p.press('enter')
             
         if _find_img('botao_consultar_selecionado.png', conf=0.9):
             _click_img('botao_consultar_selecionado.png', conf=0.9)
             contador = 0
 
-        if _find_img('nova_certidao.png', conf=0.9):
-            _click_img('nova_certidao.png', conf=0.9)
-
-        situacao = verificacoes(consulta_tipo, andamento, identificacao, nome)
-
-        if not situacao:
-            p.hotkey('ctrl', 'w')
-            return False
-
-        if situacao == 'erro':
-            return situacao
-        
-        if _find_img('cnpj_vazio.png', conf=0.99):
-            p.write(identificacao)
-            time.sleep(1)
-            
-        if _find_img(f'informe_{consulta_tipo}.png', conf=0.9):
-            p.press('enter')
-        
         time.sleep(1)
         
     # escreve o nome do arquivo (.upper() serve para deixar em letra maiúscula)
@@ -135,17 +149,22 @@ def consulta(consulta_tipo, identificacao):
     while not _find_img(f'informe_{consulta_tipo}.png', conf=0.9):
         if _find_img('nova_certidao.png', conf=0.9):
             _click_img('nova_certidao.png', conf=0.9)
-        
+
+        if _find_img('nova_consulta.png', conf=0.9):
+            _click_img('nova_consulta.png', conf=0.9)
+
         for i in range(60):
-            if _find_img('site_morreu.png', conf=0.9):
-                break
+            if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9):
+                _abrir_chrome(link)
+
             time.sleep(1)
-            if _find_img(f'informe_{consulta_tipo}.png', conf=0.9):
+            if _find_img(f'informe_{consulta_tipo}.png', conf=0.9) or _find_img(f'informe_{consulta_tipo}_2.png', conf=0.9):
                 break
 
     time.sleep(1)
 
-    _click_img(f'informe_{consulta_tipo}.png', conf=0.9)
+    _click_img(f'informe_{consulta_tipo}.png', conf=0.9, timeout=1)
+    _click_img(f'informe_{consulta_tipo}_2.png', conf=0.9, timeout=1)
     time.sleep(1)
 
     p.write(identificacao)

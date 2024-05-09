@@ -90,9 +90,9 @@ def open_lista_dados(input_excel):
 def run(window, planilha_primaria, planilha_secundaria):
     cpfs = pd.read_excel(planilha_primaria, index_col=None)
     encontrados = pd.DataFrame([[]])
-    last_column = cpfs.shape[1]
+    last_column = cpfs.shape[1] -1
     
-    for count, cpfs_linha in enumerate(cpfs.itertuples(), start=1):
+    for count, cpfs_linha in enumerate(cpfs.values, start=1):
         cpf = cpfs_linha[last_column]
         print(cpf)
         

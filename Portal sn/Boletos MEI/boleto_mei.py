@@ -59,6 +59,7 @@ def imprimir(empresa, andamentos):
 
     # Selecionar local
     p.press('tab', presses=6)
+
     time.sleep(0.5)
     p.press('enter')
     time.sleep(0.5)
@@ -82,6 +83,7 @@ def boleto_mei(empresa, andamentos):
     cnpj, comp, ano, venc = empresa
 
     # espera o site abrir
+    print('>>> Esperando o site abrir')
     while not _wait_img('informe_cnpj.png', conf=0.9, timeout=-1):
         time.sleep(1)
 

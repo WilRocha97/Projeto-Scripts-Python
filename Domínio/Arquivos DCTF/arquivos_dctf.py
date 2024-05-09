@@ -156,18 +156,22 @@ def arquivos_dctf(empresa, periodo, andamento):
             p.click(412, 601)
             time.sleep(1)
     
-    # sem alteração do regime ou não se aplica se for primeiro janeiro
+    # sem alteração do regime ou não se aplica se for janeiro
     p.click(1215, 547)
     time.sleep(0.5)
     
-    if periodo[:2] == '01':
+    if _find_img('nao_se_aplica.png', conf=0.99):
+        _click_img('nao_se_aplica.png', conf=0.99)
+        time.sleep(1)
+        
+    """if periodo[:2] == '01':
         if _find_img('nao_se_aplica.png', conf=0.99):
             _click_img('nao_se_aplica.png', conf=0.99)
             time.sleep(1)
     else:
         if _find_img('sem_alteracao.png', conf=0.99):
             _click_img('sem_alteracao.png', conf=0.99)
-            time.sleep(1)
+            time.sleep(1)"""
     
     # ok
     p.hotkey('alt', 'o')

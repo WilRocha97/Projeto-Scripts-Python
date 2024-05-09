@@ -8,7 +8,7 @@ from pyautogui_comum import _click_img, _find_img
 import os, time, pyautogui as p
 
 service = Service(log_path = 'V:\Setor Robô\Scripts Python\_comum\Chrome driver\chromedriver.exe')
-
+imagens = 'V:\\_imagens_comum_python\\imgs_google'
 _msgs = {
     "not_download": "Não foi possivel baixar o chromeDriver correspondente ao chromeBrowser",
     "not_close": "Verifique se existe algum arquivo chromedriver.exe na pasta" + os.getcwd(),
@@ -145,21 +145,34 @@ _find_by_class = find_by_class
 def abrir_chrome(url, tela_inicial_site=False, fechar_janela=True, outra_janela=False, anti_travamento=False, iniciar_com_icone=False):
     def abrir_nova_janela():
         time.sleep(0.5)
+        print('>>> Iniciando Chrome')
         if iniciar_com_icone:
-            _click_img('icone_chrome.png', pasta='imgs_google', conf=0.95)
+            _click_img('icone_chrome.png', pasta=imagens, conf=0.95)
         else:
             os.startfile(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
 
         if outra_janela:
-            while _find_img(outra_janela, pasta='imgs_google', conf=0.9):
+            while _find_img(outra_janela, pasta=imagens, conf=0.9):
                 time.sleep(1)
-        
-        while not _find_img('google.png', pasta='imgs_google', conf=0.9):
+
+        timer = 0
+        while not _find_img('google.png', pasta=imagens, conf=0.9):
+            time.sleep(1)
+            timer += 1
+            if timer > 10:
+                print('>>> Iniciando Chrome')
+                if iniciar_com_icone:
+                    _click_img('icone_chrome.png', pasta=imagens, conf=0.95)
+                else:
+                    os.startfile(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
+                timer = 0
+
             if anti_travamento:
-                if _find_img('chrome_travado.png', pasta='imgs_google', conf=0.9):
-                    _click_img('chrome_travado.png', pasta='imgs_google', conf=0.9)
-        
-        _click_img('google.png', pasta='imgs_google', conf=0.9)
+                if _find_img('chrome_travado.png', pasta=imagens, conf=0.9):
+                    _click_img('chrome_travado.png', pasta=imagens, conf=0.9)
+
+        print('>>> Cofigurando Chrome')
+        _click_img('google.png', pasta=imagens, conf=0.9)
         time.sleep(1)
         p.hotkey('alt', 'space', 'x')
         p.hotkey('alt', 'space', 'x')
@@ -168,8 +181,8 @@ def abrir_chrome(url, tela_inicial_site=False, fechar_janela=True, outra_janela=
         p.hotkey('alt', 'space', 'x')
         
         time.sleep(1)
-        if _find_img('restaurar_pagina.png', pasta='imgs_google', conf=0.9):
-            _click_img('restaurar_pagina.png', pasta='imgs_google', conf=0.9)
+        if _find_img('restaurar_pagina.png', pasta=imagens, conf=0.9):
+            _click_img('restaurar_pagina.png', pasta=imagens, conf=0.9)
             time.sleep(0.5)
             p.press('esc')
             time.sleep(0.5)
@@ -178,8 +191,8 @@ def abrir_chrome(url, tela_inicial_site=False, fechar_janela=True, outra_janela=
         p.hotkey('win', 'm')
     
     if fechar_janela:
-        if _find_img('chrome_aberto.png', pasta='imgs_google', conf=0.99):
-            _click_img('chrome_aberto.png', pasta='imgs_google', conf=0.99, timeout=1)
+        if _find_img('chrome_aberto.png', pasta=imagens, conf=0.99):
+            _click_img('chrome_aberto.png', pasta=imagens, conf=0.99, timeout=1)
         else:
             abrir_nova_janela()
             
@@ -188,7 +201,7 @@ def abrir_chrome(url, tela_inicial_site=False, fechar_janela=True, outra_janela=
 
     if tela_inicial_site:
         timer = 0
-        while not _find_img(tela_inicial_site, pasta='imgs_google', conf=0.9):
+        while not _find_img(tela_inicial_site, pasta=imagens, conf=0.9):
             print('>>> Aguardando o site carregar...')
             if timer == 0:
                 for i in range(3):
@@ -217,6 +230,7 @@ def abrir_chrome(url, tela_inicial_site=False, fechar_janela=True, outra_janela=
                 timer = 0
 
     else:
+        print('>>> Acessando site')
         for i in range(3):
             p.click(1000, 51)
             time.sleep(0.1)

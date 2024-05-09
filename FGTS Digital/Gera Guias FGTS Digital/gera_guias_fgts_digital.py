@@ -1,4 +1,4 @@
-import time, os, PIL.ImagePalette, fitz, re, shutil,  pyperclip, pyautogui as p
+import datetime, time, os, PIL.ImagePalette, fitz, re, shutil,  pyperclip, pyautogui as p
 from sys import path
 
 path.append(r'..\..\_comum')
@@ -62,8 +62,8 @@ def login(cnpj):
         if _find_img('troca_perfil.png'):
             break
             
-        if _find_img('trocar_perfil.png', conf=0.95):
-            _click_img('trocar_perfil.png', conf=0.95)
+        if _find_img('trocar_perfil.png', conf=0.9):
+            _click_img('trocar_perfil.png', conf=0.9)
             
         if _find_img('erro_gov.png'):
             p.press('pgDn')
@@ -167,7 +167,7 @@ def busca_guia(comp):
 def salva_guia(codigo_dominio, cnpj, nome, caminho, caminho_final):
     alerta = ''
     os.makedirs('execução\Guias', exist_ok=True)
-    print('>>> Baixando Informe')
+    print('>>> Baixando guia')
     
     arquivo_nome = f'GFD - {comp.replace("/", "-")} - Vencimento- - {cnpj} - {nome.replace("/", "")}'
 
@@ -175,16 +175,18 @@ def salva_guia(codigo_dominio, cnpj, nome, caminho, caminho_final):
     while not _find_img('emitir_guia.png', conf=0.9):
         if _find_img('vinculos_desligados.png', conf=0.9):
             return 'Existem vínculos desligados com cálculo da Indenização Compensatória pendente'
+        if _find_img('nao_tem_debito_na_comp.png', conf=0.9):
+            return 'Não há o tipo de débito selecionado para o empregador na competência'
         p.press('down')
 
     # clica para baixar o pdf
     _click_img('emitir_guia.png', conf=0.9)
 
     # aguarda a tela de salvar do navegador abrir
-    while not _find_img('salvar_como.png', conf=0.9, timeout=-1):
-        if _find_img('conflito.png', conf=0.9):
+    while not _find_img('salvar_como.png', conf=0.9):
+        if _find_img('conflito.png', conf=0.9) or _find_img('conflito_2.png', conf=0.9):
             alerta = ' Um ou mais débitos do agrupamento já compõem guia gerada anteriormente, ainda não paga e não vencida, e que continua válida mesmo após emissão de nova guia'
-            _click_img('confirmar_alerta.png')
+            _click_img('confirmar_alerta.png', conf=0.9)
             
     pyperclip.copy(arquivo_nome)
     p.hotkey('ctrl', 'v')
@@ -200,11 +202,12 @@ def salva_guia(codigo_dominio, cnpj, nome, caminho, caminho_final):
     time.sleep(0.5)
     p.press('enter')
     time.sleep(0.5)
-    p.hotkey('alt', 'l')
-    time.sleep(1)
-    if _find_img('substituir.png', conf=0.95):
-        p.press('s')
-    time.sleep(1)
+    while _find_img('salvar_como.png', conf=0.9):
+        p.hotkey('alt', 'l')
+        time.sleep(1)
+        if _find_img('substituir.png', conf=0.95):
+            p.press('s')
+        time.sleep(5)
     print('✔ Guia GFD gerada')
     time.sleep(5)
     analisa_guia(codigo_dominio, cnpj, arquivo_nome + '.pdf', caminho, caminho_final)
@@ -235,10 +238,10 @@ def analisa_guia(codigo_dominio, cnpj, guia, caminho, caminho_final):
         p.alert('ERRO')
         return False, ''
     
+    nova_guia = guia.replace('Vencimento-', f'Vencimento-{vencimento_sem_barra}')
     _escreve_relatorio_csv(f'{codigo_dominio};{cnpj};{cpf_cnpj_guia};{nome_guia};{identificador};{tag};{valor_recolher};{vencimento}', nome='Resumo Guias')
-    shutil.move(os.path.join(caminho, guia), os.path.join(caminho, guia.replace('Vencimento-', f'Vencimento-{vencimento_sem_barra}')))
-    add_text_to_pdf(guia, caminho, caminho_final, cnpj)
-
+    shutil.move(os.path.join(caminho, guia), os.path.join(caminho, nova_guia))
+    add_text_to_pdf(nova_guia, caminho, caminho_final, cnpj)
 
 
 def add_text_to_pdf(guia, caminho, caminho_final, text):
@@ -254,6 +257,7 @@ def add_text_to_pdf(guia, caminho, caminho_final, text):
     # Adicionar texto na página
     page.insert_text((x_text, y_text), text, fontsize=12, overlay=True)
     
+    os.makedirs(caminho_final, exist_ok=True)
     # Salvar o PDF modificado
     pdf_document.save(os.path.join(caminho_final, guia))
 

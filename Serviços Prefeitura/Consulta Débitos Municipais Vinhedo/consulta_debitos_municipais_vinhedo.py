@@ -105,6 +105,25 @@ def salvar_guia(driver, cnpj, caminho_final):
 
 @_time_execution
 def run():
+    caminho_final = "V:\\Setor Robô\\Scripts Python\\Serviços Prefeitura\\Consulta Débitos Municipais Vinhedo\\execução\\Certidões"
+    # opções para fazer com que o chome trabalhe em segundo plano (opcional)
+    options = webdriver.ChromeOptions()
+    #options.add_argument('--headless')
+    # options.add_argument('--window-size=1920,1080')
+    options.add_argument("--start-maximized")
+    options.add_experimental_option('prefs', {
+        "download.default_directory": caminho_final,  # Change default directory for downloads
+        "download.prompt_for_download": False,  # To auto download the file
+        "download.directory_upgrade": True,
+        "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
+    })
+    
+    empresas = _open_lista_dados()
+    
+    index = _where_to_start(tuple(i[0] for i in empresas))
+    if index is None:
+        return
+    
     tempos = [datetime.datetime.now()]
     tempo_execucao = []
     total_empresas = empresas[index:]
@@ -123,26 +142,8 @@ def run():
             
                 _escreve_relatorio_csv(f'{cnpj};{insc_muni};{nome};{situacao}', nome='Consulta de débitos municipais de Vinhedo')
                 break
-                
-    return True
+
     
     
 if __name__ == '__main__':
-    caminho_final = "V:\\Setor Robô\\Scripts Python\\Serviços Prefeitura\\Consulta Débitos Municipais Vinhedo\\execução\\Certidões"
-    # opções para fazer com que o chome trabalhe em segundo plano (opcional)
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--window-size=1920,1080')
-    # options.add_argument("--start-maximized")
-    options.add_experimental_option('prefs', {
-        "download.default_directory": caminho_final,  # Change default directory for downloads
-        "download.prompt_for_download": False,  # To auto download the file
-        "download.directory_upgrade": True,
-        "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
-    })
-    
-    empresas = _open_lista_dados()
-    
-    index = _where_to_start(tuple(i[0] for i in empresas))
-    if index is not None:
-         run()
+    run()

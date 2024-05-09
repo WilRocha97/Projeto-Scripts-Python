@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from pyautogui import prompt, confirm
-import datetime, os, time, re, csv, shutil, fitz
+import datetime, os, time, re, shutil, fitz
 
 from sys import path
 path.append(r'..\..\_comum')
@@ -49,17 +49,20 @@ def procura_empresa(execucao, tipo, competencia, empresa, driver, options):
     
     # espera a barra de pesquisa, se não aparecer em 1 minuto, recarrega a página
     timer = 0
-    while not _find_by_id('select2-ddlCompanyIris-container', driver):
-        time.sleep(1)
-        timer += 1
-        _click_img('comprovantes.png', conf=0.9)
-        if timer >= 60:
-            print('>>> Tentando novamente\n')
-            driver.close()
-            status, driver = _initialize_chrome(options)
-            driver = login_sieg(driver)
-            driver = sieg_iris(driver)
-            timer = 0
+    while True:
+        if not _find_by_id('select2-ddlCompanyIris-container', driver):
+            time.sleep(1)
+            timer += 1
+            _click_img('comprovantes.png', conf=0.9)
+            if timer >= 60:
+                print('>>> Tentando novamente\n')
+                driver.close()
+                status, driver = _initialize_chrome(options)
+                driver = login_sieg(driver)
+                driver = sieg_iris(driver)
+                timer = 0
+        else:
+            break
 
     time.sleep(5)
     print('>>> Pesquisando empresa')
@@ -69,11 +72,19 @@ def procura_empresa(execucao, tipo, competencia, empresa, driver, options):
         # Encontre um elemento que esteja fora do modal e clique nele
         elemento_fora_modal = driver.find_element(by=By.XPATH, value='/html/body/form/div[5]/div[3]/div/div/div[2]/div[2]/div[1]/input')
         ActionChains(driver).move_to_element(elemento_fora_modal).click().perform()
-        
+
+    timer = 0
     # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
     while not _find_by_path('/html/body/form/div[5]/div[3]/div[1]/div/div[3]/div/table/tbody/tr[1]/td/div/span', driver):
         time.sleep(1)
         _click_img('comprovantes.png', conf=0.9)
+        if timer >= 60:
+            print('>>> Tentando novamente\n')
+            driver.close()
+            status, driver = _initialize_chrome(options)
+            driver = login_sieg(driver)
+            driver = sieg_iris(driver)
+            timer = 0
         
     # clica para abrir a barra de pesquisa
     driver.find_element(by=By.ID, value='select2-ddlCompanyIris-container').click()
@@ -282,8 +293,8 @@ def click(driver, comprovante):
 
 
 # @_time_execution
-# @_barra_de_status
-def run():
+@_barra_de_status
+def run(window):
     # iniciar o driver do chome
     status, driver = _initialize_chrome(options)
     driver.set_page_load_timeout(30)
@@ -295,7 +306,7 @@ def run():
     total_empresas = empresas[index:]
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
-        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
+        tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, window, tempos, tempo_execucao)
 
         while True:
             #try:

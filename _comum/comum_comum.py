@@ -79,7 +79,7 @@ def barra_de_status(func):
         
         # guarda a janela na variável para manipula-la
         screen_width, screen_height = sg.Window.get_screen_size()
-        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(740, 34), margins=(0,0), finalize=True, location=((screen_width // 2) - (740 // 2), 0))
+        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(745, 34), margins=(0,0), finalize=True, location=((screen_width // 2) - (745 // 2), 0))
         
         def run_script_thread():
             # habilita e desabilita os botões conforme necessário

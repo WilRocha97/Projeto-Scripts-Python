@@ -10,7 +10,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from captcha_comum import _solve_recaptcha
 from chrome_comum import _initialize_chrome
-from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start
+from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, _open_lista_dados, _where_to_start
 
 
 def verifica_debitos(pagina):

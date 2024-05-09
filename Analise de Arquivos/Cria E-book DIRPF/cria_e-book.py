@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import warnings, time, shutil, io, fitz, PyPDF2, re, os, sys, traceback, PySimpleGUI as sg
+import time, shutil, io, fitz, PyPDF2, re, os, sys, traceback, PySimpleGUI as sg
 from PIL import Image
 from threading import Thread
 from pyautogui import alert, confirm
@@ -128,43 +128,57 @@ def cria_capa(output_path, image_path, text, text_2):
     # Adiciona a imagem à posição desejada
     pdf_canvas.drawInlineImage(image_path, 0, 0, width=tamanho_da_pagina[0], height=tamanho_da_pagina[1])
     
-    altura_linha = 401
-    for linha in text:
-        # Define as configurações de texto
-        text_object = pdf_canvas.beginText(x=44, y=altura_linha,)
-        altura_linha = (altura_linha - 35)
+    def coloca_nome_e_imposto(pdf_canvas, text, text_2):
+        altura_linha = 401
+        for linha in text:
+            # Define as configurações de texto
+            text_object = pdf_canvas.beginText(x=44, y=altura_linha,)
+            altura_linha = (altura_linha - 35)
+            
+            text_object.setFont("Fonte", 30)
+            text_object.setFillColor(colors.black)
         
-        text_object.setFont("Fonte", 30)
+            # Adiciona o texto personalizável
+            text_object.textLine(linha.upper())
+        
+            # Desenha o texto no canvas
+            pdf_canvas.drawText(text_object)
+        
+        # adiciona o segundo texto
+        # Define as configurações de texto
+        text_object = pdf_canvas.beginText(x=44, y=296, )
+        
+        text_object.setFont("Fonte", 15)
         text_object.setFillColor(colors.black)
-    
+        
         # Adiciona o texto personalizável
-        text_object.textLine(linha.upper())
-    
+        text_object.textLine(text_2.upper())
+        
         # Desenha o texto no canvas
         pdf_canvas.drawText(text_object)
-    
-    # adiciona o segundo texto
-    # Define as configurações de texto
-    text_object = pdf_canvas.beginText(x=44, y=296, )
-    
-    text_object.setFont("Fonte", 15)
-    text_object.setFillColor(colors.black)
-    
-    # Adiciona o texto personalizável
-    text_object.textLine(text_2.upper())
-    
-    # Desenha o texto no canvas
-    pdf_canvas.drawText(text_object)
+        
+        return pdf_canvas
+        
+    pdf_canvas = coloca_nome_e_imposto(pdf_canvas, text, text_2)
     
     # Fecha o arquivo PDF
     pdf_canvas.save()
     
 
 def cria_pagina_resumo(infos_resumo, output_path):
+    titulo_equipe = "Assets\\Titulo Equipe.txt"
+    f = open(titulo_equipe, 'r', encoding='utf-8')
+    titulos_equipe = f.readline().split('/')
+    
+    equipe = "Assets\\Equipe.txt"
+    f = open(equipe, 'r', encoding='utf-8')
+    equipe = f.readline()
+    equipes = equipe.split('|')
+    
     # c.rect(x, y, width, height, fill=1)  #draw rectangle
     infos_resumo = sorted(infos_resumo)
     data_list = []
-    title_data = ['SEM TITULO']
+    title_data = [['SEM TITULO']]
     for info in infos_resumo:
         if info[0] == 0:
             text = info[1].upper().split('-')
@@ -175,48 +189,105 @@ def cria_pagina_resumo(infos_resumo, output_path):
             data_list.append((info[1].upper(), info[2]))
     
     # Criação do documento PDF
-    pdf_right_aligned = SimpleDocTemplate(output_path, pagesize=tamanho_da_pagina)
+    pdf_right_aligned = SimpleDocTemplate(output_path, pagesize=tamanho_da_pagina, topMargin=44, bottonMargin=0)
     tabela = []
+    
+    
+    def cria_tabela_resumo(tabela, title_data, data_list):
+        # Estilo para o título da tabela
+        title_style_left_aligned = TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Fonte'),
+            ('FONTSIZE', (0, 0), (-1, -1), 15),  # Mesmo tamanho de fonte para ambas as linhas
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+            ('TOPPADDING', (0, 0), (-1, -1), 0),
+        ])
+        
+        title_table_left_aligned = Table(title_data, colWidths=[580])  # Ajuste da largura para alinhamento à esquerda
+        title_table_left_aligned.setStyle(title_style_left_aligned)
+        tabela.append(title_table_left_aligned)
+        
+        # Adicionar espaço
+        tabela.append(Table([['']], colWidths=[None], rowHeights=[20]))
+        
+        # Estilo para a tabela com valores alinhados à direita
+        right_align_style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (-1, 0), (-1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Fonte'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+            ('TOPPADDING', (0, 0), (-1, -1), 20),
+            ('LINEBELOW', (0, 0), (-1, -1), 0.5, colors.black),  # Linha fina abaixo de cada item
+        ])
+        
+        # Definindo a tabela com alinhamento à direita
+        right_aligned_table = Table(data_list, colWidths=[330, 250])
+        right_aligned_table.setStyle(right_align_style)
+        
+        # Adicionar a tabela aos elementos do documento
+        tabela.append(right_aligned_table)
+        
+        return tabela
+    
+    
+    def coloca_equipe(tabela):
+        listas = []
+        for count, titulo in enumerate(titulos_equipe):
+            listas.append((titulo, equipes[count]))
+        
+        altura_linha = (950 - ((len(title_data) * 20) + ((len(data_list)+1) * 30)) - (((len(equipes)+1) * 12) + (len(titulo_equipe) * 16) + (35*4)))
+        # Adicionar espaço
+        tabela.append(Table([['']], colWidths=[None], rowHeights=[altura_linha]))
+        
+        for lista in listas:
+            _titulo = lista[0]
+            _equipe = lista[1].split('/')
+            data_equipe = []
+            for info in _equipe:
+                data_equipe.append([info])
 
-    # Estilo para o título da tabela
-    title_style_left_aligned = TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, -1), 'Fonte'),
-        ('FONTSIZE', (0, 0), (-1, -1), 15),  # Mesmo tamanho de fonte para ambas as linhas
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
-        ('TOPPADDING', (0, 0), (-1, -1), 0),
-    ])
+            # Estilo para o título da tabela
+            title_style_left_aligned = TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, -1), 'Fonte'),
+                ('FONTSIZE', (0, 0), (-1, -1), 11),  # Mesmo tamanho de fonte para ambas as linhas
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+                ('TOPPADDING', (0, 0), (-1, -1), 5),
+            ])
+            # Estilo para a tabela com valores alinhados à direita
+            right_align_style = TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, -1), 'Fonte'),
+                ('FONTSIZE', (0, 0), (-1, -1), 8),  # Mesmo tamanho de fonte para ambas as linhas
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ])
+            
+            # Adicionar espaço
+            tabela.append(Table([['']], colWidths=[None], rowHeights=[22]))
+            # TITULO
+            title_table_left_aligned = Table([[_titulo]], colWidths=[580])  # Ajuste da largura para alinhamento à esquerda
+            title_table_left_aligned.setStyle(title_style_left_aligned)
+            tabela.append(title_table_left_aligned)
+            # Adicionar espaço
+            tabela.append(Table([['']], colWidths=[None], rowHeights=[13]))
+            # LISTA
+            right_aligned_table = Table(data_equipe, colWidths=[580])
+            right_aligned_table.setStyle(right_align_style)
+            tabela.append(right_aligned_table)
+        
+        return tabela
     
-    title_table_left_aligned = Table(title_data, colWidths=[575])  # Ajuste da largura para alinhamento à esquerda
-    title_table_left_aligned.setStyle(title_style_left_aligned)
-    tabela.append(title_table_left_aligned)
     
-    # Adicionar espaço
-    tabela.append(Table([['']], colWidths=[None], rowHeights=[20]))
-    
-    # Estilo para a tabela com valores alinhados à direita
-    right_align_style = TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.white),
-        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-        ('ALIGN', (-1, 0), (-1, -1), 'RIGHT'),
-        ('FONTNAME', (0, 0), (-1, -1), 'Fonte'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
-        ('TOPPADDING', (0, 0), (-1, -1), 20),
-        ('LINEBELOW', (0, 0), (-1, -1), 0.5, colors.black),  # Linha fina abaixo de cada item
-    ])
-    
-    # Definindo a tabela com alinhamento à direita
-    right_aligned_table = Table(data_list, colWidths=[325, 250])
-    right_aligned_table.setStyle(right_align_style)
-    
-    # Adicionar a tabela aos elementos do documento
-    tabela.append(right_aligned_table)
+    tabela = cria_tabela_resumo(tabela, title_data, data_list)
+    tabela = coloca_equipe(tabela)
     
     # Construir o PDF com os elementos
     pdf_right_aligned.build(tabela)
-    
-    
+
+ 
 def analisa_subpastas(caminho_subpasta, nome_subpasta, subpasta_arquivos):
     # para cada arquivo na subpasta
     for arquivo in os.listdir(caminho_subpasta):
@@ -394,22 +465,22 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
             
             # cria uma cópia númerada da capa
             if not subpasta:
-                # shutil.copy(os.path.join(pasta_inicial, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
-                remove_metadata(os.path.join(pasta_inicial, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
+                shutil.copy(os.path.join(pasta_inicial, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
+                # remove_metadata(os.path.join(pasta_inicial, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
             else:
-                # shutil.copy(os.path.join(pasta_inicial, subpasta, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
-                remove_metadata(os.path.join(pasta_inicial, subpasta, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
+                shutil.copy(os.path.join(pasta_inicial, subpasta, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
+                # remove_metadata(os.path.join(pasta_inicial, subpasta, f'Capa E-book {nome_declarante}.pdf'), os.path.join('Arquivos para mesclar', '0.pdf'))
             
             # adiciona a capa na lista de arquivos para mesclar
             lista_arquivos.append(0)
             
             # cria uma cópia númerada do recibo
             if not subpasta:
-                # shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
-                remove_metadata(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
+                shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
+                # remove_metadata(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
             else:
-                # shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
-                remove_metadata(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
+                shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
+                # remove_metadata(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '2.pdf'))
             # adiciona o recibo na lista de arquivos para mesclar
             lista_arquivos.append(2)
             continue
@@ -442,11 +513,11 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
             
             # cria uma cópia númerada da declaração
             if not subpasta:
-                # shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '3.pdf'))
-                remove_metadata(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '3.pdf'))
+                shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '3.pdf'))
+                # remove_metadata(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', '3.pdf'))
             else:
-                # shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '3.pdf'))
-                remove_metadata(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '3.pdf'))
+                shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '3.pdf'))
+                # remove_metadata(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', '3.pdf'))
             # adiciona a declaração na lista de arquivos para mesclar
             lista_arquivos.append(3)
             continue
@@ -465,11 +536,11 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
                 
                 if informe_empresa:
                     if not subpasta:
-                        # shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
-                        remove_metadata(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        # remove_metadata(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
                     else:
-                        # shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
-                        remove_metadata(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        # remove_metadata(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
                         
                     lista_arquivos.append(contador)
                     contador += 1
@@ -498,19 +569,24 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
                 
                 if not informe_empresa:
                     if not subpasta:
-                        # shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
-                        remove_metadata(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        # remove_metadata(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
                     else:
-                        # shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
-                        remove_metadata(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                        # remove_metadata(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
                         
                     lista_arquivos.append(contador)
                     contador += 1
     
     # percorre os arquivos novamente, adicionando os outros documentos
     for arquivo in nomes_arquivos:
+        if not subpasta:
+            abre_pdf = os.path.join(pasta_inicial, arquivo)
+        else:
+            abre_pdf = os.path.join(pasta_inicial, subpasta, arquivo)
+            
         print(f'\n{arquivo}')
-        with open(os.path.join(pasta_inicial, arquivo), 'rb') as pdf_file:
+        with open(abre_pdf, 'rb') as pdf_file:
             pdf_reader = PyPDF2.PdfReader(pdf_file, strict=False)
             # Verifica se o PDF possui metadados
             meta = pdf_reader.metadata
@@ -530,11 +606,11 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
         else:
             
             if not subpasta:
-                # shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
-                remove_metadata(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                shutil.copy(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                # remove_metadata(os.path.join(pasta_inicial, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
             else:
-                # shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
-                remove_metadata(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                shutil.copy(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
+                # remove_metadata(os.path.join(pasta_inicial, subpasta, arquivo), os.path.join('Arquivos para mesclar', str(contador) + '.pdf'))
             
             lista_arquivos.append(contador)
             contador += 1
@@ -553,8 +629,9 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
             window['-progressbar-'].update_bar(count, max=int(len(lista_arquivos)))
             window['-Progresso_texto-'].update(str(round(float(count) / int(len(lista_arquivos)) * 100, 1)) + '%')
             window.refresh()
-        
+    
     pdf_merger.append(os.path.join('Assets', 'AGRADECIMENTO POR ESCOLHER A VEIGA & POSTAL - IPRF TIMBRADO.pdf'))
+
     # cria o e-book
     unificado_pdf = os.path.join(pasta_final, f'E-BOOK DIRPF - {nome_declarante}.pdf')
     while True:
@@ -697,7 +774,6 @@ def run(window, pasta_inicial, pasta_final):
     if resultado:
         alert(text='PDFs unificados com sucesso.')
     
-    
 
 # Define o ícone global da aplicação
 sg.set_global_icon('Assets/auto-flash.ico')
@@ -792,7 +868,7 @@ if __name__ == '__main__':
             # Cria uma nova thread para executar o script
             script_thread = Thread(target=run_script_thread)
             script_thread.start()
-        
+    
         elif event == '-abrir_resultados-':
             os.startfile(pasta_final)
     

@@ -129,8 +129,10 @@ def solicita_dctf(output_dir, tipo, categoria, comp, cnpj_contratante, id_empres
         
     if tipo == '-guia_pagamento-':
         id_servico = "GERARGUIA31"
+        url = 'https://gateway.apiserpro.serpro.gov.br/integra-contador/v1/Emitir'
     else:
         id_servico = "CONSDECCOMPLETA33"
+        url = 'https://gateway.apiserpro.serpro.gov.br/integra-contador/v1/Consultar'
     
       
     categoria_guias = ''
@@ -171,7 +173,7 @@ def solicita_dctf(output_dir, tipo, categoria, comp, cnpj_contratante, id_empres
     
     tentativas = 0
     while True:
-        pagina = requests.post('https://gateway.apiserpro.serpro.gov.br/integra-contador/v1/Emitir', headers=headers, data=json.dumps(data))
+        pagina = requests.post(url, headers=headers, data=json.dumps(data))
         resposta = pagina.json()
         
         try:
@@ -452,6 +454,8 @@ if __name__ == '__main__':
         window['-input_senha_certificado-'].update(disabled=True)
         window['-categoria_mensal-'].update(disabled=True)
         window['-categoria_13-'].update(disabled=True)
+        window['-declaração-'].update(disabled=True)
+        window['-guia_pagamento-'].update(disabled=True)
         window['-input_competencia-'].update(disabled=True)
         window['-abrir-'].update(disabled=True)
         window['-abrir1-'].update(disabled=True)
@@ -494,6 +498,8 @@ if __name__ == '__main__':
         window['-input_senha_certificado-'].update(disabled=False)
         window['-categoria_mensal-'].update(disabled=False)
         window['-categoria_13-'].update(disabled=False)
+        window['-declaração-'].update(disabled=False)
+        window['-guia_pagamento-'].update(disabled=False)
         window['-input_competencia-'].update(disabled=False)
         window['-abrir-'].update(disabled=False)
         window['-abrir1-'].update(disabled=False)

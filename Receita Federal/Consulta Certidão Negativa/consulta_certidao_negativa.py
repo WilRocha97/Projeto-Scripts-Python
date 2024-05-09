@@ -35,6 +35,7 @@ def verificacoes(consulta_tipo, andamento, identificacao, nome):
 def salvar(consulta_tipo, pasta, andamento, identificacao, nome, pasta_download, nome_certidao):
     # espera abrir a tela de salvar o arquivo
     contador = 0
+    timer = 0
     print('>>> Aguardando consulta')
     while not _find_img('salvar_como.png', conf=0.9):
         situacao = verificacoes(consulta_tipo, andamento, identificacao, nome)
@@ -42,8 +43,10 @@ def salvar(consulta_tipo, pasta, andamento, identificacao, nome, pasta_download,
             p.hotkey('ctrl', 'w')
             return False
 
-        if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9):
+        if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9) or _find_img('site_morreu_4.png', conf=0.9):
             print('>>> Site morreu, tentando novamente')
+            p.hotkey('ctrl', 'w')
+            time.sleep(1)
             consulta(consulta_tipo, identificacao)
 
         if situacao == 'erro':
@@ -57,9 +60,13 @@ def salvar(consulta_tipo, pasta, andamento, identificacao, nome, pasta_download,
 
         if _find_img('em_processamento.png', conf=0.9) or _find_img('erro_captcha.png', conf=0.9):
             print('>>> Tentando novamente')
+            p.hotkey('ctrl', 'w')
+            time.sleep(1)
             consulta(consulta_tipo, identificacao)
-            if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9):
+            if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9) or _find_img('site_morreu_4.png', conf=0.9):
                 print('>>> Site morreu, tentando novamente')
+                p.hotkey('ctrl', 'w')
+                time.sleep(1)
                 consulta(consulta_tipo, identificacao)
             if contador >= 5:
                 _escreve_relatorio_csv('{};{};Consulta em processamento, volte daqui alguns minutos.'.format(identificacao, nome), nome=andamento)
@@ -92,8 +99,15 @@ def salvar(consulta_tipo, pasta, andamento, identificacao, nome, pasta_download,
             contador = 0
 
         time.sleep(1)
-        
-    # escreve o nome do arquivo (.upper() serve para deixar em letra maiúscula)
+        timer += 1
+
+        if timer > 60:
+            print('>>> Site morreu, tentando novamente')
+            p.hotkey('ctrl', 'w')
+            time.sleep(1)
+            consulta(consulta_tipo, identificacao)
+            timer = 0
+
     time.sleep(1)
 
     while True:
@@ -154,7 +168,8 @@ def consulta(consulta_tipo, identificacao):
             _click_img('nova_consulta.png', conf=0.9)
 
         for i in range(60):
-            if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9):
+            if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9) or _find_img('site_morreu_4.png', conf=0.9):
+                p.hotkey('ctrl', 'w')
                 _abrir_chrome(link)
 
             time.sleep(1)

@@ -61,7 +61,7 @@ def captura_dados_email(driver):
             titulo = titulo.replace('-&nbsp;', '- ').replace(' &nbsp;', ' ').replace('&nbsp; ', ' ').replace('&nbsp;', ' ').replace('&amp;', '&')
             break
         except:
-            print('aqui2')
+            return driver, 'Sem titulo', 'x', 'x', 'x', 'x', 'x'
 
     print(titulo)
     pasta_anexos = 'V:\\Setor Robô\\Scripts Python\\Geral\\Envia Documento\\ignore\\Anexos'
@@ -552,6 +552,13 @@ def run(window):
                         time.sleep(0.5)
                         p.hotkey('alt', 'f4')
                         time.sleep(0.5)
+                    if _find_img('erro_whats.png', conf=0.95):
+                        _click_img('erro_whats.png', conf=0.95)
+                        time.sleep(0.5)
+                        p.press('f5')
+                        while not _find_img('nova_conversa.png', conf=0.9):
+                            time.sleep(1)
+                            
                     with p.hold('alt'):
                         p.press('tab')
                         

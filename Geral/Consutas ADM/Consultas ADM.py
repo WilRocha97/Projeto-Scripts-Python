@@ -11,6 +11,7 @@ from selenium.webdriver.support.select import Select
 from twocaptcha import TwoCaptcha
 from tkinter.filedialog import askopenfilename, askdirectory, Tk
 from PIL import Image
+from threading import Thread
 from pyautogui import confirm
 from PyQt5.QtWidgets import QApplication, QMessageBox, QLabel
 from PyQt5.QtGui import QPixmap, QIcon
@@ -21,12 +22,14 @@ dados_anticaptcha = "Dados\Dados 2Cap.txt"
 
 def exibir_alerta(imagem, texto):
     imagem = os.path.join('Assets', imagem)
+    # Crie a aplicação
+    app = QApplication([])
     
     # Crie uma caixa de mensagem
     msg = QMessageBox()
-    msg.setWindowTitle("Alerta")
+    msg.setWindowTitle(" ")
     msg.setText(texto)
-    msg.setWindowIcon(QIcon(icone))
+    msg.setWindowIcon(QIcon('Assets/em_branco.ico'))
     
     # Adicione uma imagem à mensagem
     pixmap = QPixmap(imagem)

@@ -263,6 +263,7 @@ def enviar_sem_anexo(numero, link_mensagem, titulo, vencimento):
         
     _click_img('nova_conversa.png', conf=0.9)
     time.sleep(1)
+    _wait_img('nova_conversa_titulo.png', conf=0.9)
     p.write(numero)
     time.sleep(2)
 
@@ -275,8 +276,10 @@ def enviar_sem_anexo(numero, link_mensagem, titulo, vencimento):
 
     while _find_img('procurando_numero.png', conf=0.9):
         time.sleep(1)
-
-    p.press('enter')
+    
+    time.sleep(1)
+    _click_position_img('achou_contato.png', '+', pixels_y=165, conf=0.9)
+    
     _wait_img('anexar.png', conf=0.9)
     time.sleep(1)
     
@@ -290,7 +293,7 @@ def enviar_sem_anexo(numero, link_mensagem, titulo, vencimento):
             pass
 
     time.sleep(1)
-    p.press('enter')
+    _click_img('enviar.png', conf=0.9)
     # time.sleep(3)
     
     """while _find_img('anexar.png'):
@@ -318,20 +321,23 @@ def enviar_anexo(numero, anexo, corpo_email):
     
     _click_img('nova_conversa.png', conf=0.9)
     time.sleep(1)
+    _wait_img('nova_conversa_titulo.png', conf=0.9)
     p.write(numero)
     time.sleep(2)
-
+    
     if _find_img('sem_contato.png', conf=0.9):
         p.press('f5')
         time.sleep(3)
         """p.hotkey('ctrl', 'w')
         time.sleep(1)"""
         return 'Nenhum contato encontrado'
-
+    
     while _find_img('procurando_numero.png', conf=0.9):
         time.sleep(1)
-
-    p.press('enter')
+    
+    time.sleep(1)
+    _click_position_img('achou_contato.png', '+', pixels_y=165, conf=0.9)
+    
     _wait_img('anexar.png', conf=0.9)
     _click_img('anexar.png', conf=0.9)
     time.sleep(1)
@@ -353,9 +359,6 @@ def enviar_anexo(numero, anexo, corpo_email):
     p.press('enter')
     _wait_img('digitar_mensagem.png', conf=0.9)
     time.sleep(1)
-    p.press('enter')
-    time.sleep(1)
-    
     while True:
         try:
             pyperclip.copy(mensagem)
@@ -364,10 +367,10 @@ def enviar_anexo(numero, anexo, corpo_email):
             break
         except:
             pass
-        
+    
     time.sleep(1)
-    p.press('enter')
-    #time.sleep(3)
+    _click_img('enviar_verde.png', conf=0.9)
+    # time.sleep(3)
     
     """while _find_img('anexar.png'):
         p.hotkey('ctrl', 'w')

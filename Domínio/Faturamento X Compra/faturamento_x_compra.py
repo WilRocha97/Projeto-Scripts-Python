@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 import datetime, fitz, re, shutil, pyperclip, time, os, pyautogui as p
-from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from sys import path
 
 path.append(r'..\..\_comum')
-from pyautogui_comum import _find_img, _click_img, _wait_img
+from pyautogui_comum import _find_img, _click_img, _wait_img, get_comp
 from comum_comum import _indice, _time_execution, _barra_de_status, _escreve_relatorio_csv, _escreve_header_csv, e_dir, _open_lista_dados, _where_to_start, ask_for_dir
 from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf
 
@@ -215,9 +214,7 @@ def run(window):
 
 if __name__ == '__main__':
     # configura o ano e digita no domínio
-    ano = int(datetime.now().year)
-    if int(datetime.now().month) < 3:
-        ano -= 1
+    ano = get_comp(subject='ano', printable='0000', strptime='%Y')
     andamentos = 'Faturamento X Compra - ' + str(ano)
     
     refaz_planilha = p.confirm(title='Script incrível', text='Gerar planilha com os demonstrativos já existentes?', buttons=['Sim', 'Não'])

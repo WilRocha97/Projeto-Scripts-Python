@@ -4,6 +4,7 @@ from selenium.webdriver.common.by import By
 from decimal import Decimal
 from pyautogui import confirm, prompt
 import os, time, re, fitz, shutil
+import datetime
 
 from sys import path
 path.append(r'..\..\_comum')

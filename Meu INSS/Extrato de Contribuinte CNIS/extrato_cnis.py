@@ -50,7 +50,7 @@ def salva_arquivo(caminho, arquivo_nome, arquivo):
     time.sleep(1)
     if _find_img('substituir.png', conf=0.95):
         p.press('s')
-    time.sleep(1)
+    time.sleep(5)
     
     while True:
         try:
@@ -76,7 +76,8 @@ def run(window):
         tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, window, tempos, tempo_execucao)
 
         cpf, nome, senha = empresa
-
+        nome = nome.strip()
+        
         andamentos = f'Extratos de Contribuições - Previdenciárias e Remunerações'
 
         _abrir_chrome('https://meu.inss.gov.br/#/login', iniciar_com_icone=True)

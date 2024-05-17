@@ -87,25 +87,28 @@ _click_img = click_img
 
 
 def click_position_img(img, operacao, pixels_x=0, pixels_y=0, pasta='imgs', conf=1.0, clicks=1):
-    if img.endswith('.png'):
-        img = os.path.join(pasta, img)
-        a.moveTo(a.locateCenterOnScreen(img, confidence=conf))
-        local_mouse = a.position()
-    else:
-        local_mouse = img
-        
-    if operacao == '+':
-        a.click(int(local_mouse[0] + int(pixels_x)), int(local_mouse[1] + int(pixels_y)), clicks=clicks)
-        return True
-    if operacao == '-':
-        a.click(int(local_mouse[0] - int(pixels_x)), int(local_mouse[1] - int(pixels_y)), clicks=clicks)
-        return True
-    if operacao == '+x-y':
-        a.click(int(local_mouse[0] + int(pixels_x)), int(local_mouse[1] - int(pixels_y)), clicks=clicks)
-        return True
-    if operacao == '-x+y':
-        a.click(int(local_mouse[0] - int(pixels_x)), int(local_mouse[1] + int(pixels_y)), clicks=clicks)
-        return True
+    try:
+        if img.endswith('.png'):
+            img = os.path.join(pasta, img)
+            a.moveTo(a.locateCenterOnScreen(img, confidence=conf))
+            local_mouse = a.position()
+        else:
+            local_mouse = img
+
+        if operacao == '+':
+            a.click(int(local_mouse[0] + int(pixels_x)), int(local_mouse[1] + int(pixels_y)), clicks=clicks)
+            return True
+        if operacao == '-':
+            a.click(int(local_mouse[0] - int(pixels_x)), int(local_mouse[1] - int(pixels_y)), clicks=clicks)
+            return True
+        if operacao == '+x-y':
+            a.click(int(local_mouse[0] + int(pixels_x)), int(local_mouse[1] - int(pixels_y)), clicks=clicks)
+            return True
+        if operacao == '-x+y':
+            a.click(int(local_mouse[0] - int(pixels_x)), int(local_mouse[1] + int(pixels_y)), clicks=clicks)
+            return True
+    except:
+        return False
 _click_position_img = click_position_img
 
 
@@ -113,8 +116,6 @@ _click_position_img = click_position_img
 # e checa se a entrada satisfaz o modelo definido em 'strptime'
 # Retorna a competencia em string em caso de sucesso
 # Retorna false caso a caixa de texto seja fechada
-
-
 def get_comp(printable, strptime, subject='competencia'):
     text = base = f'Digite {subject} no modelo {printable}:'
 

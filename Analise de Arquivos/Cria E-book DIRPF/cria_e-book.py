@@ -120,7 +120,7 @@ def quebra_de_linha(frase, caracteres_por_linha=30):
 
 
 def cria_capa(output_path, image_path, text, text_2):
-    text = quebra_de_linha(text, caracteres_por_linha=20)
+    text = quebra_de_linha(text, caracteres_por_linha=16)
     
     # Abre o arquivo PDF para gravação
     pdf_canvas = canvas.Canvas(output_path, pagesize=tamanho_da_pagina)
@@ -778,22 +778,48 @@ def run(window, pasta_inicial, pasta_final):
 # Define o ícone global da aplicação
 sg.set_global_icon('Assets/auto-flash.ico')
 if __name__ == '__main__':
-    sg.theme('GrayGrayGray')  # Define o tema do PySimpleGUI
+    # Carregar a fonte personalizada
+    sg.theme()
+    
+    sg.LOOK_AND_FEEL_TABLE['tema'] = {'BACKGROUND': '#ffffff',
+                                      'TEXT': '#0e0e0e',
+                                      'INPUT': '#ffffff',
+                                      'TEXT_INPUT': '#0e0e0e',
+                                      'SCROLL': '#ffffff',
+                                      'BUTTON': ('#0e0e0e', '#ffffff'),
+                                      'PROGRESS': ('#ffffff', '#ffffff'),
+                                      'BORDER': 0,
+                                      'SLIDER_DEPTH': 0,
+                                      'PROGRESS_DEPTH': 0}
+    
+    sg.theme('tema')  # Define o tema do PySimpleGUI
     layout = [
-        [sg.Button('Ajuda', border_width=0), sg.Button('Sobre', border_width=0), sg.Button('Log do sistema', border_width=0, disabled=True)],
+        [sg.Button('AJUDA', font=("Helvetica", 10, "underline"), border_width=0),
+         sg.Button('SOBRE', font=("Helvetica", 10, "underline"), border_width=0),
+         sg.Button('LOG DO SISTEMA', font=("Helvetica", 10, "underline"), border_width=0, disabled=True)],
         [sg.Text('')],
+        
         [sg.Text('Selecione a pasta que contenha os arquivos PDF para analisar:')],
-        [sg.FolderBrowse('Pesquisar', key='-abrir_pdf-'), sg.InputText(key='-output_dir-', size=80, disabled=True)],
-        [sg.Text('Selecione a pasta para salvar os e-books:')],
-        [sg.FolderBrowse('Pesquisar', key='-abrir_pdf_final-'), sg.InputText(key='-output_dir-', size=80, disabled=True)],
+        [sg.FolderBrowse('SELECIONAR', font=("Helvetica", 10, "underline"), key='-abrir_pdf-'),
+         sg.InputText(key='-output_dir-', size=80, disabled=True)],
         [sg.Text('')],
+        
+        [sg.Text('Selecione a pasta para salvar os e-books:')],
+        [sg.FolderBrowse('SELECIONAR', font=("Helvetica", 10, "underline"), key='-abrir_pdf_final-'),
+         sg.InputText(key='-output_dir-', size=80, disabled=True)],
+        [sg.Text('', expand_y=True)],
+        
         [sg.Text('', key='-Mensagens-')],
-        [sg.Text(size=6, text='', key='-Progresso_texto-'), sg.ProgressBar(max_value=0, orientation='h', size=(54, 5), key='-progressbar-', bar_color='#f0f0f0')],
-        [sg.Button('Iniciar', key='-iniciar-', border_width=0), sg.Button('Encerrar', key='-encerrar-', disabled=True, border_width=0), sg.Button('Abrir resultados', key='-abrir_resultados-', disabled=True, border_width=0)],
+        [sg.Text(size=6, text='', key='-Progresso_texto-'),
+         sg.ProgressBar(max_value=0, orientation='h', size=(54, 5), key='-progressbar-', bar_color=('#fca400', '#ffe0a6'), visible=False)],
+        [sg.Button('INICIAR', font=("Helvetica", 10, "underline"), button_color=('white', 'white'), image_filename='Assets\\fundo_botao.png', key='-iniciar-', border_width=0),
+         sg.Button('ENCERRAR', font=("Helvetica", 10, "underline"), key='-encerrar-', disabled=True, border_width=0),
+         sg.Button('ABRIR RESULTADOS', font=("Helvetica", 10, "underline"), key='-abrir_resultados-', disabled=True, border_width=0)],
     ]
 
     # guarda a janela na variável para manipula-la
-    window = sg.Window('Cria E-book DIRPF', layout)
+    window = sg.Window('Cria E-book DIRPF', layout, finalize=True, resizable=True, margins=(30, 30))
+    window.set_min_size((500, 300))
     
     def run_script_thread():
         # try:
@@ -816,7 +842,7 @@ if __name__ == '__main__':
         # apaga qualquer mensagem na interface
         window['-Mensagens-'].update('')
         # atualiza a barra de progresso para ela ficar mais visível
-        window['-progressbar-'].update(bar_color=('#fca400', '#ffe0a6'))
+        window['-progressbar-'].update(visible=True)
         
         try:
             # Chama a função que executa o script
@@ -831,7 +857,7 @@ if __name__ == '__main__':
             alert(text='Erro detectado, clique no botão "Log do sistema" para acessar o arquivo de erros e contate o desenvolvedor')
             
         window['-progressbar-'].update_bar(0)
-        window['-progressbar-'].update(bar_color='#f0f0f0')
+        window['-progressbar-'].update(visible=False)
         window['-Progresso_texto-'].update('')
         window['-Mensagens-'].update('')
         # habilita e desabilita os botões conforme necessário

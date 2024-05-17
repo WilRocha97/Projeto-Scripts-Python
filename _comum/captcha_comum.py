@@ -1,9 +1,9 @@
-"""from anticaptchaofficial.imagecaptcha import *
+from anticaptchaofficial.imagecaptcha import *
 from anticaptchaofficial.recaptchav2proxyless import *
 from anticaptchaofficial.recaptchav3proxyless import *
-from anticaptchaofficial.hcaptchaproxyless import *"""
+from anticaptchaofficial.hcaptchaproxyless import *
 from selenium import webdriver
-from twocaptcha import TwoCaptcha
+"""from twocaptcha import TwoCaptcha"""
 from selenium.webdriver.common.by import By
 from PIL import Image
 import os, sys, time
@@ -26,7 +26,7 @@ api_key = os.getenv('APIKEY_2CAPTCHA', key_2cap)
 # ---------- VVVV 2 Captcha VVVV ---------------------------------------------------------------------------------------------------------------------------
 
 
-def solve_recaptcha(data):
+"""def solve_recaptcha(data):
     tipo = 'recaptcha-v2'
     print(f'>>> Resolvendo {tipo}')
 
@@ -38,14 +38,13 @@ def solve_recaptcha(data):
         return str(result['code'])
     except:
         print(result)
-        
-_solve_recaptcha = solve_recaptcha
+_solve_recaptcha = solve_recaptcha"""
 
 
 # Envia os dados do recaptcha para a api two captcha
 # Retorna um dicionario com id da requisição e token do captcha
 # Retorna uma string/mensagem em caso de erro
-def solve_recaptcha_v3(data):
+"""def solve_recaptcha_v3(data):
     tipo = 'recaptcha-v3'
     print(f'>>> Resolvendo {tipo}')
 
@@ -57,14 +56,13 @@ def solve_recaptcha_v3(data):
         return str(result['code'])
     except:
         print(result)
-        
-_solve_recaptcha_v3 = solve_recaptcha_v3
+_solve_recaptcha_v3 = solve_recaptcha_v3"""
 
 
 # Envia os dados do hcaptcha para a api two capctcha
 # Retorna um dicionário com id da requisição e token do captcha
 # Retorna uma string/mensagem em caso de erro
-def solve_hcaptcha(data):
+"""def solve_hcaptcha(data):
     tipo = 'hcaptcha'
     print(f'>>> Resolvendo {tipo}')
     
@@ -77,13 +75,13 @@ def solve_hcaptcha(data):
     except:
         print(result)
         
-_solve_hcaptcha = solve_hcaptcha
+_solve_hcaptcha = solve_hcaptcha"""
 
 
 # Envia imagem do normal captcha para a api two captcha
 # Retorna um dicionário com id da requisição e token do captcha
 # Retorna uma string/mensagem em caso de erro
-def solve_text_captcha(driver, captcha_element, element_type='id'):
+"""def solve_text_captcha(driver, captcha_element, element_type='id'):
     os.makedirs('ignore\captcha', exist_ok=True)
     # captura a imagem do captcha
     if element_type == 'id':
@@ -117,10 +115,10 @@ def solve_text_captcha(driver, captcha_element, element_type='id'):
     except:
         print(result)
         
-_solve_text_captcha = solve_text_captcha
+_solve_text_captcha = solve_text_captcha"""
 
 
-def solve_audio_recaptcha(driver, iframe, id_input_captcha, id_confirma_captcha):
+"""def solve_audio_recaptcha(driver, iframe, id_input_captcha, id_confirma_captcha):
     os.makedirs('ignore\captcha', exist_ok=True)
     caminho_audio = 'ignore\captcha\\audio.mp3'
     # IMPORTAÇÃO BIBLIOTECA QUE TRANSFORMA AUDIO EM TEXTO
@@ -158,7 +156,7 @@ def solve_audio_recaptcha(driver, iframe, id_input_captcha, id_confirma_captcha)
 
     # VOLTA O FRAME AO ORIGINAL
     driver.switch_to.default_content()
-_solve_audio_recaptcha = solve_audio_recaptcha
+_solve_audio_recaptcha = solve_audio_recaptcha"""
 
 
 # ---------- VVVV Anti Captcha VVVV ---------------------------------------------------------------------------------------------------------------------------
@@ -166,7 +164,7 @@ _solve_audio_recaptcha = solve_audio_recaptcha
 
 # Recebe a url do site com o captcha mais a chave da api responsável pelo captcha encontrada no código do site
 # envia para a api e retorna a chave para resolver o captcha
-"""def solve_recaptcha(data):
+def solve_recaptcha(data):
     print('>>> Quebrando recaptcha')
     solver = recaptchaV2Proxyless()
     solver.set_verbose(1)
@@ -182,10 +180,10 @@ _solve_audio_recaptcha = solve_audio_recaptcha
     else:
         print(solver.error_code)
         return solver.error_code
-_solve_recaptcha = solve_recaptcha"""
+_solve_recaptcha = solve_recaptcha
 
 
-"""def solve_recaptcha_v3(data):
+def solve_recaptcha_v3(data):
     print('>>> Quebrando recaptcha v3')
     solver = recaptchaV3Proxyless()
     solver.set_verbose(1)
@@ -205,11 +203,11 @@ _solve_recaptcha = solve_recaptcha"""
     else:
         print(solver.error_code)
         return solver.error_code
-_solve_recaptcha_v3 = solve_recaptcha_v3"""
+_solve_recaptcha_v3 = solve_recaptcha_v3
 
 
 # Recebe a imagem do captcha e envia para a api e retorna o texto da imagem
-"""def solve_text_captcha(driver, captcha_element, element_type='id'):
+def solve_text_captcha(driver, captcha_element, element_type='id'):
     os.makedirs('ignore\captcha', exist_ok=True)
     # captura a imagem do captcha
     if element_type == 'id':
@@ -243,12 +241,12 @@ _solve_recaptcha_v3 = solve_recaptcha_v3"""
     else:
         print(solver.error_code)
         return solver.error_code
-_solve_text_captcha = solve_text_captcha"""
+_solve_text_captcha = solve_text_captcha
 
 
 # Recebe a url do site com o captcha mais a chave da api responsável pelo captcha encontrada no código do site
 # envia para a api e retorna a chave para resolver o captcha
-"""def solve_hcaptcha(data, visible=False):
+def solve_hcaptcha(data, visible=False):
     response = 'ERROR_NO_SLOT_AVAILABLE'
     while response == 'ERROR_NO_SLOT_AVAILABLE':
         print('>>> Quebrando hcaptcha')
@@ -279,10 +277,10 @@ _solve_text_captcha = solve_text_captcha"""
             else:
                 print(solver.error_code)
                 return solver.error_code
-_solve_hcaptcha = solve_hcaptcha"""
+_solve_hcaptcha = solve_hcaptcha
 
 
-"""def solve_audio_recaptcha(driver, iframe, id_input_captcha, id_confirma_captcha):
+def solve_audio_recaptcha(driver, iframe, id_input_captcha, id_confirma_captcha):
     os.makedirs('ignore\captcha', exist_ok=True)
     caminho_audio = 'ignore\captcha\\audio.mp3'
     # IMPORTAÇÃO BIBLIOTECA QUE TRANSFORMA AUDIO EM TEXTO
@@ -322,4 +320,4 @@ _solve_hcaptcha = solve_hcaptcha"""
     # VOLTA O FRAME AO ORIGINAL
     driver.switch_to.default_content()
 
-_solve_audio_recaptcha = solve_audio_recaptcha"""
+_solve_audio_recaptcha = solve_audio_recaptcha

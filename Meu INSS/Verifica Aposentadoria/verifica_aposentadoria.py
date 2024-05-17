@@ -1,4 +1,4 @@
-import datetime, re, time, os, pyperclip, pyautogui as p
+import datetime, random, re, time, os, pyperclip, pyautogui as p
 from bs4 import BeautifulSoup
 
 from sys import path
@@ -12,13 +12,21 @@ from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir,
 def busca_analise():
     _acessar_site_chrome('https://meu.inss.gov.br/#/simulador')
     print('>>> Aguardando simulação')
+    time.sleep(random.randrange(1, 5))
     # aguarda a tela da simulação carregar
     while not _find_img('tela_simulacao.png', conf=0.9):
-        if _find_img('erro_requisicao_simulacao.png', conf=0.9):
+        if _find_img('erro_requisicao_simulacao.png', conf=0.9) or _find_img('erro_requisicao_simulacao_2.png', conf=0.9):
             _acessar_site_chrome('https://meu.inss.gov.br/#/simulador')
-            
+
         if _find_img('nao_simula_aposentadoria.png', conf=0.9):
             return False, 'A simulação de aposentadoria para quem só possui contribuições depois de 13/11/2019 está em desenvolvimento'
+        if _find_img('erro_dados.png', conf=0.9):
+            return False, 'Seus dados cadastrais estão divergentes entre o INSS e a Receita Federal do Brasil'
+        if _find_img('erro_servico.png', conf=0.9):
+            return False, 'Serviço indisponível'
+        if _find_img('nao_possui_vinculo.png', conf=0.9):
+            return False, 'Usuário ainda não possuí vínculos'
+
         time.sleep(1)
 
     return True, ''
@@ -39,13 +47,13 @@ def salva_arquivo(caminho, arquivo_nome, arquivo):
     timer = 0
     while not _find_img('salvar_como.png', conf=0.9):
         if _find_img('erro_salvar_pdf_completo.png', conf=0.9):
-            _click_img('salvar_pdf.png', conf=0.9, timeout=1)
-            _click_img('salvar_pdf_2.png', conf=0.9, timeout=1)
+            _click_img('salvar_como_pdf.png', conf=0.9, timeout=1)
+            _click_img('salvar_como_pdf_2.png', conf=0.9, timeout=1)
         time.sleep(1)
         timer += 1
         if timer > 10:
-            _click_img('salvar_pdf.png', conf=0.9, timeout=1)
-            _click_img('salvar_pdf_2.png', conf=0.9, timeout=1)
+            _click_img('salvar_como_pdf.png', conf=0.9, timeout=1)
+            _click_img('salvar_como_pdf_2.png', conf=0.9, timeout=1)
             
     # exemplo: cnpj;DAS;01;2021;22-02-2021;Guia do MEI 01-2021
     pyperclip.copy(arquivo_nome)
@@ -116,7 +124,7 @@ def salva_pdf_pagina(caminho, data_hora_formatada, nome):
     p.press('end')
     
     x, y = p.locateCenterOnScreen('imgs\\rodape.png', confidence=0.9)
-    p.moveTo(x-70, y-10)
+    p.moveTo(x, y)
     time.sleep(0.5)
     
     p.hotkey('ctrl', 'p')
@@ -176,7 +184,8 @@ def run(window):
         cpf, nome, senha = empresa
 
         andamentos = f'Verifica Aposentadoria'
-
+        time.sleep(random.randrange(1, 5))
+        
         _abrir_chrome('https://meu.inss.gov.br/#/login', iniciar_com_icone=True)
         # faz login no cpf
         while True:
@@ -208,14 +217,14 @@ def run(window):
                 os.makedirs(f'execução\Simulações', exist_ok=True)
                 
                 if salva_pdf_pagina(caminho, data_hora_formatada, nome):
-                    analise_resumida = 'Analise resumida salvo com sucesso'
+                    analise_resumida = 'Analise resumida salva com sucesso'
                 else:
                     analise_resumida = 'Não salvou a analise resumida'
                     
                 _click_img('baixar_pdf.png', conf=0.95)
                 arquivo_nome = f'Simulação Aposentadoria {data_hora_formatada} - {nome} - Completa'
                 if salva_arquivo(caminho, arquivo_nome, 'Simulação Aposentadoria Completa'):
-                    analise_completa = 'Analise completa salvo com sucesso'
+                    analise_completa = 'Analise completa salva com sucesso'
                 else:
                     analise_completa = 'Não salvou a analise completa'
                 resultado = f'{resposta_analise};{analise_resumida};{analise_completa}'

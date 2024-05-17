@@ -41,7 +41,7 @@ def concatena(variavel, quantidade, posicao, caractere):
 
 
 def initialize_chrome(options=webdriver.ChromeOptions()):
-    # biblioteca para baixar o chormedriver atualizado
+    # biblioteca para baixar o chromedriver atualizado
     chromedriver_autoinstaller.install()
     print('>>> Inicializando Chromedriver...')
     
@@ -52,7 +52,7 @@ def initialize_chrome(options=webdriver.ChromeOptions()):
     options.add_argument("--ignore-certificate-errors")
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
     
-    # retorna o chormedriver aberto
+    # retorna o chromedriver aberto
     return True, webdriver.Chrome(options=options)
 
 
@@ -800,7 +800,7 @@ def run_cndtni(window_principal, codigo_20000, planilha_dados, pasta_final_, and
             doc.close()
             pasta_sem_debito = os.path.join(pasta_final, 'CNDNI')
             os.makedirs(pasta_sem_debito, exist_ok=True)
-            # move o arquivo com novo nome para melhor identifica-lo
+            # move o arquivo com novo nome para melhor identificá-lo
             shutil.move(arq, os.path.join(pasta_sem_debito, f'{nome[:30]} - {cnpj} - CNDNI.pdf'))
         
         print('✔ Sem débitos')

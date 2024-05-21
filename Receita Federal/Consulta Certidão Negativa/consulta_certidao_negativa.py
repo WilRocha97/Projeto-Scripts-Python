@@ -8,7 +8,7 @@ from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start, _barra_de_status
 
 
-def verificacoes(consulta_tipo, andamento, identificacao, nome):
+def verificacoes(consulta_tipo, andamento, codigo, identificacao, cnpj, nome):
     alertas = [('inscricao_cancelada.png', 'inscrição cancelada de ofício pela Secretaria Especial da Receita Federal do Brasil - RFB', False),
                ('nao_foi_possivel.png', 'Não foi possível concluir a consulta', 'erro'),
                ('info_insuficiente.png', 'As informações disponíveis na Secretaria da Receita Federal do Brasil - RFB sobre o contribuinte são insuficientes para a emissão de certidão por meio da Internet.', False),
@@ -21,7 +21,7 @@ def verificacoes(consulta_tipo, andamento, identificacao, nome):
     for alerta in alertas:
         if _find_img(alerta[0], conf=0.9):
             if alerta[2] != 'erro':
-                _escreve_relatorio_csv(f'{identificacao};{nome};{alerta[1]}', nome=andamento)
+                _escreve_relatorio_csv(f'{codigo};{identificacao};{cnpj};{nome};{alerta[1]}', nome=andamento)
             print(f'❌ {alerta[1]}')
             return alerta[2]
 
@@ -32,13 +32,13 @@ def verificacoes(consulta_tipo, andamento, identificacao, nome):
     return True
 
 
-def salvar(consulta_tipo, pasta, andamento, identificacao, nome, pasta_download, nome_certidao):
+def salvar(consulta_tipo, pasta, andamento, codigo, identificacao, cnpj, nome, pasta_download, nome_certidao):
     # espera abrir a tela de salvar o arquivo
     contador = 0
     timer = 0
     print('>>> Aguardando consulta')
     while not _find_img('salvar_como.png', conf=0.9):
-        situacao = verificacoes(consulta_tipo, andamento, identificacao, nome)
+        situacao = verificacoes(consulta_tipo, andamento, codigo, identificacao, cnpj, nome)
         if not situacao:
             p.hotkey('ctrl', 'w')
             return False
@@ -47,7 +47,7 @@ def salvar(consulta_tipo, pasta, andamento, identificacao, nome, pasta_download,
             print('>>> Site morreu, tentando novamente')
             p.hotkey('ctrl', 'w')
             time.sleep(1)
-            consulta(consulta_tipo, identificacao)
+            consulta(consulta_tipo, codigo, identificacao, cnpj, nome)
 
         if situacao == 'erro':
             return situacao
@@ -62,14 +62,14 @@ def salvar(consulta_tipo, pasta, andamento, identificacao, nome, pasta_download,
             print('>>> Tentando novamente')
             p.hotkey('ctrl', 'w')
             time.sleep(1)
-            consulta(consulta_tipo, identificacao)
+            consulta(consulta_tipo, codigo, identificacao, cnpj, nome)
             if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9) or _find_img('site_morreu_4.png', conf=0.9):
                 print('>>> Site morreu, tentando novamente')
                 p.hotkey('ctrl', 'w')
                 time.sleep(1)
-                consulta(consulta_tipo, identificacao)
+                consulta(consulta_tipo, codigo, identificacao, cnpj, nome)
             if contador >= 5:
-                _escreve_relatorio_csv('{};{};Consulta em processamento, volte daqui alguns minutos.'.format(identificacao, nome), nome=andamento)
+                _escreve_relatorio_csv('{};{};{};{};Consulta em processamento, volte daqui alguns minutos.'.format(codigo, identificacao, cnpj, nome), nome=andamento)
                 print(f'❗ Consulta em processamento, volte daqui alguns minutos.')
                 p.hotkey('ctrl', 'w')
                 return False
@@ -77,8 +77,12 @@ def salvar(consulta_tipo, pasta, andamento, identificacao, nome, pasta_download,
 
         if _find_img('nova_consulta.png', conf=0.9):
             _click_img('nova_consulta.png', conf=0.9)
-
-        if _find_img('cnpj_vazio.png', conf=0.99):
+        
+        if _find_img('cpf_nao_inserido.png', conf=0.9):
+            _click_img('cpf_nao_inserido_ok.png', conf=0.9)
+            time.sleep(1)
+            
+        if _find_img(consulta_tipo + '_vazio.png', conf=0.99):
             p.write(identificacao)
             time.sleep(1)
             
@@ -89,7 +93,7 @@ def salvar(consulta_tipo, pasta, andamento, identificacao, nome, pasta_download,
             _click_img(f'informe_{consulta_tipo}.png', conf=0.9, timeout=1)
             _click_img(f'informe_{consulta_tipo}_2.png', conf=0.9, timeout=1)
 
-        if _find_img('cnpj_vazio.png', conf=0.99):
+        if _find_img(consulta_tipo + '_vazio.png', conf=0.99):
             p.write(identificacao)
             time.sleep(1)
             p.press('enter')
@@ -105,7 +109,7 @@ def salvar(consulta_tipo, pasta, andamento, identificacao, nome, pasta_download,
             print('>>> Site morreu, tentando novamente')
             p.hotkey('ctrl', 'w')
             time.sleep(1)
-            consulta(consulta_tipo, identificacao)
+            consulta(consulta_tipo, codigo, identificacao, cnpj, nome)
             timer = 0
 
     time.sleep(1)
@@ -150,7 +154,7 @@ def salvar(consulta_tipo, pasta, andamento, identificacao, nome, pasta_download,
     return True
 
 
-def consulta(consulta_tipo, identificacao):
+def consulta(consulta_tipo, codigo, identificacao, cnpj, nome):
     if consulta_tipo == 'CNPJ':
         link = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PJ/Emitir'
     else:
@@ -225,14 +229,14 @@ def run(window):
         # printa o indice da empresa que está sendo executada
         tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, window, tempos, tempo_execucao)
 
-        identificacao, nome = empresa
+        codigo, identificacao, cnpj, nome = empresa
         nome = nome.replace('/', '')
         
-        nome_certidao = f'Certidão Negativa - {identificacao}.pdf'
+        nome_certidao = f'Certidão Negativa - {codigo} - {identificacao}.pdf'
         # try:
         while True:
-            consulta(consulta_tipo, identificacao)
-            situacao = salvar(consulta_tipo, pasta, andamento, identificacao, nome, pasta_download, nome_certidao)
+            consulta(consulta_tipo, codigo, identificacao, cnpj, nome)
+            situacao = salvar(consulta_tipo, pasta, andamento, codigo, identificacao, cnpj, nome, pasta_download, nome_certidao)
             p.hotkey('ctrl', 'w')
 
             if not situacao:
@@ -244,7 +248,7 @@ def run(window):
             else:
                 resultado = analisa_nome_certidao(pasta_download, nome_certidao)
                 print('✔ Certidão gerada')
-                _escreve_relatorio_csv('{};{};{} gerada {}'.format(identificacao, nome, andamento, resultado), nome=andamento)
+                _escreve_relatorio_csv('{};{};{};{};{} gerada {}'.format(codigo, identificacao, cnpj, nome, andamento, resultado), nome=andamento)
                 time.sleep(1)
                 break
 

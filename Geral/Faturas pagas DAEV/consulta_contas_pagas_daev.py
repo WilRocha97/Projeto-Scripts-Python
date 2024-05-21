@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import requests
+import datetime
 from pyautogui import prompt
 from sys import path
 path.append(r'..\..\_comum')

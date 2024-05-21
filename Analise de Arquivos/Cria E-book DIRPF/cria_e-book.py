@@ -10,6 +10,9 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from PIL import Image, ImageDraw
+from PySimpleGUI import BUTTON_TYPE_READ_FORM, FILE_TYPES_ALL_FILES, theme_background_color, theme_button_color, BUTTON_TYPE_BROWSE_FILE, BUTTON_TYPE_BROWSE_FOLDER
+from base64 import b64encode
 
 # Carregar a fonte TrueType (substitua 'sua_fonte.ttf' pelo caminho da sua fonte)
 pdfmetrics.registerFont(TTFont('Fonte', 'Assets\HankenGrotesk-SemiBold.ttf'))
@@ -778,48 +781,97 @@ def run(window, pasta_inicial, pasta_final):
 # Define o ícone global da aplicação
 sg.set_global_icon('Assets/auto-flash.ico')
 if __name__ == '__main__':
+    def RoundedButton(button_text=' ', corner_radius=0.1, button_type=BUTTON_TYPE_READ_FORM, target=(None, None), tooltip=None, file_types=FILE_TYPES_ALL_FILES, initial_folder=None, default_extension='',
+                      disabled=False, change_submits=False, enable_events=False, image_size=(None, None), image_subsample=None, border_width=None, size=(None, None), auto_size_button=None,
+                      button_color=None, disabled_button_color=None, highlight_colors=None, mouseover_colors=(None, None), use_ttk_buttons=None, font=None, bind_return_key=False, focus=False,
+                      pad=None, key=None, right_click_menu=None, expand_x=False, expand_y=False, visible=True, metadata=None):
+        if None in size:
+            multi = 5
+            size = (((len(button_text) if size[0] is None else size[0]) * 5 + 20) * multi,
+                    20 * multi if size[1] is None else size[1])
+        if button_color is None:
+            button_color = theme_button_color()
+        btn_img = Image.new('RGBA', size, (0, 0, 0, 0))
+        corner_radius = int(corner_radius / 2 * min(size))
+        poly_coords = (
+            (corner_radius, 0),
+            (size[0] - corner_radius, 0),
+            (size[0], corner_radius),
+            (size[0], size[1] - corner_radius),
+            (size[0] - corner_radius, size[1]),
+            (corner_radius, size[1]),
+            (0, size[1] - corner_radius),
+            (0, corner_radius),
+        )
+        pie_coords = [
+            [(size[0] - corner_radius * 2, size[1] - corner_radius * 2, size[0], size[1]),
+             [0, 90]],
+            [(0, size[1] - corner_radius * 2, corner_radius * 2, size[1]), [90, 180]],
+            [(0, 0, corner_radius * 2, corner_radius * 2), [180, 270]],
+            [(size[0] - corner_radius * 2, 0, size[0], corner_radius * 2), [270, 360]],
+        ]
+        brush = ImageDraw.Draw(btn_img)
+        brush.polygon(poly_coords, button_color[1])
+        for coord in pie_coords:
+            brush.pieslice(coord[0], coord[1][0], coord[1][1], button_color[1])
+        data = io.BytesIO()
+        btn_img.thumbnail((size[0] // 3, size[1] // 3), resample=Image.LANCZOS)
+        btn_img.save(data, format='png', quality=95)
+        btn_img = b64encode(data.getvalue())
+        return sg.Button(button_text=button_text, button_type=button_type, target=target, tooltip=tooltip,
+                         file_types=file_types, initial_folder=initial_folder, default_extension=default_extension,
+                         disabled=disabled, change_submits=change_submits, enable_events=enable_events,
+                         image_data=btn_img, image_size=image_size,
+                         image_subsample=image_subsample, border_width=border_width, size=size,
+                         auto_size_button=auto_size_button, button_color=(button_color[0], theme_background_color()),
+                         disabled_button_color=disabled_button_color, highlight_colors=highlight_colors,
+                         mouseover_colors=mouseover_colors, use_ttk_buttons=use_ttk_buttons, font=font,
+                         bind_return_key=bind_return_key, focus=focus, pad=pad, key=key, right_click_menu=right_click_menu,
+                         expand_x=expand_x, expand_y=expand_y, visible=visible, metadata=metadata)
+    
     # Carregar a fonte personalizada
     sg.theme()
     
-    sg.LOOK_AND_FEEL_TABLE['tema'] = {'BACKGROUND': '#ffffff',
-                                      'TEXT': '#0e0e0e',
-                                      'INPUT': '#ffffff',
-                                      'TEXT_INPUT': '#0e0e0e',
-                                      'SCROLL': '#ffffff',
-                                      'BUTTON': ('#0e0e0e', '#ffffff'),
-                                      'PROGRESS': ('#ffffff', '#ffffff'),
+    sg.LOOK_AND_FEEL_TABLE['tema'] = {'BACKGROUND': '#F8F8F8',
+                                      'TEXT': '#000000',
+                                      'INPUT': '#F8F8F8',
+                                      'TEXT_INPUT': '#000000',
+                                      'SCROLL': '#F8F8F8',
+                                      'BUTTON': ('#000000', '#F8F8F8'),
+                                      'PROGRESS': ('#fca400', '#D7D7D7'),
                                       'BORDER': 0,
                                       'SLIDER_DEPTH': 0,
                                       'PROGRESS_DEPTH': 0}
     
     sg.theme('tema')  # Define o tema do PySimpleGUI
     layout = [
-        [sg.Button('AJUDA', font=("Helvetica", 10, "underline"), border_width=0),
-         sg.Button('SOBRE', font=("Helvetica", 10, "underline"), border_width=0),
-         sg.Button('LOG DO SISTEMA', font=("Helvetica", 10, "underline"), border_width=0, disabled=True)],
+        [sg.Button('AJUDA'),
+         sg.Button('SOBRE'),
+         sg.Button('LOG DO SISTEMA', disabled=True)],
         [sg.Text('')],
         
-        [sg.Text('Selecione a pasta que contenha os arquivos PDF para analisar:')],
-        [sg.FolderBrowse('SELECIONAR', font=("Helvetica", 10, "underline"), key='-abrir_pdf-'),
-         sg.InputText(key='-output_dir-', size=80, disabled=True)],
-        [sg.Text('')],
+        [sg.pin(sg.Text(text='Selecione a pasta que contenha os arquivos PDF para analisar:', key='-abrir_pdf_texto-', visible=False)),
+         sg.pin(RoundedButton('Selecione a pasta que contenha os arquivos PDF para analisar:', key='-abrir_pdf-', corner_radius=0.8, button_color=('#F8F8F8', '#848484'),
+                              size=(1300, 100), button_type=BUTTON_TYPE_BROWSE_FOLDER, target='-output_dir-')),
+         sg.pin(sg.InputText(key='-output_dir-', text_color='#fca400', expand_x=True))],
         
-        [sg.Text('Selecione a pasta para salvar os e-books:')],
-        [sg.FolderBrowse('SELECIONAR', font=("Helvetica", 10, "underline"), key='-abrir_pdf_final-'),
-         sg.InputText(key='-output_dir-', size=80, disabled=True)],
+        [sg.pin(sg.Text(text='Selecione a pasta para salvar os e-books:', key='-abrir_pdf_final_texto-', visible=False)),
+         sg.pin(RoundedButton('Selecione a pasta para salvar os e-books:', key='-abrir_pdf_final-', corner_radius=0.8, button_color=('#F8F8F8', '#848484'),
+                              size=(900, 100), button_type=BUTTON_TYPE_BROWSE_FOLDER, target='-output_file-')),
+         sg.pin(sg.InputText(key='-output_file-', text_color='#fca400', expand_x=True))],
         [sg.Text('', expand_y=True)],
         
         [sg.Text('', key='-Mensagens-')],
         [sg.Text(size=6, text='', key='-Progresso_texto-'),
-         sg.ProgressBar(max_value=0, orientation='h', size=(54, 5), key='-progressbar-', bar_color=('#fca400', '#ffe0a6'), visible=False)],
-        [sg.Button('INICIAR', font=("Helvetica", 10, "underline"), button_color=('white', 'white'), image_filename='Assets\\fundo_botao.png', key='-iniciar-', border_width=0),
-         sg.Button('ENCERRAR', font=("Helvetica", 10, "underline"), key='-encerrar-', disabled=True, border_width=0),
-         sg.Button('ABRIR RESULTADOS', font=("Helvetica", 10, "underline"), key='-abrir_resultados-', disabled=True, border_width=0)],
+         sg.ProgressBar(max_value=0, orientation='h', size=(54, 5), key='-progressbar-', visible=False)],
+        [sg.pin(RoundedButton('INICIAR', key='-iniciar-', corner_radius=0.8, button_color=('#F8F8F8', '#fca400'))),
+         sg.pin(RoundedButton('ENCERRAR', key='-encerrar-', corner_radius=0.8, button_color=('#F8F8F8', '#fca400'), visible=False)),
+         sg.pin(RoundedButton('ABRIR RESULTADOS', key='-abrir_resultados-', corner_radius=0.8, button_color=('#F8F8F8', '#fca400'), visible=False))]
     ]
-
+    
     # guarda a janela na variável para manipula-la
     window = sg.Window('Cria E-book DIRPF', layout, finalize=True, resizable=True, margins=(30, 30))
-    window.set_min_size((500, 300))
+    window.set_min_size((700, 300))
     
     def run_script_thread():
         # try:
@@ -833,16 +885,15 @@ if __name__ == '__main__':
             alert(text=f'Nenhum arquivo PDF encontrado na pasta selecionada.')
             return
         
-        # habilita e desabilita os botões conforme necessário
-        window['-abrir_pdf-'].update(disabled=True)
-        window['-abrir_pdf_final-'].update(disabled=True)
-        window['-iniciar-'].update(disabled=True)
-        window['-encerrar-'].update(disabled=False)
-        window['-abrir_resultados-'].update(disabled=False)
         # apaga qualquer mensagem na interface
         window['-Mensagens-'].update('')
         # atualiza a barra de progresso para ela ficar mais visível
         window['-progressbar-'].update(visible=True)
+        
+        # habilita e desabilita os botões conforme necessário
+        for key in [('-iniciar-', False), ('-encerrar-', True), ('-abrir_resultados-', True), ('-abrir_pdf-', False), ('-abrir_pdf_final-', False),
+                    ('-abrir_pdf_texto-', True), ('-abrir_pdf_final_texto-', True)]:
+            window[key[0]].update(visible=key[1])
         
         try:
             # Chama a função que executa o script
@@ -856,15 +907,13 @@ if __name__ == '__main__':
             window['Log do sistema'].update(disabled=False)
             alert(text='Erro detectado, clique no botão "Log do sistema" para acessar o arquivo de erros e contate o desenvolvedor')
             
-        window['-progressbar-'].update_bar(0)
-        window['-progressbar-'].update(visible=False)
+        # habilita e desabilita os botões conforme necessário
+        for key in [('-progressbar-', False), ('-encerrar-', False), ('-iniciar-', True), ('-abrir_pdf-', True), ('-abrir_pdf_final-', True),
+                    ('-abrir_pdf_texto-', False), ('-abrir_pdf_final_texto-', False)]:
+            window[key[0]].update(visible=key[1])
+            
         window['-Progresso_texto-'].update('')
         window['-Mensagens-'].update('')
-        # habilita e desabilita os botões conforme necessário
-        window['-abrir_pdf-'].update(disabled=False)
-        window['-abrir_pdf_final-'].update(disabled=False)
-        window['-iniciar-'].update(disabled=False)
-        window['-encerrar-'].update(disabled=True)
         
     
     while True:

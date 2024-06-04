@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
-import xhtml2pdf, fitz, shutil, re, os, traceback, requests.exceptions
+import selenium.common
+import xhtml2pdf, fitz, sys, shutil, re, os, traceback, requests.exceptions, pdfkit
 from requests import Session
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
 from anticaptchaofficial.hcaptchaproxyless import *
 from pyautogui import alert
-
 import comum
 
 controle_rotinas = 'Log/Controle.txt'
 
 
-def run_cndtni(window_principal, codigo_20000, planilha_dados, pasta_final_, andamentos):
+def run_cndtni(window_principal, codigo_20000, situacao_dados, planilha_dados, pasta_final_, andamentos, tempos, tempo_execucao, continuar_rotina):
     def abre_pagina_consulta(window_principal, driver):
         print('>>> Abrindo Conta Fiscal')
         window_principal['-Mensagens_2-'].update(f'Abrindo Conta Fiscal...')
@@ -244,17 +245,12 @@ def run_cndtni(window_principal, codigo_20000, planilha_dados, pasta_final_, and
         print('✔ Sem débitos')
         return 'Sem débitos'
     
-    # bloco para filtrar e criar a nova planilha de dados
-    colunas_usadas = ['CNPJ', 'Razao', 'Cidade', 'PostoFiscalUsuario', 'PostoFiscalSenha', 'PostoFiscalContador']
-    filtrar_celulas_em_branco = ['CNPJ', 'Razao', 'Cidade']
-    pasta_final, index, empresas = comum.configura_dados(window_principal, codigo_20000, planilha_dados, pasta_final_, andamentos,
-                                                         colunas_usadas=colunas_usadas, filtrar_celulas_em_branco=filtrar_celulas_em_branco)
-    if not empresas:
-        try:
-            os.rmdir(pasta_final)
-        except:
-            pass
-        return False
+    # filtrar e criar a nova planilha de dados
+    pasta_final, index, df_empresas, total_empresas = comum.configura_dados(window_principal, codigo_20000, situacao_dados, planilha_dados, pasta_final_, andamentos,
+                                                         colunas_usadas=['CNPJ', 'Razao', 'Cidade', 'PostoFiscalUsuario', 'PostoFiscalSenha', 'PostoFiscalContador'],
+                                                         filtrar_celulas_em_branco=['CNPJ', 'Razao', 'Cidade'])
+    if df_empresas.empty:
+        return False, pasta_final
     
     # inicia a variável que verifica se o usuário da execução anterior é igual ao atual
     usuario_anterior = 'padrão'
@@ -262,23 +258,13 @@ def run_cndtni(window_principal, codigo_20000, planilha_dados, pasta_final_, and
     
     pasta_download = os.path.join(pasta_final, 'Download')
     
-    # opções para fazer com que o chrome trabalhe em segundo plano (opcional)
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--window-size=1920,1080')
-    # options.add_argument("--start-maximized")
-    options.add_experimental_option('prefs', {
-        "download.default_directory": pasta_download.replace('/', '\\'),  # Change default directory for downloads
-        "download.prompt_for_download": False,  # To auto download the file
-        "download.directory_upgrade": True,
-        "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
-    })
+    # configura o navegador
+    options = comum.configura_navegador(window_principal, pasta=pasta_download, retorna_options=True)
     
     tempos = [datetime.now()]
     tempo_execucao = []
-    total_empresas = empresas[index:]
-    for count, empresa in enumerate(empresas[index:], start=1):
-        # printa o indice da empresa que está sendo executada
+    for count, [index_atual, empresa] in enumerate(df_empresas.iloc[index:].iterrows(), start=1):
+        # printa o índice da empresa que está sendo executada
         tempos, tempo_execucao = comum.indice(count, empresa, total_empresas, index, window_principal, tempos, tempo_execucao)
         
         cnpj, nome, cidade, usuario, senha, perfil = empresa
@@ -298,11 +284,7 @@ def run_cndtni(window_principal, codigo_20000, planilha_dados, pasta_final_, and
                         driver.close()
                     except:
                         pass
-                    try:
-                        os.rmdir(pasta_final)
-                    except:
-                        pass
-                    return False
+                    return False, pasta_final
                 
                 # se o usuario anterior for diferente e existir uma sessão aberta, a sessão é fechada
                 try:
@@ -319,11 +301,7 @@ def run_cndtni(window_principal, codigo_20000, planilha_dados, pasta_final_, and
                             driver.close()
                         except:
                             pass
-                        try:
-                            os.rmdir(pasta_final)
-                        except:
-                            pass
-                        return False
+                        return False, pasta_final
                     try:
                         # abre uma nova sessão no site da fazenda
                         driver, sid = comum.new_session_fazenda_driver(window_principal, usuario, senha, perfil, retorna_driver=True, options=options)
@@ -347,14 +325,11 @@ def run_cndtni(window_principal, codigo_20000, planilha_dados, pasta_final_, and
                         driver.close()
                     except:
                         pass
-                    try:
-                        os.rmdir(pasta_final)
-                    except:
-                        pass
-                    return False
+                    return False, pasta_final
                 
                 if driver == 'erro':
-                    comum.escreve_relatorio_csv(f'{cnpj};{nome};{cidade};{sid}', nome=andamentos, local=pasta_final)
+                    comum.escreve_relatorio_xlsx({'CNPJ': cnpj, 'NOME': nome, 'CIDADE': cidade, 'RESULTADO': sid},
+                                                 nome=andamentos, local=pasta_final)
                     usuario_anterior = usuario
                     break
                 
@@ -371,14 +346,11 @@ def run_cndtni(window_principal, codigo_20000, planilha_dados, pasta_final_, and
                         driver.close()
                     except:
                         pass
-                    try:
-                        os.rmdir(pasta_final)
-                    except:
-                        pass
-                    return False
+                    return False, pasta_final
                 
                 if resultado != 'erro':
-                    comum.escreve_relatorio_csv(f'{cnpj};{nome};{cidade};{resultado}', nome=andamentos, local=pasta_final)
+                    comum.escreve_relatorio_xlsx({'CNPJ': cnpj, 'NOME': nome, 'CIDADE': cidade, 'RESULTADO': sid},
+                                                 nome=andamentos, local=pasta_final)
                     usuario_anterior = usuario
                     break
                 
@@ -393,36 +365,25 @@ def run_cndtni(window_principal, codigo_20000, planilha_dados, pasta_final_, and
                     driver.close()
                 except:
                     pass
-                try:
-                    os.rmdir(pasta_final)
-                except:
-                    pass
-                return False
+                return False, pasta_final
     
     try:
         driver.close()
     except:
         pass
-    return True
+    return True, pasta_final
 
 
-def run_debitos_municipais_jundiai(window_principal, codigo_20000, planilha_dados, pasta_final_, andamentos):
+def run_debitos_municipais_jundiai(window_principal, codigo_20000, situacao_dados, planilha_dados, pasta_final_, andamentos, tempos, tempo_execucao, continuar_rotina):
     def login_jundiai(window_principal, cnpj, insc_muni, pasta_final):
         cnpj_limpo = cnpj.replace('.', '').replace('/', '').replace('-', '')
         
         pasta_final_certidao = os.path.join(pasta_final, 'Certidões')
         
-        options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
-        # options.add_argument('--window-size=1920,1080')
-        # options.add_argument("--start-maximized")
-        options.add_experimental_option('prefs', {
-            "download.default_directory": pasta_final_certidao.replace('/', '\\'),  # Change default directory for downloads
-            "download.prompt_for_download": False,  # To auto download the file
-            "download.directory_upgrade": True,
-            "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
-        })
-        status, driver = comum.initialize_chrome(options)
+        # configura o navegador
+        status, driver = comum.configura_navegador(window_principal, pasta=pasta_final_certidao)
+        window_principal['-Mensagens_2-'].update('Entrando no perfil da empresa...')
+        window_principal.refresh()
         
         # entra na página inicial da consulta
         url_inicio = 'https://web.jundiai.sp.gov.br/PMJ/SW/certidaonegativamobiliario.aspx'
@@ -433,7 +394,7 @@ def run_debitos_municipais_jundiai(window_principal, codigo_20000, planilha_dado
         data = {'url': url_inicio, 'sitekey': '6LfK0igTAAAAAOeUqc7uHQpW4XS3EqxwOUCHaSSi'}
         response = comum.solve_recaptcha(data)
         if not response:
-            return False, 'erro_captcha'
+            return driver, 'recomeçar', '❌ Erro no captcha'
         
         # insere a inscrição estadual e o cnpj da empresa
         comum.send_input('DadoContribuinteMobiliario1_txtCfm', insc_muni, driver)
@@ -447,16 +408,7 @@ def run_debitos_municipais_jundiai(window_principal, codigo_20000, planilha_dado
         while not text_response == response:
             cr = open(controle_rotinas, 'r', encoding='utf-8').read()
             if cr == 'STOP':
-                try:
-                    driver.close()
-                except:
-                    pass
-                
-                try:
-                    os.rmdir(pasta_final)
-                except:
-                    pass
-                return False, ''
+                return driver, 'encerrar', ''
             
             print('>>> Tentando preencher o campo do captcha')
             # insere a solução do captcha via javascript
@@ -478,32 +430,14 @@ def run_debitos_municipais_jundiai(window_principal, codigo_20000, planilha_dado
         while not comum.find_by_id('lblContribuinte', driver):
             cr = open(controle_rotinas, 'r', encoding='utf-8').read()
             if cr == 'STOP':
-                try:
-                    driver.close()
-                except:
-                    pass
-                
-                try:
-                    os.rmdir(pasta_final)
-                except:
-                    pass
-                return False, ''
+                return driver, 'encerrar', ''
             
             if comum.find_by_id('AjaxAlertMod1_lblAjaxAlertMensagem', driver):
                 situacao = re.compile(r'AjaxAlertMod1_lblAjaxAlertMensagem\">(.+)</span>')
                 while True:
                     cr = open(controle_rotinas, 'r', encoding='utf-8').read()
                     if cr == 'STOP':
-                        try:
-                            driver.close()
-                        except:
-                            pass
-                        
-                        try:
-                            os.rmdir(pasta_final)
-                        except:
-                            pass
-                        return False, ''
+                        return driver, 'encerrar', ''
                     
                     try:
                         situacao = situacao.search(driver.page_source).group(1)
@@ -516,16 +450,11 @@ def run_debitos_municipais_jundiai(window_principal, codigo_20000, planilha_dado
                         or situacao == 'Consta(m) pendência(s) para emissão de certidão por meio da internet. Dirija-se à Av. União dos Ferroviários, 1760 - ' \
                                        'Centro - Jundiaí de segunda a sexta-feiras das 9h:00 às 17h:00 e aos sábados das 9h:00 às 13h:00.':
                     situacao_print = f'❗ {situacao}'
-                    driver.close()
-                    return situacao, situacao_print
+                    return driver, 'ok', situacao_print
                 if situacao == 'Confirme que você não é um robô':
-                    situacao_print = '❌ Erro ao logar na empresa'
-                    driver.close()
-                    return 'Erro ao logar na empresa', situacao_print
+                    return driver, 'recomeçar', '❌ Erro ao logar na empresa'
                 if situacao == 'EIX000: (-107) ISAM error:  record is locked.':
-                    situacao_print = '❌ Erro no site'
-                    driver.close()
-                    return 'Erro no site', situacao_print
+                    return driver, 'recomeçar', '❌ Erro no site'
             time.sleep(1)
         
         situacao = re.compile(r'<span id=\"lblSituacao\">(.+)</span>')
@@ -543,30 +472,12 @@ def run_debitos_municipais_jundiai(window_principal, codigo_20000, planilha_dado
             while not os.path.exists(os.path.join(pasta_final_certidao, 'relatorio.pdf')):
                 cr = open(controle_rotinas, 'r', encoding='utf-8').read()
                 if cr == 'STOP':
-                    try:
-                        driver.close()
-                    except:
-                        pass
-                    
-                    try:
-                        os.rmdir(pasta_final)
-                    except:
-                        pass
-                    return False, ''
+                    return driver, ''
                 time.sleep(1)
             while os.path.exists(os.path.join(pasta_final_certidao, 'relatorio.pdf')):
                 cr = open(controle_rotinas, 'r', encoding='utf-8').read()
                 if cr == 'STOP':
-                    try:
-                        driver.close()
-                    except:
-                        pass
-                    
-                    try:
-                        os.rmdir(pasta_final)
-                    except:
-                        pass
-                    return False, ''
+                    return driver, ''
                 try:
                     arquivo = f'{cnpj_limpo} - Certidão Negativa de Débitos Municipais Jundiaí.pdf'
                     shutil.move(os.path.join(pasta_final_certidao, 'relatorio.pdf'), os.path.join(pasta_final_certidao, arquivo))
@@ -578,75 +489,59 @@ def run_debitos_municipais_jundiai(window_principal, codigo_20000, planilha_dado
                 or situacao == 'Consta(m) pendência(s) para emissão de certidão por meio da internet. Dirija-se à Av. União dos Ferroviários, 1760 - ' \
                                'Centro - Jundiaí de segunda a sexta-feiras das 9h:00 às 17h:00 e aos sábados das 9h:00 às 13h:00.':
             situacao_print = f'❗ {situacao}'
-            driver.quit()
-            return situacao, situacao_print
+            return driver, situacao_print
         
         situacao_print = f'✔ {situacao}'
-        driver.quit()
-        return situacao, situacao_print
+        return driver, situacao_print
     
-    colunas_usadas = ['CNPJ', 'InsMunicipal', 'Razao']
-    colunas_filtro = ['Cidade']
-    palavras_filtro = ['Jundiaí']
-    pasta_final, index, empresas = comum.configura_dados(window_principal, codigo_20000, planilha_dados, pasta_final_, andamentos,
-                                                         colunas_usadas=colunas_usadas, colunas_filtro=colunas_filtro, palavras_filtro=palavras_filtro)
-    if not empresas:
-        try:
-            os.rmdir(pasta_final)
-        except:
-            pass
-        return False
+    # filtrar e criar a nova planilha de dados
+    pasta_final, index, df_empresas, total_empresas = comum.configura_dados(window_principal, codigo_20000, situacao_dados, planilha_dados, pasta_final_, andamentos,
+                                                         colunas_usadas=['CNPJ', 'InsMunicipal', 'Razao', 'Cidade'], colunas_filtro=['Cidade'], palavras_filtro=['Jundiaí'])
+    if df_empresas.empty:
+        return False, pasta_final
     
-    tempos = [datetime.now()]
-    tempo_execucao = []
-    total_empresas = empresas[index:]
-    for count, empresa in enumerate(empresas[index:], start=1):
-        # printa o indice da empresa que está sendo executada
+    for count, [index_atual, empresa] in enumerate(df_empresas.iloc[index:].iterrows(), start=1):
+        # printa o índice da empresa que está sendo executada
         tempos, tempo_execucao = comum.indice(count, empresa, total_empresas, index, window_principal, tempos, tempo_execucao)
         
-        cnpj, insc_muni, nome = empresa
+        cnpj, insc_muni, nome, cidade = empresa
+        cnpj = str(cnpj)
+        cnpj = comum.concatena(cnpj, 14, 'antes', 0)
         insc_muni = insc_muni.replace('/', '').replace('.', '').replace('-', '')
         
-        situacao = ''
-        situacao_print = ''
         contador = 0
         # iteração para logar na empresa e consultar, tenta 5 vezes
         while True:
-            cr = open(controle_rotinas, 'r', encoding='utf-8').read()
-            if cr == 'STOP':
-                break
-            
             window_principal['-Mensagens_2-'].update('Entrando no perfil da empresa...')
             window_principal.refresh()
-            situacao, situacao_print = login_jundiai(window_principal, cnpj, insc_muni, pasta_final)
-            if situacao_print == 'erro_captcha':
-                return False
+            driver, situacao, situacao_print = login_jundiai(window_principal, cnpj, insc_muni, pasta_final)
+            print(situacao_print)
             
-            if situacao == 'Erro ao logar na empresa':
+            if situacao == 'recomeçar':
+                try:
+                    driver.close()
+                except:
+                    pass
                 contador += 1
                 if contador >= 5:
                     break
                 continue
             
-            if situacao != 'Erro no site':
+            else:
                 break
         
         cr = open(controle_rotinas, 'r', encoding='utf-8').read()
         if cr == 'STOP':
             alert(f'❗ Rotina "{andamentos}" encerrada pelo usuário')
-            try:
-                os.rmdir(pasta_final)
-            except:
-                pass
-            return False
+            return False, pasta_final
         
-        print(situacao_print)
-        comum.escreve_relatorio_csv(f'{cnpj};{insc_muni};{nome};{situacao}', nome=andamentos, local=pasta_final)
+        comum.escreve_relatorio_xlsx({'CNPJ': cnpj, 'INSCRIÇÃO MUNICIPAL': insc_muni, 'NOME': nome, 'RESULTADO': situacao_print[2:]},
+                                     nome=andamentos, local=pasta_final)
     
-    return True
+    return True, pasta_final
 
 
-def run_debitos_municipais_valinhos(window_principal, codigo_20000, planilha_dados, pasta_final_, andamentos):
+def run_debitos_municipais_valinhos(window_principal, codigo_20000, situacao_dados, planilha_dados, pasta_final_, andamentos, tempos, tempo_execucao, continuar_rotina):
     def reset_table(table):
         table.attrs = None
         for tag in table.findAll(True):
@@ -705,11 +600,7 @@ def run_debitos_municipais_valinhos(window_principal, codigo_20000, planilha_dad
         while not comum.find_by_id('span7Menu', driver):
             cr = open(controle_rotinas, 'r', encoding='utf-8').read()
             if cr == 'STOP':
-                try:
-                    driver.close()
-                except:
-                    pass
-                return
+                return driver, 'encerrar'
             time.sleep(1)
         button = driver.find_element(by=By.ID, value='span7Menu')
         button.click()
@@ -717,30 +608,19 @@ def run_debitos_municipais_valinhos(window_principal, codigo_20000, planilha_dad
         while not comum.find_by_id('captchaimg', driver):
             cr = open(controle_rotinas, 'r', encoding='utf-8').read()
             if cr == 'STOP':
-                try:
-                    driver.close()
-                except:
-                    pass
-                return
+                return driver, 'encerrar'
             time.sleep(1)
         
         time.sleep(1)
         captcha = comum.solve_text_captcha(driver, 'captchaimg')
         if not captcha:
-            return False, 'erro_captcha'
-        
-        if not captcha:
             print('Erro Login - não encontrou captcha')
-            return driver, 'erro captcha'
+            return driver, 'recomeçar'
         
         while not comum.find_by_id('input1', driver):
             cr = open(controle_rotinas, 'r', encoding='utf-8').read()
             if cr == 'STOP':
-                try:
-                    driver.close()
-                except:
-                    pass
-                return
+                return driver, 'encerrar'
             time.sleep(1)
         element = driver.find_element(by=By.ID, value='input1')
         element.send_keys(insc_muni)
@@ -748,11 +628,7 @@ def run_debitos_municipais_valinhos(window_principal, codigo_20000, planilha_dad
         while not comum.find_by_id('input4', driver):
             cr = open(controle_rotinas, 'r', encoding='utf-8').read()
             if cr == 'STOP':
-                try:
-                    driver.close()
-                except:
-                    pass
-                return
+                return driver, 'encerrar'
             time.sleep(1)
         element = driver.find_element(by=By.ID, value='input4')
         element.send_keys(cnpj)
@@ -760,11 +636,7 @@ def run_debitos_municipais_valinhos(window_principal, codigo_20000, planilha_dad
         while not comum.find_by_id('captchafield', driver):
             cr = open(controle_rotinas, 'r', encoding='utf-8').read()
             if cr == 'STOP':
-                try:
-                    driver.close()
-                except:
-                    pass
-                return
+                return driver, 'encerrar'
             time.sleep(1)
         element = driver.find_element(by=By.ID, value='captchafield')
         element.send_keys(captcha)
@@ -772,11 +644,7 @@ def run_debitos_municipais_valinhos(window_principal, codigo_20000, planilha_dad
         while not comum.find_by_id('imagebutton1', driver):
             cr = open(controle_rotinas, 'r', encoding='utf-8').read()
             if cr == 'STOP':
-                try:
-                    driver.close()
-                except:
-                    pass
-                return
+                return driver, 'encerrar'
             time.sleep(1)
         button = driver.find_element(by=By.ID, value='imagebutton1')
         button.click()
@@ -787,11 +655,7 @@ def run_debitos_municipais_valinhos(window_principal, codigo_20000, planilha_dad
         while not comum.find_by_id('td30', driver):
             cr = open(controle_rotinas, 'r', encoding='utf-8').read()
             if cr == 'STOP':
-                try:
-                    driver.close()
-                except:
-                    pass
-                return
+                return driver, 'encerrar'
             print('>>> Aguardando site')
             driver.save_screenshot(r'Log\debug_screen.png')
             time.sleep(1)
@@ -806,7 +670,7 @@ def run_debitos_municipais_valinhos(window_principal, codigo_20000, planilha_dad
             timer += 1
             if timer >= 10:
                 print(f'❌ Erro no login')
-                return driver, 'Erro no login'
+                return driver, 'recomeçar'
         
         return driver, 'ok'
     
@@ -825,41 +689,33 @@ def run_debitos_municipais_valinhos(window_principal, codigo_20000, planilha_dad
                     xhtml2pdf.pisa.showLogging()
                     xhtml2pdf.pisa.CreatePDF(str_html, pdf)
                     print('❗ Arquivo gerado')
-                comum.escreve_relatorio_csv(f'{cnpj};{insc_muni};{nome};Com débitos', nome=andamentos, local=pasta_final)
+                comum.escreve_relatorio_xlsx({'CNPJ': cnpj, 'INSCRIÇÃO MUNICIPAL': insc_muni, 'NOME': nome, 'RESULTADO': 'Com débitos'},
+                                             nome=andamentos, local=pasta_final)
             else:
-                comum.escreve_relatorio_csv(f'{cnpj};{insc_muni};{nome};Sem débitos', nome=andamentos, local=pasta_final)
+                comum.escreve_relatorio_xlsx({'CNPJ': cnpj, 'INSCRIÇÃO MUNICIPAL': insc_muni, 'NOME': nome, 'RESULTADO': 'Sem débitos'},
+                                             nome=andamentos, local=pasta_final)
                 print('✔ Não há débitos')
         except:
-            comum.escreve_relatorio_csv(f'{cnpj};{insc_muni};{nome};Erro na geração do PDF', nome=andamentos, local=pasta_final)
+            comum.escreve_relatorio_xlsx({'CNPJ': cnpj, 'INSCRIÇÃO MUNICIPAL': insc_muni, 'NOME': nome, 'RESULTADO': 'Erro na geração do PDF'},
+                                         nome=andamentos, local=pasta_final)
             driver.save_screenshot(r'Log\debug_screen.png')
             print('❌ Erro na geração do PDF')
         
         return driver, True
     
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--window-size=1920,1080')
+    # filtrar e criar a nova planilha de dados
+    pasta_final, index, df_empresas, total_empresas = comum.configura_dados(window_principal, codigo_20000, situacao_dados, planilha_dados, pasta_final_, andamentos,
+                                                         colunas_usadas=['CNPJ', 'InsMunicipal', 'Razao', 'Cidade'], colunas_filtro=['Cidade'], palavras_filtro=['Valinhos'])
+    if df_empresas.empty:
+        return False, pasta_final
     
-    colunas_usadas = ['CNPJ', 'InsMunicipal', 'Razao']
-    colunas_filtro = ['Cidade']
-    palavras_filtro = ['Valinhos']
-    pasta_final, index, empresas = comum.configura_dados(window_principal, codigo_20000, planilha_dados, pasta_final_, andamentos,
-                                                         colunas_usadas=colunas_usadas, colunas_filtro=colunas_filtro, palavras_filtro=palavras_filtro)
-    if not empresas:
-        try:
-            os.rmdir(pasta_final)
-        except:
-            pass
-        return False
-    
-    tempos = [datetime.now()]
-    tempo_execucao = []
-    total_empresas = empresas[index:]
-    for count, empresa in enumerate(empresas[index:], start=1):
-        # printa o indice da empresa que está sendo executada
+    for count, [index_atual, empresa] in enumerate(df_empresas.iloc[index:].iterrows(), start=1):
+        # printa o índice da empresa que está sendo executada
         tempos, tempo_execucao = comum.indice(count, empresa, total_empresas, index, window_principal, tempos, tempo_execucao)
         
-        cnpj, insc_muni, nome = empresa
+        cnpj, insc_muni, nome, cidade = empresa
+        cnpj = str(cnpj)
+        cnpj = comum.concatena(cnpj, 14, 'antes', 0)
         insc_muni = insc_muni.replace('/', '').replace('.', '').replace('-', '')
         
         try:
@@ -867,59 +723,41 @@ def run_debitos_municipais_valinhos(window_principal, codigo_20000, planilha_dad
         except:
             continue
         
-        resultado = 'Texto da imagem incorreto'
-        while resultado == 'Texto da imagem incorreto':
-            cr = open(controle_rotinas, 'r', encoding='utf-8').read()
-            if cr == 'STOP':
-                alert(f'❗ Rotina "{andamentos}" encerrada pelo usuário')
-                try:
-                    os.rmdir(pasta_final)
-                except:
-                    pass
-                return False
-            
+        while True:
+            status, driver = comum.configura_navegador(window_principal)
             window_principal['-Mensagens_2-'].update('Entrando no perfil da empresa...')
             window_principal.refresh()
-            
-            status, driver = comum.initialize_chrome(options)
             driver, resultado = login_valinhos(driver, cnpj, insc_muni)
             
-            if resultado == 'ok':
-                driver, resultado = consulta_valinhos(driver, cnpj, insc_muni, nome, andamentos, pasta_final)
-            elif resultado == 'erro_captcha':
-                return False
-            elif resultado == 'Texto da imagem incorreto':
-                pass
-            else:
-                comum.escreve_relatorio_csv(f'{cnpj};{insc_muni};{nome};{resultado}', nome=andamentos, local=pasta_final)
-            driver.close()
+            if resultado == 'encerrar':
+                break
+            if resultado != 'recomeçar':
+                if resultado == 'ok':
+                    driver, resultado = consulta_valinhos(driver, cnpj, insc_muni, nome, andamentos, pasta_final)
+                else:
+                    comum.escreve_relatorio_xlsx({'CNPJ': cnpj, 'INSCRIÇÃO MUNICIPAL': insc_muni, 'NOME': nome, 'RESULTADO': resultado},
+                                                 nome=andamentos, local=pasta_final)
+                break
+            
+            window_principal['-Mensagens_2-'].update('Erro ao logar na empresa, tentando novamente...')
+            window_principal.refresh()
         
+        try:
+            driver.close()
+        except:
+            pass
         cr = open(controle_rotinas, 'r', encoding='utf-8').read()
         if cr == 'STOP':
             alert(f'❗ Rotina "{andamentos}" encerrada pelo usuário')
-            try:
-                os.rmdir(pasta_final)
-            except:
-                pass
-            return False
+            return False, pasta_final
     
-    return True
+    return True, pasta_final
 
 
-def run_debitos_municipais_vinhedo(window_principal, codigo_20000, planilha_dados, pasta_final_, andamentos):
+def run_debitos_municipais_vinhedo(window_principal, codigo_20000, situacao_dados, planilha_dados, pasta_final_, andamentos, tempos, tempo_execucao, continuar_rotina):
     def pesquisar_vinhedo(window_principal, cnpj, insc_muni, pasta_final):
-        # opções para fazer com que o chome trabalhe em segundo plano (opcional)
-        options = webdriver.ChromeOptions()
-        # options.add_argument('--headless')
-        # options.add_argument('--window-size=1920,1080')
-        options.add_argument("--start-maximized")
-        options.add_experimental_option('prefs', {
-            "download.default_directory": pasta_final.replace('/', '\\'),  # Change default directory for downloads
-            "download.prompt_for_download": False,  # To auto download the file
-            "download.directory_upgrade": True,
-            "plugins.always_open_pdf_externally": True  # It will not show PDF directly in chrome
-        })
-        status, driver = comum.initialize_chrome(options)
+        # configura o navegador
+        status, driver = comum.configura_navegador(window_principal, pasta=pasta_final)
         
         url_inicio = 'http://vinhedomun.presconinformatica.com.br/certidaoNegativa.jsf?faces-redirect=true'
         driver.get(url_inicio)
@@ -932,18 +770,18 @@ def run_debitos_municipais_vinhedo(window_principal, codigo_20000, planilha_dado
                     driver.close()
                 except:
                     pass
-                try:
-                    os.rmdir(pasta_final)
-                except:
-                    pass
-                return
+                return False, 'encerrar'
             contador += 1
             time.sleep(0.2)
         
         # resolve o captcha
         captcha = comum.solve_text_captcha(driver, f'homeForm:panelCaptcha:j_idt{str(contador)}')
         if not captcha:
-            return False, 'erro_captcha'
+            try:
+                driver.close()
+            except:
+                pass
+            return False, 'recomeçar'
         
         # espera o campo do tipo da pesquisa
         while not comum.find_by_id('homeForm:inputTipoInscricao_label', driver):
@@ -953,11 +791,7 @@ def run_debitos_municipais_vinhedo(window_principal, codigo_20000, planilha_dado
                     driver.close()
                 except:
                     pass
-                try:
-                    os.rmdir(pasta_final)
-                except:
-                    pass
-                return
+                return False, 'encerrar'
             time.sleep(1)
         # clica no menu
         driver.find_element(by=By.ID, value='homeForm:inputTipoInscricao_label').click()
@@ -970,17 +804,17 @@ def run_debitos_municipais_vinhedo(window_principal, codigo_20000, planilha_dado
                     driver.close()
                 except:
                     pass
-                try:
-                    os.rmdir(pasta_final)
-                except:
-                    pass
-                return
+                return False, 'encerrar'
             time.sleep(1)
         # clica na opção "Mobiliário"
         driver.find_element(by=By.XPATH, value='/html/body/div[6]/div/ul/li[2]').click()
         
         if not captcha:
             print('Erro Login - não encontrou captcha')
+            try:
+                driver.close()
+            except:
+                pass
             return False, 'recomeçar'
         
         time.sleep(1)
@@ -1004,11 +838,7 @@ def run_debitos_municipais_vinhedo(window_principal, codigo_20000, planilha_dado
                     driver.close()
                 except:
                     pass
-                try:
-                    os.rmdir(pasta_final)
-                except:
-                    pass
-                return
+                return False, 'encerrar'
             
             if comum.find_by_path('/html/body/div[1]/div[5]/div[2]/div[1]/div/ul/li/span', driver):
                 padraozinho = re.compile(r'confirmationMessage\" class=\"ui-messages ui-widget\" aria-live=\"polite\"><div '
@@ -1033,11 +863,7 @@ def run_debitos_municipais_vinhedo(window_principal, codigo_20000, planilha_dado
                 driver.close()
             except:
                 pass
-            try:
-                os.rmdir(pasta_final)
-            except:
-                pass
-            return
+            return False, 'encerrar'
         
         situacao_print = f'✔ {situacao}'
         return situacao, situacao_print
@@ -1051,10 +877,6 @@ def run_debitos_municipais_vinhedo(window_principal, codigo_20000, planilha_dado
             if cr == 'STOP':
                 try:
                     driver.close()
-                except:
-                    pass
-                try:
-                    os.rmdir(pasta_final)
                 except:
                     pass
                 return
@@ -1071,10 +893,6 @@ def run_debitos_municipais_vinhedo(window_principal, codigo_20000, planilha_dado
             if cr == 'STOP':
                 try:
                     driver.close()
-                except:
-                    pass
-                try:
-                    os.rmdir(pasta_final)
                 except:
                     pass
                 return
@@ -1097,61 +915,52 @@ def run_debitos_municipais_vinhedo(window_principal, codigo_20000, planilha_dado
         
         return 'Certidão negativa salva'
     
-    colunas_usadas = ['CNPJ', 'InsMunicipal', 'Razao']
-    colunas_filtro = ['Cidade']
-    palavras_filtro = ['Vinhedo']
-    pasta_final, index, empresas = comum.configura_dados(window_principal, codigo_20000, planilha_dados, pasta_final_, andamentos,
-                                                         colunas_usadas=colunas_usadas, colunas_filtro=colunas_filtro, palavras_filtro=palavras_filtro)
-    if not empresas:
-        try:
-            os.rmdir(pasta_final)
-        except:
-            pass
-        return False
+    # filtrar e criar a nova planilha de dados
+    pasta_final, index, df_empresas, total_empresas = comum.configura_dados(window_principal, codigo_20000, situacao_dados, planilha_dados, pasta_final_, andamentos,
+                                                         colunas_usadas=['CNPJ', 'InsMunicipal', 'Razao', 'Cidade'], colunas_filtro=['Cidade'], palavras_filtro=['Vinhedo'])
+    if df_empresas.empty:
+        return False, pasta_final
     
-    tempos = [datetime.now()]
-    tempo_execucao = []
-    total_empresas = empresas[index:]
-    for count, empresa in enumerate(empresas[index:], start=1):
-        # printa o indice da empresa que está sendo executada
+    for count, [index_atual, empresa] in enumerate(df_empresas.iloc[index:].iterrows(), start=1):
+        # printa o índice da empresa que está sendo executada
         tempos, tempo_execucao = comum.indice(count, empresa, total_empresas, index, window_principal, tempos, tempo_execucao)
         
-        cnpj, insc_muni, nome = empresa
+        cnpj, insc_muni, nome, cidade = empresa
+        cnpj = str(cnpj)
+        cnpj = comum.concatena(cnpj, 14, 'antes', 0)
         insc_muni = insc_muni.replace('/', '').replace('.', '').replace('-', '')
         
         while True:
-            cr = open(controle_rotinas, 'r', encoding='utf-8').read()
-            if cr == 'STOP':
-                alert(f'❗ Rotina "{andamentos}" encerrada pelo usuário')
-                try:
-                    os.rmdir(pasta_final)
-                except:
-                    pass
-                return False
-            
             window_principal['-Mensagens_2-'].update('Entrando no perfil da empresa...')
             window_principal.refresh()
             
             situacao, situacao_print = pesquisar_vinhedo(window_principal, cnpj, insc_muni, pasta_final)
-            if situacao_print == 'erro_captcha':
-                return False
+            if situacao_print == 'encerrar':
+                break
+                
             if situacao_print != 'recomeçar':
                 print(situacao_print)
                 if situacao == 'Desculpe, mas ocorreram problemas de rede. Por favor, tente novamente mais tarde.':
                     alert(f'❗ Rotina "{andamentos}":\n\nDesculpe, mas ocorreram problemas de rede. Por favor, tente novamente mais tarde.')
-                    try:
-                        os.rmdir(pasta_final)
-                    except:
-                        pass
-                    return False
+                    return False, pasta_final
                 
-                comum.escreve_relatorio_csv(f'{cnpj};{insc_muni};{nome};{situacao}', nome=andamentos, local=pasta_final)
+                comum.escreve_relatorio_xlsx({'CNPJ': cnpj, 'INSCRIÇÃO MUNICIPAL': insc_muni, 'NOME': nome, 'RESULTADO': situacao},
+                                             nome=andamentos, local=pasta_final)
                 break
-    
-    return True
+            
+            window_principal['-Mensagens_2-'].update('Erro ao logar na empresa, tentando novamente...')
+            window_principal.refresh()
+            
+            
+        cr = open(controle_rotinas, 'r', encoding='utf-8').read()
+        if cr == 'STOP':
+            alert(f'❗ Rotina "{andamentos}" encerrada pelo usuário')
+            return False, pasta_final
+        
+    return True, pasta_final
 
 
-def run_debitos_estaduais(window_principal, codigo_20000, planilha_dados, pasta_final_, andamentos):
+def run_debitos_estaduais(window_principal, codigo_20000, situacao_dados, planilha_dados, pasta_final_, andamentos, tempos, tempo_execucao, continuar_rotina):
     situacoes_debitos_estaduais = {
         'C': '✔ Certidão sem pendencias',
         'S': '❗ Nao apresentou STDA',
@@ -1308,97 +1117,76 @@ def run_debitos_estaduais(window_principal, codigo_20000, planilha_dados, pasta_
         
         return situacao
     
-    colunas_usadas = ['CNPJ', 'Razao', 'Cidade', 'PostoFiscalUsuario', 'PostoFiscalSenha', 'PostoFiscalContador']
-    filtrar_celulas_em_branco = ['CNPJ', 'Razao', 'Cidade']
-    pasta_final, index, empresas = comum.configura_dados(window_principal, codigo_20000, planilha_dados, pasta_final_, andamentos,
-                                                         colunas_usadas=colunas_usadas, filtrar_celulas_em_branco=filtrar_celulas_em_branco)
-    if not empresas:
-        try:
-            os.rmdir(pasta_final)
-        except:
-            pass
-        return False
+    # filtrar e criar a nova planilha de dados
+    pasta_final, index, df_empresas, total_empresas = comum.configura_dados(window_principal, codigo_20000, situacao_dados, planilha_dados, pasta_final_, andamentos,
+                                                         colunas_usadas=['CNPJ', 'Razao', 'Cidade', 'PostoFiscalUsuario', 'PostoFiscalSenha', 'PostoFiscalContador'],
+                                                         filtrar_celulas_em_branco=['CNPJ', 'Razao', 'Cidade'])
     
     # inicia a variável que verifica se o usuário da execução anterior é igual ao atual
     usuario_anterior = 'padrão'
     s = False
     
+    if df_empresas.empty:
+        return False, pasta_final
+    
     tempos = [datetime.now()]
     tempo_execucao = []
-    total_empresas = empresas[index:]
-    for count, empresa in enumerate(empresas[index:], start=1):
-        # printa o indice da empresa que está sendo executada
+    for count, [index_atual, empresa] in enumerate(df_empresas.iloc[index:].iterrows(), start=1):
+        # printa o índice da empresa que está sendo executada
         tempos, tempo_execucao = comum.indice(count, empresa, total_empresas, index, window_principal, tempos, tempo_execucao)
         
         cnpj, nome, cidade, usuario, senha, perfil = empresa
         cnpj = comum.concatena(cnpj, 14, 'antes', 0)
+        cnpj = str(cnpj)
         print(cnpj)
         
         # verifica se o usuario anterior é o mesmo para não fazer login de novo com o mesmo usuário
         if usuario_anterior != usuario:
             # se o usuario anterior for diferente e existir uma sessão aberta, a sessão é fechada
-            if s:
-                s.close()
+            if s: s.close()
             
             # abre uma nova sessão
-            with Session() as s:
-                
-                erro = 'S'
-                contador = 0
-                # loga no site da secretaria da fazenda com web driver e salva os cookies do site e a id da sessão
-                while erro == 'S':
-                    cr = open(controle_rotinas, 'r', encoding='utf-8').read()
-                    if cr == 'STOP':
-                        alert(f'❗ Rotina "{andamentos}" encerrada pelo usuário')
-                        try:
-                            s.close()
-                        except:
-                            pass
-                        try:
-                            os.rmdir(pasta_final)
-                        except:
-                            pass
-                        return False
-                    if contador >= 3:
-                        cookies = 'erro'
-                        sid = 'Erro ao logar na empresa'
-                        break
-                    try:
-                        cookies, sid = comum.new_session_fazenda_driver(window_principal, usuario, senha, perfil)
-                        erro = 'N'
-                    except:
-                        print('❗ Erro ao logar na empresa, tentando novamente')
-                        erro = 'S'
-                        contador += 1
-                
+            s = Session()
+            
+            contador = 0
+            # loga no site da secretaria da fazenda com web driver e salva os cookies do site e a id da sessão
+            while True:
                 cr = open(controle_rotinas, 'r', encoding='utf-8').read()
                 if cr == 'STOP':
                     alert(f'❗ Rotina "{andamentos}" encerrada pelo usuário')
-                    try:
-                        s.close()
-                    except:
-                        pass
-                    try:
-                        os.rmdir(pasta_final)
-                    except:
-                        pass
-                    return False
+                    if s: s.close()
+                    return False, pasta_final
                 
-                time.sleep(1)
-                # se não salvar os cookies fecha a sessão e vai para o próximo dado
-                if cookies == 'erro' or not cookies:
-                    texto = f'{cnpj};{sid}'
-                    usuario_anterior = 'padrão'
-                    s.close()
-                    
-                    comum.escreve_relatorio_csv(f'{cnpj};{nome};{cidade};{texto}', nome=andamentos, local=pasta_final)
-                    
-                    # print(f'❗ {sid}\n', end='')
-                    continue
+                if contador >= 3:
+                    cookies = 'erro'
+                    sid = 'Erro ao logar na empresa'
+                    break
+                try:
+                    cookies, sid = comum.new_session_fazenda_driver(window_principal, usuario, senha, perfil)
+                    break
+                except:
+                    print('❗ Erro ao logar na empresa, tentando novamente')
+                    contador += 1
+            
+            cr = open(controle_rotinas, 'r', encoding='utf-8').read()
+            if cr == 'STOP':
+                alert(f'❗ Rotina "{andamentos}" encerrada pelo usuário')
+                if s: s.close()
+                return False, pasta_final
+            
+            time.sleep(1)
+            # se não salvar os cookies vai para o próximo dado
+            if cookies == 'erro' or not cookies:
+                texto = f'{cnpj};{sid}'
+                usuario_anterior = 'padrão'
                 
-                # adiciona os cookies do login da sessão por request no web driver
-                for cookie in cookies:
-                    s.cookies.set(cookie['name'], cookie['value'])
+                comum.escreve_relatorio_xlsx({'CNPJ': cnpj, 'NOME': nome, 'CIDADE': cidade, 'RESULTADO': texto},
+                                             nome=andamentos, local=pasta_final)
+                continue
+            
+            # adiciona os cookies do login da sessão por request no web driver
+            for cookie in cookies:
+                s.cookies.set(cookie['name'], cookie['value'])
         
         # se não retornar a id da sessão do web driver fecha a sessão por request
         if not sid:
@@ -1412,24 +1200,19 @@ def run_debitos_estaduais(window_principal, codigo_20000, planilha_dados, pasta_
             situacao = consulta_deb_estaduais(window_principal, pasta_final, cnpj, cidade, s, sid)
             # guarda o usuario da execução atual
             usuario_anterior = usuario
+            
             cr = open(controle_rotinas, 'r', encoding='utf-8').read()
             if cr == 'STOP':
                 alert(f'❗ Rotina "{andamentos}" encerrada pelo usuário')
-                try:
-                    s.close()
-                except:
-                    pass
-                try:
-                    os.rmdir(pasta_final)
-                except:
-                    pass
-                return False
+                if s: s.close()
+                return False, pasta_final
         
         # escreve na planilha de andamentos o resultado da execução atual
         texto = f'{cnpj};{str(situacao[2:])}'
         try:
             texto = texto.replace('❗ ', '').replace('❌ ', '').replace('✔ ', '')
-            comum.escreve_relatorio_csv(f'{cnpj};{nome};{cidade};{texto}', nome=andamentos, local=pasta_final)
+            comum.escreve_relatorio_xlsx({'CNPJ': cnpj, 'NOME': nome, 'CIDADE': cidade, 'RESULTADO': texto},
+                                        nome=andamentos, local=pasta_final)
         except:
             raise Exception(f"Erro ao escrever esse texto: {texto}")
         print(situacao)
@@ -1437,20 +1220,14 @@ def run_debitos_estaduais(window_principal, codigo_20000, planilha_dados, pasta_
         cr = open(controle_rotinas, 'r', encoding='utf-8').read()
         if cr == 'STOP':
             alert(f'❗ Rotina "{andamentos}" encerrada pelo usuário')
-            try:
-                s.close()
-            except:
-                pass
-            try:
-                os.rmdir(pasta_final)
-            except:
-                pass
-            return False
+            if s: s.close()
+            return False, pasta_final
     
-    return True
+    if s: s.close()
+    return True, pasta_final
 
 
-def run_debitos_divida_ativa(window_principal, codigo_20000, planilha_dados, pasta_final_, andamentos):
+def run_debitos_divida_ativa(window_principal, codigo_20000, situacao_dados, planilha_dados, pasta_final_, andamentos, tempos, tempo_execucao, continuar_rotina):
     def verifica_debitos(pagina):
         soup = BeautifulSoup(pagina.content, 'html.parser')
         # debito = soup.find('span', attrs={'id': 'consultaDebitoForm:dataTable:tb'})
@@ -1460,9 +1237,13 @@ def run_debitos_divida_ativa(window_principal, codigo_20000, planilha_dados, pas
             request_verification = re.compile(r'(consultaDebitoForm:dataTable:tb)').search(soup).group(1)
             return request_verification
         except:
-            re.compile(r'(Nenhum resultado com os critérios de consulta)').search(soup).group(1)
-            return False
-    
+            try:
+                re.compile(r'(Nenhum resultado com os critérios de consulta)').search(soup).group(1)
+                return False
+            except:
+                print(soup)
+                raise Exception('que merda em')
+                
     def limpa_registros(html):
         # pega todas as tags <tr>
         linhas = html.findAll('tr')
@@ -1550,16 +1331,14 @@ def run_debitos_divida_ativa(window_principal, codigo_20000, planilha_dados, pas
             # pisa.showLogging()
             xhtml2pdf.pisa.CreatePDF(str(html), pdf)
         print('✔ Arquivo salvo')
-        comum.escreve_relatorio_csv(f'{cnpj};{empresa};Empresa com debitos;{compl}', nome=andamentos, local=pasta_final)
+        comum.escreve_relatorio_xlsx({'CNPJ': cnpj, 'NOME': empresa, 'RESULTADO': f'Empresa com débitos', 'COMPLEMENTO': compl},
+                                    nome=andamentos, local=pasta_final)
         
         return True
     
     def inicia_sessao():
-        options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
-        options.add_argument('--window-size=1920,1080')
-        
-        status, driver = comum.initialize_chrome(options)
+        # configura navegador
+        status, driver = comum.configura_navegador(window_principal)
         
         url = 'https://www.dividaativa.pge.sp.gov.br/sc/pages/consultas/consultarDebito.jsf'
         driver.get(url)
@@ -1591,8 +1370,12 @@ def run_debitos_divida_ativa(window_principal, codigo_20000, planilha_dados, pas
         window_principal['-Mensagens_2-'].update('Entrando no perfil da empresa...')
         window_principal.refresh()
         
-        cnpj, empresa = empresa
-        print(cnpj)
+        cnpj, nome, cidade = empresa
+        cnpj = str(cnpj)
+        cnpj = comum.concatena(cnpj, 14, 'antes', 0)
+        cnpj_formatado = re.sub(r'^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$', r'\1.\2.\3/\4-\5', cnpj)
+        
+        print(cnpj_formatado)
         
         url = 'https://www.dividaativa.pge.sp.gov.br/sc/pages/consultas/consultarDebito.jsf'
         # str_cnpj = f"{cnpj[0:2]}.{cnpj[2:5]}.{cnpj[5:8]}/{cnpj[8:12]}-{cnpj[12:]}"
@@ -1603,12 +1386,13 @@ def run_debitos_divida_ativa(window_principal, codigo_20000, planilha_dados, pas
             viewstate = soup.find(id="javax.faces.ViewState").get('value')
         except Exception as e:
             print('❌ Não encontrou viewState')
-            comum.escreve_relatorio_csv(f'{cnpj};{empresa};{e}', nome=andamentos, local=pasta_final)
+            comum.escreve_relatorio_xlsx({'CNPJ': cnpj_formatado, 'NOME': nome, 'RESULTADO': e},
+                                         nome=andamentos, local=pasta_final)
             print(e)
             print(soup)
             s.close()
             return False
-        
+
         # gera o token para passar pelo captcha
         recaptcha_data = {'sitekey': '6Le9EjMUAAAAAPKi-JVCzXgY_ePjRV9FFVLmWKB_', 'url': url}
         token = comum.solve_recaptcha(recaptcha_data)
@@ -1617,11 +1401,10 @@ def run_debitos_divida_ativa(window_principal, codigo_20000, planilha_dados, pas
         
         cr = open(controle_rotinas, 'r', encoding='utf-8').read()
         if cr == 'STOP':
-            try:
-                s.close()
-            except:
-                pass
             return
+        
+        soup = soup.prettify()
+        j_id_1 = re.compile(r'consultaDebitoForm:decLblTipoConsulta:j_id(\d+)').search(soup).group(1)
         
         # Troca opção de pesquisa para CNPJ
         info = {
@@ -1634,7 +1417,7 @@ def run_debitos_divida_ativa(window_principal, codigo_20000, planilha_dados, pas
             'javax.faces.ViewState': viewstate,
             'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa': 'CNPJ',
             'ajaxSingle': 'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa',
-            'consultaDebitoForm:decLblTipoConsulta:j_id76': 'consultaDebitoForm:decLblTipoConsulta:j_id76'
+            f'consultaDebitoForm:decLblTipoConsulta:j_id{j_id_1}': f'consultaDebitoForm:decLblTipoConsulta:j_id{j_id_1}'
         }
 
         s.post(url, info)
@@ -1643,7 +1426,7 @@ def run_debitos_divida_ativa(window_principal, codigo_20000, planilha_dados, pas
         info = {
             'consultaDebitoForm': 'consultaDebitoForm',
             'consultaDebitoForm:decLblTipoConsulta:opcoesPesquisa': 'CNPJ',
-            'consultaDebitoForm:decTxtTipoConsulta:cnpj': cnpj,
+            'consultaDebitoForm:decTxtTipoConsulta:cnpj': cnpj_formatado,
             'consultaDebitoForm:decTxtTipoConsulta:tiposDebitosCnpj': 0,
             'g-recaptcha-response': token,
             nome_botao_consulta: 'Consultar',
@@ -1659,7 +1442,8 @@ def run_debitos_divida_ativa(window_principal, codigo_20000, planilha_dados, pas
         # se não tiver débitos, anota na planilha e retorna
         if not debitos:
             print('✔ Sem débitos')
-            comum.escreve_relatorio_csv(f'{cnpj};{empresa};Empresa sem debitos', nome=andamentos, local=pasta_final)
+            comum.escreve_relatorio_xlsx({'CNPJ': cnpj_formatado, 'NOME': nome, 'RESULTADO': 'Empresa sem debitos'},
+                                         nome=andamentos, local=pasta_final)
         # se tiver débitos pega quantos débitos tem para montar a PDF
         else:
             print('❗ Com débitos')
@@ -1708,25 +1492,17 @@ def run_debitos_divida_ativa(window_principal, codigo_20000, planilha_dados, pas
         
         return s
     
-    colunas_usadas = ['CNPJ', 'Razao']
-    colunas_filtro = False
-    palavras_filtro = False
-    pasta_final, index, empresas = comum.configura_dados(window_principal, codigo_20000, planilha_dados, pasta_final_, andamentos,
-                                                         colunas_usadas=colunas_usadas, colunas_filtro=colunas_filtro, palavras_filtro=palavras_filtro)
-    if not empresas:
-        try:
-            os.rmdir(pasta_final)
-        except:
-            pass
-        return False
-    
-    window_principal['-Mensagens-'].update('Iniciando ambiente da consulta, aguarde...')
-    window_principal.refresh()
+    # filtrar e criar a nova planilha de dados
+    pasta_final, index, df_empresas, total_empresas = comum.configura_dados(window_principal, codigo_20000, situacao_dados, planilha_dados, pasta_final_, andamentos,
+                                                         colunas_usadas=['CNPJ', 'Razao', 'Cidade'], colunas_filtro=False, palavras_filtro=False)
+    if df_empresas.empty:
+        return False, pasta_final
     
     # inicia uma sessão com webdriver para gerar cookies no site e garantir que as requisições funcionem depois
     driver, nome_botao_consulta = inicia_sessao()
     if nome_botao_consulta == 'erro_captcha':
-        return False
+        return False, pasta_final
+
     # armazena os cookies gerados pelo webdriver
     cookies = driver.get_cookies()
     driver.quit()
@@ -1737,11 +1513,8 @@ def run_debitos_divida_ativa(window_principal, codigo_20000, planilha_dados, pas
         for cookie in cookies:
             s.cookies.set(cookie['name'], cookie['value'])
         
-        tempos = [datetime.now()]
-        tempo_execucao = []
-        total_empresas = empresas[index:]
-        for count, empresa in enumerate(empresas[index:], start=1):
-            # printa o indice da empresa que está sendo executada
+        for count, [index_atual, empresa] in enumerate(df_empresas.iloc[index:].iterrows(), start=1):
+            # printa o índice da empresa que está sendo executada
             tempos, tempo_execucao = comum.indice(count, empresa, total_empresas, index, window_principal, tempos, tempo_execucao)
             
             # enquanto a consulta não conseguir ser realizada e tenta de novo
@@ -1753,7 +1526,7 @@ def run_debitos_divida_ativa(window_principal, codigo_20000, planilha_dados, pas
                 try:
                     s = consulta_debito(window_principal, s, nome_botao_consulta, empresa, andamentos, pasta_final)
                     if s == 'erro_captcha':
-                        return False
+                        return False, pasta_final
                     break
                 except requests.exceptions.ConnectionError:
                     pass
@@ -1761,26 +1534,588 @@ def run_debitos_divida_ativa(window_principal, codigo_20000, planilha_dados, pas
             cr = open(controle_rotinas, 'r', encoding='utf-8').read()
             if cr == 'STOP':
                 alert(f'❗ Rotina "{andamentos}" encerrada pelo usuário')
-                try:
-                    s.close()
-                except:
-                    pass
-                try:
-                    os.rmdir(pasta_final)
-                except:
-                    pass
+                return False, pasta_final
+    
+    return True, pasta_final
+
+
+def run_debitos_divida_ativa_uniao(window_principal, codigo_20000, situacao_dados, planilha_dados, pasta_final_, andamentos, tempos, tempo_execucao, continuar_rotina):
+    ultima_divida = 'Log/ultima_divida.txt'
+    
+    def click(driver, divida):
+        # função para clicar em elementos via ID
+        print('>>> Baixando arquivo')
+        contador_2 = 0
+        while True:
+            try:
+                driver.find_element(by=By.ID, value=divida).click()
+                break
+            except:
+                contador_2 += 1
+            
+            if contador_2 > 5:
                 return False
+        
+        return True
     
-    # fecha a sessão
-    try:
-        s.close()
-    except:
-        pass
+    def download_divida(driver, divida, descricao, tipo, processo, inscricao, andamentos, pasta_final_download, pasta_final_dividas):
+        # formata o texto da descrição da dívida e define as pastas de download do arquivo e a pasta final do PDF
+        descricao = descricao.replace('/', ' ')
+        
+        # cria as pastas de download e a pasta final do arquivo
+        os.makedirs(pasta_final_download, exist_ok=True)
+        
+        # limpa a pasta de download para não ter conflito com novos arquivos
+        for arquivo in os.listdir(pasta_final_download):
+            os.remove(os.path.join(pasta_final_download, arquivo))
+        
+        # tenta clicar em download até conseguir
+        while not click(driver, divida):
+            time.sleep(5)
+            cr = open(controle_rotinas, 'r', encoding='utf-8').read()
+            if cr == 'STOP':
+                return driver, 'Finalizado', False
+        
+        # se conseguir, mas não aparecer nada na pasta, continua tentando baixar até o limite de 6 tentativas
+        contador_3 = 0
+        contador_4 = 0
+        while os.listdir(pasta_final_download) == []:
+            if contador_3 > 10:
+                while not click(driver, divida):
+                    time.sleep(5)
+                contador_4 += 1
+                contador_3 = 0
+            if contador_4 > 5:
+                return driver, 'erro', True
+            time.sleep(2)
+            contador_3 += 1
+        
+        # verifica se os arquivos baixados estão com erro ou ainda não terminaram de baixar
+        for arquivo in os.listdir(pasta_final_download):
+            print(arquivo)
+            # caso exista algum arquivo com problema, tenta de novo o mesmo arquivo
+            while re.compile(r'.tmp').search(arquivo):
+                try:
+                    os.remove(os.path.join(pasta_final_download, arquivo))
+                    return driver, 'ok', True
+                except:
+                    pass
+                for arq in os.listdir(pasta_final_download):
+                    arquivo = arq
+            
+            while re.compile(r'crdownload').search(arquivo):
+                cr = open(controle_rotinas, 'r', encoding='utf-8').read()
+                if cr == 'STOP':
+                    return driver, 'Finalizado', False
+                
+                print('>>> Aguardando download...')
+                time.sleep(3)
+                for arq in os.listdir(pasta_final_download):
+                    arquivo = arq
+            
+            # se não tiver problema com o arquivo baixado, tenta converter
+            for arq in os.listdir(pasta_final_download):
+                resultado = converte_html_pdf(pasta_final_download, pasta_final_dividas, arq, descricao, tipo, processo, inscricao, andamentos)
+                if resultado == 'erro':
+                    return driver, 'erro', False
+                time.sleep(2)
+            
+            # limpa a pasta de download caso fique algum arquivo nela
+            for arquivo in os.listdir(pasta_final_download):
+                os.remove(os.path.join(pasta_final_download, arquivo))
+                
+        return driver, 'ok', False
     
-    return True
+    def converte_html_pdf(download_folder, pasta_final_dividas, arquivo, descricao, tipo, processo, inscricao, andamentos):
+        # Defina o caminho para o arquivo HTML e PDF
+        html_path = os.path.join(download_folder, arquivo)
+        
+        # Estrutura básica do HTML que queremos adicionar
+        estrutura_inicial = """<!DOCTYPE html>
+        <html lang="pt-BR">
+        <head>
+            <meta charset="UTF-8">
+        </head>
+        <body>
+        """
+        
+        while True:
+            try:
+                # Leitura do conteúdo do arquivo existente
+                with open(html_path, 'r', encoding='utf-8') as file:
+                    conteudo_existente = file.read()
+                break
+            except PermissionError:
+                pass
+        
+        # Adicionando a estrutura inicial ao conteúdo existente
+        novo_conteudo = estrutura_inicial + conteudo_existente + "\n</body>\n</html>"
+        while True:
+            try:
+                # Salvando o conteúdo modificado de volta ao arquivo
+                with open(html_path, 'w', encoding='utf-8') as file:
+                    file.write(novo_conteudo)
+                break
+            except PermissionError:
+                pass
+        
+        # define o novo nome do arquivo PDF
+        novo_arquivo, descricao, nome, cpf_cnpj = pega_info_arquivo(html_path, descricao)
+        if not novo_arquivo:
+            return 'erro'
+        
+        # coloca na pasta de ativas ou extintas
+        if re.compile('EXTINTA').search(descricao) or re.compile('NEGOCIAD').search(descricao) or re.compile('Parcelad').search(descricao):
+            pasta_final_dividas_ok = f'{pasta_final_dividas} EXTINTAS OU NEGOCIADAS'
+        else:
+            pasta_final_dividas_ok = f'{pasta_final_dividas} ATIVAS'
+        os.makedirs(pasta_final_dividas_ok, exist_ok=True)
+        
+        # Defina o caminho para o arquivo HTML e PDF
+        pdf_path = os.path.join(pasta_final_dividas_ok, novo_arquivo)
+        
+        # Localização do executável do wkhtmltopdf
+        wkhtmltopdf_path = r'wkhtmltopdf\bin\wkhtmltopdf.exe'
+        
+        # Configuração do pdfkit para utilizar o wkhtmltopdf
+        config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
+        
+        options = {
+            'page-size': 'Letter',
+            'margin-top': '0.75in',
+            'margin-right': '0.75in',
+            'margin-bottom': '0.75in',
+            'margin-left': '0.75in',
+            'encoding': "UTF-8",
+            'custom-header': [
+                ('Accept-Encoding', 'gzip')
+            ],
+            'cookie': [
+                ('cookie-empty-value', '""'),
+                ('cookie-name1', 'cookie-value1'),
+                ('cookie-name2', 'cookie-value2')
+            ],
+            'no-outline': None
+        }
+        
+        # tenta converter o PDF, se não conseguir anota na planilha o nome do arquivo em html que deu erro na conversão
+        # e coloca ele em uma pasta separada para arquivos em html
+        try:
+            pdfkit.from_file(html_path, pdf_path, configuration=config, options=options)
+        except:
+            comum.escreve_relatorio_xlsx({'CNPJ': cpf_cnpj, 'NOME': nome, 'TIPO':tipo, 'PROCESSO':processo, 'INSCRIÇÃO':inscricao, 'RESULTADO': f'Erro ao converter arquivo, arquivo HTML salvo: {novo_arquivo.replace(".pdf", ".html")}'},
+                                         nome=andamentos, local=pasta_final)
+            pasta_final_dividas_html = f'{pasta_final_dividas} Arquivos em HTML'
+            os.makedirs(pasta_final_dividas_html, exist_ok=True)
+            shutil.move(html_path, os.path.join(pasta_final_dividas_html, novo_arquivo.replace('.pdf', '.html')))
+            print(f'❗ Erro ao converter arquivo\n')
+            return False
+        
+        # anota o arquivo que acabou de baixar e converter
+        print(f'✔ {novo_arquivo}\n')
+        comum.escreve_relatorio_xlsx({'CNPJ': cpf_cnpj, 'NOME': nome, 'TIPO': tipo, 'PROCESSO': processo, 'INSCRIÇÃO': inscricao, 'RESULTADO': descricao},
+                                     nome=andamentos, local=pasta_final)
+        
+        return True
+    
+    def pega_info_arquivo(html_path, descricao):
+        # abrir o arquivo html
+        while True:
+            print('>>> Tentando abrir o novo arquivo html...')
+            try:
+                # Salvando o conteúdo modificado de volta ao arquivo
+                with open(html_path, 'r', encoding='utf-8') as file:
+                    html = file.read()
+                break
+            except PermissionError:
+                pass
+            
+        # extrair o texto do arquivo html usando BeautifulSoup
+        soup = BeautifulSoup(html, 'html.parser')
+        text = soup.get_text()
+        
+        # pega as infos da empresa e a inscrição do documento porque tem empresas com mais de um arquivo
+        if re.compile(r'Tempo de conexão esgotado').search(text):
+            return False, 'Erro ao acessar o arquivo no portal REGULARIZE', False, False
+        
+        try:
+            nome_inteiro = re.compile(r'RFB\n\n\n\nNome:\n(.+)').search(text).group(1)
+        except:
+            try:
+                nome_inteiro = re.compile(r'Devedor Principal:\n.+\n\n.+ {2}(.+)\n').search(text).group(1)
+            except:
+                try:
+                    nome_inteiro = re.compile(r'Devedor principal: (.+)/CNPJ:').search(text).group(1)
+                except:
+                    try:
+                        nome_inteiro = re.compile(r'Devedor Principal:\n(.+)\n').search(text).group(1)
+                    except:
+                        print(text)
+                        raise Exception('Errei fui muleke')
+        try:
+            cpf_cnpj = re.compile(r'CNPJ/CPF:\n.+\n\n.+ {2}(.+)\n').search(text).group(1)
+        except:
+            try:
+                cpf_cnpj = re.compile(r'CNPJ:.+(\d\d\.\d\d\d\.\d\d\d/\d\d\d\d-\d\d)').search(text).group(1)
+            except:
+                try:
+                    cpf_cnpj = re.compile(r'CNPJ:.+(\d\d\d\.\d\d\d\.\d\d\d-\d\d)').search(text).group(1)
+                except:
+                    try:
+                        cpf_cnpj = re.compile(r'CNPJ/CPF:\n(.+)\n').search(text).group(1)
+                    except:
+                        print(text)
+                        raise Exception('Errei fui muleke')
+        try:
+            inscricao = re.compile(r'Inscrição:\n.+\n\n.+ {2}(.+)\n').search(text).group(1)
+        except:
+            try:
+                inscricao = re.compile(r'Nº inscrição:\s+(\d.+\d).+tuação da inscrição').search(text).group(1)
+            except:
+                try:
+                    sem_inscricao = re.compile(r'Nº inscrição:\s+Situação da inscrição').search(text)
+                    if sem_inscricao:
+                        inscricao = 'Não foi possível recuperar as informações da inscrição'
+                    else:
+                        raise Exception
+                except:
+                    try:
+                        inscricao = re.compile(r'N\.º Inscrição:\n(.+)\n').search(text).group(1)
+                    except:
+                        print(text)
+                        raise Exception('Errei fui muleke')
+        
+        if descricao == 'SEM DESCRIÇÃO':
+            try:
+                descricao = re.compile(r'Situação da inscrição:\s\s(.+)\s\sInformações gerais').search(text).group(1)
+            except:
+                try:
+                    descricao = re.compile(r'Situação da inscrição: Benefício Fiscal - (.+)\s\sInformações gerais').search(text).group(1)
+                except:
+                    print(text)
+                    raise Exception('Errei fui muleke')
+        
+        # formata os textos
+        nome_inteiro = nome_inteiro.replace('&amp;', '&')
+        inscricao = inscricao.replace('.', '').replace('-', '').replace(' ', '')
+        nome = nome_inteiro[:20]
+        nome = nome.replace('/', '').replace("-", "")
+        cpf_cnpj = cpf_cnpj.replace('.', '').replace('/', '').replace('-', '')
+        
+        nome_pdf = f'{nome} - {cpf_cnpj} - {descricao}-{inscricao}.pdf'
+        nome_pdf = nome_pdf.replace('  ', ' ').replace('/', '-')
+        
+        return nome_pdf, descricao, nome_inteiro, cpf_cnpj
+    
+    def login_sieg(driver):
+        try:
+            driver.get('https://auth.sieg.com/')
+        
+            print('>>> Acessando o site')
+            time.sleep(1)
+            
+            dados = "V:\\Setor Robô\\Scripts Python\\_comum\\DadosVeri-SIEG.txt"
+            f = open(dados, 'r', encoding='latin-1')
+            user = f.read()
+            user = user.split('/')
+            
+            # inserir o email no campo
+            driver.find_element(by=By.ID, value='txtEmail').send_keys(user[0])
+            time.sleep(1)
+            
+            # inserir a senha no campo
+            driver.find_element(by=By.ID, value='txtPassword').send_keys(user[1])
+            time.sleep(1)
+            
+            # clica em acessar
+            driver.find_element(by=By.ID, value='btnSubmit').click()
+            time.sleep(1)
+        except:
+            return None
+        
+        return driver
+    
+    def sieg_iris(driver):
+        print('>>> Acessando IriS Dívida Ativa')
+        try:
+            driver.get('https://hub.sieg.com/IriS/#/DividaAtiva')
+        except:
+            return None
+        
+        return driver
+    
+    def consulta_lista(window_principal, driver, andamentos, pasta_final_download, pasta_final_dividas):
+        ud = open(ultima_divida, 'r', encoding='utf-8').read()
+        if ud != '':
+            try:
+                continuar_pagina = ud.split('|')[0]
+                contador_dividas = int(ud.split('|')[1])
+                cpf_cnpj_anterior = ud.split('|')[2]
+                processo_anterior = ud.split('|')[3]
+                inscricao_anterior = ud.split('|')[4]
+                print(f'Última dívida salva:\n'
+                      f'Página: {continuar_pagina}\n'
+                      f'CPF/CNPJ: {cpf_cnpj_anterior}\n'
+                      f'Número do processo: {processo_anterior}\n'
+                      f'Número da inscrição: {inscricao_anterior}\n\n')
+            
+            except:
+                continuar_pagina = ud
+                contador_dividas = 0
+                cpf_cnpj_anterior = 0
+                processo_anterior = 0
+                inscricao_anterior = 0
+        else:
+            continuar_pagina = 1
+            contador_dividas = 0
+            cpf_cnpj_anterior = 0
+            processo_anterior = 0
+            inscricao_anterior = 0
+        
+        print('>>> Consultando lista de arquivos\n')
+        window_principal['-Mensagens-'].update('Aguardando lista de dívidas')
+        window_principal.refresh()
+        
+        # espera a lista de arquivos carregar, se não carregar tenta pesquisar novamente
+        timer = 0
+        while not comum.find_by_path('/html/body/form/div[5]/div[3]/div/div/div[3]/div/table/tbody/tr[1]/td/div/span', driver):
+            cr = open(controle_rotinas, 'r', encoding='utf-8').read()
+            if cr == 'STOP':
+                return driver
+            time.sleep(1)
+            timer += 1
+            if timer >= 60:
+                driver.close()
+                return False
+        
+        window_principal['-Mensagens_2-'].update('')
+        window_principal.refresh()
+        time.sleep(2)
+        if comum.find_by_id('modalYouTube', driver):
+            # Encontre um elemento que esteja fora do modal e clique nele
+            elemento_fora_modal = driver.find_element(by=By.ID, value='txtDataSearch')
+            ActionChains(driver).move_to_element(elemento_fora_modal).click().perform()
+        
+        time.sleep(1)
+        paginas = re.compile(r'>(\d+)</a></span><a class=\"paginate_button btn btn-default next').search(driver.page_source).group(1)
+        
+        contador = 1
+        index = 0
+        total = 0
+        tempos = [datetime.now()]
+        tempo_execucao = []
+        for pagina in range(int(paginas) + 1):
+            cr = open(controle_rotinas, 'r', encoding='utf-8').read()
+            if cr == 'STOP':
+                return driver
+            
+            if pagina == 0:
+                continue
+            
+            if pagina < int(continuar_pagina):
+                window_principal['-Mensagens_2-'].update(f'Buscando última dívida salva, aguarde...')
+                window_principal.refresh()
+                driver.find_element(by=By.ID, value='tableActiveDebit_next').click()
+                # espera a lista de arquivos carregar
+                while re.compile(r'id=\"tableActiveDebit_processing\" class=\"\" style=\"display: block;').search(driver.page_source):
+                    time.sleep(1)
+                time.sleep(3)
+                continue
+            
+            # espera a lista de arquivos carregar
+            while not comum.find_by_path('/html/body/form/div[5]/div[3]/div/div/div[3]/div/table/tbody/tr[1]/td/div/span', driver):
+                cr = open(controle_rotinas, 'r', encoding='utf-8').read()
+                if cr == 'STOP':
+                    return driver
+                
+                time.sleep(1)
+            
+            time.sleep(1)
+            print(f'>>> Página: {pagina}\n')
+            with open(ultima_divida, 'w', encoding='utf-8') as f:
+                f.write(str(pagina))
+            
+            info_pagina = driver.page_source
+            
+            detalhes = re.compile(r'btn-details float-right\" (data-id=\".+\") onclick=\"SeeDetails').findall(driver.page_source)
+            print('Abrindo listas das empresas...')
+            for detalhe in detalhes:
+                pixels = 1
+                while True:
+                    try:
+                        print(f'ID da lista: {detalhe}')
+                        driver.find_element(by=By.XPATH, value=f'//a[@{detalhe}]').click()
+                        time.sleep(0.1)
+                        break
+                    except:
+                        driver.execute_script(f"window.scrollTo(0, {pixels})")
+                        pixels += 1
+                        pass
+            
+            time.sleep(1)
+            # pega a lista de guias da competência desejada
+            lista_divida = re.compile(r'excel\"><a id=\"(.+)\" class=\"btn iris-btn iris-btn-orange iris-btn-sm margin-left\"').findall(driver.page_source)
+            
+            nome = False
+            # faz o download dos comprovantes
+            for divida in lista_divida:
+                cr = open(controle_rotinas, 'r', encoding='utf-8').read()
+                if cr == 'STOP':
+                    return driver
+                
+                for i in range(100):
+                    id_empresa = re.compile(
+                        r'<span class=\"title-datatable\">(.+)\((\d+)\)<span(.+\n){' + str(i) + '}.+col-md-2 td-background-dt\">(.+)</td><td class=\" td-background-dt\">(.+)</td><td class=\" td-background-dt hidden-sm hidden-xs\">(\d.+)</td><td class=\" td-background-dt hidden-sm hidden-xs\">.+excel\"><a id=\"' + divida).search(
+                        driver.page_source)
+                    if not id_empresa:
+                        continue
+                    nome = id_empresa.group(1).replace('&amp;', '&')
+                    cpf_cnpj = id_empresa.group(2)
+                    tipo = id_empresa.group(4)
+                    processo = id_empresa.group(5)
+                    inscricao = id_empresa.group(6)
+                    break
+                
+                if not nome:
+                    print(driver.page_source)
+                    print(divida)
+                    raise Exception('Rapadura é doce mas não é mole não')
+                
+                # verifica qual foi a última empresa consultada da lista
+                if cpf_cnpj_anterior != 0:
+                    # se achar a última dívida salva da execução anterior, pule mais um se não irá baixar a mesma dívida novamente
+                    if not cpf_cnpj == cpf_cnpj_anterior and not processo == processo_anterior and not inscricao == inscricao_anterior:
+                        window_principal['-Mensagens_2-'].update('Buscando última dívida salva, aguarde...')
+                        window_principal.refresh()
+                        continue
+                    cpf_cnpj_anterior = 0
+                    continue
+                
+                window_principal['-Mensagens_2-'].update('')
+                window_principal.refresh()
+                indices_dividas = re.compile(r'Mostrando (.+) até (.+) de (.+) </div>').search(driver.page_source)
+                total_de_dividas  = int(indices_dividas.group(3).replace(',', '').replace('.', ''))
+                if contador == 1:
+                    index = contador_dividas
+                    total = total_de_dividas-contador_dividas
+                    
+                # print(contador, 'fora do índice')
+                tempos, tempo_execucao = comum.indice(contador, divida, total, index, window_principal, tempos, tempo_execucao)
+                
+                print('>>> Tentando baixar o arquivo')
+                download = True
+                while download:
+                    cr = open(controle_rotinas, 'r', encoding='utf-8').read()
+                    if cr == 'STOP':
+                        return driver
+                    
+                    empresa = re.compile(r'col-md-3 td-background-dt hidden-xs\">(.+)</td><td class=\" td-background-dt hidden-xs\">.+excel\"><a id=\"' + divida + r'\" class=\"btn iris-btn iris-btn-orange iris-btn-sm margin-left\"')
+                    try:
+                        descricao = empresa.search(driver.page_source).group(1)
+                    except:
+                        descricao = 'SEM DESCRIÇÃO'
+                    
+                    driver, erro, download = download_divida(driver, divida, descricao, tipo, processo, inscricao, andamentos, pasta_final_download, pasta_final_dividas)
+                    if erro == 'Finalizado':
+                        return driver
+                    # print(contador, 'depois do download')
+                    if erro == 'erro':
+                        try:
+                            comum.escreve_relatorio_xlsx({'CNPJ': cpf_cnpj, 'NOME': nome, 'TIPO': tipo, 'PROCESSO': processo, 'INSCRIÇÃO': inscricao, 'RESULTADO': 'Erro ao baixar o arquivo'},
+                                                         nome=andamentos, local=pasta_final)
+                            print('>>> Erro ao baixar o arquivo\n')
+                        except:
+                            print(driver.page_source)
+                            raise Exception(f'Então tá bom {divida}')
+                        break
+                
+                contador += 1
+                contador_dividas += 1
+                with open(ultima_divida, 'w', encoding='utf-8') as f:
+                    f.write(f'{pagina}|{contador_dividas}|{cpf_cnpj}|{processo}|{inscricao}')
+                    
+                
+                
+            if pagina == 25:
+                return driver
+            
+            # próxima página
+            try:
+                driver.find_element(by=By.ID, value='tableActiveDebit_next').click()
+            except:
+                return driver
+            
+            # espera a lista de arquivos carregar
+            while re.compile(r'id=\"tableActiveDebit_processing\" class=\"\" style=\"display: block;').search(driver.page_source):
+                cr = open(controle_rotinas, 'r', encoding='utf-8').read()
+                if cr == 'STOP':
+                    return driver
+                
+                time.sleep(1)
+            time.sleep(3)
+            
+            while info_pagina == driver.page_source:
+                cr = open(controle_rotinas, 'r', encoding='utf-8').read()
+                if cr == 'STOP':
+                    return driver
+                
+                print(f'>>> Aguardando Página {pagina}\n')
+                time.sleep(2)
+            
+            time.sleep(1)
+        
+        return driver
+        
+    # filtrar e criar a nova planilha de dados
+    pasta_final, index, df_empresas, total_empresas = comum.configura_dados(window_principal, codigo_20000, situacao_dados, planilha_dados, pasta_final_, andamentos,
+                                                         colunas_usadas=False, colunas_filtro=False, palavras_filtro=False)
+    if continuar_rotina == '-reiniciar_rotina-':
+        with open(ultima_divida, 'w', encoding='utf-8') as f:
+            f.write('1')
+    
+    # captura o caminho absoluto do arquivo atual para criar uma pasta onde será feito o download dos arquivos para depois movê-los para a pasta definitiva
+    if getattr(sys, 'frozen', False):
+        # Se estiver em um executável criado por PyInstaller
+        current_file_path = sys.executable
+    else:
+        # Se estiver em um script Python normal
+        current_file_path = os.path.abspath(__file__)
+    current_file_path_list = current_file_path.split('\\')[:-1]
+    new_current_file_path = ''
+    for caminho in current_file_path_list:
+        new_current_file_path = new_current_file_path + caminho + '\\'
+    pasta_final_download = new_current_file_path + 'Downloads'
+    
+    pasta_final_dividas = os.path.join(pasta_final, 'Dividas')
+    # iniciar o driver do chome
+    while True:
+        cr = open(controle_rotinas, 'r', encoding='utf-8').read()
+        if cr == 'STOP':
+            break
+            
+        status, driver = comum.configura_navegador(window_principal, pasta=pasta_final_download, timeout=60)
+        driver = login_sieg(driver)
+        if driver:
+            driver = sieg_iris(driver)
+            if driver:
+                driver = consulta_lista(window_principal, driver, andamentos, pasta_final_download, pasta_final_dividas)
+                if driver:
+                    driver.close()
+                    break
+
+        window_principal['-Mensagens_2-'].update('SIEG IRIS demorou muito pra responder, tentando novamente')
+        window_principal.refresh()
+        print('SIEG IRIS demorou muito pra responder, tentando novamente')
+    
+    cr = open(controle_rotinas, 'r', encoding='utf-8').read()
+    if cr == 'STOP':
+        alert(f'❗ Rotina "{andamentos}" encerrada pelo usuário')
+        return False, pasta_final
+    
+    return True, pasta_final
 
 
-def run_pendencias_sigiss(window_principal, codigo_20000, planilha_dados, pasta_final_, andamentos):
+def run_pendencias_sigiss(window_principal, codigo_20000, situacao_dados, planilha_dados, pasta_final_, andamentos, tempos, tempo_execucao, continuar_rotina):
     def login_sigiss(cnpj, senha):
         with Session() as s:
             # entra no site
@@ -1853,26 +2188,19 @@ def run_pendencias_sigiss(window_principal, codigo_20000, planilha_dados, pasta_
         
         return True, documento, s
     
-    colunas_usadas = ['CNPJ', 'Senha Prefeitura', 'Razao']
-    colunas_filtro = ['Cidade']
-    palavras_filtro = ['Valinhos']
-    pasta_final, index, empresas = comum.configura_dados(window_principal, codigo_20000, planilha_dados, pasta_final_, andamentos,
-                                                         colunas_usadas=colunas_usadas, colunas_filtro=colunas_filtro, palavras_filtro=palavras_filtro)
-    if not empresas:
-        try:
-            os.rmdir(pasta_final)
-        except:
-            pass
-        return False
+    # filtrar e criar a nova planilha de dados
+    pasta_final, index, df_empresas, total_empresas = comum.configura_dados(window_principal, codigo_20000, situacao_dados, planilha_dados, pasta_final_, andamentos,
+                                                         colunas_usadas=['CNPJ', 'Razao', 'Cidade', 'Senha Prefeitura'], colunas_filtro=['Cidade'], palavras_filtro=['Valinhos'])
+    if df_empresas.empty:
+        return False, pasta_final
     
-    tempos = [datetime.now()]
-    tempo_execucao = []
-    total_empresas = empresas[index:]
-    for count, empresa in enumerate(empresas[index:], start=1):
-        # printa o indice da empresa que está sendo executada
+    for count, [index_atual, empresa] in enumerate(df_empresas.iloc[index:].iterrows(), start=1):
+        # printa o índice da empresa que está sendo executada
         tempos, tempo_execucao = comum.indice(count, empresa, total_empresas, index, window_principal, tempos, tempo_execucao)
         
-        cnpj, senha, nome = empresa
+        cnpj, nome, cidade, senha = empresa
+        cnpj = str(cnpj)
+        cnpj = comum.concatena(cnpj, 14, 'antes', 0)
         print(cnpj)
         
         nome = nome.replace('/', ' ')
@@ -1884,33 +2212,44 @@ def run_pendencias_sigiss(window_principal, codigo_20000, planilha_dados, pasta_
             execucao, documento, s = consulta(s, cnpj, nome, pasta_final)
         
         # escreve os resultados da consulta
-        comum.escreve_relatorio_csv(f'{cnpj};{senha};{nome};{documento}', nome=andamentos, local=pasta_final)
+        comum.escreve_relatorio_xlsx({'CNPJ': cnpj, 'SENHA': senha, 'NOME':nome, 'RESULTADO':documento}, nome=andamentos, local=pasta_final)
         s.close()
         
         cr = open(controle_rotinas, 'r', encoding='utf-8').read()
         if cr == 'STOP':
             alert(f'❗ Rotina "{andamentos}" encerrada pelo usuário')
-            try:
-                s.close()
-            except:
-                pass
-            try:
-                os.rmdir(pasta_final)
-            except:
-                pass
-            return False
+            return False, pasta_final
     
-    return True
+    return True, pasta_final
 
 
-def executa_rotina(window_principal, codigo_20000, planilha_dados, pasta_final, rotina):
+def executa_rotina(window_principal, codigo_20000, situacao_dados, planilha_dados, pasta_final, rotina, continuar_rotina):
     rotinas = {'Consulta Certidão Negativa de Débitos Tributários Não Inscritos': run_cndtni,
                'Consulta Débitos Municipais Jundiaí': run_debitos_municipais_jundiai,
                'Consulta Débitos Municipais Valinhos': run_debitos_municipais_valinhos,
                'Consulta Débitos Municipais Vinhedo': run_debitos_municipais_vinhedo,
                'Consulta Débitos Estaduais - Situação do Contribuinte': run_debitos_estaduais,
-               'Consulta Divida Ativa': run_debitos_divida_ativa,
+               'Consulta Dívida Ativa da União': run_debitos_divida_ativa_uniao,
+               'Consulta Dívida Ativa Procuradoria Geral do Estado de São Paulo': run_debitos_divida_ativa,
                'Consulta Pendências SIGISSWEB Valinhos': run_pendencias_sigiss}
     
-    if rotinas[str(rotina)](window_principal, codigo_20000, planilha_dados, pasta_final, rotina):
+    tempos = [datetime.now()]
+    tempo_execucao = []
+    # try:
+    resultado, pasta_final_oficial = rotinas[str(rotina)](window_principal, codigo_20000, situacao_dados, planilha_dados, pasta_final, rotina, tempos, tempo_execucao, continuar_rotina)
+    """except ValueError:
+        alert(f'❌ A planilha de dados selecionada "{planilha_dados}" não contem as colunas necessárias para a consulta')
+        return"""
+        
+    if resultado:
+        window_principal['-Mensagens-'].update('')
+        window_principal['-Mensagens_2-'].update('')
+        window_principal['-progressbar-'].update_bar(100, max=100)
+        window_principal['-Progresso_texto-'].update('100 %')
         alert(f'✔ Rotina "{rotina}" finalizada')
+    else:
+        try:
+            os.remove(os.path.join(pasta_final_oficial, 'Dados.xlsx'))
+            os.rmdir(pasta_final_oficial)
+        except:
+            pass

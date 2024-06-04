@@ -166,8 +166,8 @@ def procura_empresa(execucao, tipo, competencia, empresa, driver, options):
             while download:
                 driver, contador, erro, download = download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
             if erro == 'erro':
-                sem_recibo = 'Existe um comprovante com o botão de download desabilitado'
-                print(f'❌ Existe um comprovante com o botão de download desabilitado')
+                sem_recibo = 'Existe um comprovante com o botão de download desabilitado ou com erro ao baixar'
+                print(f'❌ Existe um comprovante com o botão de download desabilitado ou com erro ao baixar')
             time.sleep(1)
         
         # tenta ir para a próxima página, se não conseguir sai do while e anota os resultados na planilha
@@ -195,14 +195,18 @@ def download_comprovante(tipo, contador, driver, competencia, cnpj, comprovante)
     final_folder = "V:\\Setor Robô\\Scripts Python\\SIEG\\Download comprovantes de pagamento\\execução\\Comprovantes"
     
     contador_3 = 0
+    contador_4 = 0
     while os.listdir(download_folder) == []:
         if _find_img('varios_arquivos.png', conf=0.9):
             _click_img('confirmar_varios_arquivos.png', conf=0.9)
         if contador_3 > 10:
             if not click(driver, comprovante):
                 return driver, contador, 'erro', False
+            contador_4 += 1
             contador_3 = 0
         time.sleep(1)
+        if contador_4 > 5:
+            return driver, contador, 'erro', False
         contador_3 += 1
     
     # caso exista algum arquivo com problema, tenta de novo o mesmo arquivo

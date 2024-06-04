@@ -161,9 +161,12 @@ def consulta_notas(andamentos, periodo, download_folder, driver, cod_dominio, cn
     _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{contador} notas encontradas;{comp_nota_anterior};{valor_total_mes}', nome=andamentos)
     
     # para cada nota armazenada na variável, insere na planilha de notas
-    for nota in dados:
+    pula_linha_txt = ''
+    for count, nota in enumerate(dados):
+        if count > 0:
+            pula_linha_txt = '\n'
         # cria um txt com os dados das notas em uma pasta nomeada com o código no domínio e o cnpj do prestador
-        cria_txt(cod_dominio, cnpj, nota)
+        cria_txt(cod_dominio, cnpj, nota, pula_linha_txt)
     
     return driver, 'ok'
 
@@ -223,7 +226,7 @@ def coleta_dados_da_nota_no_site(driver):
                 uf = endereco_tomador[2].split('/')[1]
                 cidade = endereco_tomador[2].split('/')[0]
                 endereco = endereco_tomador[0]
-                endereco = re.sub(r'  +', '', endereco).replace('\n', ' ').replace(' , ', ', ')
+                endereco = re.sub(r'  +', '', endereco).replace('\n', ' ').replace('\r', ' ').replace(' , ', ', ')
             except:
                 pass
     
@@ -337,7 +340,7 @@ def coleta_dados_e_renomeia_arquivo(download_folder, link_pdf, nome, nf_cancelad
     return dados_pdf.replace('.', ''), valor_servico
 
 
-def cria_txt(codigo, cnpj, dados_nota, tipo='NFSe-MEI', encode='latin-1'):
+def cria_txt(codigo, cnpj, dados_nota, pula_linha_txt, tipo='NFSe-MEI', encode='latin-1'):
     # cria um txt com os dados das notas em uma pasta nomeada com o código no domínio e o cnpj do prestador
     local = os.path.join('Execução', 'Arquivos para Importação', str(codigo) + '-' + str(cnpj))
     os.makedirs(local, exist_ok=True)
@@ -346,8 +349,42 @@ def cria_txt(codigo, cnpj, dados_nota, tipo='NFSe-MEI', encode='latin-1'):
         f = open(os.path.join(local, f"{tipo} - {cnpj}.txt"), 'a', encoding=encode)
     except:
         f = open(os.path.join(local, f"{tipo}  - {cnpj} - auxiliar.txt"), 'a', encoding=encode)
+    """ ESTRUTURA DOS DADOS DA NOTA """
+    """dados_site = (f'{cpf_cnpj_tomador};' # 0
+                    f'{nome_tomador};'      # 1
+                    f'{uf};'                # 2
+                    f'{cidade};'            # 3
+                    f'{endereco};'          # 4
+                    f'{numero_nota};'       # 5
+                    f'{serie_nota};'        # 6
+                    f'{data_emissao}')"""   # 7
+    """ situacao """                        # 8
+    """dados_pdf = (f'{acumulador};'        # 9
+                 f'{cfps};'                 # 10
+                 f'{valor_servico};'        # 11
+                 f'{valor_descontos};'      # 12
+                 f'{valor_deducoes};'       # 13
+                 f'{valor_contabil};'       # 14
+                 f'{base_calculo};'         # 15
+                 f'{aliquota_iss};'         # 16
+                 f'{valor_iss};'            # 17
+                 f'{valor_iss_retido};'     # 18
+                 f'{valor_irrf};'           # 19
+                 f'{valor_pis};'            # 20
+                 f'{valor_cofins};'         # 21
+                 f'{valor_csll};'           # 22
+                 f'{valor_crf};'            # 23
+                 f'{valor_inss};'           # 24
+                 f'{codigo_item};'          # 25
+                 f'{quantidade};'           # 26
+                 f'{valor_unitario}')"""    # 27
     
-    f.write(str(dados_nota) + '\n')
+    dnl = dados_nota.split(';')
+    
+    dados_nota_layout = (f'{dnl[0]};{dnl[1]};{dnl[2]};{dnl[3]};{dnl[4]};{dnl[5]};{dnl[6]};{dnl[7]};{dnl[8]};{dnl[9]};{dnl[10]};{dnl[11]};{dnl[12]};{dnl[13]};{dnl[14]};{dnl[15]};'
+                         f'{dnl[16]};{dnl[17]};{dnl[18]};{dnl[19]};{dnl[20]};{dnl[21]};{dnl[22]};{dnl[23]};{dnl[24]};{dnl[25]};{dnl[26]};{dnl[27]}')
+    
+    f.write(pula_linha_txt + str(dados_nota_layout))
     f.close()
     
 

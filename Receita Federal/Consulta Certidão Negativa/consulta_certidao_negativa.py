@@ -21,7 +21,10 @@ def verificacoes(consulta_tipo, andamento, codigo, identificacao, cnpj, nome):
     for alerta in alertas:
         if _find_img(alerta[0], conf=0.9):
             if alerta[2] != 'erro':
-                _escreve_relatorio_csv(f'{codigo};{identificacao};{cnpj};{nome};{alerta[1]}', nome=andamento)
+                if codigo:
+                    _escreve_relatorio_csv(f'{codigo};{identificacao};{cnpj};{nome};{alerta[1]}', nome=andamento)
+                else:
+                    _escreve_relatorio_csv(f'{identificacao};{nome};{alerta[1]}', nome=andamento)
             print(f'❌ {alerta[1]}')
             return alerta[2]
 
@@ -43,11 +46,11 @@ def salvar(consulta_tipo, pasta, andamento, codigo, identificacao, cnpj, nome, p
             p.hotkey('ctrl', 'w')
             return False
 
-        if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9) or _find_img('site_morreu_4.png', conf=0.9):
+        if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9) or _find_img('site_morreu_4.png', conf=0.9) or _find_img('site_morreu_5.png', conf=0.9):
             print('>>> Site morreu, tentando novamente')
             p.hotkey('ctrl', 'w')
             time.sleep(1)
-            consulta(consulta_tipo, codigo, identificacao, cnpj, nome)
+            consulta(consulta_tipo, identificacao)
 
         if situacao == 'erro':
             return situacao
@@ -57,19 +60,26 @@ def salvar(consulta_tipo, pasta, andamento, codigo, identificacao, cnpj, nome, p
 
         if _find_img('identificacao_nao_informada.png', conf=0.95):
             _click_img('identificacao_nao_informada_ok.png', conf=0.95)
+            time.sleep(1)
+            p.write(identificacao)
+            time.sleep(1)
 
-        if _find_img('em_processamento.png', conf=0.9) or _find_img('erro_captcha.png', conf=0.9):
+        if _find_img('em_processamento.png', conf=0.9) or _find_img('em_processamento_2.png', conf=0.9) or _find_img('erro_captcha.png', conf=0.9):
             print('>>> Tentando novamente')
             p.hotkey('ctrl', 'w')
             time.sleep(1)
-            consulta(consulta_tipo, codigo, identificacao, cnpj, nome)
+            consulta(consulta_tipo, identificacao)
             if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9) or _find_img('site_morreu_4.png', conf=0.9):
                 print('>>> Site morreu, tentando novamente')
                 p.hotkey('ctrl', 'w')
                 time.sleep(1)
-                consulta(consulta_tipo, codigo, identificacao, cnpj, nome)
+                consulta(consulta_tipo, identificacao)
             if contador >= 5:
-                _escreve_relatorio_csv('{};{};{};{};Consulta em processamento, volte daqui alguns minutos.'.format(codigo, identificacao, cnpj, nome), nome=andamento)
+                if codigo:
+                    _escreve_relatorio_csv('{};{};{};{};Consulta em processamento, volte daqui alguns minutos.'.format(codigo, identificacao, cnpj, nome), nome=andamento)
+                else:
+                    _escreve_relatorio_csv('{};{};Consulta em processamento, volte daqui alguns minutos.'.format(identificacao, nome), nome=andamento)
+
                 print(f'❗ Consulta em processamento, volte daqui alguns minutos.')
                 p.hotkey('ctrl', 'w')
                 return False
@@ -77,9 +87,11 @@ def salvar(consulta_tipo, pasta, andamento, codigo, identificacao, cnpj, nome, p
 
         if _find_img('nova_consulta.png', conf=0.9):
             _click_img('nova_consulta.png', conf=0.9)
-        
-        if _find_img('cpf_nao_inserido.png', conf=0.9):
-            _click_img('cpf_nao_inserido_ok.png', conf=0.9)
+
+        if _find_img('identificacao_nao_informada.png', conf=0.95):
+            _click_img('identificacao_nao_informada_ok.png', conf=0.95)
+            time.sleep(1)
+            p.write(identificacao)
             time.sleep(1)
             
         if _find_img(consulta_tipo + '_vazio.png', conf=0.99):
@@ -105,11 +117,11 @@ def salvar(consulta_tipo, pasta, andamento, codigo, identificacao, cnpj, nome, p
         time.sleep(1)
         timer += 1
 
-        if timer > 60:
+        if timer > 30:
             print('>>> Site morreu, tentando novamente')
             p.hotkey('ctrl', 'w')
             time.sleep(1)
-            consulta(consulta_tipo, codigo, identificacao, cnpj, nome)
+            consulta(consulta_tipo, identificacao)
             timer = 0
 
     time.sleep(1)
@@ -124,7 +136,6 @@ def salvar(consulta_tipo, pasta, andamento, codigo, identificacao, cnpj, nome, p
             print('Erro no clipboard...')
             
     time.sleep(0.5)
-
     # Selecionar local
     p.press('tab', presses=6)
     time.sleep(1)
@@ -154,7 +165,7 @@ def salvar(consulta_tipo, pasta, andamento, codigo, identificacao, cnpj, nome, p
     return True
 
 
-def consulta(consulta_tipo, codigo, identificacao, cnpj, nome):
+def consulta(consulta_tipo, identificacao):
     if consulta_tipo == 'CNPJ':
         link = 'https://solucoes.receita.fazenda.gov.br/Servicos/certidaointernet/PJ/Emitir'
     else:
@@ -165,11 +176,16 @@ def consulta(consulta_tipo, codigo, identificacao, cnpj, nome):
     
     # espera o site abrir e recarrega caso demore
     while not _find_img(f'informe_{consulta_tipo}.png', conf=0.9):
+        p.click(900, 750)
+        p.click(934, 750)
         if _find_img('nova_certidao.png', conf=0.9):
             _click_img('nova_certidao.png', conf=0.9)
 
         if _find_img('nova_consulta.png', conf=0.9):
             _click_img('nova_consulta.png', conf=0.9)
+
+        if _find_img('site_bugou.png', conf=0.9):
+            p.press('f5')
 
         for i in range(60):
             if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9) or _find_img('site_morreu_4.png', conf=0.9):
@@ -194,7 +210,10 @@ def consulta(consulta_tipo, codigo, identificacao, cnpj, nome):
 
 def analisa_nome_certidao(pasta_download, nome_certidao):
     arq = os.path.join(pasta_download, nome_certidao)
-    doc = fitz.open(arq, filetype="pdf")
+    try:
+        doc = fitz.open(arq, filetype="pdf")
+    except:
+        return 'erro'
     
     texto_arquivo = ''
     for page in doc:
@@ -228,14 +247,24 @@ def run(window):
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
         tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, window, tempos, tempo_execucao)
-
-        codigo, identificacao, cnpj, nome = empresa
+        
+        try:
+            codigo, identificacao, cnpj, nome = empresa
+        except:
+            identificacao, nome = empresa
+            codigo = False
+            cnpj = False
+            
         nome = nome.replace('/', '')
         
-        nome_certidao = f'Certidão Negativa - {codigo} - {identificacao}.pdf'
+        if codigo:
+            nome_certidao = f'Certidão Negativa - {codigo} - {identificacao}.pdf'
+        else:
+            nome_certidao = f'Certidão Negativa - {identificacao}.pdf'
+            
         # try:
         while True:
-            consulta(consulta_tipo, codigo, identificacao, cnpj, nome)
+            consulta(consulta_tipo, identificacao)
             situacao = salvar(consulta_tipo, pasta, andamento, codigo, identificacao, cnpj, nome, pasta_download, nome_certidao)
             p.hotkey('ctrl', 'w')
 
@@ -247,11 +276,17 @@ def run(window):
 
             else:
                 resultado = analisa_nome_certidao(pasta_download, nome_certidao)
-                print('✔ Certidão gerada')
-                _escreve_relatorio_csv('{};{};{};{};{} gerada {}'.format(codigo, identificacao, cnpj, nome, andamento, resultado), nome=andamento)
-                time.sleep(1)
-                break
-
+                if resultado == 'erro':
+                    p.hotkey('ctrl', 'w')
+                else:
+                    print('✔ Certidão gerada')
+                    if codigo:
+                        _escreve_relatorio_csv('{};{};{};{};{} gerada {}'.format(codigo, identificacao, cnpj, nome, andamento, resultado), nome=andamento)
+                    else:
+                        _escreve_relatorio_csv('{};{};{} gerada {}'.format(identificacao, nome, andamento, resultado), nome=andamento)
+                    time.sleep(1)
+                    break
+                
         """except:
             time.sleep(2)
             p.hotkey('ctrl', 'w')"""

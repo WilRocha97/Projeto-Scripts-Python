@@ -26,9 +26,7 @@ def run(window):
         
         # Loop infinito para verificar o horário atual
         while not condicao_executada:
-            p.moveTo(600,750)
             p.click(600,750)
-            p.moveTo(800, 750)
             p.click(800, 750)
             # Obtenha a data e hora atuais
             horario_atual = datetime.datetime.now().time()
@@ -50,9 +48,7 @@ def run(window):
                         if _find_img('reconnect.png', pasta='imgs_c', conf=0.9):
                             _click_img('reconnect_nao.png', pasta='imgs_c', conf=0.9)
 
-                        p.moveTo(600, 750)
                         p.click(600, 750)
-                        p.moveTo(800, 750)
                         p.click(800, 750)
                         if not "AppController.exe" in (i.name() for i in psutil.process_iter()):
                             _login_web()

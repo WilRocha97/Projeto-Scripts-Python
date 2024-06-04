@@ -10,20 +10,20 @@ from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf
 
 
 def faturamento_compra(ano, empresa, andamento):
-    _wait_img('relatorios.png', conf=0.9, timeout=-1)
-    # Relatórios
-    p.hotkey('alt', 'r')
-    time.sleep(0.5)
-    # Acompanhamentos
-    p.press('a')
-    # Demonstrativo Mensal
-    time.sleep(0.5)
-    p.press('m')
-    # Confirmar
-    time.sleep(0.5)
-    p.press('enter')
-    
-    while not _find_img('demonstrativo_mensal.png', conf=0.9):
+    while not _find_img('demonstrativo_mensal.png', conf=0.95):
+        if _find_img('demonstrativo_mensal_2.png', conf=0.95):
+            break
+        # Relatórios
+        p.hotkey('alt', 'r')
+        time.sleep(0.5)
+        # Acompanhamentos
+        p.press('a')
+        # Demonstrativo Mensal
+        time.sleep(0.5)
+        p.press('m')
+        # Confirmar
+        time.sleep(0.5)
+        p.press('enter')
         time.sleep(1)
     
     time.sleep(1)
@@ -77,7 +77,9 @@ def espera_gerar(empresa, andamento):
     # espera gerar
     while not _find_img('demonstrativo_mensal_gerado.png', conf=0.9):
         print('>>> Aguardando gerar')
-        if _find_img('sem_dados.png', conf=0.9):
+        if _find_img('demonstrativo_mensal_gerado_2.png', conf=0.9):
+            break
+        if _find_img('sem_dados.png', conf=0.9) or _find_img('sem_dados_2.png', conf=0.9):
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para imprimir']), nome=andamento)
             print('❌ Sem dados para imprimir')
             p.press('enter')

@@ -31,8 +31,12 @@ def _login(empresa, andamentos):
         try:
             cod, cnpj, nome, regime = empresa
         except:
-            cod, cnpj, nome = empresa
-        
+            try:
+                cod, cnpj, nome = empresa
+            except:
+                cod, cnpj = empresa
+                nome = ''
+                
     # espera a tela inicial do domínio
     while not _find_img('inicial.png', pasta=imagens, conf=0.9):
         sleep(1)
@@ -42,6 +46,8 @@ def _login(empresa, andamentos):
     # espera abrir a janela de seleção de empresa
     while not _find_img('trocar_empresa.png', pasta=imagens, conf=0.9):
         p.press('f8')
+        if _find_img('trocar_empresa_2.png', pasta=imagens, conf=0.9):
+            break
     
     sleep(1)
     # clica para pesquisar empresa por código
@@ -53,7 +59,7 @@ def _login(empresa, andamentos):
     # confirmar empresa
     p.hotkey('alt', 'a')
     # enquanto a janela estiver aberta verifica exceções
-    while _find_img('trocar_empresa.png', pasta=imagens, conf=0.9):
+    while _find_img('trocar_empresa.png', pasta=imagens, conf=0.9) or _find_img('trocar_empresa_2.png', pasta=imagens, conf=0.9):
         sleep(1)
         if _find_img('sem_parametro.png', pasta=imagens, conf=0.9):
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Parametro não cadastrado para esta empresa']), nome=andamentos)
@@ -80,7 +86,9 @@ def _login(empresa, andamentos):
                 sleep(1)
             return False
         
-        if _find_img('empresa_nao_usa_sistema.png', pasta=imagens, conf=0.9) or _find_img('empresa_nao_usa_sistema_2.png', pasta=imagens, conf=0.9):
+        if (_find_img('empresa_nao_usa_sistema.png', pasta=imagens, conf=0.9) or
+                _find_img('empresa_nao_usa_sistema_2.png', pasta=imagens, conf=0.9) or
+                _find_img('empresa_nao_usa_sistema_3.png', pasta=imagens, conf=0.9)):
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Empresa não está marcada para usar este sistema']), nome=andamentos)
             print('❌ Empresa não está marcada para usar este sistema')
             p.press('enter')
@@ -142,12 +150,12 @@ def verifica_empresa(cod):
                     pass
             
             codigo = cnpj_codigo.split('-')
-            codigo = str(codigo[1])
+            codigo = str(codigo[-1].strip())
             codigo = codigo.replace(' ', '')
         
             if codigo != cod:
-                print(f'Código da empresa: {codigo}')
-                print(f'Código encontrado no Domínio: {cod}')
+                print(f'Código da empresa: {cod}')
+                print(f'Código encontrado no Domínio: {codigo}')
                 return False
             else:
                 return True
@@ -243,6 +251,8 @@ def _salvar_pdf(abriu_janela=False):
         p.hotkey('ctrl', 'd')
     timer = 0
     while not _find_img('salvar_em_pdf.png', pasta=imagens, conf=0.9):
+        if _find_img('salvar_em_pdf_2.png', pasta=imagens, conf=0.9):
+            break
         time.sleep(1)
         timer += 1
         if timer > 30:
@@ -253,9 +263,14 @@ def _salvar_pdf(abriu_janela=False):
             break
         if _find_img('cliente_c_selecionado_2.png', pasta=imagens, conf=0.9):
             break
+        if _find_img('cliente_c_selecionado_3.png', pasta=imagens, conf=0.9):
+            break
         _click_img('botao.png', pasta=imagens, conf=0.9, timeout=1)
+        _click_img('botao_2.png', pasta=imagens, conf=0.9, timeout=1)
         time.sleep(3)
-        
+
+        if _find_img('cliente_c_2.png', pasta=imagens, conf=0.9):
+            _click_img('cliente_c_2.png', pasta=imagens, conf=0.9, timeout=1)
         if _find_img('cliente_c.png', pasta=imagens, conf=0.9):
             _click_img('cliente_c.png', pasta=imagens, conf=0.9, timeout=1)
         if _find_img('cliente_m.png', pasta=imagens, conf=0.9):
@@ -266,7 +281,7 @@ def _salvar_pdf(abriu_janela=False):
     
     timer = 0
     while not _find_img('pdf_aberto.png', pasta=imagens, conf=0.9):
-        if _find_img('sera_finalizada.png', pasta=imagens, conf=0.9):
+        if _find_img('sera_finalizada.png', pasta=imagens, conf=0.9) or _find_img('sera_finalizada_2.png', pasta=imagens, conf=0.9):
             p.press('esc')
             time.sleep(2)
             return False
@@ -275,7 +290,7 @@ def _salvar_pdf(abriu_janela=False):
             p.press('enter')
             p.hotkey('alt', 'f4')
             
-        if _find_img('substituir.png', pasta=imagens, conf=0.9):
+        if _find_img('substituir.png', pasta=imagens, conf=0.9) or _find_img('substituir_2.png', pasta=imagens, conf=0.9):
             p.hotkey('alt', 'y')
         if _find_img('adobe.png', pasta=imagens, conf=0.9):
             p.press('enter')
@@ -284,13 +299,24 @@ def _salvar_pdf(abriu_janela=False):
         if timer > 30:
             p.hotkey('ctrl', 'd')
             while not _find_img('salvar_em_pdf.png', pasta=imagens, conf=0.9):
+                if _find_img('salvar_em_pdf_2.png', pasta=imagens, conf=0.9):
+                    break
                 time.sleep(1)
             
-            if not _find_img('cliente_c_selecionado.png', pasta=imagens, conf=0.9):
+            if not _find_img('cliente_c_selecionado.png', pasta=imagens, conf=0.9) or not _find_img('cliente_c_selecionado_3.png', pasta=imagens, conf=0.9):
                 while not _find_img('cliente_c.png', pasta=imagens, conf=0.9):
+                    if _find_img('cliente_c_2.png', pasta=imagens, conf=0.9):
+                        break
+                    if _find_img('cliente_m.png', pasta=imagens, conf=0.9):
+                        break
                     _click_img('botao.png', pasta=imagens, conf=0.9)
                     time.sleep(3)
-                _click_img('cliente_c.png', pasta=imagens, conf=0.9)
+                if _find_img('cliente_c_2.png', pasta=imagens, conf=0.9):
+                    _click_img('cliente_c_2.png', pasta=imagens, conf=0.9, timeout=1)
+                if _find_img('cliente_c.png', pasta=imagens, conf=0.9):
+                    _click_img('cliente_c.png', pasta=imagens, conf=0.9, timeout=1)
+                if _find_img('cliente_m.png', pasta=imagens, conf=0.9):
+                    _click_img('cliente_m.png', pasta=imagens, conf=0.9, timeout=1)
                 time.sleep(5)
             
             p.press('enter')
@@ -303,5 +329,8 @@ def _salvar_pdf(abriu_janela=False):
     while _find_img('sera_finalizada.png', pasta=imagens, conf=0.9):
         p.press('esc')
         time.sleep(2)
-        
+
+    while _find_img('sera_finalizada_2.png', pasta=imagens, conf=0.9):
+        p.press('esc')
+        time.sleep(2)
     return True

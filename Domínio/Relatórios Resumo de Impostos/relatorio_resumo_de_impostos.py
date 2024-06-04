@@ -1,27 +1,33 @@
 # -*- coding: utf-8 -*-
-import datetime, fitz, re, shutil, time, os, pyautogui as p
+import psutil, datetime, fitz, re, shutil, time, os, pyautogui as p
 from sys import path
 
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
 from comum_comum import _ask_for_dir, _indice, _time_execution, _escreve_relatorio_csv, _escreve_header_csv, e_dir, _open_lista_dados, _where_to_start, _barra_de_status
-from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf
+from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf, imagens
 
 
 def relatorio_darf_dctf(empresa, periodo, andamento):
     cod, cnpj, nome = empresa
-    _wait_img('relatorios.png', conf=0.9, timeout=-1)
-    # Relatórios
-    p.hotkey('alt', 'r')
-    time.sleep(0.5)
-    # Impostos
-    p.press('i')
-    # Resumo
-    time.sleep(0.5)
-    p.press('m')
     verificacao = 'continue'
     while not _find_img('resumo_de_impostos.png', conf=0.9):
-        
+        if _find_img('resumo_de_impostos_2.png', conf=0.9):
+            break
+        # Relatórios
+        p.hotkey('alt', 'r')
+        time.sleep(0.5)
+        # Impostos
+        p.press('i')
+        # Resumo
+        time.sleep(0.5)
+        p.press('m')
+
+        if _find_img('try_reconect.png', pasta=imagens, conf=0.9):
+            p.hotkey('alt', 's')
+            
+        if not "AppController.exe" in (i.name() for i in psutil.process_iter()):
+            return 'dominio fechou'
         if verificacao != 'continue':
             return verificacao, ''
         time.sleep(1)
@@ -57,7 +63,15 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
     time.sleep(1)
 
     while _find_img('destacar_linhas.png', conf=0.95):
-        _click_img('destacar_linhas.png', conf=0.95)
+        if _find_img('destacar_linhas_2.png', conf=0.95):
+            _click_img('destacar_linhas_2.png', conf=0.95, timeout=1)
+            break
+        if _find_img('try_reconect.png', pasta=imagens, conf=0.9):
+            p.hotkey('alt', 's')
+            
+        if not "AppController.exe" in (i.name() for i in psutil.process_iter()):
+            return 'dominio fechou'
+        _click_img('destacar_linhas.png', conf=0.95, timeout=1)
         time.sleep(0.5)
         
     '''while _find_img('detalhar_dados.png', conf=0.95):
@@ -69,6 +83,11 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
     sem_layout = 0
 
     while not _find_img('resumo_gerado.png', conf=0.8):
+        if _find_img('try_reconect.png', pasta=imagens, conf=0.9):
+            p.hotkey('alt', 's')
+            
+        if not "AppController.exe" in (i.name() for i in psutil.process_iter()):
+            return 'dominio fechou'
         if verificacao != 'continue':
             return verificacao, ''
         time.sleep(1)
@@ -77,6 +96,9 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
             p.press('enter')
         if sem_layout == 1:
             while not _find_img('resumo_de_impostos.png', conf=0.9):
+                if _find_img('try_reconect.png', pasta=imagens, conf=0.9):
+                    p.hotkey('alt', 's')
+                    
                 if verificacao != 'continue':
                     return verificacao, ''
                 p.press('enter')
@@ -87,7 +109,7 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
             return 'ok', ''
 
         time.sleep(3)
-        if _find_img('sem_dados.png', conf=0.9):
+        if _find_img('sem_dados.png', conf=0.9) or _find_img('sem_dados_2.png', conf=0.9):
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para imprimir']), nome=andamento)
             print('❌ Sem dados para imprimir')
             p.press('enter')
@@ -96,7 +118,7 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
             time.sleep(1)
             return 'ok', ''
 
-        if _find_img('sem_imposto.png', conf=0.9):
+        if _find_img('sem_imposto.png', conf=0.9) or _find_img('sem_imposto_2.png', conf=0.9):
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, 'Sem dados para imprimir']), nome=andamento)
             print('❌ Sem dados para imprimir')
             p.press('enter')
@@ -105,7 +127,7 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
             time.sleep(1)
             return 'ok', ''
 
-        if _find_img('resumo_calculado.png', conf=0.9) or _find_img('resumo_gerado_2.png', conf=0.9):
+        if _find_img('resumo_calculado.png', conf=0.9) or _find_img('resumo_gerado_2.png', conf=0.9) or _find_img('resumo_gerado_3.png', conf=0.9):
             break
 
     _salvar_pdf()
@@ -269,7 +291,14 @@ def run(window):
             tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, window, tempos, tempo_execucao)
     
             while True:
-                if not _find_img('inicial.png', pasta='imgs_c', conf=0.9):
+                if _find_img('try_reconect.png', pasta=imagens, conf=0.9):
+                    p.hotkey('alt', 's')
+                    
+                if _find_img('try_reconect.png', pasta=imagens, conf=0.9):
+                    p.hotkey('alt', 's')
+                    
+                if not "AppController.exe" in (i.name() for i in psutil.process_iter()):
+                    _escreve_relatorio_csv('Dominio fechou', nome='controle')
                     _login_web()
                     _abrir_modulo('escrita_fiscal')
                 if not _login(empresa, andamentos):
@@ -278,15 +307,15 @@ def run(window):
                     resultado, arq_final = relatorio_darf_dctf(empresa, periodo, andamentos)
 
                     if resultado == 'dominio fechou':
+                        _escreve_relatorio_csv('Dominio fechou', nome='controle')
                         _login_web()
-                        _abrir_modulo('escrita_fiscal')
-                
-                    if resultado == 'modulo fechou':
                         _abrir_modulo('escrita_fiscal')
                     
                     if resultado == 'ok':
                         break
-    
+            
+            
+            
     _escreve_header_csv('COD;CNPJ;NOME;RESUMO;IMPOSTO;BASE CALCULO;ALIQUOTA;VALOR IMPOSTO;SALDO CREDOR ANTERIOR;SALDO DEFERIDO ANTERIOR;DÉBITOS;CRÉDITOS;ACRESCIMOS;'
                         'OUTRAS DEDUÇÕES;IMPOSTO RECOLHER;IMPOSTO DEFERIDO;SALDO CREDOR;TOTAL', nome=f'Resumo relatórios {periodo.replace("/", "-")}')
     

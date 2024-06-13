@@ -10,7 +10,7 @@ from selenium.webdriver.common.by import By
 path.append(r'..\..\_comum')
 from comum_comum import _escreve_relatorio_csv
 from chrome_comum import _initialize_chrome, _send_input_xpath
-from pyautogui_comum import _find_img, _click_img
+from pyautogui_comum import _find_img, _click_img, _click_position_img
 
 imagens = "V:\\_imagens_comum_python\\imgs_comum_dominio"
 
@@ -18,10 +18,6 @@ dados = "V:\\Setor Robô\\Scripts Python\\_comum\\Dados Domínio.txt"
 f = open(dados, 'r', encoding='utf-8')
 user = f.readline()
 user = user.split('/')
-
-
-#def imagem_dominio():
-    #return os.path.join(imagem, nome_da_imagem)
 
 
 def _login(empresa, andamentos):
@@ -84,6 +80,8 @@ def _login(empresa, andamentos):
             p.hotkey('alt', 'n')
             while _find_img('trocar_empresa.png', pasta=imagens, conf=0.9):
                 sleep(1)
+            while _find_img('trocar_empresa_2.png', pasta=imagens, conf=0.9):
+                sleep(1)
             return False
         
         if (_find_img('empresa_nao_usa_sistema.png', pasta=imagens, conf=0.9) or
@@ -96,26 +94,28 @@ def _login(empresa, andamentos):
             p.press('esc', presses=5)
             while _find_img('trocar_empresa.png', pasta=imagens, conf=0.9):
                 sleep(1)
+            while _find_img('trocar_empresa_2.png', pasta=imagens, conf=0.9):
+                sleep(1)
             return False
         
-        if _find_img('fase_dois_do_cadastro.png', pasta=imagens, conf=0.9):
+        if _find_img('fase_dois_do_cadastro.png', pasta=imagens, conf=0.9) or _find_img('fase_dois_do_cadastro_2.png', pasta=imagens, conf=0.9):
             p.hotkey('alt', 'n')
             sleep(1)
             p.hotkey('alt', 'n')
 
-        if _find_img('conforme_modulo.png', pasta=imagens, conf=0.9):
+        if _find_img('conforme_modulo.png', pasta=imagens, conf=0.9) or _find_img('conforme_modulo_2.png', pasta=imagens, conf=0.9):
             p.press('enter')
             sleep(1)
 
-        if _find_img('aviso_regime.png', pasta=imagens, conf=0.9):
+        if _find_img('aviso_regime.png', pasta=imagens, conf=0.9) or _find_img('aviso_regime_2.png', pasta=imagens, conf=0.9):
             p.hotkey('alt', 'n')
             sleep(1)
 
-        if _find_img('aviso.png', pasta=imagens, conf=0.9):
+        if _find_img('aviso.png', pasta=imagens, conf=0.9) or _find_img('aviso_2.png', pasta=imagens, conf=0.9):
             p.hotkey('alt', 'o')
             sleep(1)
 
-        if _find_img('erro_troca_empresa.png', pasta=imagens, conf=0.9):
+        if _find_img('erro_troca_empresa.png', pasta=imagens, conf=0.9) or _find_img('erro_troca_empresa_2.png', pasta=imagens, conf=0.9):
             p.press('enter')
             sleep(1)
             p.press('esc', presses=5, interval=1)
@@ -134,33 +134,31 @@ def _login(empresa, andamentos):
 
 
 def verifica_empresa(cod):
+    p.click(1000, 500)
     time.sleep(1)
-    erro = 'sim'
-    while erro == 'sim':
-        try:
-            p.click(1258,82)
-    
-            while True:
-                try:
-                    p.hotkey('ctrl', 'c')
-                    p.hotkey('ctrl', 'c')
-                    cnpj_codigo = pyperclip.paste()
-                    break
-                except:
-                    pass
-            
-            codigo = cnpj_codigo.split('-')
-            codigo = str(codigo[-1].strip())
-            codigo = codigo.replace(' ', '')
+    while True:
+        p.click(1258, 82)
+        while True:
+            try:
+                p.hotkey('ctrl', 'c')
+                p.hotkey('ctrl', 'c')
+                cnpj_codigo = pyperclip.paste()
+                break
+            except:
+                pass
         
-            if codigo != cod:
-                print(f'Código da empresa: {cod}')
-                print(f'Código encontrado no Domínio: {codigo}')
-                return False
-            else:
-                return True
-        except:
-            erro = 'sim'
+        codigo = cnpj_codigo.split('-')
+        codigo = str(codigo[-1].strip())
+        codigo = codigo.replace(' ', '')
+        if codigo != '':
+            break
+        
+    if codigo != cod:
+        print(f'Código da empresa: {cod}')
+        print(f'Código encontrado no Domínio: {codigo}')
+        return False
+    else:
+        return True
     
 
 def _login_web(usuario=user[0], senha=user[1]):
@@ -187,8 +185,10 @@ def _login_web(usuario=user[0], senha=user[1]):
         driver.quit()
         return True
     else:
-        _click_img('app_controler_desfocado.png', pasta=imagens, conf=0.99, timeout=1)
-        _click_img('app_controler.png', pasta=imagens, conf=0.99, timeout=1)
+        if _find_img('app_controler_desfocado.png', pasta=imagens, conf=0.99):
+            _click_img('app_controler_desfocado.png', pasta=imagens, conf=0.99, timeout=1)
+        else:
+            _click_img('app_controler.png', pasta=imagens, conf=0.99, timeout=1)
         sleep(2)
         if _find_img('lista_de_programas.png', pasta=imagens, conf=0.9):
             p.press('right', presses=2, interval=0.5)
@@ -200,17 +200,7 @@ def _abrir_modulo(modulo, usuario=user[2], senha=user[3]):
     if _find_img('inicial.png', pasta=imagens, conf=0.9):
         return True
     
-    modulo_nome = ''
-    if modulo == 'escrita_fiscal':
-        modulo_nome = 'Escrita Fiscal'
-    elif modulo == 'folha':
-        modulo_nome = 'Folha'
-    elif modulo == 'conexoes':
-        modulo_nome = 'Conexões'
-    elif modulo == 'lalur':
-        modulo_nome = 'Lalur'
-    
-    print(f'>>> Abrindo modulo {modulo_nome}\n')
+    print(f'>>> Abrindo modulo {modulo.capitalize()}\n')
     while not _find_img('modulos.png', pasta=imagens, conf=0.9):
         sleep(1)
         try:
@@ -219,12 +209,78 @@ def _abrir_modulo(modulo, usuario=user[2], senha=user[3]):
             pass
     sleep(1)
     _click_img('modulo_' + modulo + '.png', pasta=imagens, conf=0.9, button='left', clicks=2)
+    
+    timer = 0
     while not _find_img('login_modulo.png', pasta=imagens, conf=0.9):
         sleep(1)
+        timer += 1
+        if timer > 10:
+            contador = 1
+            with p.hold('alt'):
+                if contador == 1:
+                    p.press('tab')
+                    time.sleep(1)
+                if contador == 2:
+                    p.press('tab')
+                    time.sleep(0.1)
+                    p.press('tab')
+                    time.sleep(1)
+                if contador == 3:
+                    p.press('tab')
+                    time.sleep(0.1)
+                    p.press('tab')
+                    time.sleep(0.1)
+                    p.press('tab')
+                    time.sleep(1)
+                if contador == 4:
+                    p.press('tab')
+                    time.sleep(0.1)
+                    p.press('tab')
+                    time.sleep(0.1)
+                    p.press('tab')
+                    time.sleep(0.1)
+                    p.press('tab')
+                    time.sleep(1)
+                    contador = 0
+                contador += 1
+        
+        if timer > 30:
+            while not _find_img('tela_modulos.png', pasta=imagens, conf=0.9):
+                contador = 1
+                with p.hold('alt'):
+                    if contador == 1:
+                        p.press('tab')
+                        time.sleep(1)
+                    if contador == 2:
+                        p.press('tab')
+                        time.sleep(0.1)
+                        p.press('tab')
+                        time.sleep(1)
+                    if contador == 3:
+                        p.press('tab')
+                        time.sleep(0.1)
+                        p.press('tab')
+                        time.sleep(0.1)
+                        p.press('tab')
+                        time.sleep(1)
+                    if contador == 4:
+                        p.press('tab')
+                        time.sleep(0.1)
+                        p.press('tab')
+                        time.sleep(0.1)
+                        p.press('tab')
+                        time.sleep(0.1)
+                        p.press('tab')
+                        time.sleep(1)
+                        contador = 0
+                    contador += 1
+
+            _click_img('tela_modulos.png', pasta=imagens, conf=0.9)
+            sleep(1)
+            _click_img('modulo_' + modulo + '.png', pasta=imagens, conf=0.9, button='left', clicks=2)
+            timer = 0
     
-    p.moveTo(_find_img('insere_usuario.png', pasta=imagens, conf=0.9))
-    local_mouse = p.position()
-    p.click(int(local_mouse[0] + 120), local_mouse[1], clicks=2)
+    _click_position_img('insere_usuario.png', '+', pixels_x=120, pasta=imagens, conf=0.9, clicks=2)
     
     sleep(0.5)
     p.press('del', presses=10)
@@ -246,11 +302,12 @@ def _abrir_modulo(modulo, usuario=user[2], senha=user[3]):
     return True
 
 
-def _salvar_pdf(abriu_janela=False):
+def _salvar_pdf(nome_arquivo=False, abriu_janela=False):
     if not abriu_janela:
         p.hotkey('ctrl', 'd')
     timer = 0
     while not _find_img('salvar_em_pdf.png', pasta=imagens, conf=0.9):
+        print('>>> Aguardando tela para salvar o PDF')
         if _find_img('salvar_em_pdf_2.png', pasta=imagens, conf=0.9):
             break
         time.sleep(1)
@@ -259,14 +316,18 @@ def _salvar_pdf(abriu_janela=False):
             return False
     
     while not _find_img('cliente_c_selecionado.png', pasta=imagens, conf=0.9):
+        print('>>> Verificando se o diretório correto para salvar doi selecionado...')
         if _find_img('cliente_m_selecionado.png', pasta=imagens, conf=0.9):
+            break
+        if _find_img('cliente_m_selecionado_2.png', pasta=imagens, conf=0.9):
+            break
+        if _find_img('cliente_m_selecionado_3.png', pasta=imagens, conf=0.9):
             break
         if _find_img('cliente_c_selecionado_2.png', pasta=imagens, conf=0.9):
             break
         if _find_img('cliente_c_selecionado_3.png', pasta=imagens, conf=0.9):
             break
         _click_img('botao.png', pasta=imagens, conf=0.9, timeout=1)
-        _click_img('botao_2.png', pasta=imagens, conf=0.9, timeout=1)
         time.sleep(3)
 
         if _find_img('cliente_c_2.png', pasta=imagens, conf=0.9):
@@ -275,12 +336,37 @@ def _salvar_pdf(abriu_janela=False):
             _click_img('cliente_c.png', pasta=imagens, conf=0.9, timeout=1)
         if _find_img('cliente_m.png', pasta=imagens, conf=0.9):
             _click_img('cliente_m.png', pasta=imagens, conf=0.9, timeout=1)
+        if _find_img('cliente_m_2.png', pasta=imagens, conf=0.9):
+            _click_img('cliente_m_2.png', pasta=imagens, conf=0.9, timeout=1)
         time.sleep(5)
-    
-    p.press('enter')
+
+    """while True:
+        p.hotkey('alt', 'n')
+        time.sleep(1)
+        try:
+            pyperclip.copy(nome_arquivo)
+            pyperclip.copy(nome_arquivo)
+            pyperclip.copy(nome_arquivo)
+            pyperclip.copy(nome_arquivo)
+            pyperclip.copy(nome_arquivo)
+            pyperclip.copy(nome_arquivo)
+            pyperclip.copy(nome_arquivo)
+            pyperclip.copy(nome_arquivo)
+            p.hotkey('ctrl', 'v')
+            time.sleep(1)
+
+            if not _find_img('sem_nome_arquivo.png', conf=0.95) or not _find_img('sem_nome_arquivo_2.png', conf=0.95):
+                break
+
+        except:
+            pass
+
+    time.sleep(1)"""
+    p.hotkey('alt', 's')
     
     timer = 0
     while not _find_img('pdf_aberto.png', pasta=imagens, conf=0.9):
+        print('>>> Aguardando gerar o PDF...')
         if _find_img('sera_finalizada.png', pasta=imagens, conf=0.9) or _find_img('sera_finalizada_2.png', pasta=imagens, conf=0.9):
             p.press('esc')
             time.sleep(2)
@@ -302,12 +388,18 @@ def _salvar_pdf(abriu_janela=False):
                 if _find_img('salvar_em_pdf_2.png', pasta=imagens, conf=0.9):
                     break
                 time.sleep(1)
-            
-            if not _find_img('cliente_c_selecionado.png', pasta=imagens, conf=0.9) or not _find_img('cliente_c_selecionado_3.png', pasta=imagens, conf=0.9):
+
+            if (not _find_img('cliente_c_selecionado.png', pasta=imagens, conf=0.9)
+                    or not _find_img('cliente_c_selecionado_3.png', pasta=imagens, conf=0.9)
+                    or not _find_img('cliente_m_selecionado.png', pasta=imagens, conf=0.9)
+                    or not _find_img('cliente_m_selecionado_2.png', pasta=imagens, conf=0.9)
+                    or not _find_img('cliente_m_selecionado_3.png', pasta=imagens, conf=0.9)):
                 while not _find_img('cliente_c.png', pasta=imagens, conf=0.9):
                     if _find_img('cliente_c_2.png', pasta=imagens, conf=0.9):
                         break
                     if _find_img('cliente_m.png', pasta=imagens, conf=0.9):
+                        break
+                    if _find_img('cliente_m_2.png', pasta=imagens, conf=0.9):
                         break
                     _click_img('botao.png', pasta=imagens, conf=0.9)
                     time.sleep(3)
@@ -317,8 +409,10 @@ def _salvar_pdf(abriu_janela=False):
                     _click_img('cliente_c.png', pasta=imagens, conf=0.9, timeout=1)
                 if _find_img('cliente_m.png', pasta=imagens, conf=0.9):
                     _click_img('cliente_m.png', pasta=imagens, conf=0.9, timeout=1)
+                if _find_img('cliente_m_2.png', pasta=imagens, conf=0.9):
+                    _click_img('cliente_m_2.png', pasta=imagens, conf=0.9, timeout=1)
                 time.sleep(5)
-            
+
             p.press('enter')
             timer = 0
 

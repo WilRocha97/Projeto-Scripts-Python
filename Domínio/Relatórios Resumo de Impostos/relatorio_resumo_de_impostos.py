@@ -27,7 +27,7 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
             p.hotkey('alt', 's')
             
         if not "AppController.exe" in (i.name() for i in psutil.process_iter()):
-            return 'dominio fechou'
+            return 'dominio fechou', ''
         if verificacao != 'continue':
             return verificacao, ''
         time.sleep(1)
@@ -70,7 +70,7 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
             p.hotkey('alt', 's')
             
         if not "AppController.exe" in (i.name() for i in psutil.process_iter()):
-            return 'dominio fechou'
+            return 'dominio fechou', ''
         _click_img('destacar_linhas.png', conf=0.95, timeout=1)
         time.sleep(0.5)
         
@@ -91,11 +91,13 @@ def relatorio_darf_dctf(empresa, periodo, andamento):
         if verificacao != 'continue':
             return verificacao, ''
         time.sleep(1)
-        if _find_img('imposto_sem_layout.png', conf=0.9):
+        if _find_img('imposto_sem_layout.png', conf=0.9) or _find_img('imposto_sem_layout_2.png', conf=0.9):
             sem_layout = 1
             p.press('enter')
         if sem_layout == 1:
             while not _find_img('resumo_de_impostos.png', conf=0.9):
+                if _find_img('resumo_de_impostos_2.png', conf=0.9):
+                    break
                 if _find_img('try_reconect.png', pasta=imagens, conf=0.9):
                     p.hotkey('alt', 's')
                     
@@ -313,8 +315,6 @@ def run(window):
                     
                     if resultado == 'ok':
                         break
-            
-            
             
     _escreve_header_csv('COD;CNPJ;NOME;RESUMO;IMPOSTO;BASE CALCULO;ALIQUOTA;VALOR IMPOSTO;SALDO CREDOR ANTERIOR;SALDO DEFERIDO ANTERIOR;DÉBITOS;CRÉDITOS;ACRESCIMOS;'
                         'OUTRAS DEDUÇÕES;IMPOSTO RECOLHER;IMPOSTO DEFERIDO;SALDO CREDOR;TOTAL', nome=f'Resumo relatórios {periodo.replace("/", "-")}')

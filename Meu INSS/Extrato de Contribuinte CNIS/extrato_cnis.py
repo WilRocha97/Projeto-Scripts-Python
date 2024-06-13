@@ -1,5 +1,4 @@
-import datetime, fitz, re, time, os, pyperclip, pyautogui as p
-from bs4 import BeautifulSoup
+import datetime, fitz, time, os, pyperclip, pyautogui as p
 
 from sys import path
 path.append(r'..\..\_comum')

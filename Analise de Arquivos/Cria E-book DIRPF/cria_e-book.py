@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import time, shutil, io, fitz, PyPDF2, re, os, sys, traceback, PySimpleGUI as sg
+import json, time, shutil, io, fitz, PyPDF2, re, os, sys, traceback, PySimpleGUI as sg
 from PIL import Image
 from threading import Thread
 from pyautogui import alert, confirm
@@ -18,45 +18,28 @@ from base64 import b64encode
 pdfmetrics.registerFont(TTFont('Fonte', 'Assets\HankenGrotesk-SemiBold.ttf'))
 tamanho_da_pagina = (672,950)
 
+# Define o ícone global da aplicação
+sg.set_global_icon('Assets/EB_icon.ico')
+dados_modo = 'Assets/modo.txt'
+dados_elementos = 'Log/window_values.json'
+controle_botoes = 'Log/Buttons.txt'
 
-def data_modificacao_arquivo(nome_arquivo):
-    # Obter o tempo de modificação do arquivo
-    tempo_modificacao = os.path.getmtime(nome_arquivo)
-    return tempo_modificacao
+versao_atual = '2.0'
+caminho_arquivo = 'T:\ROBÔ\_Executáveis\Cria E-book\Cria E-book DIRPF.exe'
 
-
-# Caminho dos dois arquivos que você deseja comparar
-caminho_arquivo1 = 'C:\Program Files (x86)\Automações\Cria E-book DIRPF\cria_e-book.exe'
-caminho_arquivo2 = 'T:\ROBÔ\_Executáveis\Cria E-book\Cria E-book DIRPF.exe'
-data_modificacao1 = 0
-data_modificacao2 = 0
-
-try:
-    # Obter a data de modificação de cada arquivo
-    data_modificacao1 = data_modificacao_arquivo(caminho_arquivo1)
-    data_modificacao2 = data_modificacao_arquivo(caminho_arquivo2)
-    
-    data_modificacao1 = int(str(data_modificacao1)[:7])
-    data_modificacao2 = int(str(data_modificacao2)[:7])
-    
-    print(data_modificacao1)
-    print(data_modificacao2)
-except:
-    pass
-    
-# Comparar as datas de modificação
-if data_modificacao1 < data_modificacao2:
+cr = open('T:\\ROBÔ\\_Executáveis\\Cria E-book\\Versão.txt', 'r', encoding='utf-8').read()
+if str(cr) != versao_atual:
     while True:
         atualizar = confirm(text='Existe uma nova versão do programa, deseja atualizar agora?', buttons=('Novidades da atualização', 'Sim', 'Não'))
         if atualizar == 'Novidades da atualização':
-            os.startfile('Sobre.pdf')
+            os.startfile('T:\\ROBÔ\\_Executáveis\\Cria E-book\\Sobre.pdf')
         if atualizar == 'Sim':
             break
         elif atualizar == 'Não':
             break
     
     if atualizar == 'Sim':
-        os.startfile(caminho_arquivo2)
+        os.startfile(caminho_arquivo)
         sys.exit()
         
 
@@ -633,7 +616,7 @@ def cria_ebook(window, subpasta, nomes_arquivos, pasta_final):
             window['-Progresso_texto-'].update(str(round(float(count) / int(len(lista_arquivos)) * 100, 1)) + '%')
             window.refresh()
     
-    pdf_merger.append(os.path.join('Assets', 'AGRADECIMENTO POR ESCOLHER A VEIGA & POSTAL - IPRF TIMBRADO.pdf'))
+    pdf_merger.append(os.path.join('Assets', 'AGRADECIMENTO - IPRF TIMBRADO.pdf'))
 
     # cria o e-book
     unificado_pdf = os.path.join(pasta_final, f'E-BOOK DIRPF - {nome_declarante}.pdf')
@@ -776,10 +759,22 @@ def run(window, pasta_inicial, pasta_final):
     
     if resultado:
         alert(text='PDFs unificados com sucesso.')
-    
 
-# Define o ícone global da aplicação
-sg.set_global_icon('Assets/auto-flash.ico')
+
+# Função para salvar os valores dos elementos em um arquivo JSON
+def save_values(values, filename=dados_elementos):
+    with open(filename, 'w', encoding='latin-1') as f:
+        json.dump(values, f)
+
+
+# Função para carregar os valores dos elementos de um arquivo JSON
+def load_values(filename=dados_elementos):
+    if os.path.exists(filename):
+        with open(filename, 'r', encoding='latin-1') as f:
+            return json.load(f)
+    return {}
+
+
 if __name__ == '__main__':
     def RoundedButton(button_text=' ', corner_radius=0.1, button_type=BUTTON_TYPE_READ_FORM, target=(None, None), tooltip=None, file_types=FILE_TYPES_ALL_FILES, initial_folder=None, default_extension='',
                       disabled=False, change_submits=False, enable_events=False, image_size=(None, None), image_subsample=None, border_width=None, size=(None, None), auto_size_button=None,
@@ -828,50 +823,76 @@ if __name__ == '__main__':
                          mouseover_colors=mouseover_colors, use_ttk_buttons=use_ttk_buttons, font=font,
                          bind_return_key=bind_return_key, focus=focus, pad=pad, key=key, right_click_menu=right_click_menu,
                          expand_x=expand_x, expand_y=expand_y, visible=visible, metadata=metadata)
-    
-    # Carregar a fonte personalizada
-    sg.theme()
-    
-    sg.LOOK_AND_FEEL_TABLE['tema'] = {'BACKGROUND': '#F8F8F8',
-                                      'TEXT': '#000000',
-                                      'INPUT': '#F8F8F8',
-                                      'TEXT_INPUT': '#000000',
-                                      'SCROLL': '#F8F8F8',
-                                      'BUTTON': ('#000000', '#F8F8F8'),
-                                      'PROGRESS': ('#fca400', '#D7D7D7'),
-                                      'BORDER': 0,
-                                      'SLIDER_DEPTH': 0,
-                                      'PROGRESS_DEPTH': 0}
-    
-    sg.theme('tema')  # Define o tema do PySimpleGUI
-    layout = [
-        [sg.Button('AJUDA'),
-         sg.Button('SOBRE'),
-         sg.Button('LOG DO SISTEMA', disabled=True)],
-        [sg.Text('')],
         
-        [sg.pin(sg.Text(text='Selecione a pasta que contenha os arquivos PDF para analisar:', key='-abrir_pdf_texto-', visible=False)),
-         sg.pin(RoundedButton('Selecione a pasta que contenha os arquivos PDF para analisar:', key='-abrir_pdf-', corner_radius=0.8, button_color=('#F8F8F8', '#848484'),
-                              size=(1300, 100), button_type=BUTTON_TYPE_BROWSE_FOLDER, target='-output_dir-')),
-         sg.pin(sg.InputText(key='-output_dir-', text_color='#fca400', expand_x=True))],
+    # limpa o arquivo que salva o estado dos elementos preenchidos e o estado anterior do botão de abrir os resultados
+    with open(dados_elementos, 'w', encoding='utf-8') as f:
+        f.write('')
+    with open(controle_botoes, 'w', encoding='utf-8') as f:
+        f.write('')
         
-        [sg.pin(sg.Text(text='Selecione a pasta para salvar os e-books:', key='-abrir_pdf_final_texto-', visible=False)),
-         sg.pin(RoundedButton('Selecione a pasta para salvar os e-books:', key='-abrir_pdf_final-', corner_radius=0.8, button_color=('#F8F8F8', '#848484'),
-                              size=(900, 100), button_type=BUTTON_TYPE_BROWSE_FOLDER, target='-output_file-')),
-         sg.pin(sg.InputText(key='-output_file-', text_color='#fca400', expand_x=True))],
-        [sg.Text('', expand_y=True)],
-        
-        [sg.Text('', key='-Mensagens-')],
-        [sg.Text(size=6, text='', key='-Progresso_texto-'),
-         sg.ProgressBar(max_value=0, orientation='h', size=(54, 5), key='-progressbar-', visible=False)],
-        [sg.pin(RoundedButton('INICIAR', key='-iniciar-', corner_radius=0.8, button_color=('#F8F8F8', '#fca400'))),
-         sg.pin(RoundedButton('ENCERRAR', key='-encerrar-', corner_radius=0.8, button_color=('#F8F8F8', '#fca400'), visible=False)),
-         sg.pin(RoundedButton('ABRIR RESULTADOS', key='-abrir_resultados-', corner_radius=0.8, button_color=('#F8F8F8', '#fca400'), visible=False))]
-    ]
+    sg.LOOK_AND_FEEL_TABLE['tema_claro'] = {'BACKGROUND': '#F8F8F8',
+                                            'TEXT': '#000000',
+                                            'INPUT': '#F8F8F8',
+                                            'TEXT_INPUT': '#000000',
+                                            'SCROLL': '#F8F8F8',
+                                            'BUTTON': ('#000000', '#F8F8F8'),
+                                            'PROGRESS': ('#fca400', '#D7D7D7'),
+                                            'BORDER': 0,
+                                            'SLIDER_DEPTH': 0,
+                                            'PROGRESS_DEPTH': 0}
     
-    # guarda a janela na variável para manipula-la
-    window = sg.Window('Cria E-book DIRPF', layout, finalize=True, resizable=True, margins=(30, 30))
-    window.set_min_size((700, 300))
+    sg.LOOK_AND_FEEL_TABLE['tema_escuro'] = {'BACKGROUND': '#000000',
+                                             'TEXT': '#F8F8F8',
+                                             'INPUT': '#000000',
+                                             'TEXT_INPUT': '#F8F8F8',
+                                             'SCROLL': '#000000',
+                                             'BUTTON': ('#F8F8F8', '#000000'),
+                                             'PROGRESS': ('#fca400', '#2A2A2A'),
+                                             'BORDER': 0,
+                                             'SLIDER_DEPTH': 0,
+                                             'PROGRESS_DEPTH': 0}
+    
+    # define o tema baseado no tema que estava selecionado na última vêz que o programa foi fechado
+    f = open(dados_modo, 'r', encoding='utf-8')
+    modo = f.read()
+    sg.theme(f'tema_{modo}')
+    
+    def cria_layout():
+        coluna_ui = [
+            [sg.Button('AJUDA'),
+             sg.Button('SOBRE'),
+             sg.Button('LOG DO SISTEMA', disabled=True),
+             sg.Text('', expand_x=True),
+             sg.Button('', key='-tema-', font=("Arial", 11), border_width=0)],
+            [sg.Text('')],
+            
+            [sg.pin(sg.Text(text='Pasta selecionada para capturar os PDFs:', key='-abrir_pdf_texto-', visible=False)),
+             sg.pin(RoundedButton(button_text='Selecione a pasta que contenha os arquivos PDF para analisar:', key='-abrir_pdf-', corner_radius=0.8, button_color=('#F8F8F8', '#848484'),
+                                  size=(1300, 100), button_type=BUTTON_TYPE_BROWSE_FOLDER, target='-input_dir-')),
+             sg.pin(sg.InputText(key='-input_dir-', text_color='#fca400', expand_x=True), expand_x=True)],
+            
+            [sg.pin(sg.Text(text='Pasta selecionada para salvar os e-books:', key='-abrir_pdf_final_texto-', visible=False)),
+             sg.pin(RoundedButton(button_text='Selecione a pasta para salvar os e-books:', key='-abrir_pdf_final-', corner_radius=0.8, button_color=('#F8F8F8', '#848484'),
+                                  size=(900, 100), button_type=BUTTON_TYPE_BROWSE_FOLDER, target='-output_file-')),
+             sg.pin(sg.InputText(key='-output_file-', text_color='#fca400', expand_x=True), expand_x=True)],
+            [sg.Text('', expand_y=True)],
+            
+            [sg.Text('', key='-Mensagens-')],
+            [sg.Text(text='', key='-Progresso_texto-'),
+             sg.ProgressBar(max_value=0, orientation='h', size=(5, 5), expand_x=True, key='-progressbar-', visible=False)],
+            [sg.pin(RoundedButton('INICIAR', key='-iniciar-', corner_radius=0.8, button_color=('#F8F8F8', '#fca400'))),
+             sg.pin(RoundedButton('ENCERRAR', key='-encerrar-', corner_radius=0.8, button_color=('#F8F8F8', '#fca400'), visible=False)),
+             sg.pin(RoundedButton('ABRIR RESULTADOS', key='-abrir_resultados-', corner_radius=0.8, button_color=('#F8F8F8', '#fca400'), visible=False))]
+            ]
+        
+        coluna_terminal = [[RoundedButton(button_text='TERMINAL ATIVADO', corner_radius=0.8, key='-dev_mode-', button_color=('black', 'red')),
+                            sg.Button('🗑', key='-limpa_console-', font=("Arial", 11))],
+                           [sg.Output(expand_x=True, expand_y=True, key='-console-')]]
+        
+        layout = [[sg.Column(coluna_ui, expand_y=True, expand_x=True), sg.Column(coluna_terminal, expand_y=True, expand_x=True, key='-terminal-', visible=False)]]
+        
+        return sg.Window('Cria E-book DIRPF', layout, finalize=True, resizable=True, return_keyboard_events=True, use_default_focus=False, margins=(30, 30))
+        
     
     def run_script_thread():
         # try:
@@ -887,13 +908,16 @@ if __name__ == '__main__':
         
         # apaga qualquer mensagem na interface
         window['-Mensagens-'].update('')
-        # atualiza a barra de progresso para ela ficar mais visível
-        window['-progressbar-'].update(visible=True)
         
+        window['-tema-'].update(disabled=True)
         # habilita e desabilita os botões conforme necessário
         for key in [('-iniciar-', False), ('-encerrar-', True), ('-abrir_resultados-', True), ('-abrir_pdf-', False), ('-abrir_pdf_final-', False),
-                    ('-abrir_pdf_texto-', True), ('-abrir_pdf_final_texto-', True)]:
+                    ('-abrir_pdf_texto-', True), ('-abrir_pdf_final_texto-', True), ('-progressbar-', True)]:
             window[key[0]].update(visible=key[1])
+            
+        # controle para saber se os botões estavam visíveis ao trocar o tema da janela
+        with open(controle_botoes, 'w', encoding='utf-8') as f:
+            f.write('visible')
         
         try:
             # Chama a função que executa o script
@@ -908,21 +932,82 @@ if __name__ == '__main__':
             alert(text='Erro detectado, clique no botão "Log do sistema" para acessar o arquivo de erros e contate o desenvolvedor')
             
         # habilita e desabilita os botões conforme necessário
-        for key in [('-progressbar-', False), ('-encerrar-', False), ('-iniciar-', True), ('-abrir_pdf-', True), ('-abrir_pdf_final-', True),
-                    ('-abrir_pdf_texto-', False), ('-abrir_pdf_final_texto-', False)]:
+        for key in [('-encerrar-', False), ('-iniciar-', True), ('-abrir_pdf-', True), ('-abrir_pdf_final-', True),
+                    ('-abrir_pdf_texto-', False), ('-abrir_pdf_final_texto-', False), ('-progressbar-', False)]:
             window[key[0]].update(visible=key[1])
-            
+        
+        window['-tema-'].update(disabled=False)
         window['-Progresso_texto-'].update('')
         window['-Mensagens-'].update('')
-        
     
+    
+    window = cria_layout()
+    window.set_min_size((700, 300))
+    
+    code = ''
     while True:
+        # Obtenha o widget Tkinter subjacente para o elemento Output
+        output_widget = window['-console-'].Widget
+        
+        # configura o tema conforme o tema que estava quando o programa foi fechado da última ves
+        f = open(dados_modo, 'r', encoding='utf-8')
+        modo = f.read()
+        if modo == 'claro':
+            for key in ['-abrir_resultados-', '-encerrar-', '-iniciar-', '-abrir_pdf-', '-abrir_pdf_final-']:
+                window[key].update(button_color=('#F8F8F8', None))
+            window['-tema-'].update(text='☀', button_color=('#FFC100', '#F8F8F8'))
+            # Ajuste a borda diretamente no widget Tkinter
+            output_widget.configure(highlightthickness=1, highlightbackground="black")
+        else:
+            for key in ['-abrir_resultados-', '-encerrar-', '-iniciar-', '-abrir_pdf-', '-abrir_pdf_final-']:
+                window[key].update(button_color=('#000000', None))
+            window['-tema-'].update(text='🌙', button_color=('#00C9FF', '#000000'))
+            # Ajuste a borda diretamente no widget Tkinter
+            output_widget.configure(highlightthickness=1, highlightbackground="white")
+            
         # captura o evento e os valores armazenados na interface
         event, values = window.read()
+        # salva o estado da interface
+        save_values(values)
+        
+        # troca o tema
+        if event == '-tema-':
+            f = open(dados_modo, 'r', encoding='utf-8')
+            modo = f.read()
+            
+            if modo == 'claro':
+                sg.theme('tema_escuro')  # Define o tema claro
+                with open(dados_modo, 'w', encoding='utf-8') as f:
+                    f.write('escuro')
+            else:
+                sg.theme('tema_claro')  # Define o tema claro
+                with open(dados_modo, 'w', encoding='utf-8') as f:
+                    f.write('claro')
+            
+            window.close()  # Fecha a janela atual
+            # inicia as variáveis das janelas
+            window = cria_layout()
+            
+            # retorna os elementos preenchidos
+            values = load_values()
+            for key, value in values.items():
+                if key in window.AllKeysDict:
+                    try:
+                        window[key].update(value)
+                    except Exception as e:
+                        print(f"Erro ao atualizar o elemento {key}: {e}")
+            
+            window['-abrir_pdf-'].update('Selecione a pasta que contenha os arquivos PDF para analisar:')
+            window['-abrir_pdf_final-'].update('Selecione a pasta para salvar os e-books:')
+                
+            # recupera o estado do botão de abrir resultados
+            cb = open(controle_botoes, 'r', encoding='utf-8').read()
+            if cb == 'visible':
+                window['-abrir_resultados-'].update(visible=True)
         
         try:
-            pasta_inicial = values['-abrir_pdf-']
-            pasta_final = values['-abrir_pdf_final-']
+            pasta_inicial = values['-input_dir-']
+            pasta_final = values['-output_file-']
         except:
             pasta_inicial = None
             pasta_final = None
@@ -933,11 +1018,11 @@ if __name__ == '__main__':
         elif event == 'Log do sistema':
             os.startfile('Log')
         
-        elif event == 'Ajuda':
-            os.startfile('Manual do usuário - Cria E-book DIRPF.pdf')
+        elif event == 'AJUDA':
+            os.startfile('Docs\Manual do usuário - Cria E-book DIRPF.pdf')
         
-        elif event == 'Sobre':
-            os.startfile('Sobre.pdf')
+        elif event == 'SOBRE':
+            os.startfile('Docs\Sobre.pdf')
         
         elif event == '-iniciar-':
             # Cria uma nova thread para executar o script
@@ -946,6 +1031,26 @@ if __name__ == '__main__':
     
         elif event == '-abrir_resultados-':
             os.startfile(pasta_final)
-    
+        
+        elif event == '-limpa_console-':
+            window['-console-'].update('')
+          
+        elif event == '-dev_mode-':
+            window['-terminal-'].update(visible=False)
+            code = ''
+        
+        elif event == 'Control_L:17':
+            code = ''
+
+        if event == 'Up:38' or event == 'Down:40' or event == 'Left:37' or event == 'Right:39' or event == 'a' or event == 'b':
+            code += event
+            
+        else:
+            code = ''
+        
+        if code == 'Up:38Up:38Down:40Down:40Left:37Right:39Left:37Right:39ab':
+            window['-terminal-'].update(visible=True)
+            code = ''
+            
     window.close()
     

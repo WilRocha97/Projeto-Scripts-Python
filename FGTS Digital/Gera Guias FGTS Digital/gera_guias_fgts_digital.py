@@ -64,7 +64,10 @@ def login(cnpj):
             
         if _find_img('trocar_perfil.png', conf=0.9):
             _click_img('trocar_perfil.png', conf=0.9)
-            
+        
+        if _find_img('trocar_perfil_2.png', conf=0.9):
+            _click_img('trocar_perfil_2.png', conf=0.9)
+          
         if _find_img('erro_gov.png'):
             p.press('pgDn')
             time.sleep(1)
@@ -157,7 +160,9 @@ def busca_guia(comp):
     p.press('enter')
     time.sleep(0.5)
     
-    
+    if _find_img('competencia_apuracao_nao_encontrada.png', conf=0.9):
+        return f'Competência {comp} não encontrada para esse empregador'
+
     # clica em pesquisar
     _click_img('pesquisar.png', conf=0.95, clicks=3)
     

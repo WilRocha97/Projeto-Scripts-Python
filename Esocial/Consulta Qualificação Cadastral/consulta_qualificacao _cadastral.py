@@ -9,7 +9,7 @@ from sys import path
 path.append(r'..\..\_comum')
 from chrome_comum import _initialize_chrome, _find_by_id, _find_by_path
 from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header_csv, _open_lista_dados, _where_to_start, _indice
-from captcha_comum import _solve_text_captcha
+from captcha_comum import _solve_recaptcha
 
 
 def login(driver, nome, cpf, pis, data_nasc):
@@ -67,34 +67,37 @@ def login(driver, nome, cpf, pis, data_nasc):
         timer += 1
         # se passar 60 segundos e não aparecer a tabela, retorna um erro
         if timer > 60:
-            print('❌ O site demorou muito para responder, tentando novamente')
+            print('❌ O site demorou muito para responder, tentando novamente 1')
             return driver, 'erro'
     # clica em validar a consulta
     driver.find_element(by=By.ID, value='formValidacao2:botaoValidar2').click()
     timer = 0
     # tira um print da tela com e recorta apenas a imagem do captcha para enviar para a api
-    while not _find_by_id('captcha_challenge', driver):
+    while not _find_by_id('formValidacao:botaoValidar', driver):
         time.sleep(1)
         timer += 1
         # se passar 60 segundos e não carregar o site, retorna um erro
         if timer > 60:
-            print('❌ O site demorou muito para responder, tentando novamente')
+            print('❌ O site demorou muito para responder, tentando novamente 2')
             return driver, 'erro'
     
     # resolver o captcha
-    captcha = _solve_text_captcha(driver, 'captcha_challenge')
+    data = {'url': 'https://consultacadastral.inss.gov.br/Esocial/pages/qualificacao/qualificar.xhtml',
+            'sitekey': '6LeHKtspAAAAAIGfAB4kjt6ApvYLB8w-lSRlomzg'}
+    captcha = _solve_recaptcha(data)
     
     if not captcha:
         print('❌ Erro Login - não encontrou captcha')
         return driver, 'erro captcha'
 
     # insere a resposta do captcha e clica em validar
-    try:
-        driver.find_element(by=By.ID, value='captcha_campo_resposta').send_keys(captcha)
-        driver.find_element(by=By.ID, value='formValidacao:botaoValidar').click()
-    except:
+    #try:
+    #driver.find_element(by=By.ID, value='g-recaptcha-response').send_keys(captcha)
+    driver.execute_script('document.getElementById("g-recaptcha-response").innerText="' + captcha + '"')
+    driver.find_element(by=By.ID, value='formValidacao:botaoValidar').click()
+    """except:
         print('❌ Erro ao validar a consulta, tentando novamente')
-        return driver, 'erro'
+        return driver, 'erro'"""
 
     print('>>> Acessando cadastro')
     # aguarda as informações do cadastro aparecerem, se demorar mais de 1 minuto ou a resposta do captcha estiver errada,
@@ -107,7 +110,7 @@ def login(driver, nome, cpf, pis, data_nasc):
             print('❌ A resposta não corresponde ao desafio gerado, tentando novamente')
             return driver, 'erro'
         if timer > 60:
-            print('❌ O site demorou muito para responder, tentando novamente')
+            print('❌ O site demorou muito para responder, tentando novamente 3')
             return driver, 'erro'
     return driver, 'ok'
 

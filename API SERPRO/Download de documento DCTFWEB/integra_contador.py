@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-import traceback, requests_pkcs12, atexit, re, os, requests, time, base64, json, io, chardet, OpenSSL.crypto, contextlib, tempfile, pyautogui as p, PySimpleGUI as sg
+import traceback, requests_pkcs12, atexit, sys, re, os, requests, time, base64, json, io, chardet, OpenSSL.crypto, contextlib, tempfile, pyautogui as p, PySimpleGUI as sg
+from PySimpleGUI import BUTTON_TYPE_READ_FORM, FILE_TYPES_ALL_FILES, theme_background_color, theme_button_color, BUTTON_TYPE_BROWSE_FILE, BUTTON_TYPE_BROWSE_FOLDER
+from PIL import Image, ImageDraw
+from base64 import b64encode
 from threading import Thread
 from pathlib import Path
 from functools import wraps
@@ -8,6 +11,11 @@ dados = "info\\info.txt"
 f = open(dados, 'r', encoding='utf-8')
 user = f.readline()
 input_consumer = user.split('/')
+
+icone = 'Assets/AS_icon.ico'
+dados_modo = 'Assets/modo.txt'
+controle_botoes = 'Log/Buttons.txt'
+dados_elementos = 'Log/window_values.json'
 
 
 def create_lock_file(lock_file_path):
@@ -353,10 +361,23 @@ def run(window, cnpj_contratante, usuario_b64, senha, tipo, categoria, competenc
             return
         
     p.alert(text='Download finalizado!')
-    
+
+
+# Função para salvar os valores dos elementos em um arquivo JSON
+def save_values(values, filename=dados_elementos):
+    with open(filename, 'w', encoding='latin-1') as f:
+        json.dump(values, f)
+
+# Função para carregar os valores dos elementos de um arquivo JSON
+def load_values(filename=dados_elementos):
+    if os.path.exists(filename):
+        with open(filename, 'r', encoding='latin-1') as f:
+            return json.load(f)
+    return {}
+
 
 # Define o ícone global da aplicação
-sg.set_global_icon('Assets/auto-flash.ico')
+sg.set_global_icon(icone)
 if __name__ == '__main__':
     # Especifique o caminho para o arquivo de trava
     lock_file_path = 'integra_contador.lock'
@@ -369,75 +390,150 @@ if __name__ == '__main__':
     # Defina uma função para remover o arquivo de trava ao final da execução
     atexit.register(remove_lock_file, lock_file_path)
     
-    sg.theme('GrayGrayGray')  # Define o tema do PySimpleGUI
     categoria_key = ('GERAL_MENSAL', 'GERAL_13o_SALARIO')
     categoria_nome = ('Mensal', '13º')
+    
+    # limpa o arquivo que salva o estado dos elementos preenchidos e o estado anterior do botão de abrir os resultados
+    with open(dados_elementos, 'w', encoding='utf-8') as f:
+        f.write('')
+    with open(controle_botoes, 'w', encoding='utf-8') as f:
+        f.write('')
+    
+    sg.LOOK_AND_FEEL_TABLE['tema_claro'] = {'BACKGROUND': '#F8F8F8',
+                                            'TEXT': '#000000',
+                                            'INPUT': '#F8F8F8',
+                                            'TEXT_INPUT': '#000000',
+                                            'SCROLL': '#F8F8F8',
+                                            'BUTTON': ('#000000', '#F8F8F8'),
+                                            'PROGRESS': ('#fca400', '#D7D7D7'),
+                                            'BORDER': 0,
+                                            'SLIDER_DEPTH': 0,
+                                            'PROGRESS_DEPTH': 0}
+    
+    sg.LOOK_AND_FEEL_TABLE['tema_escuro'] = {'BACKGROUND': '#000000',
+                                             'TEXT': '#F8F8F8',
+                                             'INPUT': '#000000',
+                                             'TEXT_INPUT': '#F8F8F8',
+                                             'SCROLL': '#000000',
+                                             'BUTTON': ('#F8F8F8', '#000000'),
+                                             'PROGRESS': ('#fca400', '#2A2A2A'),
+                                             'BORDER': 0,
+                                             'SLIDER_DEPTH': 0,
+                                             'PROGRESS_DEPTH': 0}
+    
+    # define o tema baseado no tema que estava selecionado na última vêz que o programa foi fechado
+    f = open(dados_modo, 'r', encoding='utf-8')
+    modo = f.read()
+    sg.theme(f'tema_{modo}')
+    
+    def RoundedButton(button_text=' ', corner_radius=0.1, button_type=BUTTON_TYPE_READ_FORM, target=(None, None), tooltip=None, file_types=FILE_TYPES_ALL_FILES, initial_folder=None, default_extension='',
+                      disabled=False, change_submits=False, enable_events=False, image_size=(None, None), image_subsample=None, border_width=None, size=(None, None), auto_size_button=None,
+                      button_color=None, disabled_button_color=None, highlight_colors=None, mouseover_colors=(None, None), use_ttk_buttons=None, font=None, bind_return_key=False, focus=False,
+                      pad=None, key=None, right_click_menu=None, expand_x=False, expand_y=False, visible=True, metadata=None):
+        if None in size:
+            multi = 5
+            size = (((len(button_text) if size[0] is None else size[0]) * 5 + 20) * multi,
+                    20 * multi if size[1] is None else size[1])
+        if button_color is None:
+            button_color = theme_button_color()
+        btn_img = Image.new('RGBA', size, (0, 0, 0, 0))
+        corner_radius = int(corner_radius / 2 * min(size))
+        poly_coords = (
+            (corner_radius, 0),
+            (size[0] - corner_radius, 0),
+            (size[0], corner_radius),
+            (size[0], size[1] - corner_radius),
+            (size[0] - corner_radius, size[1]),
+            (corner_radius, size[1]),
+            (0, size[1] - corner_radius),
+            (0, corner_radius),
+        )
+        pie_coords = [
+            [(size[0] - corner_radius * 2, size[1] - corner_radius * 2, size[0], size[1]),
+             [0, 90]],
+            [(0, size[1] - corner_radius * 2, corner_radius * 2, size[1]), [90, 180]],
+            [(0, 0, corner_radius * 2, corner_radius * 2), [180, 270]],
+            [(size[0] - corner_radius * 2, 0, size[0], corner_radius * 2), [270, 360]],
+        ]
+        brush = ImageDraw.Draw(btn_img)
+        brush.polygon(poly_coords, button_color[1])
+        for coord in pie_coords:
+            brush.pieslice(coord[0], coord[1][0], coord[1][1], button_color[1])
+        data = io.BytesIO()
+        btn_img.thumbnail((size[0] // 3, size[1] // 3), resample=Image.LANCZOS)
+        btn_img.save(data, format='png', quality=95)
+        btn_img = b64encode(data.getvalue())
+        return sg.Button(button_text=button_text, button_type=button_type, target=target, tooltip=tooltip,
+                         file_types=file_types, initial_folder=initial_folder, default_extension=default_extension,
+                         disabled=disabled, change_submits=change_submits, enable_events=enable_events,
+                         image_data=btn_img, image_size=image_size,
+                         image_subsample=image_subsample, border_width=border_width, size=size,
+                         auto_size_button=auto_size_button, button_color=(button_color[0], theme_background_color()),
+                         disabled_button_color=disabled_button_color, highlight_colors=highlight_colors,
+                         mouseover_colors=mouseover_colors, use_ttk_buttons=use_ttk_buttons, font=font,
+                         bind_return_key=bind_return_key, focus=focus, pad=pad, key=key, right_click_menu=right_click_menu,
+                         expand_x=expand_x, expand_y=expand_y, visible=visible, metadata=metadata)
+    
+    
     # sg.theme_previewer()
     # Layout da janela
-    layout = [
-        [sg.Button('Ajuda', border_width=0), sg.Button('Log do sistema', border_width=0)],
-        [sg.Text('')],
-        [sg.Text('Informe o CNPJ do contratante do serviço SERPRO:')],
-        [sg.InputText(key='-input_cnpj_contratante-', size=90, default_text=input_consumer[0])],
-        [sg.Text('Informe a Consumer Key:')],
-        [sg.InputText(key='-input_consumer_key-', size=90, password_char='*', default_text=input_consumer[1])],
-        [sg.Text('Informe a Consumer Secret:')],
-        [sg.InputText(key='-input_consumer_secret-', size=90, password_char='*', default_text=input_consumer[2])],
-        [sg.Text('Informe a senha do certificado digital:')],
-        [sg.InputText(key='-input_senha_certificado-', size=90, password_char='*')],
-        [sg.Checkbox(key='-categoria_mensal-', text='Mensal', enable_events=True), sg.Checkbox(key='-categoria_13-', text='13º', enable_events=True)],
-        [sg.Checkbox(key='-guia_pagamento-', text='Documento de arrecadação', enable_events=True), sg.Checkbox(key='-declaração-', text='Declaração Completa', enable_events=True)],
-        [sg.Text('Informe a competência das guias. (Mensal = "00/0000") (13º = "0000"):')],
-        [sg.InputText(key='-input_competencia-', size=90)],
-        [sg.Text('')],
-        [sg.Text('Selecione o certificado digital:')],
-        [sg.FileBrowse('Pesquisar', key='-abrir-', file_types=(('PFX files', '*.pfx'),)), sg.InputText(key='-input_certificado-', size=80, disabled=True)],
-        [sg.Text('Selecione um arquivo Excel com os dados dos clientes:')],
-        [sg.FileBrowse('Pesquisar', key='-abrir1-', file_types=(('Planilhas Excel', '*.csv'),)), sg.InputText(key='-input_excel-', size=80, disabled=True)],
-        [sg.Text('Selecione um diretório para salvar os resultados (Servidor "Comum T:" é o padrão):')],
-        [sg.FolderBrowse('Pesquisar', key='-abrir2-'), sg.InputText(default_text='T:/ROBÔ/DCTF-WEB',key='-output_dir-', size=80, disabled=True)],
-        [sg.Text('')],
-        [sg.Text('', key='-Mensagens-')],
-        [sg.Text(size=6, text='', key='-Progresso_texto-'), sg.ProgressBar(max_value=0, orientation='h', size=(54, 5), key='-progressbar-', bar_color='#f0f0f0')],
-        [sg.Button('Iniciar', key='-iniciar-', border_width=0), sg.Button('Encerrar', key='-encerrar-', disabled=True, border_width=0), sg.Button('Abrir resultados', key='-abrir_resultados-', disabled=True, border_width=0)],
-    ]
-    
-    # guarda a janela na variável para manipula-la
-    window = sg.Window('Download de documentos DCTFWEB API SERPRO', layout)
+    def cria_layout():
+        layout = [
+                [sg.Button('AJUDA', border_width=0),
+                   sg.Button('LOG DO SISTEMA', border_width=0),
+                   sg.Text('', expand_x=True),
+                   sg.Button('', key='-tema-', font=("Arial", 11), border_width=0)],
+                [sg.Text('')],
+                [sg.Text('')],
+                [sg.Text('Informe o CNPJ do contratante do serviço SERPRO:'), sg.InputText(key='-input_cnpj_contratante-', size=14, default_text=input_consumer[0])],
+                [sg.Text('Informe a Consumer Key:'), sg.InputText(key='-input_consumer_key-', size=30, password_char='*', default_text=input_consumer[1])],
+                [sg.Text('Informe a Consumer Secret:'), sg.InputText(key='-input_consumer_secret-', size=30, password_char='*', default_text=input_consumer[2])],
+                [sg.Text('Informe a senha do certificado digital:'), sg.InputText(key='-input_senha_certificado-', size=30, password_char='*')],
+                [sg.Checkbox(key='-categoria_mensal-', text='Mensal', enable_events=True), sg.Checkbox(key='-categoria_13-', text='13º', enable_events=True)],
+                [sg.Checkbox(key='-guia_pagamento-', text='Documento de arrecadação', enable_events=True), sg.Checkbox(key='-declaração-', text='Declaração Completa', enable_events=True)],
+                [sg.Text('Informe a competência das guias. (Mensal = "00/0000") (13º = "0000"):'), sg.InputText(key='-input_competencia-', size=7)],
+                [sg.Text('')],
+                
+                [sg.pin(sg.Text(text='Selecione o certificado digital', key='-abrir_texto-', visible=False)),
+                 sg.pin(RoundedButton('Selecione o certificado digital', key='-abrir-', corner_radius=0.8, button_color=(None, '#848484'), button_type=BUTTON_TYPE_BROWSE_FILE,
+                                      size=(650, 100), file_types=(('PFX files', '*.pfx'),), target='-input_certificado-')),
+                 sg.pin(sg.InputText(expand_x=True, key='-input_certificado-', text_color='#fca400'), expand_x=True)],
+                
+                [sg.pin(sg.Text(text='Selecione um arquivo Excel com os dados dos clientes', key='-abrir1_texto-', visible=False)),
+                 sg.pin(RoundedButton('Selecione um arquivo Excel com os dados dos clientes', key='-abrir1-', corner_radius=0.8, button_color=(None, '#848484'), button_type=BUTTON_TYPE_BROWSE_FILE,
+                                      size=(1100, 100), file_types=(('Planilhas Excel', '*.csv'),), target='-input_excel-')),
+                 sg.pin(sg.InputText(expand_x=True, key='-input_excel-', text_color='#fca400'), expand_x=True)],
+                
+                [sg.pin(sg.Text(text='Selecione um diretório para salvar os resultados (Servidor "Comum T:" é o padrão)', key='-abrir2_texto-', visible=False)),
+                 sg.pin(RoundedButton('Selecione um diretório para salvar os resultados (Servidor "Comum T" é o padrão):', key='-abrir2-', corner_radius=0.8, button_color=(None, '#848484'),
+                                      size=(1550, 100), button_type=BUTTON_TYPE_BROWSE_FOLDER, target='-output_dir-')),
+                 sg.pin(sg.InputText(expand_x=True, default_text='T:/ROBÔ/DCTF-WEB', key='-output_dir-', text_color='#fca400'), expand_x=True)],
+                
+                [sg.Text('', expand_y=True)],
+                
+                [sg.Text('', key='-Mensagens-')],
+                [sg.Text(text='', key='-Progresso_texto-'),
+                 sg.ProgressBar(max_value=0, orientation='h', size=(5, 5), expand_x=True, key='-progressbar-', visible=False)],
+                [sg.pin(RoundedButton('INICIAR', key='-iniciar-', corner_radius=0.8, button_color=(None, '#fca400'))),
+                 sg.pin(RoundedButton('ENCERRAR', key='-encerrar-', corner_radius=0.8, button_color=(None, '#fca400'), visible=False)),
+                 sg.pin(RoundedButton('ABRIR RESULTADOS', key='-abrir_resultados-', corner_radius=0.8, button_color=(None, '#fca400'), visible=False))]
+        ]
+        
+        # guarda a janela na variável para manipula-la
+        return sg.Window('Download de documentos DCTFWEB API SERPRO', layout, resizable=True, finalize=True, margins=(30, 30))
     
     
     def run_script_thread():
-        # try:
-        if not cnpj_contratante:
-            p.alert(text=f'Por favor informe o CNPJ do contratante da API SERPRO.')
-            return
-        if not len(cnpj_contratante) == 14:
-            p.alert(text=f'Por favor informe um CNPJ válido.')
-            return
-        if not consumer_key:
-            p.alert(text=f'Por favor informe o consumerKey.')
-            return
-        if not consumer_secret:
-            p.alert(text=f'Por favor informe o consumerSecret.')
-            return
-        if not senha:
-            p.alert(text=f'Por favor informe a senha do certificado digital.')
-            return
-        if not categoria:
-            p.alert(text=f'Por favor informe se a categoria é Mensal ou 13º.')
-            return
-        if not tipo:
-            p.alert(text=f'Por favor informe se o tipo de documento é o Documento de Arrecadação ou Declaração completa')
-            return
-        if not competencia:
-            p.alert(text=f'Por favor informe a competência das guias.')
-            return
-        if not input_certificado:
-            p.alert(text=f'Por favor selecione um certificado digital.')
-            return
-        if not input_excel:
-            p.alert(text=f'Por favor selecione uma planilha de dados.')
-            return
+        # verifica se os inputs foram preenchidos corretamente
+        for elemento in [(cnpj_contratante, 'Por favor informe o CNPJ do contratante da API SERPRO.'), (len(cnpj_contratante) == 14, 'Por favor informe um CNPJ válido.'),
+                         (consumer_key, 'Por favor informe o consumerKey.'), (consumer_secret, 'Por favor informe o consumerSecret.'), (senha, 'Por favor informe a senha do certificado digital.'),
+                         (categoria, 'Por favor informe se a categoria é Mensal ou 13º.'), (tipo, 'Por favor informe se o tipo de documento é o Documento de Arrecadação ou Declaração completa'),
+                         (competencia, 'Por favor informe a competência das guias.'), (input_certificado, 'Por favor selecione um certificado digital.'),
+                         (input_excel, 'Por favor selecione uma planilha de dados.')]:
+            if not elemento[0]:
+                p.alert(f'❗ {elemento[1]}')
+                return
+        
         if categoria == '-categoria_13-':
             if len(competencia) > 4:
                 p.alert(text=f'Por favor insira apenas o ano referente a competência de 13º.')
@@ -446,23 +542,20 @@ if __name__ == '__main__':
             if not re.compile(r'\d\d/\d\d\d\d').search(competencia):
                 p.alert(text=f'Competência no formato inválido.')
                 return
-            
+        
         # habilita e desabilita os botões conforme necessário
-        window['-input_cnpj_contratante-'].update(disabled=True)
-        window['-input_consumer_key-'].update(disabled=True)
-        window['-input_consumer_secret-'].update(disabled=True)
-        window['-input_senha_certificado-'].update(disabled=True)
-        window['-categoria_mensal-'].update(disabled=True)
-        window['-categoria_13-'].update(disabled=True)
-        window['-declaração-'].update(disabled=True)
-        window['-guia_pagamento-'].update(disabled=True)
-        window['-input_competencia-'].update(disabled=True)
-        window['-abrir-'].update(disabled=True)
-        window['-abrir1-'].update(disabled=True)
-        window['-abrir2-'].update(disabled=True)
-        window['-iniciar-'].update(disabled=True)
-        window['-encerrar-'].update(disabled=False)
-        window['-abrir_resultados-'].update(disabled=False)
+        for key in [('-input_cnpj_contratante-', True), ('-input_consumer_key-', True), ('-input_consumer_secret-', True), ('-input_senha_certificado-', True), ('-categoria_mensal-', True),
+                    ('-categoria_13-', True), ('-declaração-', True), ('-guia_pagamento-', True), ('-input_competencia-', True), ('-abrir-', True), ('-abrir1-', True), ('-abrir2-', True),]:
+            window_principal[key[0]].update(disabled=key[1])
+            
+            # habilita e desabilita os botões conforme necessário
+            for key in [('-iniciar-', False), ('-encerrar-', True), ('-abrir_resultados-', True), ('-abrir-', False), ('-abrir1-', False), ('-abrir2-', False),
+                        ('-abrir_texto-', True), ('-abrir1_texto-', True), ('-abrir2_texto-', True), ('-progressbar-', True)]:
+                window_principal[key[0]].update(visible=key[1])
+        
+        # controle para saber se os botões estavam visíveis ao trocar o tema da janela
+        with open(controle_botoes, 'w', encoding='utf-8') as f:
+            f.write('visible')
         
         window['-Mensagens-'].update('Validando credenciais...')
         # atualiza a barra de progresso para ela ficar mais visível
@@ -492,38 +585,90 @@ if __name__ == '__main__':
                             f'Erro: {erro}', local=output_dir)
         
         # habilita e desabilita os botões conforme necessário
-        window['-input_cnpj_contratante-'].update(disabled=False)
-        window['-input_consumer_key-'].update(disabled=False)
-        window['-input_consumer_secret-'].update(disabled=False)
-        window['-input_senha_certificado-'].update(disabled=False)
-        window['-categoria_mensal-'].update(disabled=False)
-        window['-categoria_13-'].update(disabled=False)
-        window['-declaração-'].update(disabled=False)
-        window['-guia_pagamento-'].update(disabled=False)
-        window['-input_competencia-'].update(disabled=False)
-        window['-abrir-'].update(disabled=False)
-        window['-abrir1-'].update(disabled=False)
-        window['-abrir2-'].update(disabled=False)
-        window['-iniciar-'].update(disabled=False)
-        window['-encerrar-'].update(disabled=True)
-        
+        for key in [('-input_cnpj_contratante-', False), ('-input_consumer_key-', False), ('-input_consumer_secret-', False), ('-input_senha_certificado-', False), ('-categoria_mensal-', False),
+                    ('-categoria_13-', False), ('-declaração-', False), ('-guia_pagamento-', False), ('-input_competencia-', False), ('-abrir-', False), ('-abrir1-', False), ('-abrir2-', False),
+                    ('-iniciar-', False), ('-encerrar-', True)]:
+            window_principal[key[0]].update(disabled=key[1])
+            
+            # habilita e desabilita os botões conforme necessário
+            for key in [('-iniciar-', True), ('-encerrar-', False), ('-abrir-', True), ('-abrir1-', True), ('-abrir2-', True),
+                        ('-abrir_texto-', False), ('-abrir1_texto-', False), ('-abrir2_texto-', False), ('-progressbar-', False)]:
+                window_principal[key[0]].update(visible=key[1])
+                
         # apaga qualquer mensagem na interface
         window['-Mensagens-'].update('')
-        # atualiza a barra de progresso para ela ficar mais visível
         window['-progressbar-'].update_bar(0)
         window['-Progresso_texto-'].update('')
-        window['-progressbar-'].update(bar_color='#f0f0f0')
         """except:
             pass"""
     
+    
+    window = cria_layout()
     
     categoria = None
     tipo = None
     while True:
         checkboxes_categoria = ['-categoria_mensal-', '-categoria_13-']
         checkboxes_tipo = ['-guia_pagamento-', '-declaração-']
+        
+        # configura o tema conforme o tema que estava quando o programa foi fechado da última ves
+        f = open(dados_modo, 'r', encoding='utf-8')
+        modo = f.read()
+        if modo == 'claro':
+            for key in ['-input_competencia-', '-input_senha_certificado-', '-input_consumer_secret-', '-input_consumer_key-', '-input_cnpj_contratante-']:
+                window[key].update(background_color='#D1D1D1')
+            for key in ['-abrir_resultados-', '-encerrar-', '-iniciar-', '-abrir-', '-abrir1-', '-abrir2-']:
+                window[key].update(button_color=('#F8F8F8', None))
+            window['-tema-'].update(text='☀', button_color=('#FFC100', '#F8F8F8'))
+        else:
+            for key in ['-input_competencia-', '-input_senha_certificado-', '-input_consumer_secret-', '-input_consumer_key-', '-input_cnpj_contratante-']:
+                window[key].update(background_color='#3F3F3F')
+            for key in ['-abrir_resultados-', '-encerrar-', '-iniciar-', '-abrir-', '-abrir1-', '-abrir2-']:
+                window[key].update(button_color=('#000000', None))
+            window['-tema-'].update(text='🌙', button_color=('#00C9FF', '#000000'))
+            
         # captura o evento e os valores armazenados na interface
         event, values = window.read()
+        
+        # salva o estado da interface
+        save_values(values)
+        
+        # troca o tema
+        if event == '-tema-':
+            f = open(dados_modo, 'r', encoding='utf-8')
+            modo = f.read()
+            
+            if modo == 'claro':
+                sg.theme('tema_escuro')  # Define o tema claro
+                with open(dados_modo, 'w', encoding='utf-8') as f:
+                    f.write('escuro')
+            else:
+                sg.theme('tema_claro')  # Define o tema claro
+                with open(dados_modo, 'w', encoding='utf-8') as f:
+                    f.write('claro')
+            
+            window.close()  # Fecha a janela atual
+            # inicia as variáveis das janelas
+            window = cria_layout()
+            
+            # retorna os elementos preenchidos
+            values = load_values()
+            for key, value in values.items():
+                if key in window.AllKeysDict:
+                    try:
+                        window[key].update(value)
+                    except Exception as e:
+                        print(f"Erro ao atualizar o elemento {key}: {e}")
+            
+            window['-abrir-'].update('Selecione o certificado digital')
+            window['-abrir1-'].update('Selecione um arquivo Excel com os dados dos clientes')
+            window['-abrir2-'].update('Selecione um diretório para salvar os resultados (Servidor "Comum T" é o padrão):')
+            
+            # recupera o estado do botão de abrir resultados
+            cb = open(controle_botoes, 'r', encoding='utf-8').read()
+            if cb == 'visible':
+                window['-abrir_resultados-'].update(visible=True)
+        
         try:
             cnpj_contratante = values['-input_cnpj_contratante-']
             cnpj_contratante = cnpj_contratante.replace('.', '').replace('/', '').replace('-', '')
@@ -562,10 +707,10 @@ if __name__ == '__main__':
         if event == sg.WIN_CLOSED:
             break
         
-        elif event == 'Log do sistema':
+        elif event == 'LOG DO SISTEMA':
             os.startfile('Log')
 
-        elif event == 'Ajuda':
+        elif event == 'AJUDA':
             os.startfile('Manual do usuário - Download de documento DCTFWEB API SERPRO.pdf')
         
         elif event == '-iniciar-':

@@ -4,7 +4,7 @@ from dateutil.relativedelta import relativedelta
 from sys import path
 
 path.append(r'..\..\_comum')
-from pyautogui_comum import _find_img, _click_img, _wait_img, get_comp
+from pyautogui_comum import _find_img, _wait_img, get_comp
 from comum_comum import _indice, _time_execution, _barra_de_status, _escreve_relatorio_csv, _escreve_header_csv, e_dir, _open_lista_dados, _where_to_start, ask_for_dir
 from dominio_comum import _login_web, _abrir_modulo, _login, _salvar_pdf
 
@@ -43,6 +43,7 @@ def faturamento_compra(ano, empresa, andamento):
     if not resultado:
         return 'ok'
     elif resultado:
+        print('>>> Arquivo criado...')
         pass
     else:
         return resultado
@@ -63,7 +64,7 @@ def faturamento_compra(ano, empresa, andamento):
             
     p.press('esc', presses=4)
     time.sleep(2)
-    
+
     arquivo = mover_demonstrativo(empresa, ano)
     captura_info_pdf(andamento, arquivo)
     
@@ -98,13 +99,14 @@ def espera_gerar(empresa, andamento):
 
 
 def mover_demonstrativo(empresa, ano):
+    print('>>> Movendo arquivo')
     os.makedirs('execução/Demonstrativos', exist_ok=True)
     cod, cnpj, nome = empresa
 
     execucoes = 'V:\\Setor Robô\\Scripts Python\\Domínio\\Faturamento X Compra\\execução\\Demonstrativos'
 
     guia = os.path.join('C:', 'Demonstrativo Mensal.pdf')
-    arquivo = f'{cod} - {nome.replace("/", " ")} - Demonstrativo Mensal {ano}.pdf'
+    arquivo = f'{cod} - {nome[:30].replace("/", " ").replace(":", " ").replace("?", "").replace("*", "").replace("|", " ").replace(">", " ").replace("<", " ")} - Demonstrativo Mensal {ano}.pdf'
     
     while not os.path.exists(guia):
         time.sleep(1)
@@ -119,6 +121,7 @@ def mover_demonstrativo(empresa, ano):
     
 
 def captura_info_pdf(andamento, arquivo, refaz_planilha='não'):
+    print('>>> Analisando arquivo...')
     empresa = re.compile(r'(\d+) - (.+) - Demonstrativo Mensal').search(arquivo)
     cod = empresa.group(1)
     nome = empresa.group(2)

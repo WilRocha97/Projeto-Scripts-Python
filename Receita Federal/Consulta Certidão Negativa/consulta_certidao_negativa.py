@@ -188,7 +188,7 @@ def consulta(consulta_tipo, identificacao):
             p.press('f5')
 
         for i in range(60):
-            if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9) or _find_img('site_morreu_4.png', conf=0.9):
+            if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9) or _find_img('site_morreu_4.png', conf=0.9) or _find_img('site_morreu_6.png', conf=0.9):
                 p.hotkey('ctrl', 'w')
                 _abrir_chrome(link)
 
@@ -251,9 +251,13 @@ def run(window):
         try:
             codigo, identificacao, cnpj, nome = empresa
         except:
-            identificacao, nome = empresa
-            codigo = False
-            cnpj = False
+            try:
+                codigo, identificacao, nome = empresa
+                cnpj = False
+            except:
+                identificacao, nome = empresa
+                codigo = False
+                cnpj = False
             
         nome = nome.replace('/', '')
         
@@ -290,8 +294,8 @@ def run(window):
         """except:
             time.sleep(2)
             p.hotkey('ctrl', 'w')"""
-
     p.hotkey('ctrl', 'w')
+
 
 
 if __name__ == '__main__':

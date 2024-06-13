@@ -67,23 +67,21 @@ def barra_de_status(func):
         sg.theme('tema')  # Define o tema do PySimpleGUI
         # sg.theme_previewer()
         # Layout da janela
-        layout = [
-            [sg.Button('Iniciar', key='-iniciar-', border_width=0),
-             sg.Button('Fechar', key='-fechar-', border_width=0, visible=False),
-             sg.Text('', key='-titulo-'),
-             sg.Text('', key='-Mensagens-'),
-             sg.Image(data=image_to_data(im), key='-Processando-'),
-             sg.Image(data=image_to_data(im_check), key='-Check-', visible=False),
-             sg.Image(data=image_to_data(im_error), key='-Error-', visible=False)],
-        ]
+        layout = [[sg.pin(sg.Image(data=image_to_data(im), key='-Processando-')),
+                 sg.pin(sg.Image(data=image_to_data(im_check), key='-Check-', visible=False)),
+                 sg.pin(sg.Image(data=image_to_data(im_error), key='-Error-', visible=False)),
+                 sg.Button('Iniciar', key='-iniciar-', border_width=0),
+                 sg.Button('Fechar', key='-fechar-', border_width=0, visible=False),
+                 sg.Text('', key='-titulo-'),
+                 sg.Text('', key='-Mensagens-')]]
         
         # guarda a janela na variável para manipula-la
         screen_width, screen_height = sg.Window.get_screen_size()
-        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(745, 34), margins=(0,0), finalize=True, location=((screen_width // 2) - (745 // 2), 0))
+        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(910, 35), margins=(0,0), finalize=True, location=((screen_width // 2) - (910 // 2), 0))
         
         def run_script_thread():
             # habilita e desabilita os botões conforme necessário
-            window['-titulo-'].update('Rotina automática, não interfira.', text_color='#fca103')
+            window['-titulo-'].update('Rotina automática.', text_color='#fca103')
             window['-iniciar-'].update(visible=False)
             window['-fechar-'].update(visible=False)
             window['-Check-'].update(visible=False)
@@ -125,6 +123,9 @@ def barra_de_status(func):
             window['-Check-'].update(visible=True)
         
         processando = 'não'
+        # Variáveis para rastreamento de movimentação
+        mouse_down = False
+        start_pos = (0, 0)
         while True:
             # captura o evento e os valores armazenados na interface
             event, values = window.read(timeout=15)
@@ -139,11 +140,11 @@ def barra_de_status(func):
                 Thread(target=run_script_thread).start()
                 processando = 'sim'
             
-            if processando == 'sim':
+            elif processando == 'sim':
                 index = (index + 1) % frames
                 im.seek(index)
                 window['-Processando-'].update(data=image_to_data(im))
-        
+            
         window.close()
     return wrapper
 _barra_de_status = barra_de_status
@@ -397,6 +398,11 @@ def indice(count, total_empresas, empresa='', index=0, window=False, tempos=Fals
         
         tempos.append(tempo_inicial)
         tempo_execucao_atual = int(tempos[1].timestamp()) - int(tempos[0].timestamp())
+        tempos.pop(0)
+        
+        # verifica se o lista 'tempo_execucao' tem mais de 100 itens, se tiver, tira o primeiro para ficar somente os 100 mais recentes
+        if len(tempo_execucao) > 100:
+            del (tempo_execucao[0])
         
         tempo_execucao.append(tempo_execucao_atual)
         for t in tempo_execucao:
@@ -414,9 +420,22 @@ def indice(count, total_empresas, empresa='', index=0, window=False, tempos=Fals
         minutos = (tempo_total.seconds % 3600) // 60
         
         # Retorna o tempo no formato "dias:horas:minutos:segundos"
-        tempo_estimado_texto = f" | Tempo estimado: {dias} dias {horas} horas {minutos} minutos"
-        tempos.pop(0)
+        dias_texto = ''
+        horas_texto = ''
+        minutos_texto = ''
         
+        if dias > 0:
+            dias_texto = f' {dias} dias'
+        if horas > 0:
+            horas_texto = f' {horas} horas'
+        if minutos > 0:
+            minutos_texto = f' {minutos} minutos'
+        
+        if dias > 0 or horas > 0 or minutos > 0:
+            previsao_termino = tempo_inicial + tempo_total
+            # Retorna o tempo no formato "dias:horas:minutos:segundos"
+            tempo_estimado_texto = f" | Tempo estimado:{dias_texto}{horas_texto}{minutos_texto} | Previsão de termino: {previsao_termino.strftime('%d/%m/%Y as %H:%M')}"
+
     if window:
         while True:
             try:
@@ -470,3 +489,18 @@ def generate_random_number(lista_controle):
         if controle not in lista_controle:
             lista_controle.append(controle)
             return controle, lista_controle
+
+
+def concatena(variavel, quantidade, posicao, caractere):
+    variavel = str(variavel)
+    if posicao == 'depois':
+        # concatena depois
+        while len(str(variavel)) < quantidade:
+            variavel += str(caractere)
+    if posicao == 'antes':
+        # concatena antes
+        while len(str(variavel)) < quantidade:
+            variavel = str(caractere) + str(variavel)
+    
+    return variavel
+_concatena = concatena

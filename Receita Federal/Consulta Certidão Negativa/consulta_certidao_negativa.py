@@ -46,7 +46,7 @@ def salvar(consulta_tipo, pasta, andamento, codigo, identificacao, cnpj, nome, p
             p.hotkey('ctrl', 'w')
             return False
 
-        if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9) or _find_img('site_morreu_4.png', conf=0.9) or _find_img('site_morreu_5.png', conf=0.9):
+        if _find_img('pagina_downloads.png', conf=0.9) or _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9) or _find_img('site_morreu_4.png', conf=0.9) or _find_img('site_morreu_5.png', conf=0.9):
             print('>>> Site morreu, tentando novamente')
             p.hotkey('ctrl', 'w')
             time.sleep(1)
@@ -90,11 +90,12 @@ def salvar(consulta_tipo, pasta, andamento, codigo, identificacao, cnpj, nome, p
 
         if _find_img('identificacao_nao_informada.png', conf=0.95):
             _click_img('identificacao_nao_informada_ok.png', conf=0.95)
-            time.sleep(1)
+            time.sleep(0.5)
             p.write(identificacao)
             time.sleep(1)
             
         if _find_img(consulta_tipo + '_vazio.png', conf=0.99):
+            time.sleep(0.5)
             p.write(identificacao)
             time.sleep(1)
             
@@ -104,7 +105,8 @@ def salvar(consulta_tipo, pasta, andamento, codigo, identificacao, cnpj, nome, p
         if _find_img(f'informe_{consulta_tipo}.png', conf=0.9) or _find_img(f'informe_{consulta_tipo}_2.png', conf=0.9):
             _click_img(f'informe_{consulta_tipo}.png', conf=0.9, timeout=1)
             _click_img(f'informe_{consulta_tipo}_2.png', conf=0.9, timeout=1)
-
+            p.write(identificacao)
+            
         if _find_img(consulta_tipo + '_vazio.png', conf=0.99):
             p.write(identificacao)
             time.sleep(1)
@@ -188,7 +190,7 @@ def consulta(consulta_tipo, identificacao):
             p.press('f5')
 
         for i in range(60):
-            if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9) or _find_img('site_morreu_4.png', conf=0.9) or _find_img('site_morreu_6.png', conf=0.9):
+            if _find_img('site_morreu_2.png', conf=0.9) or _find_img('site_morreu_3.png', conf=0.9) or _find_img('site_morreu_4.png', conf=0.9) or _find_img('site_morreu_6.png', conf=0.9) or _find_img('pagina_downloads.png', conf=0.9):
                 p.hotkey('ctrl', 'w')
                 _abrir_chrome(link)
 
@@ -209,32 +211,41 @@ def consulta(consulta_tipo, identificacao):
 
 
 def analisa_nome_certidao(pasta_download, nome_certidao):
-    arq = os.path.join(pasta_download, nome_certidao)
-    try:
-        doc = fitz.open(arq, filetype="pdf")
-    except:
-        return 'erro'
-    
-    texto_arquivo = ''
-    for page in doc:
-        texto = page.get_text('text', flags=1 + 2 + 8)
-        texto_arquivo += texto
-    
-    nome = re.compile(r'Nome: (.+)').search(texto_arquivo).group(1)
-    nome = nome.replace('/', '')
-    tem_pendencias = re.compile(r'não constam pendências em seu nome').search(texto_arquivo)
-    
-    doc.close()
-    
-    if not tem_pendencias:
-        pasta_pendencias = pasta_download + ' com pendências'
-        os.makedirs(pasta_pendencias, exist_ok=True)
-        shutil.move(arq, os.path.join(pasta_pendencias, nome_certidao.replace('.pdf', f' - {nome}.pdf')))
-        return 'com pendência'
-    else:
-        shutil.move(arq, os.path.join(pasta_download, nome_certidao.replace('.pdf', f' - {nome}.pdf')))
-        return ''
-    
+    while True:
+        try:
+            if _find_img('receita_logo.png', conf=0.9):
+                p.hotkey('ctrl', 'w')
+
+            arq = os.path.join(pasta_download, nome_certidao)
+            try:
+                doc = fitz.open(arq, filetype="pdf")
+            except:
+                return 'erro'
+
+            texto_arquivo = ''
+            for page in doc:
+                texto = page.get_text('text', flags=1 + 2 + 8)
+                texto_arquivo += texto
+
+            nome = re.compile(r'Nome: (.+)').search(texto_arquivo).group(1)
+            nome = nome.replace('/', '')
+            tem_pendencias = re.compile(r'não constam pendências em seu nome').search(texto_arquivo)
+
+            doc.close()
+
+            if not tem_pendencias:
+                pasta_pendencias = pasta_download + ' com pendências'
+                os.makedirs(pasta_pendencias, exist_ok=True)
+                shutil.move(arq, os.path.join(pasta_pendencias, nome_certidao.replace('.pdf', f' - {nome}.pdf')))
+                return 'com pendência'
+            else:
+                shutil.move(arq, os.path.join(pasta_download, nome_certidao.replace('.pdf', f' - {nome}.pdf')))
+                return ''
+
+        except PermissionError:
+            print('❗ Erro ao analizar o arquivo, tentando novamente...')
+            _click_img('continuar_download.png', conf=0.9)
+
 
 @_time_execution
 @_barra_de_status

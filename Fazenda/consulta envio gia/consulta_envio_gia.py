@@ -1,4 +1,4 @@
-import datetime, time, re, os
+import datetime, time, re, os, shutil
 from bs4 import BeautifulSoup
 from xhtml2pdf import pisa
 from selenium import webdriver
@@ -138,7 +138,12 @@ def consulta_gia(ie, nome, comp, driver, sid):
                 return driver, 'ok'
             
     return driver, f'{nome};{resultado.group(1)}'
-        
+    
+    
+def marca_planilha_usada(planilha):
+    hora_utilizacao = datetime.datetime.now().strftime('%d-%m-%Y as %H-%M-%S')
+    shutil.move(planilha, planilha.replace('.csv', f' usada {hora_utilizacao}.csv'))
+
     
 @_time_execution
 def run():
@@ -151,7 +156,7 @@ def run():
     comp = _get_comp(printable='mm/yyyy', strptime='%m/%Y')
     comp_formatado = comp.replace("/", "-")
     # função para abrir a lista de dados
-    empresas = _open_lista_dados()
+    empresas, planilha = _open_lista_dados(retorna_planilha=True)
     
     # função para saber onde o robô começa na lista de dados
     index = _where_to_start(tuple(i[0] for i in empresas))
@@ -162,6 +167,8 @@ def run():
     usuario_anterior = 'padrão'
     sid = ''
     driver = False
+    
+    marca_planilha_usada(planilha)
     
     tempos = [datetime.datetime.now()]
     tempo_execucao = []

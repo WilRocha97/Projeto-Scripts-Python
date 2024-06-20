@@ -195,25 +195,40 @@ for file in os.listdir(documentos):
     arq = os.path.join(documentos, file)
     doc = fitz.open(arq, filetype="pdf")
     
+    texto_arquivo = ''
     for page in doc:
+        # flag: 1 = mantém as ligaduras “ff”, “fi”, “fl”, “ffi”, “ffl”, , “ft”, “st”
+        # flag: 2 = mantém espaços em branco
+        # flag: 8 = bloqueia a inserção de espaçamento automático
+        # para mais informações sobre flags: https://pymupdf.readthedocs.io/en/latest/vars.html#text-extraction-flags
+        # option: 'text' = extrai o conteúdo em formato de texto
+        # para mais informações sobre 'options': https://pymupdf.readthedocs.io/en/latest/annot.html#Annot.get_text
         texto = page.get_text('text', flags=1 + 2 + 8)
+        texto_arquivo += texto
+        
+    print(texto_arquivo)
+    #time.sleep(55)
+    # regex_termo = re.compile(r'{}'.format(cnpj))
+    # regex_termo = re.compile(r'Não foram detectadas pendências/exigibilidades suspensas nos controles da Receita Federal e da Procuradoria-Geral da Fazenda Nacional.')
+    # regex_termo = re.compile(r'Não foram detectadas pendências/exigibilidades suspensas para esse contribuinte nos controles da Procuradoria-Geral da Fazenda Nacional.')
+    # regex_termo = re.compile(r'CP-SEGUR.\n11/2021')
+    # regex_termo = re.compile(r'GIA ST-1/1')
+    # regex_termo = re.compile(r'GIA-1/1')
+    # regex_termo = re.compile(r'(31/12/2022)\nOpção pelo SIMEI')
+    #regex_termo = re.compile(r'2372-01 - CSLL')
+    #regex_termo = re.compile(r'Notificação de lançamento')
+    regex_termo = re.compile(r'PARTICIPAÇÃO NOS LUCROS')
+
+    #regex_termo = re.compile(r'Ficha Cadastral Simplificada. Documento certificado por JUNTA COMERCIAL DO ESTADO DE SÃO PAULO.')
+    # regex_termo = re.compile(r'SIMPLES NAC.\n05/2021')
+    resultado = regex_termo.search(texto_arquivo)
+    
+    if not resultado:
+        continue
+    else:
         # print(texto)
         # time.sleep(55)
-        # regex_termo = re.compile(r'{}'.format(cnpj))
-        # regex_termo = re.compile(r'Não foram detectadas pendências/exigibilidades suspensas nos controles da Receita Federal e da Procuradoria-Geral da Fazenda Nacional.')
-        # regex_termo = re.compile(r'Não foram detectadas pendências/exigibilidades suspensas para esse contribuinte nos controles da Procuradoria-Geral da Fazenda Nacional.')
-        # regex_termo = re.compile(r'CP-SEGUR.\n11/2021')
-        # regex_termo = re.compile(r'GIA ST-1/1')
-        # regex_termo = re.compile(r'GIA-1/1')
-        # regex_termo = re.compile(r'(31/12/2022)\nOpção pelo SIMEI')
-        regex_termo = re.compile(r'(31/12/2022)\nSócios e Administradores')
-        # regex_termo = re.compile(r'SIMPLES NAC.\n05/2021')
-        resultado = regex_termo.search(texto)
+        doc.close()
+        new = os.path.join(pasta, file)
+        shutil.move(arq, new)
         
-        if not resultado:
-            continue
-        else:
-            doc.close()
-            new = os.path.join(pasta, file)
-            shutil.move(arq, new)
-            break

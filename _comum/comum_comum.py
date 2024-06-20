@@ -70,24 +70,27 @@ def barra_de_status(func):
         layout = [[sg.pin(sg.Image(data=image_to_data(im), key='-Processando-')),
                  sg.pin(sg.Image(data=image_to_data(im_check), key='-Check-', visible=False)),
                  sg.pin(sg.Image(data=image_to_data(im_error), key='-Error-', visible=False)),
-                 sg.Button('Iniciar', key='-iniciar-', border_width=0),
-                 sg.Button('Fechar', key='-fechar-', border_width=0, visible=False),
-                 sg.Text('', key='-titulo-'),
-                 sg.Text('', key='-Mensagens-')]]
+                 sg.pin(sg.Button('INICIAR', key='-iniciar-', border_width=0)),
+                 sg.pin(sg.Button('FECHAR', key='-fechar-', border_width=0, visible=False)),
+                 sg.pin(sg.Text('', key='-titulo-')),
+                 sg.pin(sg.Text('', key='-Mensagens-'))]]
         
         # guarda a janela na variável para manipula-la
         screen_width, screen_height = sg.Window.get_screen_size()
-        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', size=(910, 35), margins=(0,0), finalize=True, location=((screen_width // 2) - (910 // 2), 0))
+        window = sg.Window('', layout, no_titlebar=True, keep_on_top=True, element_justification='center', margins=(0,0), finalize=True, size=(910, 35), location=((screen_width // 2) - (910 // 2), 0))
         
         def run_script_thread():
             # habilita e desabilita os botões conforme necessário
-            window['-titulo-'].update('Rotina automática.', text_color='#fca103')
-            window['-iniciar-'].update(visible=False)
-            window['-fechar-'].update(visible=False)
-            window['-Check-'].update(visible=False)
-            window['-Error-'].update(visible=False)
-            window['-Processando-'].update(visible=True)
-
+            updates = [('-titulo-', {'value': 'Rotina automática.', 'text_color': '#fca103'}),
+                       ('-iniciar-', {'visible': False}),
+                       ('-fechar-', {'visible': False}),
+                       ('-Check-', {'visible': False}),
+                       ('-Error-', {'visible': False}),
+                       ('-Processando-', {'visible': True})]
+            # Loop para aplicar as atualizações
+            for key, update_args in updates:
+                window[key].update(**update_args)
+            
             try:
                 # Chama a função que executa o script
                 func(window)
@@ -95,16 +98,19 @@ def barra_de_status(func):
                 # Obtém a pilha de chamadas de volta como uma string
                 traceback_str = traceback.format_exc()
                 
-                window['-titulo-'].update(visible=False)
-                window['-iniciar-'].update(visible=False)
-                window['-Processando-'].update(visible=False)
-                window['-Mensagens-'].update(visible=False)
-                
-                window['-fechar-'].update(visible=True)
-                window['-titulo-'].update('Erro', text_color='#fc0303')
-                window['-titulo-'].update(visible=True)
-                window['-Error-'].update(visible=True)
-                
+                # habilita e desabilita os botões conforme necessário
+                updates = [('-titulo-', {'value': 'Erro', 'text_color': '#fc0303'}),
+                           ('-titulo-', {'visible': False}),
+                           ('-iniciar-', {'visible': False}),
+                           ('-Processando-', {'visible': False}),
+                           ('-Mensagens-', {'visible': False}),
+                           ('-fechar-', {'visible': True}),
+                           ('-titulo-', {'visible': True}),
+                           ('-Error-', {'visible': True})]
+                # Loop para aplicar as atualizações
+                for key, update_args in updates:
+                    window[key].update(**update_args)
+                    
                 alert(f'Traceback: {traceback_str}\n\n'
                       f'Erro: {e}')
                 print(f'Traceback: {traceback_str}\n\n'
@@ -112,20 +118,17 @@ def barra_de_status(func):
                 return
 
             # habilita e desabilita os botões conforme necessário
-            window['-titulo-'].update(visible=False)
-            window['-Processando-'].update(visible=False)
-            window['-Mensagens-'].update('')
+            updates = [('-titulo-', {'value': 'Execução finalizada', 'visible': True}),
+                       ('-Mensagens-', {'value': ''}),
+                       ('-Processando-', {'visible': False}),
+                       ('-iniciar-', {'visible': True}),
+                       ('-fechar-', {'visible': True}),
+                       ('-Check-', {'visible': True})]
+            # Loop para aplicar as atualizações
+            for key, update_args in updates:
+                window[key].update(**update_args)
             
-            window['-iniciar-'].update(visible=True)
-            window['-fechar-'].update(visible=True)
-            window['-titulo-'].update('Execução finalizada')
-            window['-titulo-'].update(visible=True)
-            window['-Check-'].update(visible=True)
-        
         processando = 'não'
-        # Variáveis para rastreamento de movimentação
-        mouse_down = False
-        start_pos = (0, 0)
         while True:
             # captura o evento e os valores armazenados na interface
             event, values = window.read(timeout=15)
@@ -353,7 +356,7 @@ _where_to_start = where_to_start
 # Abre uma janela de seleção de arquivos e abre o arquivo selecionado
 # Retorna List de Tuple das linhas dividas por ';' do arquivo caso sucesso
 # Retorna None caso nenhum selecionado ou erro ao ler arquivo
-def open_lista_dados(i_dir='ignore', encode='latin-1', file=False):
+def open_lista_dados(i_dir='ignore', encode='latin-1', file=False, retorna_planilha=False):
     ftypes = [('Plain text files', '*.txt *.csv')]
     
     if not file:
@@ -369,7 +372,10 @@ def open_lista_dados(i_dir='ignore', encode='latin-1', file=False):
         return False
 
     print('>>> usando dados de ' + file.split('/')[-1])
-    return list(map(lambda x: tuple(x.replace('\n', '').split(';')), dados))
+    if retorna_planilha:
+        return list(map(lambda x: tuple(x.replace('\n', '').split(';')), dados)), file
+    else:
+        return list(map(lambda x: tuple(x.replace('\n', '').split(';')), dados))
 _open_lista_dados = open_lista_dados
 
 
@@ -424,12 +430,12 @@ def indice(count, total_empresas, empresa='', index=0, window=False, tempos=Fals
         horas_texto = ''
         minutos_texto = ''
         
-        if dias > 0:
-            dias_texto = f' {dias} dias'
-        if horas > 0:
-            horas_texto = f' {horas} horas'
-        if minutos > 0:
-            minutos_texto = f' {minutos} minutos'
+        if dias == 1: dias_texto = f' {dias} dia'
+        elif dias > 1: dias_texto = f' {dias} dias'
+        if horas == 1: horas_texto = f' {horas} hora'
+        elif horas > 1: horas_texto = f' {horas} horas'
+        if minutos == 1: minutos_texto = f' {minutos} minuto'
+        elif minutos > 1: minutos_texto = f' {minutos} minutos'
         
         if dias > 0 or horas > 0 or minutos > 0:
             previsao_termino = tempo_inicial + tempo_total

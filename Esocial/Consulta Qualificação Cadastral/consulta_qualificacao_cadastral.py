@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import time, re, os
+import random, time, re, os
 import datetime
 from selenium import webdriver
 from PIL import Image
@@ -12,12 +12,18 @@ from comum_comum import _time_execution, _escreve_relatorio_csv, _escreve_header
 from captcha_comum import _solve_recaptcha
 
 
-def login(driver, nome, cpf, pis, data_nasc):
+def abre_site(options):
+    # iniciar o driver do chrome
+    # try:
+    status, driver = _initialize_chrome(options)
+    
+    # coloca um timeout de 60 segundos para que o robô não fique esperando eternamente caso o site não carregue
+    driver.set_page_load_timeout(60)
+    
     print('>>> Acessando site')
     # aguarda o botão de habilitar a consultar aparecer
     timer = 0
     while not _find_by_id('indexForm1:botaoConsultar', driver):
-        print('🕤')
         # abre o site da consulta e caso de erro é porque o site demorou pra responder,
         # nesse caso retorna um erro para tentar novamente
         try:
@@ -28,10 +34,10 @@ def login(driver, nome, cpf, pis, data_nasc):
         timer += 1
         if timer > 60:
             return driver, 'erro'
-        
+    
     # clica para habilitar a consulta
     driver.find_element(by=By.ID, value='indexForm1:botaoConsultar').click()
-
+    
     # aguarda o campo de nome aparecer
     timer = 0
     while not _find_by_id('formQualificacaoCadastral:nome', driver):
@@ -40,22 +46,33 @@ def login(driver, nome, cpf, pis, data_nasc):
         timer += 1
         if timer > 120:
             return driver, 'erro'
+    
+    return driver, 'ok'
+    
 
+def adiciona_cadastro(driver, nome, cpf, pis, data_nasc):
     # lista de campos para preencher
+    print('>>> Adicionando cadastro...')
     itens = [('formQualificacaoCadastral:nome', nome),
              ('formQualificacaoCadastral:dataNascimento', data_nasc),
              ('formQualificacaoCadastral:cpf', cpf),
              ('formQualificacaoCadastral:nis', pis)]
-
+    
+    # limpa o campo do nome para não arriscar misturar com o nome anterior caso tenha dado algum problema na hora de inseri-lo na tabela
+    driver.find_element(by=By.ID, value=itens[0][0]).clear()
+    time.sleep(0.1)
+    
     # para cada item da lista insere a informação correspondente
     for iten in itens:
+        time.sleep(random.uniform(0.5, 2))
         driver.find_element(by=By.ID, value=iten[0]).click()
+        time.sleep(0.1)
         driver.find_element(by=By.ID, value=iten[0]).send_keys(iten[1])
 
     # clica em adicionar cadastro a consulta
-    # não é possível adicionar mais cadastros a pesquisa, pois o site é um lixo e sai do ar
     driver.find_element(by=By.ID, value='formQualificacaoCadastral:btAdicionar').click()
-    print('>>> Acessando cadastro')
+    time.sleep(1)
+    
     timer = 0
     # espera a tabela com as infos do funcionário aparecer, se aparecer uma mensagem, pega o conteúdo dela e retorna
     while not _find_by_id('gridDadosTrabalhador', driver):
@@ -69,10 +86,29 @@ def login(driver, nome, cpf, pis, data_nasc):
         if timer > 60:
             print('❌ O site demorou muito para responder, tentando novamente 1')
             return driver, 'erro'
+        time.sleep(1)
+        
+    erro = re.compile(r'\"mensagem\".+class=\"erro\">(.+)</li>').search(driver.page_source)
+    if erro:
+        print(f'❌ {erro.group(1)}')
+        return driver, erro.group(1)
+    time.sleep(1)
+    timer += 1
+    # se passar 60 segundos e não aparecer a tabela, retorna um erro
+    if timer > 60:
+        print('❌ O site demorou muito para responder, tentando novamente 1')
+        return driver, 'erro'
+    
+    print('>>> Cadastro adicionado')
+    return driver, 'ok'
+    
+    
+def validar_consulta(driver):
+    print('\n>>> Validando dados...')
     # clica em validar a consulta
     driver.find_element(by=By.ID, value='formValidacao2:botaoValidar2').click()
     timer = 0
-    # tira um print da tela com e recorta apenas a imagem do captcha para enviar para a api
+
     while not _find_by_id('formValidacao:botaoValidar', driver):
         time.sleep(1)
         timer += 1
@@ -99,7 +135,6 @@ def login(driver, nome, cpf, pis, data_nasc):
         print('❌ Erro ao validar a consulta, tentando novamente')
         return driver, 'erro'"""
 
-    print('>>> Acessando cadastro')
     # aguarda as informações do cadastro aparecerem, se demorar mais de 1 minuto ou a resposta do captcha estiver errada,
     # retorna um erro e tenta novamente
     timer = 0
@@ -115,27 +150,42 @@ def login(driver, nome, cpf, pis, data_nasc):
     return driver, 'ok'
 
 
-def consulta(driver):
-    # captura a situação cadastral do funcionário pesquisado
-    try:
-        mensagem = re.compile(r'</span><span class=\"tamanho\d+.+>(.+)<br><br></span></td><td').search(driver.page_source).group(1)
-        return driver, str(mensagem).replace(" : ", ": ")
-    except:
-        pass
-
-    mensagens_regex = [r'</span><span class=\"tamanho\d+.+>(.+)<br><br></span></td><td class=\"left\"><span class=\"tamanho\d+\"></span><span class=\"tamanho\d+\">(.+)<br><br> </span></td></tr>',
-                       r'<span class=\"tamanho\d+.+>(.+)<br><br></span><span class=\"tamanho\d+\"></span></td><td class=\"left\"><span class=\"tamanho\d+\">(.+)<br><br></span><span class=\"tamanho\d+\"> </span></td></tr>']
-
-    for mensagem_regex in mensagens_regex:
-        try:
-            mensagens = re.compile(mensagem_regex).search(driver.page_source)
-            mensagem = f'{mensagens.group(1)};{mensagens.group(2).replace(":<br>", " | ").replace("<br>", " | ").replace(" |  | ", " | ")}'
-            return driver, str(mensagem)
-        except:
-            pass
-
-    print(driver.page_source)
-    return driver, str('Erro ao analisar o cadastro')
+def consulta(driver, cadastros_pesquisados):
+    print('>>>Analisando dados...')
+    page_source_filtrado = ''
+    
+    # modifica o código do site para que poder criar um regex mais eficiente
+    page_source_modificado = (driver.page_source.replace('<br>', '').replace('class="tamanho', 'class="tamanho\n').replace('<', '<\n'))
+    for linha in page_source_modificado.split('\n'):
+        if re.compile(r'\d\d\">(.+)').search(linha):
+            page_source_filtrado = page_source_filtrado + linha + '\n'
+    
+    page_source_filtrado = page_source_filtrado.replace('/span><\n', '').replace('/td><\n', '').replace('span class="tamanho\n', '').replace('td class="left"><\n', '').replace('td class="center"><\n', '')
+    
+    #print(page_source_filtrado)
+    #time.sleep(22)
+    
+    # o seguinte método não é necessário, mas preferí ter uma segurança maior nos dados pesquisados
+    # adiciona as informações capturadas do site em um dicionário para que poder serem buscadas seguindo os CPFs usados para preencher os dados da consulta
+    cadastros = {}
+    resultados = (re.compile(r'20\">(.+)<\n\d\d\">(\d\d/\d\d/\d\d\d\d)<\n\d\d\">(\d\d\d.\d\d\d.\d\d\d-\d\d)<\n\d\d\">(\d.\d\d\d.\d\d\d.\d\d\d-\d)<\n\d\d\"(.+)<\n\d\d\"(.+)<\n\d\d\"(.+)<\n\d\d\"(.+)<')
+                  .findall(page_source_filtrado))
+    for resultado in resultados:
+        cadastros[str(resultado[2]).replace('-', '').replace('.', '')] = (
+            resultado[0],
+            resultado[1],
+            resultado[3],
+            f'{resultado[4].replace(">", "")} {resultado[5].replace(">", "")}',
+            f'{resultado[6].replace(">", "")} {resultado[7].replace(">", "")}')
+    
+    # pesquisa os CPFs da lista de consulta no dicionário das respostas para garantir que foram todos pesquisados
+    for cadastro_pesquisado in cadastros_pesquisados:
+        print(cadastro_pesquisado[0], f'{cadastros[cadastro_pesquisado[0]][3].strip()}')
+        _escreve_relatorio_csv(f'{cadastro_pesquisado[0]};{cadastro_pesquisado[1]};{cadastro_pesquisado[2]};{cadastro_pesquisado[3]};{cadastro_pesquisado[4]};{cadastro_pesquisado[5]};'
+                               f'{cadastros[cadastro_pesquisado[0]][3].strip()};{cadastros[cadastro_pesquisado[0]][4]}', nome='Consulta Qualificação Cadastral')
+    
+    print('\n')
+    return driver
 
 
 def verifica_dados(cpf, nome, cod_empresa, cod_empregado, pis, data_nasc):
@@ -172,40 +222,46 @@ def run():
     tempos = [datetime.datetime.now()]
     tempo_execucao = []
     total_empresas = empresas[index:]
+    
+    contador = 1
+    cadastros_pesquisados = []
     for count, empresa in enumerate(empresas[index:], start=1):
         # printa o indice da empresa que está sendo executada
         tempos, tempo_execucao = _indice(count, total_empresas, empresa, index, tempos=tempos, tempo_execucao=tempo_execucao)
-        
         cpf, nome, cod_empresa, cod_empregado, pis, data_nasc = empresa
-        
         # verifica se não tem nenhum dado faltando
         if not verifica_dados(cpf, nome, cod_empresa, cod_empregado, pis, data_nasc):
             continue
-
-        while True:
-            # iniciar o driver do chrome
-            #try:
-            status, driver = _initialize_chrome(options)
-        
-            # coloca um timeout de 60 segundos para que o robô não fique esperando eternamente caso o site não carregue
-            driver.set_page_load_timeout(60)
             
-            # faz login no site
-            driver, resultado = login(driver, nome, cpf, pis, data_nasc)
-            # se não der erro no login, sai do while e realiza a consulta
-            if resultado != 'erro':
-                break
+        if contador == 1:
+            driver, resultado = abre_site(options)
+        
+        time.sleep(random.uniform(0.5, 2))
+        
+        # faz login no site
+        driver, resultado = adiciona_cadastro(driver, nome, cpf, pis, data_nasc)
+        if resultado != 'ok':
+            _escreve_relatorio_csv(f'{cpf};{nome};{cod_empresa};{cod_empregado};{pis};{data_nasc};{resultado}', nome='Consulta Qualificação Cadastral')
+            continue
+        
+        # adiciona em uma lista os dados inseridos na consulta para verificar se os CPFs conferem com a resposta do site
+        #cpf_pontuado = re.sub(r'(\d{3})(\d{3})(\d{3})(\d{2})', r'\1.\2.\3-\4', cpf)
+        cadastros_pesquisados.append((cpf, nome, cod_empresa, cod_empregado, pis, data_nasc))
+        
+        contador += 1
+        # a cada 10 CPFs, realiza a consulta, agora o site aceita até 10 cadastros por vês, porém, colocando uma espera aleatória no preenchimento dos dados para que o site não bloqueie como acesso suspeito.
+        if contador > 10:
+            driver, resultado = validar_consulta(driver)
+            driver = consulta(driver, cadastros_pesquisados)
             driver.close()
-            """except:
-                pass"""
-        
-        if resultado == 'ok':
-            driver, resultado = consulta(driver)
             
-        print(f'❕ {resultado}')
-        _escreve_relatorio_csv(f'{cpf};{nome};{cod_empresa};{cod_empregado};{pis};{data_nasc};{resultado}', nome='Consulta Qualificação Cadastral')
-        driver.close()
-
+            contador = 1
+            cadastros_pesquisados = []
+    
+    driver, resultado = validar_consulta(driver)
+    driver = consulta(driver, cadastros_pesquisados)
+    driver.close()
+    
     _escreve_header_csv('CPF;NOME;CÓD EMPRESA;CÓD EMPREGADO;PIS;DATA DE NASCIMENTO;SITUAÇÃO;OBSERVAÇÕES', nome='Consulta Qualificação Cadastral')
 
 

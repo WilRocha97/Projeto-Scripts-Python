@@ -4,7 +4,7 @@ from sys import path
 
 path.append(r'..\..\_comum')
 from pyautogui_comum import _find_img, _click_img, _wait_img
-from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start, _barra_de_status
+from comum_comum import _indice, _time_execution, _escreve_relatorio_csv, e_dir, _open_lista_dados, _where_to_start, _barra_de_status, _concatena
 from dominio_comum import _login_web, _abrir_modulo, _login
 
 
@@ -18,31 +18,29 @@ def arquivos_dctf(empresa, periodo, andamento):
 
     nome_arquivo = 'M:\DCTF_{}.RFB'.format(cod)
     
-    # aguarda a tela do domínio
-    _wait_img('relatorios.png', conf=0.9, timeout=-1)
-    # relatórios
-    p.hotkey('alt', 'r')
-    
-    time.sleep(0.5)
-    # informativos
-    p.press('n')
-    time.sleep(0.5)
-    # federais
-    p.press('f')
-    time.sleep(0.5)
-    # dctf
-    p.press('d')
-    time.sleep(0.5)
-    p.press('enter')
-    time.sleep(0.5)
-    # mensal
-    p.press('m')
-    
     # aguarda a tela abrir
     while not _find_img('dctf_mensal.png', conf=0.9):
         if _find_img('dctf_mensal_2.png', conf=0.9):
             break
-        time.sleep(1)
+        if _find_img('dctf_mensal_3.png', conf=0.9):
+            break
+        # relatórios
+        p.hotkey('alt', 'r')
+        time.sleep(0.5)
+        # informativos
+        p.press('n')
+        time.sleep(0.5)
+        # federais
+        p.press('f')
+        time.sleep(0.5)
+        # dctf
+        p.press('d')
+        time.sleep(0.5)
+        p.press('enter')
+        time.sleep(0.5)
+        # mensal
+        p.press('m')
+        time.sleep(2)
 
     # digita o período
     p.write(periodo)
@@ -67,10 +65,13 @@ def arquivos_dctf(empresa, periodo, andamento):
     while not _find_img('outros_dados.png', conf=0.9):
         if _find_img('outros_dados_2.png', conf=0.9):
             break
-        
+        if _find_img('outros_dados_3.png', conf=0.9):
+            break
+
         # verifica a competência
-        if _find_img('data_inicio.png', conf=0.9):
-            _click_img('data_inicio.png', conf=0.9)
+        if _find_img('data_inicio.png', conf=0.9) or _find_img('data_inicio_2.png', conf=0.9):
+            _click_img('data_inicio.png', conf=0.9, timeut=-1)
+            _click_img('data_inicio_2.png', conf=0.9, timeut=-1)
             p.press('enter')
             _escreve_relatorio_csv(';'.join([cod, cnpj, nome, regime, 'Competência informada menor que a data de início efetivo das atividades.']), nome=andamento)
             print('❗ Competência informada menor que a data de início efetivo das atividades.')
@@ -186,14 +187,18 @@ def arquivos_dctf(empresa, periodo, andamento):
     
     print('>>> Gerando arquivo')
     # aguarda o arquivo gerar
-    while _find_img('dctf_mensal.png', conf=0.9) or _find_img('dctf_mensal_2.png', conf=0.9):
+    while _find_img('dctf_mensal.png', conf=0.9) or _find_img('dctf_mensal_2.png', conf=0.9) or _find_img('dctf_mensal_3.png', conf=0.9):
         time.sleep(1)
         ocorrencias = [('nao_gerou_arquivo.png', 'Não gerou arquivo', 'ok'),
                        ('saldo_nao_calculado.png', 'Saldo dos impostos não foi calculado no período;' + periodo, 'ok'),
+                       ('saldo_nao_calculado_2.png', 'Saldo dos impostos não foi calculado no período;' + periodo, 'ok'),
+                       ('saldo_nao_calculado_3.png', 'Saldo dos impostos não foi calculado no período;' + periodo, 'ok'),
                        ('nao_tem_parametro.png', 'Não existe parametro para a vigência;' + periodo, 'ok'),
                        ('exportacao_cancelada.png', 'Exportação cancelada', 'ok'),
-                       ('final_da_exportacao.png', 'Arquivo gerado', 'arquivo gerado')]
-        
+                       ('final_da_exportacao.png', 'Arquivo gerado', 'arquivo gerado'),
+                       ('final_da_exportacao_2.png', 'Arquivo gerado', 'arquivo gerado'),
+                       ('final_da_exportacao_3.png', 'Arquivo gerado', 'arquivo gerado')]
+
         for ocorrencia in ocorrencias:
             if _find_img(ocorrencia[0], conf=0.9):
                 p.press('enter')
@@ -203,14 +208,14 @@ def arquivos_dctf(empresa, periodo, andamento):
                 p.press('esc', presses=5)
                 return ocorrencia[2], nome_arquivo
         
-        if _find_img('imune_irpj.png', conf=0.9):
+        if _find_img('imune_irpj.png', conf=0.9) or _find_img('imune_irpj_2.png', conf=0.9):
             p.press('enter')
             time.sleep(1)
             p.press('enter')
             mudar_regime('Imunes')
             regime = f'AE: {regime}, Domínio: Imunes'
 
-        if _find_img('isenta_alerta.png', conf=0.9):
+        if _find_img('isenta_alerta.png', conf=0.9) or _find_img('isenta_alerta_2.png', conf=0.9):
             p.press('enter')
             time.sleep(1)
             p.press('enter')
@@ -230,6 +235,8 @@ def mudar_regime(regime_certo):
     # aguarda a tela abrir
     while not _find_img('outros_dados.png', conf=0.9):
         if _find_img('outros_dados_2.png', conf=0.9):
+            break
+        if _find_img('outros_dados_3.png', conf=0.9):
             break
     
     if regime_certo == 'Imunes':
@@ -253,7 +260,15 @@ def mudar_regime(regime_certo):
     # aguarda a tela fechar
     while _find_img('outros_dados.png', conf=0.9):
         time.sleep(1)
-    
+
+    # aguarda a tela fechar
+    while _find_img('outros_dados_2.png', conf=0.9):
+        time.sleep(1)
+
+    # aguarda a tela fechar
+    while _find_img('outros_dados_3.png', conf=0.9):
+        time.sleep(1)
+
     # exportar arquivo
     p.hotkey('alt', 'x')
     
@@ -262,9 +277,54 @@ def mover_arquivo(nome_arquivo):
     nome_arquivo = nome_arquivo.replace('M:\DCTF', 'DCTF')
     os.makedirs('execução/Arquivos', exist_ok=True)
     final_folder = 'V:\\Setor Robô\\Scripts Python\\Domínio\\Arquivos DCTF\\execução\\Arquivos'
+    final_folder_editado = 'V:\\Setor Robô\\Scripts Python\\Domínio\\Arquivos DCTF\\execução\\Arquivos editados'
     folder = 'C:\\'
-    shutil.move(os.path.join(folder, nome_arquivo), os.path.join(final_folder, nome_arquivo))
 
+    edita_arquivo(nome_arquivo, os.path.join(folder, nome_arquivo), os.path.join(final_folder, nome_arquivo), final_folder_editado)
+    
+
+def edita_arquivo(nome_arquivo, arquivo_original, arquivo_final, arquivo_final_editados):
+    contador = 0
+    conteudo_modificado = ''
+    with open(arquivo_original, 'r') as arquivo:
+        # Leia o conteúdo do arquivo
+        conteudo = arquivo.readlines()
+        
+        # verifica os números de chave que podem já existir no arquivo original
+        for count, linha in enumerate(conteudo[:-1], start=1):
+            codigo_capturado = linha[34:38]
+            if str(codigo_capturado) == '5952' or str(codigo_capturado) == '1708' or str(codigo_capturado) == '3208' or str(codigo_capturado) == '5706' or str(codigo_capturado) == '8045' or str(codigo_capturado) == '2991':
+                contador += 1
+                continue
+            else:
+                conteudo_modificado += linha
+            
+            linhas = _concatena(str(count + 1 - contador), 4, 'antes', '0')
+        
+    if contador > 0:
+        os.makedirs(arquivo_final_editados, exist_ok=True)
+        
+        ultima_linha = conteudo[-1].replace('\n', '').strip()
+        ultima_linha_limpa = ultima_linha[:-4]
+        ultima_linha_editada = ultima_linha_limpa + linhas + '\n'
+        
+        """while True:
+            try:"""
+        # Abra o arquivo para escrita
+        with open(os.path.join(arquivo_final_editados, nome_arquivo), 'w') as arquivo:
+            # Escreva o conteúdo modificado de volta no arquivo
+            arquivo.writelines(conteudo_modificado + ultima_linha_editada)
+            """break
+        except PermissionError:
+            print('Tentando salvar o novo arquivo...')"""
+                
+        print('❗ Arquivo editado')
+        shutil.move(arquivo_original, arquivo_final)
+        _escreve_relatorio_csv(f'{nome_arquivo};Arquivo editado', nome='Relatório de arquivos editados')
+    else:
+        shutil.move(arquivo_original, arquivo_final)
+        _escreve_relatorio_csv(f'{nome_arquivo};Arquivo original', nome='Relatório de arquivos editados')
+    
 
 @_time_execution
 @_barra_de_status

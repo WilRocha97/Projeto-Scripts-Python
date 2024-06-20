@@ -82,10 +82,16 @@ def consulta_notas(andamentos, periodo, download_folder, driver, cod_dominio, cn
             # coleta os dados da nota no site
             dados_do_site, data_emissao, nome_tomador = coleta_dados_da_nota_no_site(driver)
             periodo_da_nota = re.search(r'\d{2}/(\d{2}/\d{4})', data_emissao).group(1)
-
-            if periodo != '' and periodo != periodo_da_nota:
-                print('>>> Essa nota não corresponde ao período pesquisado\n')
-                continue
+            
+            if re.compile(r'\d\d/\d\d\d\d').search(periodo):
+                if periodo != '' and periodo != periodo_da_nota:
+                    print('>>> Essa nota não corresponde ao período pesquisado\n')
+                    continue
+            
+            else:
+                if periodo != '' and periodo != periodo_da_nota.split('/')[1]:
+                    print('>>> Essa nota não corresponde ao período pesquisado\n')
+                    continue
             
             notas_no_periodo += 1
             # cria a pasta para salvar as notas
@@ -130,35 +136,35 @@ def consulta_notas(andamentos, periodo, download_folder, driver, cod_dominio, cn
         paginas += 1
     
     comp_nota_anterior = ''
-    valor_total_mes = 0
+    valor_total_periodo = 0
     contador = 0
     dados_para_somar_valores = sorted(dados_para_somar_valores)
     for count, dado in enumerate(dados_para_somar_valores):
-        if count == 0:
-            valor_total_mes = valor_total_mes + Decimal(float(str(dado[1]).replace('.', '').replace(',', '.')))
-            comp_nota_anterior = dado[0]
-            contador += 1
-            continue
-            
-        elif dado[0] == comp_nota_anterior:
-            valor_total_mes = valor_total_mes + Decimal(float(str(dado[1]).replace('.', '').replace(',', '.')))
-            comp_nota_anterior = dado[0]
-            contador += 1
-            continue
-    
-        valor_total_mes = round(valor_total_mes, 2)
-        valor_total_mes = str(valor_total_mes).replace('.', ',')
-        # anota na planilha de resumo o andamento da consulta e quantas notas foram baixadas
-        _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{contador} notas encontradas;{comp_nota_anterior};{valor_total_mes}', nome=andamentos)
-        
-        valor_total_mes = Decimal(float(str(dado[1]).replace('.', '').replace(',', '.')))
+        #if count == 0:
+        valor_total_periodo = valor_total_periodo + Decimal(float(str(dado[1]).replace('.', '').replace(',', '.')))
         comp_nota_anterior = dado[0]
-        contador = 1
+        contador += 1
+        #continue
+            
+        """elif dado[0] == comp_nota_anterior:
+            valor_total_periodo = valor_total_periodo + Decimal(float(str(dado[1]).replace('.', '').replace(',', '.')))
+            comp_nota_anterior = dado[0]
+            contador += 1
+            continue
     
-    valor_total_mes = round(valor_total_mes, 2)
-    valor_total_mes = str(valor_total_mes).replace('.', ',')
+        valor_total_periodo = round(valor_total_periodo, 2)
+        valor_total_periodo = str(valor_total_periodo).replace('.', ',')
+        # anota na planilha de resumo o andamento da consulta e quantas notas foram baixadas
+        _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{contador} notas encontradas;{periodo};{valor_total_periodo}')
+        
+        valor_total_periodo = Decimal(float(str(dado[1]).replace('.', '').replace(',', '.')))
+        comp_nota_anterior = dado[0]
+        contador = 1"""
+    
+    valor_total_periodo = round(valor_total_periodo, 2)
+    valor_total_periodo = str(valor_total_periodo).replace('.', ',')
     # anota na planilha de resumo o andamento da consulta e quantas notas foram baixadas
-    _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{contador} notas encontradas;{comp_nota_anterior};{valor_total_mes}', nome=andamentos)
+    _escreve_relatorio_csv(f'{cod_dominio};{cnpj};{nome};{contador} notas encontradas;{periodo};{valor_total_periodo}')
     
     # para cada nota armazenada na variável, insere na planilha de notas
     pula_linha_txt = ''
@@ -394,8 +400,7 @@ def run():
     periodo = ''
     todas_as_notas = confirm(text='Baixar todas as notas disponíveis das empresas?', buttons=('Sim', 'Não'))
     if todas_as_notas == 'Não':
-        while not re.search(r'\d{2}/\d{4}', periodo):
-            periodo = prompt(text='Qual o mês de emissão das notas?', default='00/0000')
+        periodo = prompt(text='Qual o mês de emissão das notas? (Digite uma competência: 00/0000 ou um ano: 0000)', default='00/0000')
     
     # define e cria a pasta final das notas
     download_folder = "V:\\Setor Robô\\Scripts Python\\Geral\\Relatório de NFSe Emitidas\\Execução\\NFSE"

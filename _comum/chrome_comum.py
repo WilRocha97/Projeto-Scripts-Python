@@ -1,9 +1,10 @@
-import pyperclip
+import pyperclip, chromedriver_autoinstaller
 from win32com import client
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.select import Select
+from selenium.common.exceptions import SessionNotCreatedException, WebDriverException
 from pyautogui_comum import _click_img, _find_img
 import os, time, pyautogui as p
 
@@ -16,7 +17,7 @@ _msgs = {
 }
 
 
-def get_chrome_version():
+"""def get_chrome_version():
     paths = (
         r"C:\Program Files\Google\Chrome\Application\chrome.exe",
         r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
@@ -80,6 +81,49 @@ def initialize_chrome(options=webdriver.ChromeOptions()):
         return False, _msgs["not_found"]
 
     return True, webdriver.Chrome(service=service, options=options)
+_initialize_chrome = initialize_chrome"""
+
+
+def initialize_chrome(options=webdriver.ChromeOptions(), timeout=90):
+    pasta_driver = 'V:\Setor Robô\Scripts Python\_comum\Chrome driver'
+    service = Service(pasta_driver)
+    while True:
+        for pasta_atual, subpastas, arquivos in os.walk(pasta_driver):
+            # Agora você pode processar os arquivos na pasta atual normalmente
+            for file in arquivos:
+                caminho_completo = os.path.join(pasta_atual, file)
+                if caminho_completo == 'V:\Setor Robô\Scripts Python\_comum\Chrome driver\chromedriver.exe':
+                    continue
+                service = Service(caminho_completo)
+                print('Chrome driver selecionado:', caminho_completo)
+        
+        if not options:
+            options = webdriver.ChromeOptions()
+            options.add_argument("--start-maximized")
+        
+        options.add_argument("--ignore-certificate-errors")
+        options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        
+        # retorna o chromedriver aberto
+        try:
+            print('>>> Inicializando Chromedriver...')
+            driver = webdriver.Chrome(options=options, service=service)
+            driver.set_page_load_timeout(timeout)
+            break
+        except SessionNotCreatedException:
+            print('>>> Atualizando Chromedriver...')
+            shutil.rmtree(pasta_driver)
+            time.sleep(1)
+            os.makedirs(pasta_driver, exist_ok=True)
+            # biblioteca para baixar o chromedriver atualizado
+            chromedriver_autoinstaller.install(path=pasta_driver)
+        except WebDriverException:
+            print('>>> Baixando Chromedriver...')
+            os.makedirs(pasta_driver, exist_ok=True)
+            # biblioteca para baixar o chromedriver atualizado
+            chromedriver_autoinstaller.install(path=pasta_driver)
+    
+    return True, driver
 _initialize_chrome = initialize_chrome
 
 
@@ -174,6 +218,13 @@ def abrir_chrome(url, tela_inicial_site=False, fechar_janela=True, outra_janela=
         print('>>> Cofigurando Chrome')
         _click_img('google.png', pasta=imagens, conf=0.9)
         time.sleep(1)
+        """p.hold(['slt', 'space'])
+        p.press('x')"""
+        p.hotkey('alt', 'space', 'x')
+        p.hotkey('alt', 'space', 'x')
+        p.hotkey('alt', 'space', 'x')
+        p.hotkey('alt', 'space', 'x')
+        p.hotkey('alt', 'space', 'x')
         p.hotkey('alt', 'space', 'x')
         p.hotkey('alt', 'space', 'x')
         p.hotkey('alt', 'space', 'x')
@@ -251,7 +302,6 @@ def abrir_chrome(url, tela_inicial_site=False, fechar_janela=True, outra_janela=
         time.sleep(1)
         p.press('enter')
         p.press('enter')
-
 _abrir_chrome = abrir_chrome
 
 
@@ -274,5 +324,4 @@ def acessar_site_chrome(url):
     
     time.sleep(1)
     p.press('enter')
-    
 _acessar_site_chrome = acessar_site_chrome
